@@ -3,6 +3,14 @@ set -e
 
 echo "==> Preparing Laravel for production..."
 
+# Clear any stale configuration
+php artisan config:clear || true
+php artisan route:clear || true
+php artisan view:clear || true
+
+# Discover packages & register service providers
+php artisan package:discover --ansi || true
+
 # Create storage directory links if missing
 php artisan storage:link || true
 
@@ -11,10 +19,10 @@ php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true
 
-# Run database migrations
-if [ -n "$DB_HOST" ] || [ -n "$DATABASE_URL" ]; then
+# Run database migrations if database connection is configured
+if [ -n "$DB_HOST" ] || [ -n "$DATABASE_URL" ] || [ -n "$DB_URL" ]; then
     echo "==> Running database migrations..."
-    php artisan migrate --force || echo "Migration encountered an issue, proceeding..."
+    php artisan migrate --force || echo "==> Migration skipped or pending, continuing..."
 fi
 
 # Seed if requested

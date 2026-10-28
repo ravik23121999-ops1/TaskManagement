@@ -1,7 +1,8 @@
 # ==========================================
 # STAGE 1: Build Frontend (Vite + React)
+# Use Debian slim for full glibc compatibility with Vite/Rollup native binaries
 # ==========================================
-FROM node:20-alpine AS frontend-builder
+FROM node:20-bookworm-slim AS frontend-builder
 WORKDIR /app/frontend
 
 COPY frontend/package*.json ./
@@ -15,7 +16,7 @@ RUN npm run build
 # ==========================================
 FROM php:8.3-fpm-alpine
 
-# Install system dependencies
+# Install system dependencies & extensions
 RUN apk update && apk add --no-cache \
     nginx \
     supervisor \
@@ -53,8 +54,8 @@ COPY backend/ /var/www/html/
 # Copy compiled frontend assets from Stage 1 directly into Laravel public directory
 COPY --from=frontend-builder /app/frontend/dist/ /var/www/html/public/
 
-# Install Composer dependencies (production optimized)
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+# Install Composer dependencies (production optimized; --no-scripts prevents artisan boot failure during container build)
+RUN composer install --no-dev --no-scripts --optimize-autoloader --no-interaction --prefer-dist
 
 # Copy Nginx & Supervisor configuration
 COPY backend/nginx.conf /etc/nginx/http.d/default.conf

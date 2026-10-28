@@ -24,7 +24,13 @@ services:
         generateValue: true
       - key: RUN_SEEDER
         value: "true"
+      - key: DB_CONNECTION
+        value: pgsql
       - key: DATABASE_URL
+        fromDatabase:
+          name: quicklifenow-db
+          property: connectionString
+      - key: DB_URL
         fromDatabase:
           name: quicklifenow-db
           property: connectionString
