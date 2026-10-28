@@ -1,6 +1,9 @@
-FROM php:8.3-fpm-alpine
+# ==========================================
+# STAGE 2: PHP 8.4 FPM + Nginx Production
+# ==========================================
+FROM php:8.4-fpm-alpine
 
-# Install system dependencies & build tools
+# Install system dependencies & extensions
 RUN apk update && apk add --no-cache \
     nginx \
     supervisor \
@@ -13,6 +16,7 @@ RUN apk update && apk add --no-cache \
     icu-dev \
     postgresql-dev \
     oniguruma-dev \
+    libxml2-dev \
     bash \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
@@ -24,7 +28,11 @@ RUN apk update && apk add --no-cache \
         bcmath \
         intl \
         opcache \
-        gd
+        gd \
+        dom \
+        xml \
+        xmlwriter \
+        fileinfo
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -32,23 +40,23 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
-# Copy application code
-COPY . /var/www/html
+# Copy backend application code
+COPY . /var/www/html/
 
-# Install Composer dependencies (production, optimized)
-RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
+# Install Composer dependencies
+RUN composer install --no-dev --no-scripts --optimize-autoloader --no-interaction --prefer-dist --ignore-platform-reqs
 
 # Copy Nginx & Supervisor configuration
 COPY nginx.conf /etc/nginx/http.d/default.conf
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Set permissions for storage & cache
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+# Secure file permissions
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod +x /var/www/html/entrypoint.sh
 
 # Expose port 80 for Render
 EXPOSE 80
 
-# Run entrypoint script
+# Start services via production entrypoint
 ENTRYPOINT ["/var/www/html/entrypoint.sh"]

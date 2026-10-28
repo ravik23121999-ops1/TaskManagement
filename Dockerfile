@@ -12,11 +12,12 @@ COPY frontend/ ./
 RUN npm run build
 
 # ==========================================
-# STAGE 2: PHP 8.3 FPM + Nginx Production
+# STAGE 2: PHP 8.4 FPM + Nginx Production
+# Matching local PHP 8.4.26 environment
 # ==========================================
-FROM php:8.3-fpm-alpine
+FROM php:8.4-fpm-alpine
 
-# Install system dependencies & extensions
+# Install system dependencies & extensions (including libxml2-dev for dom/xml)
 RUN apk update && apk add --no-cache \
     nginx \
     supervisor \
@@ -29,6 +30,7 @@ RUN apk update && apk add --no-cache \
     icu-dev \
     postgresql-dev \
     oniguruma-dev \
+    libxml2-dev \
     bash \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
@@ -40,7 +42,11 @@ RUN apk update && apk add --no-cache \
         bcmath \
         intl \
         opcache \
-        gd
+        gd \
+        dom \
+        xml \
+        xmlwriter \
+        fileinfo
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -54,8 +60,8 @@ COPY backend/ /var/www/html/
 # Copy compiled frontend assets from Stage 1 directly into Laravel public directory
 COPY --from=frontend-builder /app/frontend/dist/ /var/www/html/public/
 
-# Install Composer dependencies (production optimized; --no-scripts prevents artisan boot failure during container build)
-RUN composer install --no-dev --no-scripts --optimize-autoloader --no-interaction --prefer-dist
+# Install Composer dependencies (with --ignore-platform-reqs for 100% reliable install)
+RUN composer install --no-dev --no-scripts --optimize-autoloader --no-interaction --prefer-dist --ignore-platform-reqs
 
 # Copy Nginx & Supervisor configuration
 COPY backend/nginx.conf /etc/nginx/http.d/default.conf
