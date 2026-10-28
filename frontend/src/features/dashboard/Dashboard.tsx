@@ -114,8 +114,8 @@ export const Dashboard: React.FC = () => {
               {adminData.total_tasks}
             </div>
             <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
-              <span>All company tasks</span>
-              <span className="text-blue-600 font-semibold group-hover:underline">View registry →</span>
+              <span>All tasks across company</span>
+              <span className="text-blue-600 font-semibold group-hover:underline">View all →</span>
             </div>
           </div>
 
@@ -139,8 +139,8 @@ export const Dashboard: React.FC = () => {
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
-              <span>Active operational branches</span>
-              <span className="text-sky-600 font-semibold group-hover:underline">Track live →</span>
+              <span>Currently being worked on</span>
+              <span className="text-sky-600 font-semibold group-hover:underline">See active →</span>
             </div>
           </div>
 
@@ -160,8 +160,8 @@ export const Dashboard: React.FC = () => {
               {adminData.pending_review}
             </div>
             <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
-              <span>Awaiting signoff / check</span>
-              <span className="text-purple-600 font-semibold group-hover:underline">Review queue →</span>
+              <span>Waiting for review & approval</span>
+              <span className="text-purple-600 font-semibold group-hover:underline">Review now →</span>
             </div>
           </div>
 
@@ -181,8 +181,8 @@ export const Dashboard: React.FC = () => {
               {adminData.completed}
             </div>
             <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
-              <span>Final verification verified</span>
-              <span className="text-emerald-600 font-semibold group-hover:underline">View archive →</span>
+              <span>Finished & approved tasks</span>
+              <span className="text-emerald-600 font-semibold group-hover:underline">View completed →</span>
             </div>
           </div>
         </div>
@@ -194,10 +194,10 @@ export const Dashboard: React.FC = () => {
             className="bg-white p-3.5 rounded-xl border border-slate-200/80 hover:border-orange-200 hover:bg-orange-50/20 transition cursor-pointer flex items-center justify-between"
           >
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Open / Unstarted</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Not Started Yet</p>
               <p className="text-lg font-bold text-orange-600 mt-0.5">{adminData.open_tasks}</p>
             </div>
-            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-orange-100 text-orange-700">Pending</span>
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-orange-100 text-orange-700">Ready</span>
           </div>
 
           <div
@@ -205,7 +205,7 @@ export const Dashboard: React.FC = () => {
             className="bg-white p-3.5 rounded-xl border border-slate-200/80 hover:border-rose-200 hover:bg-rose-50/20 transition cursor-pointer flex items-center justify-between"
           >
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Returned For Revision</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Returned for Changes</p>
               <p className="text-lg font-bold text-rose-600 mt-0.5">{adminData.returned ?? 0}</p>
             </div>
             <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 text-rose-700">Needs Fix</span>
@@ -216,10 +216,10 @@ export const Dashboard: React.FC = () => {
             className="bg-white p-3.5 rounded-xl border border-slate-200/80 hover:border-red-200 hover:bg-red-50/20 transition cursor-pointer flex items-center justify-between"
           >
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Overdue Deadlines</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Past Due Date</p>
               <p className="text-lg font-bold text-red-600 mt-0.5">{adminData.overdue ?? 0}</p>
             </div>
-            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-100 text-red-700">Urgent</span>
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-100 text-red-700">Late</span>
           </div>
 
           <div
@@ -471,7 +471,7 @@ export const Dashboard: React.FC = () => {
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-sky-500" />
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">My Action Queue</span>
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">My Action Tasks</span>
               <span className="p-2 bg-blue-50 text-blue-600 rounded-xl group-hover:scale-110 transition-transform">
                 <Zap className="w-4 h-4" />
               </span>
@@ -486,9 +486,9 @@ export const Dashboard: React.FC = () => {
               </span>
             </div>
             <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
-              <span>Immediate deliverables</span>
+              <span>Items waiting for your step</span>
               <span className="text-blue-600 font-semibold flex items-center gap-1 group-hover:underline">
-                View Queue <ArrowRight className="w-3 h-3" />
+                View tasks <ArrowRight className="w-3 h-3" />
               </span>
             </div>
           </div>
@@ -509,9 +509,9 @@ export const Dashboard: React.FC = () => {
               {employeeData.assigned_to_me}
             </div>
             <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
-              <span>Assigned work branches</span>
+              <span>Tasks assigned to you</span>
               <span className="text-cyan-600 font-semibold flex items-center gap-1 group-hover:underline">
-                All Assigned <ArrowRight className="w-3 h-3" />
+                See all <ArrowRight className="w-3 h-3" />
               </span>
             </div>
           </div>
@@ -523,7 +523,7 @@ export const Dashboard: React.FC = () => {
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-yellow-400" />
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Awaiting Review</span>
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Submitted for Review</span>
               <span className="p-2 bg-amber-50 text-amber-600 rounded-xl group-hover:scale-110 transition-transform">
                 <FileCheck2 className="w-4 h-4" />
               </span>
@@ -532,9 +532,9 @@ export const Dashboard: React.FC = () => {
               {employeeData.awaiting_review ?? 0}
             </div>
             <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
-              <span>In review / approval</span>
+              <span>Waiting for reviewer approval</span>
               <span className="text-amber-600 font-semibold flex items-center gap-1 group-hover:underline">
-                Review Queue <ArrowRight className="w-3 h-3" />
+                View list <ArrowRight className="w-3 h-3" />
               </span>
             </div>
           </div>
@@ -546,7 +546,7 @@ export const Dashboard: React.FC = () => {
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-600 to-pink-500" />
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Collaborations</span>
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Team Collaborations</span>
               <span className="p-2 bg-purple-50 text-purple-600 rounded-xl group-hover:scale-110 transition-transform">
                 <Users className="w-4 h-4" />
               </span>
@@ -555,9 +555,9 @@ export const Dashboard: React.FC = () => {
               {employeeData.my_collaborations}
             </div>
             <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
-              <span>Shared team deliverables</span>
+              <span>Tasks you are helping with</span>
               <span className="text-purple-600 font-semibold flex items-center gap-1 group-hover:underline">
-                Collaborations <ArrowRight className="w-3 h-3" />
+                See team tasks <ArrowRight className="w-3 h-3" />
               </span>
             </div>
           </div>

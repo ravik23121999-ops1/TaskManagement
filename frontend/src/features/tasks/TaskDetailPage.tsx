@@ -436,16 +436,16 @@ export const TaskDetailPage: React.FC = () => {
   // For Work Alone mode, there is no intermediate Evaluation/Under Review or Sign-off from a separate party
   const lifecycleStages = isWorkAlone
     ? [
-        { key: 'created', label: '1. Initiated', desc: 'Task Created' },
-        { key: 'in_progress', label: '2. In Progress', desc: 'Active Execution' },
-        { key: 'completed', label: '3. Completed', desc: 'Verified & Closed' },
+        { key: 'created', label: '1. Created', desc: 'Task Started' },
+        { key: 'in_progress', label: '2. Working', desc: 'Doing the Work' },
+        { key: 'completed', label: '3. Completed', desc: 'Approved & Closed' },
       ]
     : [
-        { key: 'created', label: '1. Initiated', desc: 'Task Created' },
-        { key: 'in_progress', label: '2. In Progress', desc: 'Active Execution' },
-        { key: 'review', label: '3. Evaluation', desc: 'Under Review' },
-        { key: 'approval', label: '4. Sign-off', desc: 'Final Sign-off' },
-        { key: 'completed', label: '5. Completed', desc: 'Verified & Closed' },
+        { key: 'created', label: '1. Created', desc: 'Task Started' },
+        { key: 'in_progress', label: '2. Working', desc: 'Doing the Work' },
+        { key: 'review', label: '3. In Review', desc: 'Reviewing Work' },
+        { key: 'approval', label: '4. Final Sign-off', desc: 'Creator Check' },
+        { key: 'completed', label: '5. Completed', desc: 'Approved & Closed' },
       ];
 
   return (
@@ -670,13 +670,13 @@ export const TaskDetailPage: React.FC = () => {
               <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
               <div>
                 <p className="font-bold text-red-950">
-                  Submission Returned for Correction by {task.latest_return.reviewer?.name || 'Reviewer'}
+                  Changes Requested by {task.latest_return.reviewer?.name || 'Reviewer'}
                 </p>
                 <p className="text-red-800 mt-0.5 whitespace-pre-wrap">
                   "{task.latest_return.comments}"
                 </p>
                 <p className="text-[10px] text-red-600 mt-1">
-                  Reviewed on {new Date(task.latest_return.reviewed_at).toLocaleString()} • Please review comments, make corrections, and resubmit.
+                  Reviewed on {new Date(task.latest_return.reviewed_at).toLocaleString()} • Please review the feedback, update your work, and resubmit.
                 </p>
               </div>
             </div>
@@ -701,7 +701,7 @@ export const TaskDetailPage: React.FC = () => {
               <div>
                 <p className="font-bold text-emerald-950">All Deliverables Approved & Ready for Final Sign-off</p>
                 <p className="text-emerald-800 mt-0.5">
-                  All assigned branches have completed work and have been approved. You can now complete the project with final remarks and deliverable attachments.
+                  All assigned parts of this task have been completed and approved. You can now complete the project with final remarks and deliverable files.
                 </p>
               </div>
             </div>
@@ -732,12 +732,12 @@ export const TaskDetailPage: React.FC = () => {
                   : isReadyForFinalSignOff
                   ? `Task Creator: ${task.creator?.name || 'Creator'} (Final Sign-off)`
                   : isUnderReview
-                  ? `Reviewer (Evaluation of ${latestPendingSubmission?.submitted_by?.name || 'Deliverables'})`
+                  ? `Reviewer (Checking deliverables from ${latestPendingSubmission?.submitted_by?.name || 'Assignee'})`
                   : task.latest_clarification && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment'))
-                  ? `Task Assigner: ${task.creator?.name || 'Assigner'} (Clarification Needed)`
+                  ? `Task Assigner: ${task.creator?.name || 'Assigner'} (Question to Answer)`
                   : task.latest_return && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment'))
-                  ? `Submitter: ${task.latest_return.reviewer ? 'Revision Required' : 'Assignee'}`
-                  : `Assignee: ${task.current_owner?.name || 'Active Execution'}`}
+                  ? `Submitter (Updating changes)`
+                  : `Assignee: ${task.current_owner?.name || 'In Progress'}`}
               </span>
             </div>
           </div>

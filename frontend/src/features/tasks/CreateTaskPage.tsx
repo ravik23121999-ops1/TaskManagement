@@ -458,9 +458,9 @@ export const CreateTaskPage: React.FC = () => {
       {currentStep === 2 && (
         <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
           <div>
-            <h2 className="text-sm font-bold text-slate-900">Select Task Handling Method</h2>
+            <h2 className="text-sm font-bold text-slate-900">How would you like to handle this task?</h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Choose how this task will be handled: Work alone, Assign to 1 or more people, or Collaborate with 1 or more people.
+              Choose whether you are completing this task yourself, delegating it to team members, or collaborating together.
             </p>
           </div>
 
@@ -483,9 +483,9 @@ export const CreateTaskPage: React.FC = () => {
                 <User className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 mb-1">Work Alone</h3>
+                <h3 className="text-sm font-bold text-slate-900 mb-1">Work Solo</h3>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  I will execute this task entirely on my own and submit directly for completion.
+                  You will complete this task yourself without delegating to anyone else.
                 </p>
               </div>
               <div className="mt-3">
@@ -510,9 +510,9 @@ export const CreateTaskPage: React.FC = () => {
                 <UserPlus className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 mb-1">Assign (1 or Many)</h3>
+                <h3 className="text-sm font-bold text-slate-900 mb-1">Assign to Teammates</h3>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Assign this task to <strong>one or more employees</strong>. Each assignee manages their branch and submits for review.
+                  Delegate this task to <strong>one or more colleagues</strong>. They will do the work and submit deliverables for review.
                 </p>
               </div>
               <div className="mt-3">
@@ -537,9 +537,9 @@ export const CreateTaskPage: React.FC = () => {
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 mb-1">Collaborate (1 or Many)</h3>
+                <h3 className="text-sm font-bold text-slate-900 mb-1">Collaborate with Team</h3>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Invite <strong>one or more team members</strong> to collaborate together, with optional linked subtasks.
+                  Invite <strong>one or more team members</strong> to work together as equal partners on shared milestones.
                 </p>
               </div>
               <div className="mt-3">

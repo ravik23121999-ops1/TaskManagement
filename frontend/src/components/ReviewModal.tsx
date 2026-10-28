@@ -243,7 +243,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
                   className="text-emerald-600 focus:ring-emerald-500"
                 />
                 <CheckCircle className="w-4 h-4 text-emerald-600" />
-                <span className="text-xs">Approve (Move to next stage)</span>
+                <span className="text-xs">Approve (Ready for next step)</span>
               </label>
 
               <label
@@ -262,7 +262,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
                   className="text-red-600 focus:ring-red-500"
                 />
                 <AlertCircle className="w-4 h-4 text-red-600" />
-                <span className="text-xs">Return for Correction</span>
+                <span className="text-xs">Request Changes (Send back with feedback)</span>
               </label>
             </div>
           </div>
@@ -271,7 +271,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
               <span>
-                You cannot review your own work. Your assigner (upper branch) or the task creator must review this submission.
+                You cannot review your own work. Your assigner or the task creator must review this submission.
               </span>
             </div>
           )}
@@ -300,10 +300,10 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
                 }}
                 disabled={loading || isSelfSubmission}
                 className="flex-1 sm:flex-none px-4 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
-                title="Reject work and return to submitter for correction"
+                title="Send work back to submitter with feedback for changes"
               >
                 <AlertCircle className="w-4 h-4" />
-                <span>Reject / Return for Correction</span>
+                <span>Send Back for Changes</span>
               </button>
               <button
                 type="button"
@@ -313,10 +313,10 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
                 }}
                 disabled={loading || isSelfSubmission}
                 className="flex-1 sm:flex-none px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
-                title="Approve work and move to reviewer pending queue"
+                title="Approve work and advance to next stage"
               >
                 <CheckCircle className="w-4 h-4" />
-                <span>Approve & Move to Pending</span>
+                <span>Approve Submission</span>
               </button>
             </div>
           </div>

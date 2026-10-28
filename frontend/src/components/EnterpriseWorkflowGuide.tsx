@@ -37,8 +37,8 @@ export const EnterpriseWorkflowGuide: React.FC<EnterpriseWorkflowGuideProps> = (
     {
       id: 'step-1',
       stepNumber: '1',
-      title: 'Created & Delegated',
-      subtitle: 'Owner assigns task or sub-branches',
+      title: 'Created & Assigned',
+      subtitle: 'Creator sets goals & assigns team',
       count: metrics.openTasks ?? (isEmployeeView ? metrics.myAction ?? 0 : 0),
       countLabel: 'Open',
       badgeColor: 'bg-orange-50 text-orange-700 border-orange-200',
@@ -46,13 +46,13 @@ export const EnterpriseWorkflowGuide: React.FC<EnterpriseWorkflowGuideProps> = (
       icon: Layers,
       iconColor: 'text-orange-600 bg-orange-50',
       route: isEmployeeView ? '/tasks/pending' : '/tasks?status=pending',
-      help: 'Creator initiates the task and assigns it to an operational lead or team members.',
+      help: 'Creator starts the task and assigns it to team members.',
     },
     {
       id: 'step-2',
       stepNumber: '2',
-      title: 'Execution & Inquiry',
-      subtitle: 'Assignee works or requests missing details',
+      title: 'Working & Questions',
+      subtitle: 'Assignee works or asks questions',
       count: metrics.inProgress ?? 0,
       countLabel: 'Working',
       badgeColor: 'bg-sky-50 text-sky-700 border-sky-200',
@@ -60,13 +60,13 @@ export const EnterpriseWorkflowGuide: React.FC<EnterpriseWorkflowGuideProps> = (
       icon: Activity,
       iconColor: 'text-sky-600 bg-sky-50',
       route: '/tasks?status=in_progress',
-      help: 'Assignees execute deliverables. If anything is unclear, they can click "Request Missing Details" to bounce it back to the assigner.',
+      help: 'Assignees do the work. If something is unclear, they can click "Request Missing Details" to ask the assigner.',
     },
     {
       id: 'step-3',
       stepNumber: '3',
-      title: 'Review & Quality Check',
-      subtitle: 'Reviewer evaluates: Approve or Return',
+      title: 'Review & Feedback',
+      subtitle: 'Reviewer approves or asks for changes',
       count: metrics.pendingReview ?? 0,
       countLabel: 'In Review',
       badgeColor: 'bg-purple-50 text-purple-700 border-purple-200',
@@ -74,13 +74,13 @@ export const EnterpriseWorkflowGuide: React.FC<EnterpriseWorkflowGuideProps> = (
       icon: FileCheck2,
       iconColor: 'text-purple-600 bg-purple-50',
       route: '/tasks/review',
-      help: 'Deliverables are submitted. The reviewer inspects attachments and approves to advance, or rejects with feedback for correction.',
+      help: 'Deliverables are reviewed. The reviewer can approve or send back with friendly feedback for changes.',
     },
     {
       id: 'step-4',
       stepNumber: '4',
       title: 'Final Sign-Off',
-      subtitle: 'Creator validates all branch deliverables',
+      subtitle: 'Creator verifies deliverables',
       count: metrics.awaitingSignoff ?? (metrics.pendingReview ? 1 : 0),
       countLabel: 'Sign-off',
       badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
@@ -88,13 +88,13 @@ export const EnterpriseWorkflowGuide: React.FC<EnterpriseWorkflowGuideProps> = (
       icon: CheckCircle2,
       iconColor: 'text-indigo-600 bg-indigo-50',
       route: '/tasks/pending',
-      help: 'When all sub-branches complete and are verified, the Task Creator performs the final review and signs off.',
+      help: 'When all sub-branches are approved, the Task Creator does the final review and signs off.',
     },
     {
       id: 'step-5',
       stepNumber: '5',
-      title: 'Completed & Archived',
-      subtitle: 'Verified closure with full audit journey',
+      title: 'Completed & Done',
+      subtitle: 'Finished, approved & saved',
       count: metrics.completed ?? 0,
       countLabel: 'Verified',
       badgeColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -102,7 +102,7 @@ export const EnterpriseWorkflowGuide: React.FC<EnterpriseWorkflowGuideProps> = (
       icon: Crown,
       iconColor: 'text-emerald-600 bg-emerald-50',
       route: '/tasks/completed',
-      help: 'Task reaches 100% completion. All milestone handovers, deliverables, and comments are permanently logged.',
+      help: 'Task is 100% finished. All files and milestone history are safely saved.',
     },
   ];
 
@@ -114,14 +114,14 @@ export const EnterpriseWorkflowGuide: React.FC<EnterpriseWorkflowGuideProps> = (
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_8px_#2563eb]" />
             <h2 className="text-xs font-black tracking-wider text-slate-800 uppercase">
-              How Work Flows In QuickLifeNow
+              How Work Flows in QuickLifeNow
             </h2>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-              5-Stage Lifecycle
+              5 Simple Steps
             </span>
           </div>
           <p className="text-[11px] text-slate-400 mt-0.5">
-            Clear accountability at every stage: tasks flow seamlessly from Creator ➔ Assignee ➔ Reviewer ➔ Final Sign-off.
+            Tasks flow simply: Creator assigns ➔ Team works ➔ Reviewer checks ➔ Creator gives final sign-off.
           </p>
         </div>
 
@@ -130,7 +130,7 @@ export const EnterpriseWorkflowGuide: React.FC<EnterpriseWorkflowGuideProps> = (
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-blue-600 bg-slate-50 hover:bg-blue-50 border border-slate-200 transition cursor-pointer self-start sm:self-auto"
         >
           <Info className="w-3.5 h-3.5 text-blue-600" />
-          <span>{showExplanation ? 'Hide Guide' : 'Explain Workflow Rules'}</span>
+          <span>{showExplanation ? 'Hide Guide' : 'How Tasks Flow'}</span>
         </button>
       </div>
 
@@ -139,36 +139,36 @@ export const EnterpriseWorkflowGuide: React.FC<EnterpriseWorkflowGuideProps> = (
         <div className="mt-4 p-4 rounded-xl bg-slate-50/80 border border-slate-200 text-xs animate-in fade-in duration-200">
           <h3 className="font-bold text-slate-800 mb-2 flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-amber-500" />
-            Core Enterprise Operating Rules (No Guesswork Required):
+            Simple Workflow Rules (Easy to Follow):
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
             <div className="p-3 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
               <div className="flex items-center gap-2 font-bold text-amber-800 mb-1">
                 <HelpCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                <span>1. Request Missing Details</span>
+                <span>1. Need More Details?</span>
               </div>
               <p className="text-slate-600 text-[11px] leading-relaxed">
-                If an assignee needs more information or instructions, they click <strong>"Request Missing Details"</strong>. The task automatically moves back to the assigner's pending queue until clarified.
+                If anything is unclear, the assignee clicks <strong>"Request Missing Details"</strong>. The task moves back to the assigner to answer, then work resumes immediately.
               </p>
             </div>
 
             <div className="p-3 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
               <div className="flex items-center gap-2 font-bold text-rose-800 mb-1">
                 <RotateCcw className="w-4 h-4 text-rose-600 shrink-0" />
-                <span>2. Reviewer Return & Reject</span>
+                <span>2. Need Changes?</span>
               </div>
               <p className="text-slate-600 text-[11px] leading-relaxed">
-                When work is submitted for review, the reviewer can either <strong>Approve</strong> or <strong>Reject / Return</strong> with feedback. If rejected, it moves to the submitter's pending queue for correction.
+                Reviewers can either <strong>Approve</strong> or <strong>Send Back for Changes</strong> with feedback. If changes are needed, it moves back to the person doing the work.
               </p>
             </div>
 
             <div className="p-3 bg-white rounded-xl border border-slate-200/80 shadow-2xs">
               <div className="flex items-center gap-2 font-bold text-emerald-800 mb-1">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>3. Multi-Level Final Sign-off</span>
+                <span>3. Final Sign-off</span>
               </div>
               <p className="text-slate-600 text-[11px] leading-relaxed">
-                When sub-assignees complete their branches, the upper assignee reviews first. Once all branches pass inspection, the <strong>Task Creator</strong> performs the final verification and signs off.
+                When team members finish their branches, the upper assignee reviews first. Once all parts are approved, the <strong>Task Creator</strong> does the final verification and completes the task.
               </p>
             </div>
           </div>
