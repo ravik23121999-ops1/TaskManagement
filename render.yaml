@@ -1,9 +1,9 @@
 services:
   - type: web
-    name: quicklifenow-backend
+    name: quicklifenow-app
     runtime: docker
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     plan: free
     region: oregon
     healthCheckPath: /up
