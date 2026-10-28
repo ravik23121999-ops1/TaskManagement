@@ -71,13 +71,13 @@ export const MyActionPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Pending Tasks</h1>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">My Pending Action</h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
-              {total} requiring action
+              {total} requiring your input
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Tasks requiring your immediate action, in-progress assignments, or deliverables returned for your correction.
+            Tasks where the ball is currently in your court — active deliverables, inquiries awaiting your response, or submissions returned for revision.
           </p>
         </div>
 

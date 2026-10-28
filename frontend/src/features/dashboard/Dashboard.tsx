@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext';
 import { dashboardApi } from '../../api/tasks';
 import { StatusBadge, PriorityBadge } from '../../components/StatusBadge';
 import { WelcomeBanner } from '../../components/WelcomeBanner';
+import { EnterpriseWorkflowGuide } from '../../components/EnterpriseWorkflowGuide';
 import {
   Clock,
   Activity,
@@ -81,6 +82,17 @@ export const Dashboard: React.FC = () => {
             inProgress: adminData.in_progress,
             pendingReview: adminData.pending_review,
             completed: adminData.completed,
+          }}
+        />
+
+        {/* Enterprise 5-Stage Visual Workflow Stepper & Rule Guide */}
+        <EnterpriseWorkflowGuide
+          metrics={{
+            openTasks: adminData.open_tasks,
+            inProgress: adminData.in_progress,
+            pendingReview: adminData.pending_review,
+            completed: adminData.completed,
+            awaitingSignoff: adminData.pending_review ? 1 : 0,
           }}
         />
 
@@ -437,6 +449,17 @@ export const Dashboard: React.FC = () => {
             myAction: employeeData.my_action,
             pendingReview: employeeData.my_pending_review,
           }}
+        />
+
+        {/* Enterprise 5-Stage Visual Workflow Stepper & Rule Guide */}
+        <EnterpriseWorkflowGuide
+          metrics={{
+            myAction: employeeData.my_action,
+            inProgress: employeeData.my_in_progress,
+            pendingReview: employeeData.my_pending_review,
+            completed: employeeData.completed,
+          }}
+          isEmployeeView={true}
         />
 
         {/* Top 4 Primary Interactive Metric KPI Cards */}

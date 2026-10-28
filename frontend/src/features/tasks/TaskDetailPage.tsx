@@ -32,6 +32,7 @@ import {
   ArrowRight,
   Download,
   HelpCircle,
+  Zap,
 } from 'lucide-react';
 
 export const TaskDetailPage: React.FC = () => {
@@ -718,6 +719,36 @@ export const TaskDetailPage: React.FC = () => {
             </button>
           </div>
         )}
+
+        {/* Real-time Turn & Responsibility Tracker */}
+        <div className="mt-4 p-3.5 rounded-xl bg-slate-50/90 border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse shadow-[0_0_8px_#2563eb] shrink-0" />
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-bold text-slate-800">Current Responsibility:</span>
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white border border-slate-200 text-slate-700 shadow-2xs">
+                {isCompleted
+                  ? 'Completed & Archived'
+                  : isReadyForFinalSignOff
+                  ? `Task Creator: ${task.creator?.name || 'Creator'} (Final Sign-off)`
+                  : isUnderReview
+                  ? `Reviewer (Evaluation of ${latestPendingSubmission?.submitted_by?.name || 'Deliverables'})`
+                  : task.latest_clarification && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment'))
+                  ? `Task Assigner: ${task.creator?.name || 'Assigner'} (Clarification Needed)`
+                  : task.latest_return && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment'))
+                  ? `Submitter: ${task.latest_return.reviewer ? 'Revision Required' : 'Assignee'}`
+                  : `Assignee: ${task.current_owner?.name || 'Active Execution'}`}
+              </span>
+            </div>
+          </div>
+
+          {(task.permissions.can_submit || task.permissions.can_review || task.permissions.can_final_submit || task.permissions.can_provide_details) && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs self-start sm:self-auto">
+              <Zap className="w-3.5 h-3.5 text-cyan-200 animate-bounce" />
+              <span>Ball is in YOUR court</span>
+            </div>
+          )}
+        </div>
 
         {/* Interactive Lifecycle Workflow Stepper */}
         <div className="mt-6 pt-6 border-t border-slate-100">

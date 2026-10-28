@@ -247,12 +247,21 @@ export const TaskListPage: React.FC = () => {
                     </td>
                     <td className="py-4 px-6 whitespace-nowrap">
                       <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-[10px]">
+                        <div className="w-6 h-6 rounded-full bg-blue-50 text-blue-700 font-bold flex items-center justify-center text-[10px] border border-blue-100">
                           {task.current_owner?.name?.charAt(0) || task.creator?.name?.charAt(0) || 'U'}
                         </div>
-                        <span className="font-semibold text-slate-700">
-                          {task.current_owner?.name || task.creator?.name || 'Unassigned'}
-                        </span>
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-slate-700">
+                            {task.current_owner?.name || task.creator?.name || 'Unassigned'}
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            {task.status === 'review' || task.branches?.some((b) => b.status === 'review')
+                              ? 'Under Review'
+                              : task.permissions?.can_final_submit && task.handling_method !== 'work_alone'
+                              ? 'Awaiting Sign-off'
+                              : 'Active Assignee'}
+                          </span>
+                        </div>
                       </div>
                     </td>
                     <td className="py-4 px-6 whitespace-nowrap">

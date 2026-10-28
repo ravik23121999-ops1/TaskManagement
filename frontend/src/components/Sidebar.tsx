@@ -31,11 +31,11 @@ const Sidebar: React.FC = () => {
 
   const mainMenuItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/tasks/pending', label: 'Pending Tasks', icon: Zap },
-    { path: '/tasks/pending-with-others', label: 'Pending with Others', icon: Clock },
+    { path: '/tasks/pending', label: 'My Action Required', icon: Zap, badge: 'Active' },
+    { path: '/tasks/pending-with-others', label: 'Waiting on Others', icon: Clock },
     { path: '/tasks', label: 'All Tasks', icon: ListTodo },
     { path: '/tasks/collaborations', label: 'My Collaborations', icon: Users2 },
-    { path: '/tasks/review', label: 'Review', icon: FileCheck2 },
+    { path: '/tasks/review', label: 'Review Queue', icon: FileCheck2 },
     { path: '/tasks/completed', label: 'Completed', icon: CheckCircle2 },
     { path: '/tasks/on-hold', label: 'On Hold', icon: PauseCircle },
   ];
@@ -157,7 +157,13 @@ const Sidebar: React.FC = () => {
                       </span>
                     </div>
 
-                    {!active && (
+                    {item.badge && !active && (
+                      <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-blue-500/20 text-cyan-300 border border-blue-400/30 shadow-xs">
+                        {item.badge}
+                      </span>
+                    )}
+
+                    {!active && !item.badge && (
                       <ChevronRight className="w-3 h-3 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                     )}
                   </button>
