@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+backend/vendor/
+frontend/node_modules/
+
+# Production builds
+frontend/dist/
+backend/public/build/
+backend/public/storage/
+
+# Environment files
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.backup
+backend/.env.production
+frontend/.env.local
+frontend/.env.*.local
+
+# Storage & Caches
+backend/storage/*.key
+backend/storage/logs/*.log
+backend/storage/framework/cache/data/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+.phpunit.result.cache
+
+# Editor & OS files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

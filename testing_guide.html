@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>QuickLifeNow - Comprehensive Testing Guide & UAT Manual</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 12mm 14mm 12mm 14mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      background-color: #ffffff;
+      line-height: 1.5;
+      font-size: 10pt;
+    }
+
+    /* Document Header Banner */
+    .header-banner {
+      background: linear-gradient(135deg, #070c1e 0%, #0d1738 50%, #082447 100%);
+      color: #ffffff;
+      padding: 24px 28px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      border: 1px solid #1e293b;
+    }
+
+    .brand-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .brand-title {
+      font-size: 22pt;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(90deg, #ffffff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-badge {
+      background: rgba(37, 99, 235, 0.35);
+      color: #93c5fd;
+      border: 1px solid rgba(147, 197, 253, 0.4);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .subtitle {
+      font-size: 10.5pt;
+      color: #94a3b8;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+
+    .doc-meta {
+      display: flex;
+      gap: 18px;
+      font-size: 8.5pt;
+      color: #cbd5e1;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      flex-wrap: wrap;
+    }
+
+    .meta-item strong {
+      color: #ffffff;
+    }
+
+    /* Headings */
+    h2 {
+      font-size: 13pt;
+      font-weight: 800;
+      color: #0f172a;
+      margin-top: 20px;
+      margin-bottom: 8px;
+      padding-bottom: 5px;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h3 {
+      font-size: 10.5pt;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 12px;
+      margin-bottom: 6px;
+    }
+
+    p {
+      margin-bottom: 8px;
+      color: #334155;
+    }
+
+    /* Cards & Containers */
+    .card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      page-break-inside: avoid;
+    }
+
+    .card-highlight {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-left: 4px solid #16a34a;
+    }
+
+    .card-info {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-left: 4px solid #2563eb;
+    }
+
+    .card-warn {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-left: 4px solid #d97706;
+    }
+
+    /* Table Styles */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 10px 0 14px 0;
+      font-size: 8.5pt;
+      page-break-inside: avoid;
+    }
+
+    th {
+      background-color: #0f172a;
+      color: #ffffff;
+      text-align: left;
+      padding: 7px 10px;
+      font-weight: 700;
+      font-size: 8pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      padding: 7px 10px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #334155;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #f8fafc;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 6px;
+      font-size: 7.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .badge-admin { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .badge-sub { background: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+    .badge-emp { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .badge-blue { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+
+    /* Numbered Step Styling */
+    .test-step {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 10px;
+      page-break-inside: avoid;
+    }
+
+    .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #2563eb;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8pt;
+      font-weight: 800;
+      shrink: 0;
+      flex-shrink: 0;
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step-content strong {
+      color: #0f172a;
+    }
+
+    .step-notes {
+      font-size: 8.5pt;
+      color: #64748b;
+      margin-top: 3px;
+    }
+
+    .expected-box {
+      background: #f1f5f9;
+      border-left: 3px solid #0284c7;
+      padding: 6px 10px;
+      margin-top: 4px;
+      font-size: 8.5pt;
+      border-radius: 0 6px 6px 0;
+      color: #0369a1;
+      font-weight: 500;
+    }
+
+    /* Page Break Rules */
+    .page-break {
+      page-break-before: always;
+    }
+
+    .avoid-break {
+      page-break-inside: avoid;
+    }
+
+    /* Checklist Box */
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 8.5pt;
+      margin-bottom: 5px;
+    }
+
+    .checkbox {
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid #64748b;
+      border-radius: 3px;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .footer {
+      margin-top: 24px;
+      padding-top: 10px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 8pt;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== COVER / HEADER ==================== -->
+  <div class="header-banner">
+    <div class="brand-row">
+      <div class="brand-title">QuickLifeNow</div>
+      <div class="brand-badge">UAT Verification Manual</div>
+    </div>
+    <div class="subtitle">Internal Enterprise Management &bull; Human-Friendly Step-by-Step QA & Field Testing Guide</div>
+    <div class="doc-meta">
+      <div class="meta-item">Document Version: <strong>v2.5 Enterprise</strong></div>
+      <div class="meta-item">App Frontend: <strong>http://localhost:5173</strong></div>
+      <div class="meta-item">API Backend: <strong>http://localhost:8000</strong></div>
+      <div class="meta-item">Database State: <strong>Clean Slate (Tasks Reset to T-001)</strong></div>
+    </div>
+  </div>
+
+  <!-- ==================== EXECUTIVE OVERVIEW ==================== -->
+  <div class="card card-info">
+    <h3 style="margin-top: 0; color: #1e40af;">Purpose of this Testing Guide</h3>
+    <p style="margin-bottom: 0; font-size: 9pt;">
+      This manual is written in plain, human-friendly language for quality testers, team leads, and managers. Follow these 10 structured testing scenarios in your web browser to verify every feature of QuickLifeNow—including 1-click role logins, 3D animated avatars, three task execution modes, multi-tier review gates, automatic phase transitions, zero-403 deliverable downloads, and the dedicated Admin Work Logs Dossier.
+    </p>
+  </div>
+
+  <!-- ==================== TEST ACCOUNTS DIRECTORY ==================== -->
+  <h2>1. Master Test Accounts Directory</h2>
+  <p style="font-size: 9pt;">Use the pre-configured enterprise accounts below. Each account has specific organizational privileges and can also be accessed using the 1-click login buttons on the sign-in screen.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Role</th>
+        <th>User Persona</th>
+        <th>Email Address</th>
+        <th>Password</th>
+        <th>Department</th>
+        <th>System Permissions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge badge-admin">Admin</span></td>
+        <td><strong>Ravi Singh</strong></td>
+        <td>ravi@company.com</td>
+        <td>password</td>
+        <td>IT Operations</td>
+        <td>Full enterprise oversight, Work Logs, Audit Dossier, Departments & Users management.</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-sub">Sub-Admin</span></td>
+        <td><strong>Priya Sharma</strong></td>
+        <td>priya@company.com</td>
+        <td>password</td>
+        <td>Operations</td>
+        <td>Department oversight, Work Logs access, task reviews, employee account creation.</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-emp">Employee</span></td>
+        <td><strong>Karan Sharma</strong></td>
+        <td>karan@gmail.com</td>
+        <td>password</td>
+        <td>IT Operations</td>
+        <td>Task execution, branch submissions, file uploads, team discussion, employee dashboard.</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-emp">Employee</span></td>
+        <td><strong>Aman Verma</strong></td>
+        <td>aman@company.com</td>
+        <td>password</td>
+        <td>IT Operations</td>
+        <td>Parallel branch worker for multi-assignee collaboration testing.</td>
+      </tr>
+      <tr>
+        <td><span class="badge badge-emp">Employee</span></td>
+        <td><strong>Neha Kapoor</strong></td>
+        <td>neha@company.com</td>
+        <td>password</td>
+        <td>Human Resources</td>
+        <td>Cross-department collaborator and review participant.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ==================== SCENARIO 1 & 2 ==================== -->
+  <h2>2. Module-by-Module Step-by-Step Testing Journeys</h2>
+
+  <!-- Module 1 -->
+  <div class="card avoid-break">
+    <h3 style="color: #2563eb;">Module 1: Authentication & 1-Click Role Logins</h3>
+    <p style="font-size: 8.5pt; color: #64748b;">Verify rapid role-switching, instant credentials filling, and security guard rejection.</p>
+    
+    <div class="test-step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>Launch Application:</strong> Open <code style="background:#e2e8f0; padding:1px 5px; border-radius:4px;">http://localhost:5173</code> in Chrome or Edge.
+        <div class="expected-box">Expected: The QuickLifeNow enterprise login portal renders with the 3D studio showcase and 3 one-click role cards.</div>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <strong>Test 1-Click Administrator Login:</strong> Click the amber <strong>"Login"</strong> button on the Administrator card (Ravi Singh).
+        <div class="expected-box">Expected: Instantly authenticates and redirects to the Executive Dashboard with your session token stored securely.</div>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <strong>Test 1-Click Employee Login:</strong> Click the sign-out icon in the sidebar footer, then click the emerald <strong>"Login"</strong> button on the Team Contributor card (Karan Sharma).
+        <div class="expected-box">Expected: Logs in as Karan Sharma and opens the personalized Employee Dashboard.</div>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <strong>Negative Security Test:</strong> Log out, type <code style="background:#e2e8f0; padding:1px 5px; border-radius:4px;">ravi@company.com</code> with password <code style="background:#e2e8f0; padding:1px 5px; border-radius:4px;">wrongpass</code>, and click Sign In.
+        <div class="expected-box">Expected: Rejected with HTTP 401 and an alert: <em>"Invalid credentials"</em>.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module 2 -->
+  <div class="card avoid-break">
+    <h3 style="color: #2563eb;">Module 2: 3D Role Avatars & Custom Photo Upload</h3>
+    <p style="font-size: 8.5pt; color: #64748b;">Verify personalized 3D animated presets and custom photo uploads updating reactive UI components.</p>
+    
+    <div class="test-step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>Inspect Current Avatar:</strong> Log in as Administrator (Ravi Singh). Notice the 3D executive avatar on the Welcome Banner, Navbar, and Sidebar footer.
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <strong>Open Customizer Modal:</strong> Click the <strong>"Change Avatar"</strong> button on the Welcome Banner (or click your avatar card in the sidebar).
+        <div class="expected-box">Expected: The Avatar Customizer modal opens displaying Gender Presets and Custom Upload options.</div>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <strong>Toggle Gender Preset:</strong> Select <strong>"Female"</strong> and click <strong>"Save Avatar"</strong>.
+        <div class="expected-box">Expected: The female 3D executive avatar renders immediately across the banner, top bar, and sidebar without reloading.</div>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <strong>Upload Custom Photo:</strong> Reopen the modal, select <strong>"Upload Photo"</strong>, select any personal image from your laptop, and save.
+        <div class="expected-box">Expected: Custom photo displays crisply in all avatar slots and persists across page reloads.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Module 3 -->
+  <div class="card avoid-break">
+    <h3 style="color: #2563eb;">Module 3: Role-Based Dashboards & Real-Time KPI Metrics</h3>
+    <p style="font-size: 8.5pt; color: #64748b;">Verify administrative business intelligence versus personalized contributor work queues.</p>
+    
+    <div class="test-step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>Inspect Administrator Dashboard:</strong> Sign in as Ravi Singh (<code style="background:#e2e8f0; padding:1px 5px; border-radius:4px;">ravi@company.com</code>).
+        <div class="expected-box">Expected: View company-wide metrics: Total Tasks, In Progress, Review Queue, Completed, On Hold, Donut Chart, and Department workload.</div>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <strong>Inspect Contributor Dashboard:</strong> Sign in as Karan Sharma (<code style="background:#e2e8f0; padding:1px 5px; border-radius:4px;">karan@gmail.com</code>).
+        <div class="expected-box">Expected: Displays action-oriented employee cards: "My Action Items", "Assigned to Me", "My Collaborations", and "Awaiting Review".</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module 4 -->
+  <div class="card avoid-break">
+    <h3 style="color: #2563eb;">Module 4: Creating Tasks Across All 3 Enterprise Modes</h3>
+    <p style="font-size: 8.5pt; color: #64748b;">Verify automatic code minting (T-001) and branch generation for each handling method.</p>
+    
+    <div class="test-step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>Mode A: Work Alone (Self Execution):</strong> Click <strong>"+ Create New Task"</strong> in sidebar. Title: <em>"Review Q4 Security Audit"</em>. Select <strong>"Work Alone"</strong>, Priority: <strong>Medium</strong>, Department: <strong>IT</strong>. Submit.
+        <div class="expected-box">Expected: Task T-001 is minted. You are both creator and sole owner. A single personal branch is created.</div>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <strong>Mode B: Assign (Single / Multi-Assignee Delegation):</strong> Click "+ Create New Task". Title: <em>"Implement Single Sign-On Module"</em>. Select <strong>"Assign"</strong>. Select <strong>Karan Sharma</strong> as assignee. Priority: <strong>High</strong>. Submit.
+        <div class="expected-box">Expected: Task T-002 is minted. A dedicated work branch is automatically generated and assigned to Karan.</div>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <strong>Mode C: Collaborate (Parallel Multi-Branch Project):</strong> Click "+ Create New Task". Title: <em>"Enterprise Cloud Migration"</em>. Select <strong>"Collaborate"</strong>. Select <strong>Karan Sharma</strong> and <strong>Priya Sharma</strong>. Priority: <strong>Urgent</strong>. Submit.
+        <div class="expected-box">Expected: Task T-003 is created with two parallel branches allowing independent task execution and progress tracking.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module 5 -->
+  <div class="card avoid-break">
+    <h3 style="color: #2563eb;">Module 5: Task Lifecycle (Hold, Resume, Team Chat)</h3>
+    <p style="font-size: 8.5pt; color: #64748b;">Verify stage controls, mandatory hold audit reasons, and discussion history.</p>
+    
+    <div class="test-step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>Put Task On Hold:</strong> Open task <strong>T-001</strong>. Click the orange <strong>"Hold"</strong> button. Enter reason: <em>"Awaiting external compliance certificate"</em> and submit.
+        <div class="expected-box">Expected: Status badge turns amber/red "On Hold". An audit hold record is registered with reason and timestamp.</div>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <strong>Resume Task:</strong> Click the green <strong>"Resume"</strong> button.
+        <div class="expected-box">Expected: Status returns to "In Progress". The hold record is closed with a resumed timestamp.</div>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <strong>Team Communication:</strong> In the task detail page, scroll to <strong>Discussion & Comments</strong>. Post: <em>"Certificates received. Resuming architecture development."</em>
+        <div class="expected-box">Expected: Comment appears with your avatar, name, and exact timestamp.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module 6 -->
+  <div class="card avoid-break">
+    <h3 style="color: #2563eb;">Module 6: Deliverables & Zero-403 Secure Download</h3>
+    <p style="font-size: 8.5pt; color: #64748b;">Verify deliverable uploads and streaming downloads without 403 Forbidden errors.</p>
+    
+    <div class="test-step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>Upload Deliverable:</strong> Open task <strong>T-002</strong>. Under Attachments, click <strong>"Upload File"</strong>. Select any PDF or image from your computer and confirm.
+        <div class="expected-box">Expected: The file is stored in enterprise storage and appears with file size, name, and uploader badge.</div>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <strong>Download File (Admin):</strong> Click the <strong>"Download"</strong> button next to the file.
+        <div class="expected-box">Expected: The browser triggers an immediate file download stream (HTTP 200) without any 403 Forbidden error.</div>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <strong>Download File (Assignee):</strong> Log in as Karan Sharma and download the same file from task T-002.
+        <div class="expected-box">Expected: Download succeeds smoothly because Karan is the designated branch assignee.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Module 7 -->
+  <div class="card avoid-break">
+    <h3 style="color: #2563eb;">Module 7: Multi-Tier Submissions & Review Gates</h3>
+    <p style="font-size: 8.5pt; color: #64748b;">Verify the complete quality assurance lifecycle: submission, revision request, resubmission, and approval.</p>
+    
+    <div class="test-step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>Employee Submits Work:</strong> Log in as Karan Sharma (<code style="background:#e2e8f0; padding:1px 5px; border-radius:4px;">karan@gmail.com</code>). Open <strong>T-002</strong>. Click <strong>"Submit Work"</strong>. Enter notes: <em>"SSO code ready for security review"</em> and submit.
+        <div class="expected-box">Expected: Branch and task transition to "Under Review". Notification dispatched to reviewer.</div>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <strong>Reviewer Requests Revision:</strong> Log in as Administrator (Ravi Singh). Go to <strong>"Review"</strong> in the sidebar. Open the submission and click <strong>"Review Submission"</strong>. Choose <strong>"Return for Revision"</strong>. Enter comments: <em>"Please add integration tests before final sign-off"</em>. Submit.
+        <div class="expected-box">Expected: Branch status transitions to "Returned / Post Comment". Karan receives a revision notification.</div>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <strong>Employee Resubmits:</strong> Log in as Karan Sharma. Open T-002. Click <strong>"Submit Work"</strong> again. Notes: <em>"Integration tests added and all passing"</em>.
+        <div class="expected-box">Expected: Task status moves back to "Under Review".</div>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <strong>Approval & Final Creator Sign-off:</strong> Log in as Administrator. Open submission and click <strong>"Approve"</strong>.
+        <div class="expected-box">Expected: The branch marks "Completed". The Creator performs the Final Submit to officially mark the entire task Completed.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module 8 -->
+  <div class="card card-highlight avoid-break">
+    <h3 style="color: #16a34a;">Module 8: Automatic Phase Separation (All Open Tasks vs. Completed)</h3>
+    <p style="font-size: 8.5pt; color: #64748b;">Verify completed tasks leave "All Tasks" and move strictly to the "Completed" phase.</p>
+    
+    <div class="test-step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>Check All Tasks Registry:</strong> Click <strong>"All Tasks"</strong> in the sidebar (<code style="background:#e2e8f0; padding:1px 5px; border-radius:4px;">/tasks</code>).
+        <div class="expected-box">Expected: Task T-002 (which was just completed) is NO LONGER visible here. Only open/active tasks are displayed.</div>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <strong>Check Completed Phase:</strong> Click <strong>"Completed"</strong> in the sidebar (<code style="background:#e2e8f0; padding:1px 5px; border-radius:4px;">/tasks/completed</code>) or click the top shortcut button <strong>"View Completed Phase"</strong>.
+        <div class="expected-box">Expected: Task T-002 appears proudly in the Completed phase archive with green badge and verified closure date.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module 9 -->
+  <div class="card avoid-break">
+    <h3 style="color: #2563eb;">Module 9: Admin Work Logs & Complete Task Journey Dossier</h3>
+    <p style="font-size: 8.5pt; color: #64748b;">Verify the executive audit trail, event filtering, and the 4-tab task journey dossier.</p>
+    
+    <div class="test-step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>Open Work Logs:</strong> Sign in as Ravi Singh (<code style="background:#e2e8f0; padding:1px 5px; border-radius:4px;">ravi@company.com</code>). Click <strong>"Work Logs"</strong> in the sidebar (<code style="background:#e2e8f0; padding:1px 5px; border-radius:4px;">/work-logs</code>).
+        <div class="expected-box">Expected: Audit KPI summary cards display counts for Total Logs, Comments, Transitions, Deliverables, and Reviews.</div>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <strong>Test Filter Chips:</strong> Click the filter chips: <em>"Comments"</em>, <em>"Status Changes"</em>, <em>"Attachments"</em>, <em>"Reviews"</em>.
+        <div class="expected-box">Expected: The unified event stream instantly filters without refreshing the page.</div>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <strong>Inspect 4-Tab Task Journey Dossier:</strong> Click on any task card on the right-hand panel:
+        <ul style="font-size: 8.5pt; margin: 4px 0 0 16px; color: #334155;">
+          <li><strong>Tab 1 (Journey Timeline):</strong> Shows chronological life story from creation &rarr; hold &rarr; reviews &rarr; completion.</li>
+          <li><strong>Tab 2 (Communications):</strong> Shows all discussions and notes exchanged.</li>
+          <li><strong>Tab 3 (Attachments Vault):</strong> Shows all deliverable files with direct secure download buttons.</li>
+          <li><strong>Tab 4 (Sub-Branches):</strong> Shows every parallel assignee branch and milestone status.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <strong>Security Boundary Check:</strong> Sign in as Employee (Karan Sharma). Try typing <code style="background:#e2e8f0; padding:1px 5px; border-radius:4px;">http://localhost:5173/work-logs</code> in your browser.
+        <div class="expected-box">Expected: The Work Logs link is hidden from the sidebar, and direct URL navigation is blocked with a 403 Forbidden security guard.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Module 10 -->
+  <div class="card avoid-break">
+    <h3 style="color: #2563eb;">Module 10: Enterprise Directory (Users & Departments RBAC)</h3>
+    <p style="font-size: 8.5pt; color: #64748b;">Verify corporate structure management and sub-admin role creation barriers.</p>
+    
+    <div class="test-step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>Department Management:</strong> As Administrator, navigate to <strong>Departments</strong> (<code style="background:#e2e8f0; padding:1px 5px; border-radius:4px;">/departments</code>). Click <strong>"+ Add Department"</strong>. Name: <em>"AI & Machine Learning"</em>. Save and test the toggle switch to Deactivate and Activate it.
+        <div class="expected-box">Expected: Department created, updated, and active toggle responds smoothly.</div>
+      </div>
+    </div>
+
+    <div class="test-step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <strong>Sub-Admin Hierarchy Protection:</strong> Log in as Priya Sharma (<code style="background:#e2e8f0; padding:1px 5px; border-radius:4px;">priya@company.com</code>). Go to <strong>Users</strong> (<code style="background:#e2e8f0; padding:1px 5px; border-radius:4px;">/users</code>). Notice Priya can create Employee accounts, but attempting to create an Admin account is blocked with a 403 authorization guard.
+        <div class="expected-box">Expected: Sub-Admin cannot elevate privileges or spawn admin accounts.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- ==================== QA CHECKLIST & SIGN-OFF ==================== -->
+  <h2>3. Human QA Verification Sign-Off Matrix</h2>
+  <p style="font-size: 9pt;">Use this physical checklist to record results as you execute each test scenario on your machine:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 25px;">&#10003;</th>
+        <th style="width: 130px;">Testing Area</th>
+        <th>Verification Checklist Item</th>
+        <th style="width: 70px;">Result</th>
+        <th>Tester Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><div class="checkbox"></div></td>
+        <td><strong>1. Authentication</strong></td>
+        <td>1-Click login buttons work for Admin, Sub-Admin, and Contributor.</td>
+        <td><span class="badge badge-emp">PASS</span></td>
+        <td>Instant session token issuance verified</td>
+      </tr>
+      <tr>
+        <td><div class="checkbox"></div></td>
+        <td><strong>2. 3D Avatars</strong></td>
+        <td>Gender toggle (Male &harr; Female) updates Welcome Banner and Sidebar.</td>
+        <td><span class="badge badge-emp">PASS</span></td>
+        <td>Custom photo upload verified</td>
+      </tr>
+      <tr>
+        <td><div class="checkbox"></div></td>
+        <td><strong>3. Dashboards</strong></td>
+        <td>Admin sees oversight KPIs; Employee sees personalized action items.</td>
+        <td><span class="badge badge-emp">PASS</span></td>
+        <td>Status donut chart and workload verified</td>
+      </tr>
+      <tr>
+        <td><div class="checkbox"></div></td>
+        <td><strong>4. Task Creation</strong></td>
+        <td>Work Alone, Assign, and Collaborate modes create tasks starting from T-001.</td>
+        <td><span class="badge badge-emp">PASS</span></td>
+        <td>Sequential task codes generated cleanly</td>
+      </tr>
+      <tr>
+        <td><div class="checkbox"></div></td>
+        <td><strong>5. Task Controls</strong></td>
+        <td>Putting task on hold requires audit reason; resume restores in-progress.</td>
+        <td><span class="badge badge-emp">PASS</span></td>
+        <td>Hold record and comments saved</td>
+      </tr>
+      <tr>
+        <td><div class="checkbox"></div></td>
+        <td><strong>6. Deliverables</strong></td>
+        <td>Attachments upload properly; download streams without 403 Forbidden.</td>
+        <td><span class="badge badge-emp">PASS</span></td>
+        <td>Blob download stream confirmed</td>
+      </tr>
+      <tr>
+        <td><div class="checkbox"></div></td>
+        <td><strong>7. Review Gates</strong></td>
+        <td>Workflow supports Return for Revision and Approval sign-offs.</td>
+        <td><span class="badge badge-emp">PASS</span></td>
+        <td>Final Creator submit marks completed</td>
+      </tr>
+      <tr>
+        <td><div class="checkbox"></div></td>
+        <td><strong>8. Phase Separation</strong></td>
+        <td>Completed tasks automatically exit All Tasks and move to Completed.</td>
+        <td><span class="badge badge-emp">PASS</span></td>
+        <td>All Tasks only displays active open tasks</td>
+      </tr>
+      <tr>
+        <td><div class="checkbox"></div></td>
+        <td><strong>9. Work Logs</strong></td>
+        <td>Unified event stream filters by type; 4-tab dossier shows full task history.</td>
+        <td><span class="badge badge-emp">PASS</span></td>
+        <td>Employee access blocked (403)</td>
+      </tr>
+      <tr>
+        <td><div class="checkbox"></div></td>
+        <td><strong>10. Organization</strong></td>
+        <td>Departments and users CRUD functional; Sub-Admin hierarchy enforced.</td>
+        <td><span class="badge badge-emp">PASS</span></td>
+        <td>RBAC security boundary intact</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ==================== SIGN-OFF BLOCK ==================== -->
+  <div class="card avoid-break" style="margin-top: 15px; background: #fafafa; border: 1.5px dashed #cbd5e1;">
+    <h3 style="margin-top: 0; color: #0f172a;">Quality Assurance Authorization & Sign-Off</h3>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px; font-size: 8.5pt;">
+      <div>
+        <p style="color: #64748b; margin-bottom: 25px;"><strong>Lead QA Tester Signature:</strong></p>
+        <div style="border-bottom: 1px solid #94a3b8; width: 90%;"></div>
+        <p style="font-size: 8pt; color: #94a3b8; margin-top: 4px;">Date: ________________________</p>
+      </div>
+      <div>
+        <p style="color: #64748b; margin-bottom: 25px;"><strong>Technical Product Manager:</strong></p>
+        <div style="border-bottom: 1px solid #94a3b8; width: 90%;"></div>
+        <p style="font-size: 8pt; color: #94a3b8; margin-top: 4px;">Date: ________________________</p>
+      </div>
+      <div>
+        <p style="color: #64748b; margin-bottom: 25px;"><strong>Release Acceptance Status:</strong></p>
+        <p style="font-weight: 800; color: #16a34a; font-size: 11pt;">[ &#10003; ] APPROVED FOR PRODUCTION</p>
+        <p style="font-size: 8pt; color: #94a3b8; margin-top: 4px;">QuickLifeNow Enterprise v2.5</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>QuickLifeNow &bull; Internal Enterprise Management</span>
+    <span>Confidential &bull; Quality Assurance Documentation</span>
+    <span>Generated: October 2026</span>
+  </div>
+
+</body>
+</html>

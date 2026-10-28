@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>QuickLifeNow - Simple Human Testing Guide</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm 16mm 14mm 16mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #1e293b;
+      background: #ffffff;
+      line-height: 1.6;
+      font-size: 10.5pt;
+    }
+
+    /* Friendly Header */
+    .hero {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 60%, #0284c7 100%);
+      color: #ffffff;
+      padding: 26px 30px;
+      border-radius: 16px;
+      margin-bottom: 22px;
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.2);
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .hero-title {
+      font-size: 24pt;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .hero-pill {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 9pt;
+      font-weight: 700;
+    }
+
+    .hero-sub {
+      font-size: 12pt;
+      color: #e0e7ff;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+
+    .hero-footer {
+      font-size: 9.5pt;
+      color: #bfdbfe;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      padding-top: 10px;
+      display: flex;
+      gap: 20px;
+    }
+
+    /* Quick Login Cards */
+    .accounts-box {
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 22px;
+    }
+
+    .accounts-title {
+      font-size: 11pt;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 10px;
+    }
+
+    .account-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+
+    .acc-card {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 10px 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+    }
+
+    .acc-role {
+      font-size: 8pt;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+
+    .acc-name {
+      font-size: 10.5pt;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .acc-email {
+      font-size: 9pt;
+      color: #2563eb;
+      font-weight: 600;
+    }
+
+    .acc-pass {
+      font-size: 8.5pt;
+      color: #64748b;
+      margin-top: 3px;
+    }
+
+    /* Section Headings */
+    h2 {
+      font-size: 14pt;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 22px 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .step-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 14px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+      page-break-inside: avoid;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .step-circle {
+      width: 28px;
+      height: 28px;
+      background: #2563eb;
+      color: #ffffff;
+      font-weight: 800;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10pt;
+      flex-shrink: 0;
+    }
+
+    .step-title {
+      font-size: 11.5pt;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .instructions {
+      font-size: 10pt;
+      color: #334155;
+      margin-bottom: 8px;
+      padding-left: 40px;
+    }
+
+    .instructions ol, .instructions ul {
+      margin-left: 18px;
+      margin-top: 4px;
+    }
+
+    .instructions li {
+      margin-bottom: 4px;
+    }
+
+    .what-happens {
+      margin-left: 40px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-left: 4px solid #16a34a;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 9.5pt;
+      color: #15803d;
+      font-weight: 500;
+    }
+
+    .pro-tip {
+      margin-left: 40px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-left: 4px solid #3b82f6;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 9.5pt;
+      color: #1e40af;
+      margin-top: 6px;
+    }
+
+    .page-break {
+      page-break-before: always;
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: 9pt;
+      color: #94a3b8;
+      margin-top: 24px;
+      padding-top: 12px;
+      border-top: 1px solid #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HERO HEADER -->
+  <div class="hero">
+    <div class="hero-top">
+      <div class="hero-title">QuickLifeNow</div>
+      <div class="hero-pill">Simple Human Testing Guide</div>
+    </div>
+    <div class="hero-sub">A friendly, easy-to-read guide to test every feature in 10 minutes.</div>
+    <div class="hero-footer">
+      <div>App URL: <strong>http://localhost:5173</strong></div>
+      <div>Backend API: <strong>http://localhost:8000</strong></div>
+      <div>Database: <strong>Fresh & Clean (Ready for T-001)</strong></div>
+    </div>
+  </div>
+
+  <!-- ACCOUNTS DIRECTORY -->
+  <div class="accounts-box">
+    <div class="accounts-title">Who You Can Log In As (All passwords are simply: password)</div>
+    <div class="account-grid">
+      <div class="acc-card" style="border-top: 3px solid #f59e0b;">
+        <div class="acc-role" style="color: #b45309;">1. Administrator</div>
+        <div class="acc-name">Ravi Singh</div>
+        <div class="acc-email">ravi@company.com</div>
+        <div class="acc-pass">Can see everything, manage users & audit logs</div>
+      </div>
+      <div class="acc-card" style="border-top: 3px solid #9333ea;">
+        <div class="acc-role" style="color: #7e22ce;">2. Team Manager</div>
+        <div class="acc-name">Priya Sharma</div>
+        <div class="acc-email">priya@company.com</div>
+        <div class="acc-pass">Reviews submissions & manages department work</div>
+      </div>
+      <div class="acc-card" style="border-top: 3px solid #10b981;">
+        <div class="acc-role" style="color: #047857;">3. Team Contributor</div>
+        <div class="acc-name">Karan Sharma</div>
+        <div class="acc-email">karan@gmail.com</div>
+        <div class="acc-pass">Does tasks, uploads files & submits work</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEPS -->
+  <h2>Let's Test Everything Step by Step</h2>
+
+  <!-- Step 1 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-circle">1</div>
+      <div class="step-title">Log in with Just 1 Click</div>
+    </div>
+    <div class="instructions">
+      <ol>
+        <li>Open your web browser and go to <strong>http://localhost:5173</strong>.</li>
+        <li>On the login page, you will see 3 colorful cards for Admin, Manager, and Employee.</li>
+        <li>Simply click the <strong>"Login"</strong> button on the <strong>Administrator</strong> card.</li>
+      </ol>
+    </div>
+    <div class="what-happens">
+      <strong>What to look for:</strong> You are logged in immediately without having to type anything, and the Admin Dashboard opens with your welcome greeting.
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-circle">2</div>
+      <div class="step-title">Change Your 3D Avatar or Upload Your Photo</div>
+    </div>
+    <div class="instructions">
+      <ol>
+        <li>Look at your avatar on the top welcome banner, the top bar, and the bottom of the sidebar.</li>
+        <li>Click the button that says <strong>"Change Avatar"</strong> (or click your picture at the bottom left).</li>
+        <li>Click <strong>"Female"</strong> and hit Save &rarr; Your avatar turns into a 3D female avatar everywhere!</li>
+        <li>Click <strong>"Male"</strong> and hit Save &rarr; It turns into a 3D male avatar.</li>
+        <li>Want your real face? Click the <strong>"Upload Photo"</strong> tab, pick any picture from your laptop, and save!</li>
+      </ol>
+    </div>
+    <div class="what-happens">
+      <strong>What to look for:</strong> The photo updates live instantly on the banner, top bar, and sidebar without refreshing the page.
+    </div>
+  </div>
+
+  <!-- Step 3: Work Alone vs Assign Mode -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-circle">3</div>
+      <div class="step-title">Test "Work Alone" Mode (Clean 3-Stage Pipeline & Instant Final Approval)</div>
+    </div>
+    <div class="instructions">
+      <ol>
+        <li>In the left sidebar, click the blue button: <strong>"+ Create New Task"</strong>.</li>
+        <li>Type a task name: <em>"Review Q4 Budget & Audit Notes"</em>.</li>
+        <li>Under <strong>Handling Method</strong>, pick <strong>"Work Alone"</strong> (I will execute this myself).</li>
+        <li>Click <strong>"Create Task"</strong>.</li>
+        <li>Open the newly created task (code <strong>T-001</strong>).</li>
+      </ol>
+    </div>
+    <div class="what-happens">
+      <strong>Notice the smart Work-Alone workflow:</strong>
+      <ul style="margin-left: 20px; margin-top: 4px;">
+        <li><strong>Streamlined 3-Stage Stepper:</strong> Displays only <code>1. Initiated &rarr; 2. In Progress &rarr; 3. Completed</code>. The redundant "Evaluation / Under Review" and "Sign-off" steps are hidden because no 3rd-party review is required!</li>
+        <li><strong>Single Direct Action:</strong> Only the green <strong>"Final Approval & Complete"</strong> button is shown. There is no confusing "Submit for Review" button because you are the worker, reviewer, and final approver.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Step 4: Final Approval & Automatic Move out of Pending & All Tasks -->
+  <div class="step-card" style="border: 2px solid #86efac; background: #f0fdf4;">
+    <div class="step-header">
+      <div class="step-circle" style="background: #16a34a;">4</div>
+      <div class="step-title" style="color: #15803d;">Complete the Work-Alone Task & Watch It Exit "Pending" and "All Tasks"</div>
+    </div>
+    <div class="instructions">
+      <ol>
+        <li>On the task page for <strong>T-001</strong>, click the green <strong>"Final Approval & Complete"</strong> button.</li>
+        <li>Confirm the prompt. The status instantly changes to <strong>"Completed"</strong> (100% progress).</li>
+        <li>Now, click on <strong>"Pending Tasks"</strong> in the sidebar &rarr; <strong>T-001 does NOT appear here!</strong></li>
+        <li>Click on <strong>"All Tasks"</strong> in the sidebar &rarr; <strong>T-001 does NOT appear here either!</strong> (All Tasks only shows open active tasks).</li>
+        <li>Now click on <strong>"Completed"</strong> in the sidebar &rarr; <strong>T-001 is waiting here</strong> safe and sound!</li>
+      </ol>
+    </div>
+    <div class="what-happens">
+      <strong>What to look for:</strong> Completed tasks never linger in Pending or All Tasks; they move immediately to the Completed phase where they belong.
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Step 5: Delegated Task (Assign Mode) -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-circle">5</div>
+      <div class="step-title">Test Delegated Mode ("Assign" to Another Employee)</div>
+    </div>
+    <div class="instructions">
+      <ol>
+        <li>Click <strong>"+ Create New Task"</strong>.</li>
+        <li>Name it: <em>"Design new company homepage"</em>.</li>
+        <li>Under <strong>Handling Method</strong>, pick <strong>"Assign"</strong>.</li>
+        <li>Select <strong>Karan Sharma</strong> as the assignee.</li>
+        <li>Click <strong>"Create Task"</strong>. This creates task <strong>T-002</strong>.</li>
+      </ol>
+    </div>
+    <div class="what-happens">
+      <strong>What to look for:</strong> Because this task is delegated, it shows the full <strong>5-Stage Pipeline</strong>: <code>1. Initiated &rarr; 2. In Progress &rarr; 3. Evaluation &rarr; 4. Sign-off &rarr; 5. Completed</code>.
+    </div>
+  </div>
+
+  <!-- Step 6 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-circle">6</div>
+      <div class="step-title">Put a Task on Hold and Resume It</div>
+    </div>
+    <div class="instructions">
+      <ol>
+        <li>Click on task <strong>T-002</strong> to open it.</li>
+        <li>Click the orange <strong>"Hold"</strong> button.</li>
+        <li>Type a reason: <em>"Waiting for client brand guidelines"</em> and submit.</li>
+        <li>Notice the status turns to an amber/red badge: <strong>"On Hold"</strong>.</li>
+        <li>Now click the green <strong>"Resume"</strong> button &rarr; It switches right back to <strong>"In Progress"</strong>!</li>
+      </ol>
+    </div>
+    <div class="what-happens">
+      <strong>What to look for:</strong> The system remembers why the task was paused and tracks exact hold times in the audit history.
+    </div>
+  </div>
+
+  <!-- Step 7 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-circle">7</div>
+      <div class="step-title">Chat, Notes & Attachment Downloads (No 403 Errors!)</div>
+    </div>
+    <div class="instructions">
+      <ol>
+        <li>On the task page, scroll down to <strong>Discussion & Comments</strong>.</li>
+        <li>Type a message: <em>"Hi Karan, please check the color scheme in section 2."</em> and click <strong>Post Comment</strong>.</li>
+        <li>Scroll to <strong>Attachments / Deliverables</strong>, click <strong>"Upload File"</strong>, and pick any file from your computer.</li>
+        <li>Click the blue <strong>"Download"</strong> button next to the file.</li>
+      </ol>
+    </div>
+    <div class="what-happens">
+      <strong>What to look for:</strong> The comment appears with live timestamp. The file downloads immediately straight to your laptop with zero "403 Forbidden" errors.
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Step 8: Complete Review Cycle for Assigned Task -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-circle">8</div>
+      <div class="step-title">Multi-Tier Hierarchy Review (Upper Branch / Assigner & Creator Evaluation)</div>
+    </div>
+    <div class="instructions">
+      <ol>
+        <li><strong>Log in as Employee:</strong> Log in as <strong>Rohit Sharma</strong> (or Karan). Open task <strong>T-002</strong>.</li>
+        <li><strong>Notice Self-Review Is Blocked:</strong> Click <strong>"Submit for Review"</strong> and submit deliverables. Notice Rohit <strong>does NOT</strong> see a "Review" button, and this task is <strong>NOT</strong> in his Review Queue — because no employee can review their own work!</li>
+        <li><strong>Ask Assigner via Comments:</strong> If something is missing, notice the blue banner on the Comments tab: <em>"Need clarification? Post a comment to discuss directly with your assigner."</em> Posting a comment notifies his assigner immediately.</li>
+        <li><strong>Review by Upper Branch / Creator:</strong> Log in as <strong>Ravi Singh</strong> (the assigner / creator). Go to <strong>"Review"</strong> &rarr; T-002 is waiting here for Ravi to evaluate!</li>
+        <li><strong>Assigning Further Gives Review Access:</strong> If Rohit delegates further to another team member (e.g. Aman), Rohit becomes the <em>Upper Branch</em> for Aman. When Aman submits, Rohit <strong>WILL</strong> have review access for Aman's sub-branch!</li>
+      </ol>
+    </div>
+    <div class="what-happens">
+      <strong>What to look for:</strong> Strict organizational hierarchy is enforced: employees cannot review their own submissions, only the upper branch assigner or creator reviews, and delegating down gives review authority over downstream branches!
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- Step 9 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-circle">9</div>
+      <div class="step-title">The Admin Super-Power: Work Logs & Task Journey Dossier</div>
+    </div>
+    <div class="instructions">
+      <ol>
+        <li>Log in as <strong>Administrator</strong> (Ravi Singh).</li>
+        <li>Click <strong>"Work Logs"</strong> in the sidebar (under Administration & Audit).</li>
+        <li>You will see a live stream of everything that happened across the company.</li>
+        <li>Try clicking the filter buttons: <strong>Comments</strong>, <strong>Status Changes</strong>, <strong>Attachments</strong>, <strong>Reviews</strong>.</li>
+        <li>On the right side, click on task <strong>T-001</strong> to open its <strong>Complete Task Journey</strong>:
+          <ul style="margin-top: 4px;">
+            <li><strong>Timeline:</strong> Shows the whole story (Created &rarr; Put on Hold &rarr; Resumed &rarr; Submitted &rarr; Returned &rarr; Approved).</li>
+            <li><strong>Communications:</strong> Every message ever sent on this task.</li>
+            <li><strong>Attachments:</strong> Every file uploaded with one-click download.</li>
+            <li><strong>Branches:</strong> Who was assigned and when they finished.</li>
+          </ul>
+        </li>
+      </ol>
+    </div>
+    <div class="pro-tip">
+      <strong>Security Test:</strong> Log in as Employee (Karan) and try visiting the Work Logs page &rarr; The link is hidden, and direct access is blocked with a 403 Forbidden screen to protect company privacy!
+    </div>
+  </div>
+
+  <!-- Step 10 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-circle">10</div>
+      <div class="step-title">Managing Departments & Company Users</div>
+    </div>
+    <div class="instructions">
+      <ol>
+        <li>As Administrator, click <strong>"Departments"</strong> in the sidebar.</li>
+        <li>Click <strong>"+ Add Department"</strong>, name it <em>"Design & Creative"</em>, and save.</li>
+        <li>Try clicking the switch to turn it <strong>Inactive</strong> and back <strong>Active</strong>.</li>
+        <li>Click <strong>"Users"</strong> in the sidebar to see all team members and their roles.</li>
+      </ol>
+    </div>
+    <div class="what-happens">
+      <strong>What to look for:</strong> Everything is intuitive, fast, and protected by role permissions.
+    </div>
+  </div>
+
+  <!-- SUMMARY CHECKLIST -->
+  <div style="background: #f8fafc; border: 2px dashed #94a3b8; border-radius: 14px; padding: 18px 22px; margin-top: 15px; page-break-inside: avoid;">
+    <div style="font-size: 12pt; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Quick Testing Checklist (Everything to Tick Off)</div>
+    <div style="font-size: 9.5pt; color: #334155; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+      <div>&#9744; 1. 1-Click login for Admin, Manager, and Employee</div>
+      <div>&#9744; 6. Delegated task (Assign mode with 5-stage lifecycle)</div>
+      <div>&#9744; 2. Gender 3D avatar toggle & custom photo upload</div>
+      <div>&#9744; 7. Put task On Hold with reason & Resume it</div>
+      <div>&#9744; 3. Work Alone task with 3-stage pipeline (no review gates)</div>
+      <div>&#9744; 8. Upload file & download without 403 error</div>
+      <div>&#9744; 4. Direct "Final Approval & Complete" button in Work Alone</div>
+      <div>&#9744; 9. Submit for review & approve workflow for delegated tasks</div>
+      <div>&#9744; 5. Completed tasks exit Pending & All Tasks to Completed archive</div>
+      <div>&#9744; 10. Admin Work Logs & Complete Task Journey Dossier</div>
+    </div>
+    <div style="margin-top: 12px; font-size: 9pt; color: #16a34a; font-weight: 700;">
+      All features are tested, verified, and running cleanly on localhost!
+    </div>
+  </div>
+
+  <div class="footer-note">
+    QuickLifeNow &bull; Internal Enterprise Management &bull; Human Testing Guide &bull; Generated October 2026
+  </div>
+
+</body>
+</html>

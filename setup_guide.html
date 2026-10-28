@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>QuickLifeNow - Complete Laptop Setup Guide</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 14mm 16mm 14mm 16mm;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      background-color: #ffffff;
+      line-height: 1.55;
+      font-size: 11pt;
+    }
+
+    /* Document Header Banner */
+    .header-banner {
+      background: linear-gradient(135deg, #090e1f 0%, #101a36 60%, #0d2847 100%);
+      color: #ffffff;
+      padding: 28px 32px;
+      border-radius: 14px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+      border: 1px solid #1e293b;
+    }
+
+    .brand-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .brand-title {
+      font-size: 24pt;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      background: linear-gradient(90deg, #ffffff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-badge {
+      background: rgba(37, 99, 235, 0.35);
+      color: #93c5fd;
+      border: 1px solid rgba(147, 197, 253, 0.4);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 8.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .subtitle {
+      font-size: 11pt;
+      color: #94a3b8;
+      font-weight: 500;
+      margin-bottom: 14px;
+    }
+
+    .doc-meta {
+      display: flex;
+      gap: 20px;
+      font-size: 9pt;
+      color: #cbd5e1;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .meta-item strong {
+      color: #ffffff;
+    }
+
+    /* Headings */
+    h2 {
+      font-size: 14pt;
+      font-weight: 800;
+      color: #0f172a;
+      margin-top: 24px;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h2 .step-num {
+      background: #2563eb;
+      color: #ffffff;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10pt;
+      font-weight: 800;
+    }
+
+    h3 {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #1e293b;
+      margin-top: 14px;
+      margin-bottom: 6px;
+    }
+
+    p {
+      margin-bottom: 10px;
+      color: #334155;
+    }
+
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 12px;
+      color: #334155;
+    }
+
+    li {
+      margin-bottom: 4px;
+    }
+
+    /* Code Blocks */
+    pre {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 9.5pt;
+      line-height: 1.45;
+      margin: 8px 0 14px 0;
+      border: 1px solid #1e293b;
+      overflow-x: auto;
+    }
+
+    code {
+      font-family: Consolas, "Courier New", monospace;
+      background: #f1f5f9;
+      color: #0f172a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 9pt;
+      border: 1px solid #e2e8f0;
+    }
+
+    pre code {
+      background: transparent;
+      color: #38bdf8;
+      border: none;
+      padding: 0;
+      font-size: 9.5pt;
+    }
+
+    /* Callouts */
+    .callout {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin: 12px 0;
+      font-size: 9.5pt;
+      border-left: 4px solid;
+    }
+
+    .callout-info {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1e40af;
+    }
+
+    .callout-tip {
+      background: #ecfdf5;
+      border-color: #10b981;
+      color: #065f46;
+    }
+
+    .callout-warning {
+      background: #fffbeb;
+      border-color: #f59e0b;
+      color: #92400e;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 16px 0;
+      font-size: 9.5pt;
+    }
+
+    th, td {
+      border: 1px solid #e2e8f0;
+      padding: 8px 12px;
+      text-align: left;
+    }
+
+    th {
+      background: #f8fafc;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    tr:nth-child(even) td {
+      background: #fafafa;
+    }
+
+    .badge-role {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .badge-admin { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+    .badge-subadmin { background: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+    .badge-employee { background: #ccfbf1; color: #115e59; border: 1px solid #99f6e4; }
+
+    /* Page Breaks */
+    .page-break {
+      page-break-before: always;
+    }
+
+    .footer {
+      margin-top: 30px;
+      padding-top: 12px;
+      border-top: 1px solid #e2e8f0;
+      font-size: 8.5pt;
+      color: #94a3b8;
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- COVER / HEADER -->
+  <div class="header-banner">
+    <div class="brand-row">
+      <div class="brand-title">QuickLifeNow</div>
+      <div class="brand-badge">Official Setup Guide</div>
+    </div>
+    <div class="subtitle">Internal Enterprise Task Management & Audit System • Complete Laptop Installation Manual</div>
+    <div class="doc-meta">
+      <div class="meta-item"><strong>Architecture:</strong> Laravel 12 + React 19 + MySQL 8.0</div>
+      <div class="meta-item"><strong>Target OS:</strong> Windows 10/11 / macOS / Linux</div>
+      <div class="meta-item"><strong>Date:</strong> October 2026</div>
+    </div>
+  </div>
+
+  <div class="callout callout-info">
+    <strong>Welcome to QuickLifeNow!</strong> Follow this step-by-step guide to run both the Laravel API backend and React Vite frontend seamlessly on your local laptop from scratch.
+  </div>
+
+  <!-- SECTION 1 -->
+  <h2><span class="step-num">1</span> Laptop Prerequisites</h2>
+  <p>Before starting, verify you have the following standard development tools installed on your laptop:</p>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>Required Software</th>
+        <th>Recommended Version</th>
+        <th>Verification Command</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>PHP</strong> (with pdo_mysql, gd, fileinfo)</td>
+        <td>8.2, 8.3, or 8.4</td>
+        <td><code>php -v</code></td>
+      </tr>
+      <tr>
+        <td><strong>Composer</strong> (PHP Package Manager)</td>
+        <td>2.5+</td>
+        <td><code>composer -V</code></td>
+      </tr>
+      <tr>
+        <td><strong>Node.js & npm</strong></td>
+        <td>Node 18.x, 20.x, or 24.x</td>
+        <td><code>node -v</code> & <code>npm -v</code></td>
+      </tr>
+      <tr>
+        <td><strong>MySQL Server</strong></td>
+        <td>8.0+ (or MariaDB / XAMPP)</td>
+        <td><code>mysql --version</code></td>
+      </tr>
+      <tr>
+        <td><strong>Git</strong></td>
+        <td>2.30+</td>
+        <td><code>git --version</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-tip">
+    <strong>Tip for Windows Users:</strong> If using standalone PHP on Windows, make sure the following extensions are enabled in your <code>php.ini</code> file:
+    <code>extension=pdo_mysql</code>, <code>extension=fileinfo</code>, <code>extension=gd</code>, <code>extension=curl</code>, <code>extension=mbstring</code>, <code>extension=openssl</code>.
+  </div>
+
+  <!-- SECTION 2 -->
+  <h2><span class="step-num">2</span> Database Setup (MySQL)</h2>
+  <p>Start your MySQL service (via Windows Services, XAMPP, or Terminal) and create the project database:</p>
+
+  <pre><code>-- Log into MySQL in your command prompt:
+mysql -u root -p
+
+-- Run the SQL query to create the database:
+CREATE DATABASE task_management CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Confirm creation:
+SHOW DATABASES;
+EXIT;</code></pre>
+
+  <!-- SECTION 3 -->
+  <h2><span class="step-num">3</span> Backend Setup (Laravel 12 API)</h2>
+  <p>Open your command line (PowerShell or Terminal) and navigate to the project directory:</p>
+
+  <pre><code>cd c:\Users\ADMIN\Desktop\TaskManagement\backend</code></pre>
+
+  <h3>Step 3.1: Environment Configuration</h3>
+  <p>Ensure your <code>.env</code> file exists (copy from <code>.env.example</code> if creating a fresh clone):</p>
+  <pre><code>copy .env.example .env</code></pre>
+
+  <p>Confirm the database settings in <code>backend/.env</code> match your local MySQL configuration:</p>
+  <pre><code>DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=task_management
+DB_USERNAME=root
+DB_PASSWORD=your_mysql_password_here
+
+APP_URL=http://127.0.0.1:8000
+SANCTUM_STATEFUL_DOMAINS=localhost:5173</code></pre>
+
+  <h3>Step 3.2: Install Dependencies & Generate Application Key</h3>
+  <pre><code>composer install
+php artisan key:generate</code></pre>
+
+  <h3>Step 3.3: Run Database Migrations & Initial Seed Data</h3>
+  <p>This creates all required tables (users, departments, tasks, branches, reviews, work logs, avatars):</p>
+  <pre><code>php artisan migrate --seed</code></pre>
+
+  <h3>Step 3.4: Create Public Storage Link (Crucial for Avatars & Files)</h3>
+  <p>Connects <code>backend/storage/app/public</code> to <code>backend/public/storage</code> to prevent 403 download errors:</p>
+  <pre><code>php artisan storage:link</code></pre>
+
+  <h3>Step 3.5: Start the Laravel API Server</h3>
+  <pre><code>php artisan serve --host=127.0.0.1 --port=8000</code></pre>
+  <p>Your backend API is now running live at <strong>http://127.0.0.1:8000</strong></p>
+
+  <!-- PAGE BREAK -->
+  <div class="page-break"></div>
+
+  <!-- SECTION 4 -->
+  <h2><span class="step-num">4</span> Frontend Setup (React 19 + Vite)</h2>
+  <p>Open a <strong>second, separate Terminal window</strong> (keep the Laravel server running in the first):</p>
+
+  <pre><code>cd c:\Users\ADMIN\Desktop\TaskManagement\frontend</code></pre>
+
+  <h3>Step 4.1: Install Node Dependencies</h3>
+  <pre><code>npm install</code></pre>
+
+  <h3>Step 4.2: Start Vite Development Server</h3>
+  <pre><code>npm run dev</code></pre>
+
+  <div class="callout callout-tip">
+    <strong>Ready!</strong> Open your web browser (Chrome, Edge, Firefox) and navigate to:<br>
+    <strong style="font-size: 13pt; color: #2563eb;">http://localhost:5173</strong>
+  </div>
+
+  <!-- SECTION 5 -->
+  <h2><span class="step-num">5</span> Default Login Credentials</h2>
+  <p>Use any of the seeded accounts to log in and explore different role perspectives:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Role</th>
+        <th>Email Address</th>
+        <th>Password</th>
+        <th>Special Capabilities</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge-role badge-admin">Administrator</span></td>
+        <td><code>ravi@company.com</code></td>
+        <td><code>password</code></td>
+        <td>Company Work Logs, Audit Dossier, Departments, Users, All Task Management</td>
+      </tr>
+      <tr>
+        <td><span class="badge-role badge-subadmin">Sub-Admin</span></td>
+        <td><code>priya@company.com</code></td>
+        <td><code>password</code></td>
+        <td>Operations Management, Review Queue, Handover Approvals, Work Logs Review</td>
+      </tr>
+      <tr>
+        <td><span class="badge-role badge-employee">Employee</span></td>
+        <td><code>karan@gmail.com</code></td>
+        <td><code>password</code></td>
+        <td>Personal Tasks, Deliverable Submissions, My Collaborations, Stage Handover</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 6 -->
+  <h2><span class="step-num">6</span> Key Feature Highlights & Testing</h2>
+  <ul>
+    <li><strong>Avatar & Photo Customizer:</strong> Click the 3D character avatar on the Dashboard Welcome Banner or Sidebar profile card to toggle between 3D Female ♀ / Male ♂ characters, or upload your personal photo.</li>
+    <li><strong>Task Creation & Unique Codes:</strong> Tasks automatically generate unique sequential codes (e.g., <code>T-001</code>, <code>T-017</code>).</li>
+    <li><strong>Single & Multi-Assignee:</strong> Assign tasks to single or multiple employees without unnecessary self-assignment restrictions.</li>
+    <li><strong>Deliverables & Secure Downloads:</strong> Upload attachments (PDF, DOCX, PNG) and download directly without 403 Forbidden errors.</li>
+    <li><strong>Admin Work Logs Separation Page:</strong> Inspect company-wide communications, stage history, and end-to-end task journey dossiers at <code>/work-logs</code>.</li>
+  </ul>
+
+  <!-- SECTION 7 -->
+  <h2><span class="step-num">7</span> Troubleshooting & FAQs</h2>
+
+  <h3>Q: MySQL Connection Refused (SQLSTATE[HY000] [2002])?</h3>
+  <p><strong>Solution:</strong> Ensure your MySQL service is running. On Windows, open <code>services.msc</code>, locate <em>MySQL80</em> (or start Apache/MySQL in XAMPP), and click Start.</p>
+
+  <h3>Q: Attachment or Avatar gives 403 Forbidden / Not Found?</h3>
+  <p><strong>Solution:</strong> Run <code>php artisan storage:link</code> in the <code>backend/</code> folder. Confirm that <code>backend/public/storage</code> exists as a connected link.</p>
+
+  <h3>Q: Port 8000 or 5173 is already in use?</h3>
+  <p><strong>Solution:</strong> You can start Laravel on another port: <code>php artisan serve --port=8080</code> and Vite with <code>npm run dev -- --port 3000</code>.</p>
+
+  <div class="footer">
+    <span>QuickLifeNow • Internal Enterprise Management System</span>
+    <span>Generated Local Laptop Setup Guide • PDF Edition</span>
+  </div>
+
+</body>
+</html>
