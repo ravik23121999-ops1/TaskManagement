@@ -93,10 +93,19 @@ export interface ThreadDetailResponse {
   is_overseer: boolean;
 }
 
+const getClientTimezone = (): string => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
+  } catch {
+    return 'Asia/Kolkata';
+  }
+};
+
 export const messagesApi = {
   getThreads: async (tab: 'my_chats' | 'other' = 'my_chats') => {
+    const tz = getClientTimezone();
     const response = await apiClient.get<{ tab: string; threads: MessageThread[]; total_unread: number }>(
-      `/messages/threads?tab=${tab}`
+      `/messages/threads?tab=${tab}&tz=${encodeURIComponent(tz)}`
     );
     return response.data;
   },
@@ -105,6 +114,7 @@ export const messagesApi = {
     const params = new URLSearchParams();
     if (partnerId) params.append('partner_id', partnerId.toString());
     if (isOverseer) params.append('is_overseer', 'true');
+    params.append('tz', getClientTimezone());
 
     const response = await apiClient.get<ThreadDetailResponse>(
       `/messages/threads/${branchId}?${params.toString()}`
@@ -119,8 +129,13 @@ export const messagesApi = {
     message: string;
     message_type?: string;
     attachment_id?: number;
+    timezone?: string;
   }) => {
-    const response = await apiClient.post<{ status: string; message: ChatMessage }>('/messages/send', data);
+    const payload = {
+      ...data,
+      timezone: data.timezone || getClientTimezone(),
+    };
+    const response = await apiClient.post<{ status: string; message: ChatMessage }>('/messages/send', payload);
     return response.data;
   },
 

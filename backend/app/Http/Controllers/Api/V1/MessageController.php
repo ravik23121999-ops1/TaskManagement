@@ -35,15 +35,19 @@ class MessageController extends Controller
     }
 
     /**
-     * Resolve user client timezone safely (defaults to app timezone / UTC)
+     * Resolve user client timezone safely (defaults to Asia/Kolkata for local business operations)
      */
     private function resolveTimezone(Request $request): string
     {
-        $tz = $request->header('X-Timezone') ?: $request->query('timezone');
+        $tz = $request->input('timezone')
+            ?: $request->query('tz')
+            ?: $request->header('X-Timezone')
+            ?: $request->query('timezone');
+
         if ($tz && in_array($tz, timezone_identifiers_list())) {
             return $tz;
         }
-        return config('app.timezone', 'UTC');
+        return 'Asia/Kolkata';
     }
 
     /**

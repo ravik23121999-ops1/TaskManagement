@@ -30,23 +30,42 @@ import {
 } from 'lucide-react';
 import { StatusBadge } from '../../components/StatusBadge';
 
-// Converts UTC ISO timestamp to user's device local time (e.g. "5:01 PM")
-export const formatLocalMessageTime = (isoString?: string, fallback?: string): string => {
-  if (!isoString) return fallback || '';
-  try {
-    const d = new Date(isoString);
-    if (isNaN(d.getTime())) return fallback || '';
-    return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
-  } catch {
-    return fallback || '';
+// Ensures UTC ISO representation so browser Date always converts accurately to user's device local time
+export const normalizeUtcIsoString = (isoString?: string): string => {
+  if (!isoString) return '';
+  let str = isoString.trim();
+  const timePart = str.includes('T') ? str.split('T')[1] : (str.includes(' ') ? str.split(' ')[1] : '');
+  const hasTzOffset = timePart.includes('Z') || timePart.includes('+') || (timePart.length > 5 && timePart.slice(5).includes('-'));
+  if (!hasTzOffset) {
+    if (str.includes(' ')) {
+      str = str.replace(' ', 'T') + 'Z';
+    } else if (str.includes('T')) {
+      str = str + 'Z';
+    }
   }
+  return str;
+};
+
+// Converts UTC ISO timestamp to user's device local time (e.g. "6:24 PM")
+export const formatLocalMessageTime = (isoString?: string, fallback?: string): string => {
+  if (isoString) {
+    try {
+      const normalized = normalizeUtcIsoString(isoString);
+      const d = new Date(normalized);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+      }
+    } catch {}
+  }
+  return fallback || '';
 };
 
 // Formats date divider (e.g. "Today", "Yesterday", "Wed, Oct 29, 2026")
 export const formatMessageDateGroup = (isoString?: string): string => {
   if (!isoString) return '';
   try {
-    const msgDate = new Date(isoString);
+    const normalized = normalizeUtcIsoString(isoString);
+    const msgDate = new Date(normalized);
     if (isNaN(msgDate.getTime())) return '';
     const now = new Date();
 
@@ -80,7 +99,8 @@ export const formatMessageDateGroup = (isoString?: string): string => {
 export const formatThreadTimeAgo = (isoString?: string, fallback?: string): string => {
   if (!isoString) return fallback || '';
   try {
-    const d = new Date(isoString);
+    const normalized = normalizeUtcIsoString(isoString);
+    const d = new Date(normalized);
     if (isNaN(d.getTime())) return fallback || '';
     const diffSec = Math.floor((Date.now() - d.getTime()) / 1000);
     if (diffSec < 45) return 'Just now';
