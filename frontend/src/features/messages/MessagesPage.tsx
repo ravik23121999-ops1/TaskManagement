@@ -20,6 +20,7 @@ import {
   Download,
   FileText,
   ChevronLeft,
+  ChevronDown,
   Info,
   AlertCircle,
   CheckCircle2,
@@ -70,6 +71,10 @@ export const MessagesPage: React.FC = () => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+  const [isAtBottom, setIsAtBottom] = useState(true);
+  const [hasNewMessagesBelow, setHasNewMessagesBelow] = useState(false);
+  const prevMessagesLengthRef = useRef(0);
 
   // Sound notification toggle (persisted in localStorage)
   const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
@@ -174,9 +179,53 @@ export const MessagesPage: React.FC = () => {
     return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, [selectedBranchId, selectedPartnerId, isOverseerParam, activeTab]);
 
-  // Auto-scroll to bottom of chat smoothly when messages change
+  const scrollToBottom = (smooth = true) => {
+    if (!chatScrollRef.current) return;
+    chatScrollRef.current.scrollTo({
+      top: chatScrollRef.current.scrollHeight,
+      behavior: smooth ? 'smooth' : 'auto',
+    });
+    setIsAtBottom(true);
+    setHasNewMessagesBelow(false);
+  };
+
+  const handleChatScroll = () => {
+    if (!chatScrollRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = chatScrollRef.current;
+    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+    const atBottom = distanceFromBottom < 100;
+    setIsAtBottom(atBottom);
+    if (atBottom) {
+      setHasNewMessagesBelow(false);
+    }
+  };
+
+  // When opening or switching thread: jump cleanly to bottom without shifting outer window
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (activeThreadData?.branch?.id) {
+      setTimeout(() => {
+        scrollToBottom(false);
+      }, 50);
+    }
+  }, [activeThreadData?.branch?.id, activeThreadData?.partner?.id]);
+
+  // When messages array updates: only scroll down if user was already at bottom or sent a message
+  useEffect(() => {
+    const currentCount = activeThreadData?.messages?.length || 0;
+    const isIncrease = currentCount > prevMessagesLengthRef.current;
+    prevMessagesLengthRef.current = currentCount;
+
+    if (isIncrease) {
+      const latestMsg = activeThreadData?.messages?.[currentCount - 1];
+      if (latestMsg?.is_me || isAtBottom) {
+        setTimeout(() => {
+          scrollToBottom(true);
+        }, 30);
+      } else {
+        // User is scrolled up reading previous history: do NOT yank them down!
+        setHasNewMessagesBelow(true);
+      }
+    }
   }, [activeThreadData?.messages]);
 
   const loadThreads = async (tab: 'my_chats' | 'other', isBackground = false) => {
@@ -427,8 +476,15 @@ export const MessagesPage: React.FC = () => {
     setMessageInput(text);
   };
 
+  // Sort threads: most recent message on top, down to oldest
+  const sortedThreads = [...threads].sort((a, b) => {
+    const timeA = new Date(a.last_message_at || 0).getTime();
+    const timeB = new Date(b.last_message_at || 0).getTime();
+    return timeB - timeA;
+  });
+
   // Filtered threads list
-  const filteredThreads = threads.filter((t) => {
+  const filteredThreads = sortedThreads.filter((t) => {
     const matchesSearch =
       t.task_title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.task_code.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -682,7 +738,7 @@ export const MessagesPage: React.FC = () => {
         {/* ======================================================== */}
         {/* RIGHT PANE: ACTIVE CHAT FEED (Instagram Direct Style)      */}
         {/* ======================================================== */}
-        <div className="flex-1 flex flex-col bg-white overflow-hidden">
+        <div className="flex-1 flex flex-col bg-white overflow-hidden relative">
           {!selectedBranchId || !activeThreadData ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-400">
               <div className="w-16 h-16 rounded-3xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center mb-3 shadow-inner">
@@ -865,7 +921,11 @@ export const MessagesPage: React.FC = () => {
               )}
 
               {/* Chat Messages Stream */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-slate-50/30">
+              <div
+                ref={chatScrollRef}
+                onScroll={handleChatScroll}
+                className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-slate-50/30"
+              >
                 {loadingMessages ? (
                   <div className="p-6 space-y-4 animate-pulse">
                     <div className="flex items-start gap-3 max-w-[70%]">
@@ -1026,6 +1086,21 @@ export const MessagesPage: React.FC = () => {
                 )}
                 <div ref={messagesEndRef} />
               </div>
+
+              {/* Floating "Scroll to Recent Messages" button */}
+              {!isAtBottom && (
+                <button
+                  type="button"
+                  onClick={() => scrollToBottom(true)}
+                  className="absolute bottom-24 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-xl border border-blue-400/40 text-xs font-bold transition transform hover:scale-105 active:scale-95 animate-in fade-in slide-in-from-bottom-2 duration-200 cursor-pointer"
+                >
+                  <ChevronDown className="w-4 h-4" />
+                  <span>{hasNewMessagesBelow ? 'New message received ↓' : 'Recent Messages ↓'}</span>
+                  {hasNewMessagesBelow && (
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                  )}
+                </button>
+              )}
 
               {/* Bottom Work Action Chips & Message Composer */}
               <div className="p-3 sm:p-4 bg-white border-t border-slate-200 space-y-2.5">
