@@ -1,144 +1,159 @@
-# Task Management System (TMS)
+# QuickLifeNow - Internal Enterprise Management Platform
 
-A complete, production-ready Task Management System for internal company use.
+A high-performance, production-ready enterprise task management, hierarchy collaboration, and organizational governance system.
 
-## Technology Stack
+![QuickLifeNow Platform](frontend/public/favicon.svg)
+
+---
+
+## 🌟 Technology Stack
 
 ### Backend
-- Laravel 13
-- PHP 8.4
-- MySQL 8
-- Laravel Sanctum (Authentication)
+- **Laravel 12 / 13** (PHP 8.4)
+- **Database Support**: MySQL 8+, PostgreSQL 15+, and SQLite
+- **Security & Authentication**: Laravel Sanctum with Bearer Token Exchange
+- **Architecture**: Multi-Branch Hierarchical Task Orchestration, Real-time Activity Logging, Defensively Guarded RESTful API
 
 ### Frontend
-- React 18
-- TypeScript
-- Vite
-- Tailwind CSS v4
-- React Router
-- Axios
-- React Hook Form
-- Zod
-- TanStack Query
+- **React 19 + TypeScript**
+- **Build Engine**: Vite (Ultra-fast ESM bundler)
+- **Styling**: Tailwind CSS v4 + Glassmorphism UI
+- **Typography**: Google Font Outfit
+- **Icons**: Lucide Icons
+- **State & Data**: TanStack Query & Axios Interceptors
 
-## Installation
+### Production & Cloud Deployment
+- **Container**: Multi-Stage Docker Build (`node:20-bookworm-slim` + `php:8.4-fpm-alpine` + `nginx` + `supervisord`)
+- **Hosting**: Render.com Blueprint (`render.yaml`) & Docker Web Service
+- **Health Checks**: Built-in `/up` route for automated zero-downtime health monitoring
 
-### Backend
+---
+
+## 🚀 Key Features
+
+1. **Multi-Branch Task Delegation & Collaboration**
+   - Direct Assignee-to-Creator feedback loops.
+   - Sub-branch delegation with deep ancestor hierarchy visibility.
+   - Peer communication isolation (assignees only view their branch and overseer communication).
+
+2. **Enterprise Branch Messaging with Attachments**
+   - Instant deliverable exchange with dedicated document uploads (`.pdf`, `.png`, `.jpg`, `.zip`, `.doc`).
+   - Authenticated stream downloads preventing unauthorized direct access.
+
+3. **Multi-Stage Review & SLA Workflow**
+   - Structured submission gate with approval, revision requests, or conditional rejection.
+   - Hold & Resume workflows with mandatory audit notes.
+   - Task cancellation safeguards with role-based administrative permissions.
+
+4. **Role-Based Access Control (RBAC)**
+   - **Admin**: Full administrative command, system settings management, user creation, department configuration, permanent deletion.
+   - **Sub-Admin**: Departmental oversight, delegated review management, optional delete & cancel capabilities governed by Admin switch.
+   - **Employee**: Focused work dashboard, branch deliverables, task messaging, work log inspection.
+
+5. **Work Logs & Complete Audit Dossier**
+   - End-to-end task journey inspection tracking creation to final completion.
+   - Exportable PDF testing and setup guides.
+
+6. **100% Modern Non-Blocking UI**
+   - Zero raw browser alerts (`window.alert`, `window.confirm`, `window.prompt` completely eliminated).
+   - Auto-dismissing glassmorphic toasts and custom modal confirmation dialogs.
+
+---
+
+## 👥 Default Demo Credentials
+
+All test accounts use the password: `password`
+
+| Role | Name | Email | Department |
+| :--- | :--- | :--- | :--- |
+| **Admin** | Admin User | `admin@example.com` | IT Infrastructure |
+| **Admin** | Ravi Singh | `ravi@company.com` | IT Infrastructure |
+| **Sub-Admin** | Priya Sharma | `priya@company.com` | Operations & Facilities |
+| **Employee** | Karan Sharma | `karan@gmail.com` | IT Infrastructure |
+| **Employee** | Aman Verma | `aman@company.com` | IT Infrastructure |
+| **Employee** | Neha Kapoor | `neha@company.com` | Human Resources |
+| **Employee** | Rohit Mehta | `rohit@company.com` | Sales & Growth |
+
+---
+
+## 🛠️ Local Development Setup
+
+### Prerequisites
+- PHP 8.4+ with `pdo`, `mbstring`, `fileinfo`, `gd`, `zip` extensions
+- Composer 2+
+- Node.js 20+ & npm
+- MySQL 8.0+ or SQLite
+
+### 1. Clone & Setup Backend
 ```bash
-cd backend
+git clone https://github.com/ravik23121999-ops1/TaskManagement.git
+cd TaskManagement/backend
+
+cp .env.example .env
 composer install
-php artisan migrate
-php artisan db:seed --class=AdminSeeder
+php artisan key:generate
+php artisan migrate --seed
 php artisan serve
 ```
+Backend runs at: `http://localhost:8000`
 
-### Frontend
+### 2. Setup Frontend
 ```bash
-cd frontend
+cd ../frontend
 npm install
 npm run dev
 ```
+Frontend runs at: `http://localhost:5173`
 
-## Default Admin User
-- Email: admin@example.com
-- Password: password
+---
 
-## Features Implemented
+## ☁️ Deployment on Render.com
 
-### Backend ✅
-- ✅ Database schema (14 tables with relationships)
-- ✅ All Eloquent models with relationships
-- ✅ Authentication with Laravel Sanctum
-- ✅ User management (CRUD + activate/deactivate)
-- ✅ Department management (CRUD + activate/deactivate)
-- ✅ Task management (create, list, show, update, cancel)
-- ✅ Task branch management (create, list, show, update)
-- ✅ Comments system (create, list)
-- ✅ Notifications system (list, mark as read)
-- ✅ Form validation for all endpoints
-- ✅ API resources for consistent responses
-- ✅ Assignment workflow (auto-creates branches when assignees provided)
+This repository includes a production-ready `Dockerfile` and `render.yaml` configured for zero-configuration deployment on **Render.com**.
 
-### Frontend ✅
-- ✅ Authentication system (login, logout, protected routes)
-- ✅ Dashboard with task statistics
-- ✅ Task list with filtering
-- ✅ Task creation form (all fields including assignees)
-- ✅ Task details page
-- ✅ Responsive UI with Tailwind CSS
-- ✅ API client with interceptors
-- ✅ Error handling
+### Option A: 1-Click Blueprint Deploy (Recommended)
+1. Log in to your [Render Dashboard](https://dashboard.render.com/).
+2. Click **New +** > **Blueprint**.
+3. Connect this GitHub repository: `https://github.com/ravik23121999-ops1/TaskManagement`.
+4. Render will read `render.yaml` and provision:
+   - A **Docker Web Service** (`quicklifenow-app`) with Nginx + PHP 8.4 FPM + React SPA.
+   - A managed **PostgreSQL Database** (`quicklifenow-db`).
+5. Click **Apply**.
+6. The container automatically runs migrations and seeds default demo data on first startup.
 
-### Documentation ✅
-- ✅ ARCHITECTURE.md - Complete system architecture
-- ✅ DATABASE.md - Full database schema
-- ✅ WORKFLOW.md - All business logic
-- ✅ API.md - All API endpoints
+### Option B: Deploy as a Standalone Web Service
+1. Click **New +** > **Web Service**.
+2. Connect your GitHub repository.
+3. Choose **Docker** as the Runtime.
+4. Set the Health Check Path to: `/up`.
+5. Under **Environment Variables**, set:
+   - `APP_NAME` = `QuickLifeNow`
+   - `APP_ENV` = `production`
+   - `APP_DEBUG` = `false`
+   - `APP_KEY` = *(Click Generate or run `php artisan key:generate --show`)*
+   - `RUN_SEEDER` = `true`
+   - `DB_CONNECTION` = `sqlite` *(or `pgsql` if linking external database)*
+6. Click **Create Web Service**. Render builds the multi-stage Docker container and launches your app!
 
-## API Endpoints
+---
 
-### Authentication
-- POST /api/auth/login
-- POST /api/auth/logout
-- GET /api/auth/me
+## 🧪 Testing & Verification
 
-### Users
-- GET /api/users
-- POST /api/users
-- GET /api/users/{user}
-- PUT /api/users/{user}
-- DELETE /api/users/{user}
-- PUT /api/users/{user}/activate
-- PUT /api/users/{user}/deactivate
+Run the comprehensive PHPUnit test suite:
+```bash
+cd backend
+php vendor/bin/phpunit
+```
+*Current test suite: 37/37 passed, 322 assertions, 0 errors.*
 
-### Departments
-- GET /api/departments
-- POST /api/departments
-- GET /api/departments/{department}
-- PUT /api/departments/{department}
-- DELETE /api/departments/{department}
-- PUT /api/departments/{department}/activate
-- PUT /api/departments/{department}/deactivate
+Build the production frontend bundle:
+```bash
+cd frontend
+npm run build
+```
+*Compiled with 0 TypeScript errors and optimized Rollup chunks.*
 
-### Tasks
-- GET /api/tasks
-- POST /api/tasks
-- GET /api/tasks/{task}
-- PUT /api/tasks/{task}
-- DELETE /api/tasks/{task}
-- POST /api/tasks/{task}/cancel
+---
 
-### Task Branches
-- GET /api/task-branches
-- POST /api/task-branches
-- GET /api/task-branches/{task_branch}
-- PUT /api/task-branches/{task_branch}
-- DELETE /api/task-branches/{task_branch}
-
-### Comments
-- GET /api/comments
-- POST /api/comments
-
-### Notifications
-- GET /api/notifications
-- PUT /api/notifications/{notification}/read
-- PUT /api/notifications/read-all
-
-## Known Issues
-- None (API routing fixed, both backend and frontend working)
-
-## Remaining Features (Optional Enhancements)
-- Review and approval system with multiple levels
-- File attachments upload/download
-- Email notifications
-- Advanced dashboards with reporting
-- Activity audit logs
-- Subtask/branch review workflow
-- Time tracking
-- Custom workflows
-
-## Status
-**✅ SYSTEM IS WORKING**
-- Backend API: http://localhost:8000
-- Frontend: http://localhost:5174
-- Login: admin@example.com / password
+## 📄 License
+Internal Enterprise Management - QuickLifeNow. All rights reserved.

@@ -19,8 +19,15 @@ php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true
 
-# Run database migrations if database connection is configured
-if [ -n "$DB_HOST" ] || [ -n "$DATABASE_URL" ] || [ -n "$DB_URL" ]; then
+# Handle Database Configuration
+if [ "$DB_CONNECTION" = "sqlite" ] || [ -z "$DB_HOST" -a -z "$DATABASE_URL" -a -z "$DB_URL" -a "$DB_CONNECTION" != "mysql" -a "$DB_CONNECTION" != "pgsql" ]; then
+    echo "==> Ensuring SQLite database exists..."
+    touch /var/www/html/database/database.sqlite
+    chown www-data:www-data /var/www/html/database/database.sqlite
+    chmod 664 /var/www/html/database/database.sqlite
+    echo "==> Running SQLite database migrations..."
+    php artisan migrate --force || echo "==> SQLite migration completed or pending, continuing..."
+elif [ -n "$DB_HOST" ] || [ -n "$DATABASE_URL" ] || [ -n "$DB_URL" ] || [ "$DB_CONNECTION" = "pgsql" ] || [ "$DB_CONNECTION" = "mysql" ]; then
     echo "==> Running database migrations..."
     php artisan migrate --force || echo "==> Migration skipped or pending, continuing..."
 fi

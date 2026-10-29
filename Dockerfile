@@ -70,6 +70,7 @@ COPY backend/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Secure file permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache /var/www/html/public \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache \
+    && sed -i 's/\r$//' /var/www/html/entrypoint.sh \
     && chmod +x /var/www/html/entrypoint.sh
 
 # Expose port 80 for Render Web Service
