@@ -613,16 +613,25 @@ class MessageController extends Controller
         $user = $request->user();
 
         $validated = $request->validate([
-            'task_id' => 'required|exists:tasks,id',
             'task_branch_id' => 'required|exists:task_branches,id',
-            'recipient_id' => 'nullable|exists:users,id',
+            'task_id' => 'nullable',
+            'recipient_id' => 'nullable',
             'message' => 'required|string|max:5000',
             'message_type' => 'nullable|string|in:text,missing_details_request,details_provided,review_feedback,deliverable_update',
             'attachment_id' => 'nullable|exists:task_attachments,id',
         ]);
 
-        $task = Task::findOrFail($validated['task_id']);
         $branch = TaskBranch::with(['assignments', 'collaborators', 'owner'])->findOrFail($validated['task_branch_id']);
+        $task = Task::withTrashed()->find($branch->task_id);
+        if (!$task && !empty($validated['task_id'])) {
+            $task = Task::withTrashed()->find($validated['task_id']);
+        }
+
+        if (!$task) {
+            return response()->json([
+                'message' => 'The task associated with this branch conversation could not be found.',
+            ], 422);
+        }
 
         // Determine recipient if not provided
         $currentAssignment = $branch->assignments->firstWhere('is_current', true)
@@ -750,9 +759,12 @@ class MessageController extends Controller
 
         $request->validate([
             'file' => 'required|file|max:20480', // Max 20MB
-            'task_id' => 'required|exists:tasks,id',
-            'task_branch_id' => 'nullable|exists:task_branches,id',
+            'task_branch_id' => 'required',
+            'task_id' => 'nullable',
         ]);
+
+        $branch = TaskBranch::find($request->task_branch_id);
+        $taskId = $branch?->task_id ?? $request->task_id;
 
         $file = $request->file('file');
         $fileName = $file->getClientOriginalName();
@@ -762,7 +774,7 @@ class MessageController extends Controller
         $path = $file->store('attachments', 'public');
 
         $attachment = TaskAttachment::create([
-            'task_id' => $request->task_id,
+            'task_id' => $taskId,
             'task_branch_id' => $request->task_branch_id,
             'uploaded_by_id' => $user->id,
             'file_name' => $fileName,

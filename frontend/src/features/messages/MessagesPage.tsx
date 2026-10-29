@@ -317,7 +317,16 @@ export const MessagesPage: React.FC = () => {
   const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!messageInput.trim() && !selectedFile) return;
-    if (!activeThreadData) return;
+
+    // Resolve branch and partner with full fallbacks
+    const branchId = activeThreadData?.branch?.id || selectedBranchId;
+    const partnerId = activeThreadData?.partner?.id || selectedPartnerId;
+    const taskId = activeThreadData?.task?.id;
+
+    if (!branchId) {
+      showToast('Please select a branch conversation first.', 'error');
+      return;
+    }
 
     setSendingMessage(true);
     try {
@@ -328,20 +337,20 @@ export const MessagesPage: React.FC = () => {
         setUploadingFile(true);
         const uploadRes = await messagesApi.uploadAttachment(
           selectedFile,
-          activeThreadData.task.id,
-          activeThreadData.branch.id
+          taskId || 0,
+          branchId
         );
         attachmentId = uploadRes.attachment.id;
         setUploadingFile(false);
       }
 
       // Determine recipient
-      const recipientId = activeThreadData.partner.id;
+      const recipientId = partnerId;
 
       const payload = {
-        task_id: activeThreadData.task.id,
-        task_branch_id: activeThreadData.branch.id,
-        recipient_id: recipientId,
+        task_id: taskId || 0,
+        task_branch_id: branchId,
+        recipient_id: recipientId || 0,
         message: messageInput.trim() || `Shared attachment: ${selectedFile?.name}`,
         message_type: messageType,
         attachment_id: attachmentId,
@@ -363,7 +372,7 @@ export const MessagesPage: React.FC = () => {
         // Update latest message in left threads list
         setThreads((prev) =>
           prev.map((t) =>
-            t.branch_id === activeThreadData.branch.id && t.partner.id === recipientId
+            t.branch_id === branchId && (!recipientId || t.partner.id === recipientId)
               ? {
                   ...t,
                   last_message: res.message.message,
