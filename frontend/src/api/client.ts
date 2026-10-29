@@ -26,6 +26,15 @@ apiClient.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // Transmit client device timezone for accurate server-side timestamp formatting
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz) {
+      config.headers['X-Timezone'] = tz;
+    }
+  } catch {
+    // Fallback if Intl is unavailable
+  }
   // Sanitize double /api/ prefix if passed
   if (config.url && config.url.startsWith('/api/')) {
     config.url = config.url.replace(/^\/api\//, '/');

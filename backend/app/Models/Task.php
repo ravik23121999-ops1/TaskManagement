@@ -66,6 +66,11 @@ class Task extends Model
         return $this->hasMany(TaskAttachment::class);
     }
 
+    public function messages(): HasMany
+    {
+        return $this->hasMany(TaskMessage::class);
+    }
+
     public function submissions(): HasMany
     {
         return $this->hasMany(TaskSubmission::class);

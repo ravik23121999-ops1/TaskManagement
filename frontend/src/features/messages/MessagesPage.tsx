@@ -30,6 +30,69 @@ import {
 } from 'lucide-react';
 import { StatusBadge } from '../../components/StatusBadge';
 
+// Converts UTC ISO timestamp to user's device local time (e.g. "5:01 PM")
+export const formatLocalMessageTime = (isoString?: string, fallback?: string): string => {
+  if (!isoString) return fallback || '';
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return fallback || '';
+    return d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+  } catch {
+    return fallback || '';
+  }
+};
+
+// Formats date divider (e.g. "Today", "Yesterday", "Wed, Oct 29, 2026")
+export const formatMessageDateGroup = (isoString?: string): string => {
+  if (!isoString) return '';
+  try {
+    const msgDate = new Date(isoString);
+    if (isNaN(msgDate.getTime())) return '';
+    const now = new Date();
+
+    const isToday =
+      msgDate.getDate() === now.getDate() &&
+      msgDate.getMonth() === now.getMonth() &&
+      msgDate.getFullYear() === now.getFullYear();
+
+    if (isToday) return 'Today';
+
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    const isYesterday =
+      msgDate.getDate() === yesterday.getDate() &&
+      msgDate.getMonth() === yesterday.getMonth() &&
+      msgDate.getFullYear() === yesterday.getFullYear();
+
+    if (isYesterday) return 'Yesterday';
+
+    if (msgDate.getFullYear() === now.getFullYear()) {
+      return msgDate.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+
+    return msgDate.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch {
+    return '';
+  }
+};
+
+// Formats relative time for sidebar threads dynamically (e.g. "Just now", "5m ago", "2h ago")
+export const formatThreadTimeAgo = (isoString?: string, fallback?: string): string => {
+  if (!isoString) return fallback || '';
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return fallback || '';
+    const diffSec = Math.floor((Date.now() - d.getTime()) / 1000);
+    if (diffSec < 45) return 'Just now';
+    if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+    if (diffSec < 172800) return 'Yesterday';
+    return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  } catch {
+    return fallback || '';
+  }
+};
+
 export const MessagesPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -250,15 +313,33 @@ export const MessagesPage: React.FC = () => {
         });
       });
 
-      // If no branch is selected yet, automatically select the first thread on desktop
-      if (!isBackground && !selectedBranchId && incomingThreads.length > 0 && window.innerWidth >= 1024) {
-        const first = incomingThreads[0];
-        setSearchParams({
-          tab,
-          branch: first.branch_id.toString(),
-          partner: first.partner.id.toString(),
-          overseer: first.is_overseer ? 'true' : 'false',
-        });
+      // Restore last active conversation from localStorage or select first thread on desktop
+      if (!isBackground && !selectedBranchId && incomingThreads.length > 0) {
+        let threadToSelect: MessageThread | undefined;
+        try {
+          const savedBranch = localStorage.getItem('last_active_chat_branch');
+          const savedPartner = localStorage.getItem('last_active_chat_partner');
+          if (savedBranch) {
+            threadToSelect = incomingThreads.find(
+              (t) =>
+                t.branch_id.toString() === savedBranch &&
+                (!savedPartner || t.partner.id.toString() === savedPartner)
+            );
+          }
+        } catch {}
+
+        if (!threadToSelect && window.innerWidth >= 1024) {
+          threadToSelect = incomingThreads[0];
+        }
+
+        if (threadToSelect) {
+          setSearchParams({
+            tab,
+            branch: threadToSelect.branch_id.toString(),
+            partner: threadToSelect.partner.id.toString(),
+            overseer: threadToSelect.is_overseer ? 'true' : 'false',
+          });
+        }
       }
     } catch (err) {
       if (!isBackground) {
@@ -277,12 +358,9 @@ export const MessagesPage: React.FC = () => {
     isOverseer?: boolean,
     isBackground = false
   ) => {
-    const isNewThread =
-      !activeThreadData ||
-      activeThreadData.branch.id !== branchId ||
-      activeThreadData.partner.id !== partnerId;
+    const isNewBranch = !activeThreadData || activeThreadData.branch.id !== branchId;
 
-    if (isNewThread && !isBackground) {
+    if (isNewBranch && !isBackground) {
       setLoadingMessages(true);
     }
 
@@ -290,7 +368,7 @@ export const MessagesPage: React.FC = () => {
       const data = await messagesApi.getThreadMessages(branchId, partnerId, isOverseer);
 
       setActiveThreadData((prev) => {
-        if (!prev || isNewThread) return data;
+        if (!prev || isNewBranch) return data;
 
         const prevMsgs = prev.messages || [];
         const newMsgs = data.messages || [];
@@ -344,13 +422,18 @@ export const MessagesPage: React.FC = () => {
         }
       }
     } finally {
-      if (isNewThread && !isBackground) {
+      if (isNewBranch && !isBackground) {
         setLoadingMessages(false);
       }
     }
   };
 
   const handleSelectThread = (thread: MessageThread) => {
+    try {
+      localStorage.setItem('last_active_chat_branch', thread.branch_id.toString());
+      localStorage.setItem('last_active_chat_partner', thread.partner.id.toString());
+      localStorage.setItem('last_active_chat_tab', activeTab);
+    } catch {}
     setSearchParams({
       tab: activeTab,
       branch: thread.branch_id.toString(),
@@ -611,10 +694,24 @@ export const MessagesPage: React.FC = () => {
                 <MessageSquare className="w-8 h-8 mx-auto text-slate-300" />
                 <p className="font-bold text-slate-700 text-sm">No conversations found</p>
                 <p className="text-slate-500">
-                  {activeTab === 'my_chats'
+                  {searchQuery || filterUnreadOnly
+                    ? 'No conversations match your current search or unread filter.'
+                    : activeTab === 'my_chats'
                     ? 'When you assign tasks to employees, collaborate on branches, or are assigned work, direct chats appear here.'
                     : 'Subordinate hierarchy oversight is for managers, task creators, and administrators to review branches delegated down their management tree. Direct work assigned to you is in "My Chats".'}
                 </p>
+                {(searchQuery || filterUnreadOnly) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('');
+                      setFilterUnreadOnly(false);
+                    }}
+                    className="mt-2 px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition cursor-pointer"
+                  >
+                    Clear Search & Filters
+                  </button>
+                )}
               </div>
             ) : (
               filteredThreads.map((thread) => {
@@ -672,7 +769,7 @@ export const MessagesPage: React.FC = () => {
                           {thread.partner.name}
                         </h3>
                         <span className="text-[10px] text-slate-400 shrink-0 font-medium">
-                          {thread.last_message_time_ago}
+                          {formatThreadTimeAgo(thread.last_message_at, thread.last_message_time_ago)}
                         </span>
                       </div>
 
@@ -965,32 +1062,46 @@ export const MessagesPage: React.FC = () => {
                 ) : (
                   activeThreadData.messages.map((msg, index) => {
                     const isMe = msg.is_me;
+                    const prevMsg = index > 0 ? activeThreadData.messages[index - 1] : null;
+
+                    // Show date divider if date changed from previous message
+                    const currentDateGroup = formatMessageDateGroup(msg.created_at);
+                    const prevDateGroup = prevMsg ? formatMessageDateGroup(prevMsg.created_at) : null;
+                    const showDateDivider = !prevMsg || (currentDateGroup && currentDateGroup !== prevDateGroup);
+
+                    const localTime = formatLocalMessageTime(msg.created_at, msg.time_formatted);
 
                     return (
-                      <div
-                        key={msg.id || index}
-                        className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
-                      >
-                        {/* Sender Label for Subordinate Oversight or Left Bubble */}
-                        <div className="flex items-center gap-1.5 mb-1 px-1 text-xs text-slate-400 font-medium">
-                          <span className="font-semibold text-slate-700">{msg.sender_name}</span>
-                          {msg.sender_badge && (
-                            <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                              {msg.sender_badge}
+                      <React.Fragment key={msg.id || index}>
+                        {showDateDivider && currentDateGroup && (
+                          <div className="flex items-center justify-center my-3 select-none">
+                            <span className="px-3 py-1 rounded-full text-[11px] font-bold bg-slate-100 text-slate-600 border border-slate-200/80 shadow-2xs">
+                              {currentDateGroup}
                             </span>
-                          )}
-                          <span>•</span>
-                          <span>{msg.time_formatted}</span>
-                          {isMe && (
-                            <span title={msg.is_read ? 'Seen' : 'Delivered'}>
-                              {msg.is_read ? (
-                                <CheckCheck className="w-3.5 h-3.5 text-blue-500 inline" />
-                              ) : (
-                                <Check className="w-3.5 h-3.5 text-slate-400 inline" />
-                              )}
-                            </span>
-                          )}
-                        </div>
+                          </div>
+                        )}
+
+                        <div className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                          {/* Sender Label for Subordinate Oversight or Left Bubble */}
+                          <div className="flex items-center gap-1.5 mb-1 px-1 text-xs text-slate-400 font-medium">
+                            <span className="font-semibold text-slate-700">{msg.sender_name}</span>
+                            {msg.sender_badge && (
+                              <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                                {msg.sender_badge}
+                              </span>
+                            )}
+                            <span>•</span>
+                            <span className="font-medium text-slate-500">{localTime}</span>
+                            {isMe && (
+                              <span title={msg.is_read ? 'Seen' : 'Delivered'}>
+                                {msg.is_read ? (
+                                  <CheckCheck className="w-3.5 h-3.5 text-blue-500 inline" />
+                                ) : (
+                                  <Check className="w-3.5 h-3.5 text-slate-400 inline" />
+                                )}
+                              </span>
+                            )}
+                          </div>
 
                         {/* Message Bubble */}
                         <div
@@ -1081,7 +1192,8 @@ export const MessagesPage: React.FC = () => {
                           )}
                         </div>
                       </div>
-                    );
+                    </React.Fragment>
+                  );
                   })
                 )}
                 <div ref={messagesEndRef} />

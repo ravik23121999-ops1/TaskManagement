@@ -28,21 +28,34 @@ class MessageController extends Controller
         $tab = $request->query('tab', 'my_chats');
 
         if ($tab === 'other') {
-            return $this->getOtherCommunicationsThreads($user);
+            return $this->getOtherCommunicationsThreads($user, $request);
         }
 
-        return $this->getMyChatsThreads($user);
+        return $this->getMyChatsThreads($user, $request);
+    }
+
+    /**
+     * Resolve user client timezone safely (defaults to app timezone / UTC)
+     */
+    private function resolveTimezone(Request $request): string
+    {
+        $tz = $request->header('X-Timezone') ?: $request->query('timezone');
+        if ($tz && in_array($tz, timezone_identifiers_list())) {
+            return $tz;
+        }
+        return config('app.timezone', 'UTC');
     }
 
     /**
      * Tab 1: My Chats (Direct Branch Conversations with Assignees and Collaborators)
      */
-    protected function getMyChatsThreads(User $user): JsonResponse
+    protected function getMyChatsThreads(User $user, ?Request $request = null): JsonResponse
     {
         // Find all branches where current user is directly involved:
         // - As Assignee (owner_id or current assignment assigned_to_id)
         // - As Assigner (current assignment assigned_by_id or task creator)
         // - As Collaborator (active in task_collaborators)
+        // - Or has participated in message history
         $branches = TaskBranch::with([
             'task.creator.department',
             'owner.department',
@@ -51,14 +64,13 @@ class MessageController extends Controller
             'collaborators.user.department',
             'latestMessage.sender',
         ])
-        ->whereHas('task', function ($q) {
-            $q->whereNull('deleted_at');
-        })
+        ->whereHas('task')
         ->where(function ($q) use ($user) {
             $q->where('owner_id', $user->id)
               ->orWhereHas('task', fn($tq) => $tq->where('creator_id', $user->id))
               ->orWhereHas('assignments', fn($aq) => $aq->where('assigned_to_id', $user->id)->orWhere('assigned_by_id', $user->id))
-              ->orWhereHas('collaborators', fn($cq) => $cq->where('user_id', $user->id)->whereNull('removed_at'));
+              ->orWhereHas('collaborators', fn($cq) => $cq->where('user_id', $user->id)->whereNull('removed_at'))
+              ->orWhereHas('messages', fn($mq) => $mq->where('sender_id', $user->id)->orWhere('recipient_id', $user->id));
         })
         ->get();
 
@@ -111,8 +123,14 @@ class MessageController extends Controller
             $isAssignee = ($user->id === $assignee->id);
             $isCollaborator = $activeCollaborators->contains('user_id', $user->id);
 
-            // In "My Chats", user MUST be directly involved on this branch
-            if (!$isAssigner && !$isAssignee && !$isCollaborator) {
+            $hasUserMessages = TaskMessage::where('task_branch_id', $branch->id)
+                ->where(function ($q) use ($user) {
+                    $q->where('sender_id', $user->id)->orWhere('recipient_id', $user->id);
+                })
+                ->exists();
+
+            // In "My Chats", user MUST be directly involved on this branch or have participated in its chat history
+            if (!$isAssigner && !$isAssignee && !$isCollaborator && !$hasUserMessages) {
                 continue;
             }
 
@@ -172,6 +190,36 @@ class MessageController extends Controller
                         'thread_role' => 'Assignee',
                         'my_role' => 'collaborator',
                     ];
+                }
+            }
+
+            // Permanently retain chat history: include any users the current user exchanged messages with on this branch
+            if ($hasUserMessages) {
+                $pastMessagePartners = TaskMessage::where('task_branch_id', $branch->id)
+                    ->where(function ($q) use ($user) {
+                        $q->where('sender_id', $user->id)->orWhere('recipient_id', $user->id);
+                    })
+                    ->with(['sender.department', 'recipient.department'])
+                    ->get();
+
+                foreach ($pastMessagePartners as $pMsg) {
+                    $otherUser = ($pMsg->sender_id === $user->id) ? $pMsg->recipient : $pMsg->sender;
+                    if ($otherUser && $otherUser->id !== $user->id) {
+                        $alreadyExists = collect($counterparts)->contains(fn($c) => $c['user']->id === $otherUser->id);
+                        if (!$alreadyExists) {
+                            $roleLabel = 'Chat Partner';
+                            if ($otherUser->id === $assigner->id) $roleLabel = 'Assigner';
+                            elseif ($otherUser->id === $assignee->id) $roleLabel = 'Assignee';
+                            elseif ($otherUser->id === $task->creator_id) $roleLabel = 'Task Creator';
+                            elseif (in_array($otherUser->role, ['admin', 'sub_admin'])) $roleLabel = 'Executive Reviewer';
+
+                            $counterparts[] = [
+                                'user' => $otherUser,
+                                'thread_role' => $roleLabel,
+                                'my_role' => $isAssigner ? 'assigner' : ($isAssignee ? 'assignee' : 'collaborator'),
+                            ];
+                        }
+                    }
                 }
             }
 
@@ -252,7 +300,7 @@ class MessageController extends Controller
      * Tab 2: Other Communications (Branch Hierarchy & Subordinate Oversight)
      * Senior managers, task creators, and admins can review and chat in all below branches
      */
-    protected function getOtherCommunicationsThreads(User $user): JsonResponse
+    protected function getOtherCommunicationsThreads(User $user, ?Request $request = null): JsonResponse
     {
         $isAdminOrSubAdmin = in_array($user->role, ['admin', 'sub_admin']);
 
@@ -264,8 +312,7 @@ class MessageController extends Controller
             'collaborators.user.department',
         ])
         ->whereHas('task', function ($q) {
-            $q->whereNull('deleted_at')
-              ->where('handling_method', '!=', 'work_alone'); // Skip work_alone tasks in hierarchy oversight
+            $q->where('handling_method', '!=', 'work_alone'); // Skip work_alone tasks in hierarchy oversight
         });
 
         if (!$isAdminOrSubAdmin) {
@@ -410,7 +457,8 @@ class MessageController extends Controller
         $isDirectParty = (
             $user->id === $assigner->id ||
             $user->id === $assignee->id ||
-            $branch->collaborators->contains('user_id', $user->id)
+            $branch->collaborators->contains('user_id', $user->id) ||
+            $branch->messages()->where(fn($mq) => $mq->where('sender_id', $user->id)->orWhere('recipient_id', $user->id))->exists()
         );
 
         $isSeniorOverseer = (
@@ -493,21 +541,11 @@ class MessageController extends Controller
         ])
         ->where('task_branch_id', $branch->id);
 
-        // If there are collaborators present, show messages between user and partner (unless overseer/admin reviewing)
-        $hasActiveCollaborators = $branch->collaborators->filter(fn($c) => $c->isActive() && $c->user)->isNotEmpty();
-        if ($hasActiveCollaborators && !$isOverseer && !$isAdminOrSubAdmin) {
-            $messagesQuery->where(function ($q) use ($user, $partner) {
-                $q->where(function ($sq) use ($user, $partner) {
-                    $sq->where('sender_id', $user->id)->where('recipient_id', $partner->id);
-                })->orWhere(function ($sq) use ($user, $partner) {
-                    $sq->where('sender_id', $partner->id)->where('recipient_id', $user->id);
-                });
-            });
-        }
-
         $rawMessages = $messagesQuery->orderBy('created_at', 'asc')->get();
 
-        $messages = $rawMessages->map(function ($m) use ($user, $assigner, $assignee, $task) {
+        $tz = $this->resolveTimezone($request);
+
+        $messages = $rawMessages->map(function ($m) use ($user, $assigner, $assignee, $task, $tz) {
             // Determine badge label for sender
             $senderBadge = 'Member';
             if ($m->sender_id === $assigner->id) {
@@ -536,8 +574,8 @@ class MessageController extends Controller
                 'is_read' => $m->is_read,
                 'read_at' => $m->read_at?->toIso8601String(),
                 'created_at' => $m->created_at->toIso8601String(),
-                'time_formatted' => $m->created_at->format('g:i A'),
-                'date_formatted' => $m->created_at->format('M d, Y'),
+                'time_formatted' => $m->created_at->copy()->setTimezone($tz)->format('g:i A'),
+                'date_formatted' => $m->created_at->copy()->setTimezone($tz)->format('M d, Y'),
                 'attachment' => $m->attachment ? [
                     'id' => $m->attachment->id,
                     'file_name' => $m->attachment->file_name,
@@ -719,6 +757,8 @@ class MessageController extends Controller
             $senderBadge = 'Executive Reviewer';
         }
 
+        $tz = $this->resolveTimezone($request);
+
         return response()->json([
             'status' => 'success',
             'message' => [
@@ -737,8 +777,8 @@ class MessageController extends Controller
                 'is_read' => false,
                 'read_at' => null,
                 'created_at' => $message->created_at->toIso8601String(),
-                'time_formatted' => $message->created_at->format('g:i A'),
-                'date_formatted' => $message->created_at->format('M d, Y'),
+                'time_formatted' => $message->created_at->copy()->setTimezone($tz)->format('g:i A'),
+                'date_formatted' => $message->created_at->copy()->setTimezone($tz)->format('M d, Y'),
                 'attachment' => $message->attachment ? [
                     'id' => $message->attachment->id,
                     'file_name' => $message->attachment->file_name,
