@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { departmentsApi } from '../../api/departments';
-import type { Department } from '../../api/departments';
+import type { Department, DepartmentMember } from '../../api/departments';
 import { Pagination } from '../../components/Pagination';
-import { Building2, Plus, Edit2, Search, X } from 'lucide-react';
+import { TableSkeleton } from '../../components/TableSkeleton';
+import { Building2, Plus, Edit2, Search, X, Users, MessageSquare, ChevronRight, ExternalLink } from 'lucide-react';
 
 export const DepartmentsPage: React.FC = () => {
+  const navigate = useNavigate();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -13,13 +16,20 @@ export const DepartmentsPage: React.FC = () => {
   const [lastPage, setLastPage] = useState(1);
   const [total, setTotal] = useState(0);
 
-  // Modal
+  // Edit / Create Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDept, setEditingDept] = useState<Department | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  // Department Members Modal
+  const [isMembersModalOpen, setIsMembersModalOpen] = useState(false);
+  const [selectedDeptForMembers, setSelectedDeptForMembers] = useState<Department | null>(null);
+  const [membersList, setMembersList] = useState<DepartmentMember[]>([]);
+  const [loadingMembers, setLoadingMembers] = useState(false);
+  const [memberSearchQuery, setMemberSearchQuery] = useState('');
 
   useEffect(() => {
     loadDepartments();
@@ -43,6 +53,27 @@ export const DepartmentsPage: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const handleOpenMembers = async (dept: Department) => {
+    setSelectedDeptForMembers(dept);
+    setIsMembersModalOpen(true);
+    setLoadingMembers(true);
+    setMemberSearchQuery('');
+    try {
+      const res = await departmentsApi.getMembers(dept.id);
+      setMembersList(res.members || []);
+    } catch (err) {
+      console.error('Failed to load department members', err);
+    } finally {
+      setLoadingMembers(false);
+    }
+  };
+
+  const filteredMembers = membersList.filter((m) =>
+    m.name.toLowerCase().includes(memberSearchQuery.toLowerCase()) ||
+    m.email.toLowerCase().includes(memberSearchQuery.toLowerCase()) ||
+    m.role.toLowerCase().includes(memberSearchQuery.toLowerCase())
+  );
 
   const openCreateModal = () => {
     setEditingDept(null);
@@ -153,9 +184,7 @@ export const DepartmentsPage: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center text-slate-400">Loading departments...</td>
-                </tr>
+                <TableSkeleton rows={6} cols={5} />
               ) : departments.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-12 text-center text-slate-400">
@@ -165,18 +194,41 @@ export const DepartmentsPage: React.FC = () => {
                 </tr>
               ) : (
                 departments.map((d, idx) => (
-                  <tr key={d.id} className="hover:bg-slate-50/60 transition">
+                  <tr
+                    key={d.id}
+                    onClick={() => handleOpenMembers(d)}
+                    className="hover:bg-blue-50/40 transition cursor-pointer group"
+                    title="Click department to view team members"
+                  >
                     <td className="py-4 px-6 text-slate-400 font-semibold">{idx + 1}</td>
                     <td className="py-4 px-6">
-                      <p className="font-bold text-slate-800 text-sm">{d.name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition flex items-center gap-1.5">
+                          <span>{d.name}</span>
+                          <ChevronRight className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </p>
+                      </div>
                       {d.description && <p className="text-[11px] text-slate-400 mt-0.5">{d.description}</p>}
                     </td>
-                    <td className="py-4 px-6 font-semibold text-slate-700">
-                      {d.members_count} members
+                    <td className="py-4 px-6">
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenMembers(d);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/80 font-bold transition text-xs shadow-2xs"
+                        title="Click to view all members"
+                      >
+                        <Users className="w-3.5 h-3.5 text-blue-600" />
+                        <span>{d.members_count} members</span>
+                      </span>
                     </td>
                     <td className="py-4 px-6 whitespace-nowrap">
                       <button
-                        onClick={() => handleToggleActive(d)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleActive(d);
+                        }}
                         className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border transition cursor-pointer ${
                           d.is_active
                             ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
@@ -187,13 +239,30 @@ export const DepartmentsPage: React.FC = () => {
                       </button>
                     </td>
                     <td className="py-4 px-6 text-right whitespace-nowrap">
-                      <button
-                        onClick={() => openEditModal(d)}
-                        className="px-3 py-1 bg-slate-100 hover:bg-blue-50 text-blue-600 rounded-lg font-semibold text-xs transition inline-flex items-center gap-1 cursor-pointer"
-                      >
-                        <Edit2 className="w-3 h-3" />
-                        <span>Edit</span>
-                      </button>
+                      <div className="inline-flex items-center gap-1.5">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenMembers(d);
+                          }}
+                          className="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/80 rounded-lg font-semibold text-xs transition inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                          title="View all members of this department"
+                        >
+                          <Users className="w-3 h-3 text-blue-600" />
+                          <span>View Members</span>
+                        </button>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditModal(d);
+                          }}
+                          className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold text-xs transition inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                          <span>Edit</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -205,7 +274,7 @@ export const DepartmentsPage: React.FC = () => {
         <Pagination currentPage={page} lastPage={lastPage} total={total} onPageChange={(p) => setPage(p)} />
       </div>
 
-      {/* Modal */}
+      {/* Edit / Create Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md p-6 space-y-4">
@@ -213,7 +282,7 @@ export const DepartmentsPage: React.FC = () => {
               <h3 className="text-sm font-bold text-slate-900">
                 {editingDept ? 'Edit Department' : 'Add New Department'}
               </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1">
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -252,19 +321,243 @@ export const DepartmentsPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 font-semibold"
+                  className="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 font-semibold cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-xs"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold shadow-xs cursor-pointer"
                 >
                   {saving ? 'Saving...' : editingDept ? 'Update' : 'Create'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Department Members Modal */}
+      {isMembersModalOpen && selectedDeptForMembers && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-200/90 w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-100 flex items-start justify-between gap-4 bg-slate-50/60">
+              <div className="flex items-start gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-500 text-white flex items-center justify-center shadow-md shadow-blue-500/20 shrink-0">
+                  <Building2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2.5 flex-wrap">
+                    <h2 className="text-lg font-bold text-slate-900">
+                      {selectedDeptForMembers.name} Department
+                    </h2>
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-700">
+                      {selectedDeptForMembers.members_count} members
+                    </span>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                        selectedDeptForMembers.is_active
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-slate-100 text-slate-500 border-slate-200'
+                      }`}
+                    >
+                      {selectedDeptForMembers.is_active ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {selectedDeptForMembers.description || 'No specific description provided for this department.'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsMembersModalOpen(false)}
+                className="w-8 h-8 rounded-xl border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Filter Search Bar */}
+            <div className="px-6 py-3 border-b border-slate-100 flex items-center justify-between gap-3 bg-white">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Filter members by name, email, role..."
+                  value={memberSearchQuery}
+                  onChange={(e) => setMemberSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                />
+              </div>
+
+              <button
+                onClick={() => {
+                  setIsMembersModalOpen(false);
+                  navigate(`/users?department=${selectedDeptForMembers.id}`);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition cursor-pointer shrink-0"
+                title="Manage and assign users in full Users directory"
+              >
+                <span>Directory</span>
+                <ExternalLink className="w-3.5 h-3.5 text-slate-500" />
+              </button>
+            </div>
+
+            {/* Members Body List */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-3">
+              {loadingMembers ? (
+                <div className="space-y-3 animate-pulse">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="p-3.5 rounded-2xl border border-slate-100 bg-slate-50/50 flex items-center justify-between gap-4"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-11 h-11 rounded-2xl bg-slate-200 shrink-0" />
+                        <div className="space-y-1.5">
+                          <div className="h-3.5 w-32 bg-slate-200 rounded" />
+                          <div className="h-3 w-44 bg-slate-100 rounded" />
+                        </div>
+                      </div>
+                      <div className="h-6 w-20 bg-slate-200 rounded-full" />
+                    </div>
+                  ))}
+                </div>
+              ) : filteredMembers.length === 0 ? (
+                <div className="py-12 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+                    <Users className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-800">
+                      {memberSearchQuery ? 'No matching members found' : 'No members in this department yet'}
+                    </p>
+                    <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
+                      {memberSearchQuery
+                        ? 'Try modifying your search query to find employees in this department.'
+                        : 'Assign employees or managers to this department from the Users Management section.'}
+                    </p>
+                  </div>
+                  {!memberSearchQuery && (
+                    <button
+                      onClick={() => {
+                        setIsMembersModalOpen(false);
+                        navigate('/users');
+                      }}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Assign Members in Users</span>
+                    </button>
+                  )}
+                </div>
+              ) : (
+                filteredMembers.map((member) => {
+                  let roleBadge = 'bg-slate-100 text-slate-700 border-slate-200';
+                  if (member.role === 'admin') roleBadge = 'bg-rose-50 text-rose-700 border-rose-200';
+                  else if (member.role === 'sub_admin') roleBadge = 'bg-purple-50 text-purple-700 border-purple-200';
+                  else if (member.role === 'employee') roleBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+
+                  return (
+                    <div
+                      key={member.id}
+                      className="p-3.5 rounded-2xl border border-slate-200/80 bg-white hover:bg-slate-50/70 transition flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-2xs"
+                    >
+                      {/* Avatar & User Details */}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="relative shrink-0">
+                          <div className="w-11 h-11 rounded-2xl overflow-hidden bg-slate-900 border border-slate-200 shadow-2xs flex items-center justify-center">
+                            <img
+                              src={
+                                member.avatar_url ||
+                                `/assets/roles/${member.role}_${member.gender || 'female'}.png`
+                              }
+                              alt={member.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none';
+                              }}
+                            />
+                            <span className="text-sm font-bold text-white absolute">
+                              {member.name.charAt(0)}
+                            </span>
+                          </div>
+                          {member.is_active && (
+                            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 ring-2 ring-white" />
+                          )}
+                        </div>
+
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="text-xs font-bold text-slate-900 truncate">
+                              {member.name}
+                            </h4>
+                            <span className={`px-2 py-0.2 rounded-full text-[10px] font-bold border capitalize ${roleBadge}`}>
+                              {member.role.replace('_', ' ')}
+                            </span>
+                            {!member.is_active && (
+                              <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-100 text-slate-500">
+                                Inactive
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-500 truncate mt-0.5">{member.email}</p>
+                        </div>
+                      </div>
+
+                      {/* Workload Metrics & Quick Message Action */}
+                      <div className="flex items-center justify-between sm:justify-end gap-2.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                        <div className="flex items-center gap-1.5 text-[11px]">
+                          <span
+                            title="Active ongoing branch tasks"
+                            className="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200/80 font-bold"
+                          >
+                            {member.active_tasks_count} active
+                          </span>
+                          <span
+                            title="Completed branch tasks"
+                            className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200/80 font-bold"
+                          >
+                            {member.completed_tasks_count} done
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsMembersModalOpen(false);
+                            navigate('/messages');
+                          }}
+                          className="h-7 px-2.5 rounded-lg border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 text-slate-600 transition text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer"
+                          title="Open Work Messages"
+                        >
+                          <MessageSquare className="w-3 h-3 text-blue-600" />
+                          <span>Chat</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between text-xs">
+              <span className="text-slate-500">
+                Showing <strong>{filteredMembers.length}</strong> of <strong>{membersList.length}</strong> department team members
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsMembersModalOpen(false)}
+                className="px-4 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl transition cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

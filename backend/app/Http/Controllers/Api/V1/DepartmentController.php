@@ -131,4 +131,41 @@ class DepartmentController extends Controller
             'data' => new DepartmentResource($department->loadCount(['users', 'tasks'])),
         ]);
     }
+
+    public function members(Department $department): JsonResponse
+    {
+        $members = $department->users()
+            ->withCount([
+                'ownedBranches as active_tasks_count' => fn($q) => $q->whereNotIn('status', ['completed', 'cancelled']),
+                'ownedBranches as completed_tasks_count' => fn($q) => $q->where('status', 'completed'),
+            ])
+            ->latest('id')
+            ->get()
+            ->map(fn($u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'role' => $u->role,
+                'gender' => $u->gender ?? 'female',
+                'avatar_url' => $u->avatar_url,
+                'is_active' => (bool) $u->is_active,
+                'active_tasks_count' => (int) $u->active_tasks_count,
+                'completed_tasks_count' => (int) $u->completed_tasks_count,
+                'created_at' => $u->created_at?->format('d M Y'),
+            ])
+            ->values()
+            ->all();
+
+        return response()->json([
+            'department' => [
+                'id' => $department->id,
+                'name' => $department->name,
+                'description' => $department->description,
+                'is_active' => (bool) $department->is_active,
+                'members_count' => count($members),
+                'tasks_count' => $department->tasks()->count(),
+            ],
+            'members' => $members,
+        ]);
+    }
 }

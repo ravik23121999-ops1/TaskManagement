@@ -43,6 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Departments
     Route::apiResource('departments', DepartmentController::class);
+    Route::get('/departments/{department}/members', [DepartmentController::class, 'members']);
     Route::put('/departments/{department}/activate', [DepartmentController::class, 'activate']);
     Route::put('/departments/{department}/deactivate', [DepartmentController::class, 'deactivate']);
 

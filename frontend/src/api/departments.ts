@@ -10,6 +10,31 @@ export interface Department {
   created_at: string;
 }
 
+export interface DepartmentMember {
+  id: number;
+  name: string;
+  email: string;
+  role: 'admin' | 'sub_admin' | 'employee';
+  gender?: 'male' | 'female';
+  avatar_url?: string;
+  is_active: boolean;
+  active_tasks_count: number;
+  completed_tasks_count: number;
+  created_at?: string;
+}
+
+export interface DepartmentMembersResponse {
+  department: {
+    id: number;
+    name: string;
+    description: string | null;
+    is_active: boolean;
+    members_count: number;
+    tasks_count: number;
+  };
+  members: DepartmentMember[];
+}
+
 export interface DepartmentFilters {
   search?: string;
   is_active?: boolean;
@@ -26,6 +51,11 @@ export const departmentsApi = {
   get: async (id: number): Promise<Department> => {
     const response = await apiClient.get(`/departments/${id}`);
     return response.data.data;
+  },
+
+  getMembers: async (id: number): Promise<DepartmentMembersResponse> => {
+    const response = await apiClient.get(`/departments/${id}/members`);
+    return response.data;
   },
 
   create: async (data: { name: string; description?: string }): Promise<Department> => {
