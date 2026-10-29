@@ -268,7 +268,7 @@ class ReportsController extends Controller
         }])->get()->map(fn($d) => [
             'department' => $d->name,
             'count' => $d->tasks_count,
-        ]);
+        ])->values()->all();
 
         // Employee Workload Table
         $employees = User::withCount([
@@ -292,7 +292,7 @@ class ReportsController extends Controller
                 'pending' => $u->pending_count,
                 'overdue' => $overdueCount,
             ];
-        });
+        })->values()->all();
 
         return response()->json([
             'data' => [

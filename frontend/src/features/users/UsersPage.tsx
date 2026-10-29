@@ -13,6 +13,7 @@ import {
   X,
   Trash2,
   AlertCircle,
+  CheckCircle2,
 } from 'lucide-react';
 
 export const UsersPage: React.FC = () => {
@@ -52,6 +53,16 @@ export const UsersPage: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
+  // Toast Notification
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast((prev) => (prev?.message === message ? null : prev));
+    }, 4000);
+  };
+
   useEffect(() => {
     checkPermissions();
   }, [currentUser?.role]);
@@ -79,6 +90,7 @@ export const UsersPage: React.FC = () => {
     setDeleteError('');
     try {
       await usersApi.delete(deletingUser.id);
+      showToast(`User "${deletingUser.name}" deleted successfully.`);
       setDeletingUser(null);
       loadUsers();
     } catch (err: any) {
@@ -173,6 +185,7 @@ export const UsersPage: React.FC = () => {
         });
       }
       setIsModalOpen(false);
+      showToast(editingUser ? 'User profile updated successfully.' : 'New user registered successfully.');
       loadUsers();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to save user. Please check credentials.');
@@ -185,12 +198,14 @@ export const UsersPage: React.FC = () => {
     try {
       if (u.is_active) {
         await usersApi.deactivate(u.id);
+        showToast(`${u.name} deactivated successfully.`);
       } else {
         await usersApi.activate(u.id);
+        showToast(`${u.name} activated successfully.`);
       }
       loadUsers();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to update user status');
+      showToast(err.response?.data?.message || 'Failed to update user status.', 'error');
     }
   };
 
@@ -551,6 +566,23 @@ export const UsersPage: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+      {/* Floating Modern Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border backdrop-blur-md animate-in slide-in-from-bottom-3 duration-200 text-xs font-semibold select-none bg-white/95 text-slate-800 border-slate-200 max-w-md">
+          {toast.type === 'success' ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+          )}
+          <span className="flex-1 leading-snug">{toast.message}</span>
+          <button
+            onClick={() => setToast(null)}
+            className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition shrink-0"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
     </div>

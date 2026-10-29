@@ -46,7 +46,10 @@ export const ReportsPage: React.FC = () => {
 
   if (!data) return null;
 
-  const maxStatusCount = Math.max(...data.tasks_by_status.map((s: any) => s.count), 1);
+  const tasksByStatus: any[] = Array.isArray(data.tasks_by_status) ? data.tasks_by_status : [];
+  const tasksByDepartment: any[] = Array.isArray(data.tasks_by_department) ? data.tasks_by_department : [];
+  const maxStatusCount = Math.max(...tasksByStatus.map((s: any) => s.count || 0), 1);
+  const maxDeptCount = Math.max(...tasksByDepartment.map((d: any) => d.count || 0), 1);
 
   return (
     <div className="space-y-6">
@@ -161,8 +164,8 @@ export const ReportsPage: React.FC = () => {
         <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
           <h2 className="text-sm font-bold text-slate-800 mb-6">Tasks by Status</h2>
           <div className="h-56 flex items-end justify-between gap-4 px-2 pt-6 border-b border-slate-100">
-            {data.tasks_by_status.map((item: any, idx: number) => {
-              const heightPct = Math.max(Math.round((item.count / maxStatusCount) * 100), 8);
+            {tasksByStatus.map((item: any, idx: number) => {
+              const heightPct = Math.max(Math.round(((item.count || 0) / maxStatusCount) * 100), 8);
               return (
                 <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
                   <span className="text-[11px] font-bold text-slate-700 opacity-90">{item.count}</span>
@@ -186,9 +189,8 @@ export const ReportsPage: React.FC = () => {
             <span>Tasks by Department</span>
           </h2>
           <div className="space-y-4 pt-2">
-            {data.tasks_by_department.map((dept: any, idx: number) => {
-              const maxDept = Math.max(...data.tasks_by_department.map((d: any) => d.count), 1);
-              const pct = Math.round((dept.count / maxDept) * 100);
+            {tasksByDepartment.map((dept: any, idx: number) => {
+              const pct = Math.round(((dept.count || 0) / maxDeptCount) * 100);
               const colors = ['#3b82f6', '#0ea5e9', '#10b981', '#f59e0b', '#8b5cf6'];
               const color = colors[idx % colors.length];
 

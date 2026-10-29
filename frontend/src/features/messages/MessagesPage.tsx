@@ -21,6 +21,9 @@ import {
   FileText,
   ChevronLeft,
   Info,
+  AlertCircle,
+  CheckCircle2,
+  Sparkles,
 } from 'lucide-react';
 import { StatusBadge } from '../../components/StatusBadge';
 
@@ -52,6 +55,16 @@ export const MessagesPage: React.FC = () => {
   const [downloadingAttachmentId, setDownloadingAttachmentId] = useState<number | null>(null);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [showTaskContext, setShowTaskContext] = useState(false);
+
+  // Toast Notification
+  const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast((prev) => (prev?.message === message ? null : prev));
+    }, 4500);
+  };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -123,7 +136,9 @@ export const MessagesPage: React.FC = () => {
     } catch (err: any) {
       console.error('Failed to load thread messages', err);
       if (err?.response?.status === 403) {
-        alert('Access Denied: Same-level assignees cannot access other branch conversations.');
+        showToast('Access Denied: Same-level assignees cannot access other branch conversations.', 'error');
+      } else {
+        showToast(err?.response?.data?.message || 'Could not load branch messages.', 'error');
       }
     } finally {
       setLoadingMessages(false);
@@ -219,7 +234,7 @@ export const MessagesPage: React.FC = () => {
           ? Object.values(err.response.data.errors).flat().join(' ')
           : null) ||
         'Could not deliver message. Please verify network and try again.';
-      alert(errorMsg);
+      showToast(errorMsg, 'error');
     } finally {
       setSendingMessage(false);
       setUploadingFile(false);
@@ -232,7 +247,7 @@ export const MessagesPage: React.FC = () => {
       await tasksApi.downloadAttachment(attachmentId, fileName);
     } catch (err: any) {
       console.error('Download error:', err);
-      alert(err.response?.data?.message || 'Failed to download attachment');
+      showToast(err.response?.data?.message || 'Failed to download attachment', 'error');
     } finally {
       setDownloadingAttachmentId(null);
     }
@@ -1011,6 +1026,22 @@ export const MessagesPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Floating Modern Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border backdrop-blur-md animate-in slide-in-from-bottom-3 duration-200 text-xs font-semibold select-none bg-white/95 text-slate-800 border-slate-200 max-w-md">
+          {toast.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />}
+          {toast.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />}
+          {toast.type === 'info' && <Sparkles className="w-4 h-4 text-blue-500 shrink-0" />}
+          <span className="flex-1 leading-snug">{toast.message}</span>
+          <button
+            onClick={() => setToast(null)}
+            className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition shrink-0"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

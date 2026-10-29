@@ -31,11 +31,12 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
 
   const handleDownloadAttachment = async (attachmentId: number, fileName: string) => {
     setDownloadingId(attachmentId);
+    setError('');
     try {
       await tasksApi.downloadAttachment(attachmentId, fileName);
     } catch (err: any) {
       console.error('Download error:', err);
-      alert(err.response?.data?.message || 'Failed to download attachment');
+      setError(err.response?.data?.message || 'Failed to download attachment');
     } finally {
       setDownloadingId(null);
     }

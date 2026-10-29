@@ -300,7 +300,7 @@ export const LoginPage: React.FC = () => {
               </label>
               <button
                 type="button"
-                onClick={() => alert('Please contact your System Administrator to reset your password.')}
+                onClick={() => setError('Password resets are managed administratively. Please contact your QuickLifeNow System Administrator or Operations Lead.')}
                 className="text-blue-600 hover:text-blue-800 font-bold transition cursor-pointer"
               >
                 Forgot password?

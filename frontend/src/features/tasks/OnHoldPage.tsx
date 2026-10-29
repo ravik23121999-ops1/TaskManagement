@@ -4,7 +4,7 @@ import { tasksApi } from '../../api/tasks';
 import type { Task } from '../../api/tasks';
 import { Pagination } from '../../components/Pagination';
 import { TableSkeleton } from '../../components/TableSkeleton';
-import { Search, PauseCircle, PlayCircle, Eye, AlertCircle, Building2, Calendar } from 'lucide-react';
+import { Search, PauseCircle, PlayCircle, Eye, AlertCircle, Building2, Calendar, CheckCircle2, Sparkles, X } from 'lucide-react';
 
 export const OnHoldPage: React.FC = () => {
   const navigate = useNavigate();
@@ -40,14 +40,29 @@ export const OnHoldPage: React.FC = () => {
     }
   };
 
-  const handleResume = async (task: Task) => {
-    if (!confirm(`Are you sure you want to resume task ${task.task_code}: "${task.title}"?`)) return;
+  const [resumingTask, setResumingTask] = useState<Task | null>(null);
+  const [submittingResume, setSubmittingResume] = useState(false);
+  const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
 
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast((prev) => (prev?.message === message ? null : prev));
+    }, 4000);
+  };
+
+  const handleConfirmResume = async () => {
+    if (!resumingTask) return;
+    setSubmittingResume(true);
     try {
-      await tasksApi.resume(task.id);
+      await tasksApi.resume(resumingTask.id);
+      showToast(`Task ${resumingTask.task_code} resumed successfully.`, 'success');
+      setResumingTask(null);
       loadOnHoldTasks();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to resume task');
+      showToast(err.response?.data?.message || 'Failed to resume task', 'error');
+    } finally {
+      setSubmittingResume(false);
     }
   };
 
@@ -221,13 +236,77 @@ export const OnHoldPage: React.FC = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleResume(task);
+                            setResumingTask(task);
                           }}
                           className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-xs transition shadow-xs inline-flex items-center gap-1.5 cursor-pointer group-hover:shadow-sm"
                         >
                           <PlayCircle className="w-3.5 h-3.5" />
                           <span>Resume</span>
                         </button>
+
+
+      {/* Resume Task Confirmation Modal */}
+      {resumingTask && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 text-slate-800 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center">
+                  <PlayCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Resume Task</h3>
+                  <p className="text-xs text-slate-500">Restore task to active workflow</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setResumingTask(null)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Are you sure you want to resume <span className="font-bold text-slate-900">{resumingTask.task_code}: "{resumingTask.title}"</span>? Active workflow tracking and assignment SLAs will immediately resume.
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setResumingTask(null)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmResume}
+                disabled={submittingResume}
+                className="px-5 py-2 text-xs font-bold bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+              >
+                {submittingResume ? 'Resuming...' : 'Confirm Resume'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Modern Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border backdrop-blur-md animate-in slide-in-from-bottom-3 duration-200 text-xs font-semibold select-none bg-white/95 text-slate-800 border-slate-200 max-w-md">
+          {toast.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />}
+          {toast.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />}
+          {toast.type === 'info' && <Sparkles className="w-4 h-4 text-blue-500 shrink-0" />}
+          <span className="flex-1 leading-snug">{toast.message}</span>
+          <button
+            onClick={() => setToast(null)}
+            className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition shrink-0"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
                       </div>
                     </td>
                   </tr>

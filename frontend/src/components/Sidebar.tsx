@@ -54,13 +54,20 @@ const Sidebar: React.FC = () => {
 
   const isActive = (path: string) => {
     if (path === '/' && location.pathname === '/') return true;
-    if (path === '/tasks') return location.pathname === '/tasks';
+    if (path === '/tasks') {
+      const specialSubPages = ['pending', 'pending-with-others', 'my-action', 'collaborations', 'review', 'completed', 'on-hold', 'cancelled', 'create'];
+      const isSpecial = specialSubPages.some((sub) => location.pathname.startsWith(`/tasks/${sub}`));
+      return location.pathname === '/tasks' || (location.pathname.startsWith('/tasks/') && !isSpecial);
+    }
     if (path === '/tasks/pending') {
       return (
         location.pathname === '/tasks/pending' ||
         location.pathname === '/pending' ||
         location.pathname === '/tasks/my-action'
       );
+    }
+    if (path === '/settings') {
+      return location.pathname === '/settings' || location.pathname === '/profile';
     }
     if (path !== '/' && location.pathname === path) return true;
     if (path.startsWith('/tasks/') && location.pathname.startsWith(path)) return true;

@@ -6,7 +6,7 @@ import type { Department, DepartmentMember } from '../../api/departments';
 import { useAuth } from '../auth/AuthContext';
 import { Pagination } from '../../components/Pagination';
 import { TableSkeleton } from '../../components/TableSkeleton';
-import { Building2, Plus, Edit2, Search, X, Users, MessageSquare, ChevronRight, ExternalLink, Trash2, AlertCircle } from 'lucide-react';
+import { Building2, Plus, Edit2, Search, X, Users, MessageSquare, ChevronRight, ExternalLink, Trash2, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export const DepartmentsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -24,6 +24,16 @@ export const DepartmentsPage: React.FC = () => {
   const [deletingDept, setDeletingDept] = useState<Department | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+
+  // Toast Notification
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast((prev) => (prev?.message === message ? null : prev));
+    }, 4000);
+  };
 
   // Edit / Create Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -160,12 +170,14 @@ export const DepartmentsPage: React.FC = () => {
     try {
       if (d.is_active) {
         await departmentsApi.deactivate(d.id);
+        showToast(`Department "${d.name}" deactivated.`, 'success');
       } else {
         await departmentsApi.activate(d.id);
+        showToast(`Department "${d.name}" activated.`, 'success');
       }
       loadDepartments();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to update department status');
+      showToast(err.response?.data?.message || 'Failed to update department status', 'error');
     }
   };
 
@@ -678,6 +690,24 @@ export const DepartmentsPage: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Floating Modern Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border backdrop-blur-md animate-in slide-in-from-bottom-3 duration-200 text-xs font-semibold select-none bg-white/95 text-slate-800 border-slate-200 max-w-md">
+          {toast.type === 'success' ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+          )}
+          <span className="flex-1 leading-snug">{toast.message}</span>
+          <button
+            onClick={() => setToast(null)}
+            className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition shrink-0"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
     </div>

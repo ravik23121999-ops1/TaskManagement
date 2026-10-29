@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { notificationsApi } from '../../api/tasks';
-import { Bell, Check, CheckCircle2, AlertCircle, MessageSquare, ArrowRight } from 'lucide-react';
+import { Bell, Check, CheckCircle2, AlertCircle, MessageSquare, ArrowRight, X } from 'lucide-react';
 
 interface NotificationItem {
   id: number;
@@ -17,6 +17,14 @@ export const NotificationsPage: React.FC = () => {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast((prev) => (prev?.message === message ? null : prev));
+    }, 4000);
+  };
 
   useEffect(() => {
     loadNotifications();
@@ -38,8 +46,9 @@ export const NotificationsPage: React.FC = () => {
     try {
       await notificationsApi.markAllAsRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      showToast('All notifications marked as read.');
     } catch (err) {
-      alert('Failed to mark all notifications as read');
+      showToast('Failed to mark all notifications as read.', 'error');
     }
   };
 
@@ -139,7 +148,25 @@ export const NotificationsPage: React.FC = () => {
           })
         )}
       </div>
-    </div>
+    
+      {/* Floating Modern Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border backdrop-blur-md animate-in slide-in-from-bottom-3 duration-200 text-xs font-semibold select-none bg-white/95 text-slate-800 border-slate-200 max-w-md">
+          {toast.type === 'success' ? (
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+          ) : (
+            <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+          )}
+          <span className="flex-1 leading-snug">{toast.message}</span>
+          <button
+            onClick={() => setToast(null)}
+            className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition shrink-0"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+</div>
   );
 };
 

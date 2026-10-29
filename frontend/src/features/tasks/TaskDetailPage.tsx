@@ -33,6 +33,7 @@ import {
   Download,
   HelpCircle,
   Zap,
+  Sparkles,
   Ban,
   Trash2,
 } from 'lucide-react';
@@ -101,6 +102,22 @@ export const TaskDetailPage: React.FC = () => {
   const [deletingTask, setDeletingTask] = useState(false);
   const [deleteError, setDeleteError] = useState('');
 
+  // Hold Task Modal state
+  const [isHoldModalOpen, setIsHoldModalOpen] = useState(false);
+  const [holdReason, setHoldReason] = useState('');
+  const [holdingTask, setHoldingTask] = useState(false);
+  const [holdError, setHoldError] = useState('');
+
+  // Toast Notification state
+  const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast((prev) => (prev?.message === message ? null : prev));
+    }, 4000);
+  };
+
   useEffect(() => {
     if (id) loadTask(Number(id));
   }, [id]);
@@ -161,16 +178,31 @@ export const TaskDetailPage: React.FC = () => {
     }
   };
 
-  const handleHold = async () => {
-    if (!task) return;
-    const reason = prompt('Please enter the reason for placing this task on hold:');
-    if (!reason || !reason.trim()) return;
+  const handleOpenHoldModal = () => {
+    setHoldReason('');
+    setHoldError('');
+    setIsHoldModalOpen(true);
+  };
 
+  const handleConfirmHold = async () => {
+    if (!task) return;
+    if (!holdReason.trim()) {
+      setHoldError('Please provide a reason note for placing this task on hold.');
+      return;
+    }
+
+    setHoldingTask(true);
+    setHoldError('');
     try {
-      await tasksApi.hold(task.id, reason.trim());
+      await tasksApi.hold(task.id, holdReason.trim());
+      setIsHoldModalOpen(false);
+      setHoldReason('');
+      showToast('Task has been placed on hold.', 'info');
       loadTask(task.id);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to place task on hold');
+      setHoldError(err.response?.data?.message || 'Failed to place task on hold');
+    } finally {
+      setHoldingTask(false);
     }
   };
 
@@ -178,9 +210,10 @@ export const TaskDetailPage: React.FC = () => {
     if (!task) return;
     try {
       await tasksApi.resume(task.id);
+      showToast('Task resumed and returned to active workflow.', 'success');
       loadTask(task.id);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to resume task');
+      showToast(err.response?.data?.message || 'Failed to resume task', 'error');
     }
   };
 
@@ -242,9 +275,10 @@ export const TaskDetailPage: React.FC = () => {
       setIsSubmitModalOpen(false);
       setSubmissionDesc('');
       setSubmissionFiles([]);
+      showToast('Work submitted for review successfully.', 'success');
       loadTask(task.id);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to submit work');
+      showToast(err.response?.data?.message || 'Failed to submit work', 'error');
     } finally {
       setSubmittingWork(false);
     }
@@ -268,9 +302,10 @@ export const TaskDetailPage: React.FC = () => {
       setIsFinalCompleteModalOpen(false);
       setFinalCompleteDesc('');
       setFinalCompleteFiles([]);
+      showToast('Task approved and completed successfully!', 'success');
       loadTask(task.id);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to complete task');
+      showToast(err.response?.data?.message || 'Failed to complete task', 'error');
     } finally {
       setSubmittingFinal(false);
     }
@@ -290,9 +325,10 @@ export const TaskDetailPage: React.FC = () => {
       setIsRequestDetailsModalOpen(false);
       setRequestDetailsQuestion('');
       setRequestDetailsFiles([]);
+      showToast('Clarification request sent to assigner.', 'info');
       loadTask(task.id);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to send request for missing details');
+      showToast(err.response?.data?.message || 'Failed to send request for missing details', 'error');
     } finally {
       setSubmittingRequestDetails(false);
     }
@@ -312,9 +348,10 @@ export const TaskDetailPage: React.FC = () => {
       setIsProvideDetailsModalOpen(false);
       setProvideDetailsResponse('');
       setProvideDetailsFiles([]);
+      showToast('Clarification details submitted successfully.', 'success');
       loadTask(task.id);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to provide clarification details');
+      showToast(err.response?.data?.message || 'Failed to provide clarification details', 'error');
     } finally {
       setSubmittingProvideDetails(false);
     }
@@ -331,9 +368,10 @@ export const TaskDetailPage: React.FC = () => {
         comment: commentText.trim(),
       });
       setCommentText('');
+      showToast('Comment posted.', 'success');
       loadTask(task.id);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to add comment');
+      showToast(err.response?.data?.message || 'Failed to add comment', 'error');
     } finally {
       setPostingComment(false);
     }
@@ -350,9 +388,10 @@ export const TaskDetailPage: React.FC = () => {
     setUploadingFile(true);
     try {
       await tasksApi.uploadAttachment(formData);
+      showToast('Attachment uploaded successfully.', 'success');
       loadTask(task.id);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to upload attachment');
+      showToast(err.response?.data?.message || 'Failed to upload attachment', 'error');
     } finally {
       setUploadingFile(false);
     }
@@ -366,7 +405,7 @@ export const TaskDetailPage: React.FC = () => {
       await tasksApi.downloadAttachment(attachmentId, fileName);
     } catch (err: any) {
       console.error('Download error:', err);
-      alert(err.response?.data?.message || 'Failed to download attachment');
+      showToast(err.response?.data?.message || 'Failed to download attachment', 'error');
     } finally {
       setDownloadingId(null);
     }
@@ -639,8 +678,9 @@ export const TaskDetailPage: React.FC = () => {
             {/* Put on Hold / Resume */}
             {task.permissions.can_hold && (
               <button
-                onClick={handleHold}
+                onClick={handleOpenHoldModal}
                 className="px-3.5 py-2 border border-amber-300 text-amber-700 hover:bg-amber-50 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
+                title="Place task temporarily on hold with an explanation note"
               >
                 <PauseCircle className="w-3.5 h-3.5" />
                 <span>Hold</span>
@@ -2516,6 +2556,86 @@ export const TaskDetailPage: React.FC = () => {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Place On Hold Modal */}
+      {isHoldModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 text-slate-800 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center">
+                  <PauseCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Place Task on Hold</h3>
+                  <p className="text-xs text-slate-500">Temporarily pause active work on this task</p>
+                </div>
+              </div>
+              <button
+                onClick={() => { setIsHoldModalOpen(false); setHoldReason(''); }}
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {holdError && (
+              <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{holdError}</span>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Reason for Pause / Hold <span className="text-amber-600">*</span>
+              </label>
+              <textarea
+                rows={3}
+                value={holdReason}
+                onChange={(e) => setHoldReason(e.target.value)}
+                placeholder="Explain why this task is being paused (e.g., waiting for client feedback, budget approval)..."
+                className="w-full px-3.5 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => { setIsHoldModalOpen(false); setHoldReason(''); }}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmHold}
+                disabled={holdingTask || !holdReason.trim()}
+                className="px-5 py-2 text-xs font-bold bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+              >
+                {holdingTask ? 'Pausing...' : 'Confirm Hold'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Modern Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl border backdrop-blur-md animate-in slide-in-from-bottom-3 duration-200 text-xs font-semibold select-none bg-white/95 text-slate-800 border-slate-200 max-w-md">
+          {toast.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />}
+          {toast.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />}
+          {toast.type === 'info' && <Sparkles className="w-4 h-4 text-blue-500 shrink-0" />}
+          <span className="flex-1 leading-snug">{toast.message}</span>
+          <button
+            onClick={() => setToast(null)}
+            className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition shrink-0"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
       )}
     </div>
