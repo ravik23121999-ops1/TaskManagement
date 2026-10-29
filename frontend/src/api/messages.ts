@@ -5,6 +5,7 @@ export interface UserSummary {
   name: string;
   email?: string;
   role?: string;
+  thread_role?: string;
   department?: string;
   avatar_url?: string | null;
   gender?: string;
@@ -23,9 +24,10 @@ export interface MessageThread {
   branch_status: string;
   branch_due_date: string | null;
   partner: UserSummary;
+  thread_role?: string;
   assigner?: UserSummary;
   assignee?: UserSummary;
-  my_role: 'assigner' | 'assignee' | 'overseer';
+  my_role: 'assigner' | 'assignee' | 'collaborator' | 'overseer';
   last_message: string;
   last_message_type: 'text' | 'missing_details_request' | 'details_provided' | 'review_feedback' | 'deliverable_update';
   last_message_at: string;
@@ -83,9 +85,10 @@ export interface ThreadDetailResponse {
     due_date?: string;
   };
   partner: UserSummary;
+  thread_role?: string;
   assigner: UserSummary;
   assignee: UserSummary;
-  my_role: 'assigner' | 'assignee' | 'overseer';
+  my_role: 'assigner' | 'assignee' | 'collaborator' | 'overseer';
   is_overseer: boolean;
 }
 

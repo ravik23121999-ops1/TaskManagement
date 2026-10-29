@@ -150,4 +150,141 @@ class BranchMessageTest extends TestCase
         $unauthorizedResp = $this->actingAs($assignee2, 'sanctum')->getJson("/api/messages/threads/{$branch1->id}?partner_id={$assignee1->id}");
         $unauthorizedResp->assertStatus(403);
     }
+
+    public function test_work_alone_tasks_excluded_and_assigner_sees_assignees_and_collaborators()
+    {
+        $creator = User::create([
+            'name' => 'Ravi Singh',
+            'email' => 'ravi@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'admin',
+        ]);
+
+        $assignee = User::create([
+            'name' => 'Rohit Mehta',
+            'email' => 'rohit@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'employee',
+        ]);
+
+        $collab = User::create([
+            'name' => 'Aman Verma',
+            'email' => 'aman@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'employee',
+        ]);
+
+        // 1. Work alone task - should NEVER show as a chat thread
+        $workAloneTask = Task::create([
+            'title' => 'Personal Work Alone Task',
+            'description' => 'Self execution',
+            'creator_id' => $creator->id,
+            'handling_method' => 'work_alone',
+            'priority' => 'low',
+            'status' => 'in_progress',
+        ]);
+        $workAloneBranch = TaskBranch::create([
+            'task_id' => $workAloneTask->id,
+            'title' => 'Personal Work Alone Task',
+            'status' => 'in_progress',
+            'owner_id' => $creator->id,
+        ]);
+        TaskAssignment::create([
+            'task_branch_id' => $workAloneBranch->id,
+            'assigned_by_id' => $creator->id,
+            'assigned_to_id' => $creator->id,
+            'is_current' => true,
+            'assigned_at' => now(),
+        ]);
+
+        // 2. Assigned task with Collaborator
+        $assignedTask = Task::create([
+            'title' => 'Team Feature Task',
+            'description' => 'Collaboration',
+            'creator_id' => $creator->id,
+            'handling_method' => 'collaborate',
+            'priority' => 'high',
+            'status' => 'in_progress',
+        ]);
+        $branch = TaskBranch::create([
+            'task_id' => $assignedTask->id,
+            'title' => 'Team Feature Task',
+            'status' => 'in_progress',
+            'owner_id' => $assignee->id,
+        ]);
+        TaskAssignment::create([
+            'task_branch_id' => $branch->id,
+            'assigned_by_id' => $creator->id,
+            'assigned_to_id' => $assignee->id,
+            'is_current' => true,
+            'assigned_at' => now(),
+        ]);
+        \App\Models\TaskCollaborator::create([
+            'task_branch_id' => $branch->id,
+            'user_id' => $collab->id,
+            'invited_by_id' => $creator->id,
+            'can_assign' => true,
+            'can_collaborate' => true,
+            'invited_at' => now(),
+        ]);
+
+        // Ravi Singh checks My Chats
+        $resp = $this->actingAs($creator, 'sanctum')->getJson('/api/messages/threads?tab=my_chats');
+        $resp->assertStatus(200);
+
+        $threads = $resp->json('threads');
+        // Total threads should be 2 (Rohit Mehta + Aman Verma), NOT 3 (Work alone excluded!)
+        $this->assertCount(2, $threads);
+
+        // Verify Rohit Mehta is listed as Assignee
+        $rohitThread = collect($threads)->firstWhere('partner.id', $assignee->id);
+        $this->assertNotNull($rohitThread);
+        $this->assertEquals('Rohit Mehta', $rohitThread['partner']['name']);
+        $this->assertEquals('Assignee', $rohitThread['thread_role']);
+
+        // Verify Aman Verma is listed as Collaborator
+        $amanThread = collect($threads)->firstWhere('partner.id', $collab->id);
+        $this->assertNotNull($amanThread);
+        $this->assertEquals('Aman Verma', $amanThread['partner']['name']);
+        $this->assertEquals('Collaborator', $amanThread['thread_role']);
+
+        // Verify Ravi Singh is NEVER his own partner in any thread
+        $selfThread = collect($threads)->firstWhere('partner.id', $creator->id);
+        $this->assertNull($selfThread);
+    }
+
+    public function test_cannot_send_message_to_oneself()
+    {
+        $user = User::create([
+            'name' => 'Self User',
+            'email' => 'self@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'admin',
+        ]);
+
+        $task = Task::create([
+            'title' => 'Self Task',
+            'description' => 'Test',
+            'creator_id' => $user->id,
+            'handling_method' => 'work_alone',
+            'priority' => 'low',
+            'status' => 'in_progress',
+        ]);
+
+        $branch = TaskBranch::create([
+            'task_id' => $task->id,
+            'title' => 'Self Branch',
+            'status' => 'in_progress',
+            'owner_id' => $user->id,
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/messages/send', [
+            'task_id' => $task->id,
+            'task_branch_id' => $branch->id,
+            'recipient_id' => $user->id,
+            'message' => 'Hello myself',
+        ]);
+
+        $response->assertStatus(422);
+    }
 }

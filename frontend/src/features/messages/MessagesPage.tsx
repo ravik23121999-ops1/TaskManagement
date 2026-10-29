@@ -337,7 +337,7 @@ export const MessagesPage: React.FC = () => {
                 <p className="font-bold text-slate-700 text-sm">No conversations found</p>
                 <p className="text-slate-500">
                   {activeTab === 'my_chats'
-                    ? 'When you are assigned branches or assign work to colleagues, direct chats appear here.'
+                    ? 'When you assign tasks to employees, collaborate on branches, or are assigned work, direct chats appear here.'
                     : 'No subordinate branch communications under your management tree.'}
                 </p>
               </div>
@@ -347,8 +347,16 @@ export const MessagesPage: React.FC = () => {
                   selectedBranchId === thread.branch_id &&
                   selectedPartnerId === thread.partner.id;
 
+                const partnerRoleLabel =
+                  thread.thread_role ||
+                  thread.partner.thread_role ||
+                  (thread.my_role === 'assigner' ? 'Assignee' : 'Assigner');
+
                 let roleBadgeColor = 'bg-blue-50 text-blue-700 border-blue-200';
-                if (thread.partner.role === 'admin') roleBadgeColor = 'bg-rose-50 text-rose-700 border-rose-200';
+                if (partnerRoleLabel === 'Collaborator') roleBadgeColor = 'bg-purple-50 text-purple-700 border-purple-200';
+                else if (partnerRoleLabel === 'Assigner' || partnerRoleLabel === 'Reviewer') roleBadgeColor = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+                else if (partnerRoleLabel === 'Assignee') roleBadgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                else if (thread.partner.role === 'admin') roleBadgeColor = 'bg-rose-50 text-rose-700 border-rose-200';
                 else if (thread.partner.role === 'sub_admin') roleBadgeColor = 'bg-purple-50 text-purple-700 border-purple-200';
 
                 return (
@@ -423,7 +431,7 @@ export const MessagesPage: React.FC = () => {
                       {/* Role Pill & Status Indicator */}
                       <div className="mt-1.5 flex items-center justify-between gap-1 text-[10px]">
                         <span className={`px-2 py-0.2 rounded-full font-bold border capitalize ${roleBadgeColor}`}>
-                          {thread.my_role === 'assigner' ? 'Assignee' : 'Assigner'}
+                          {partnerRoleLabel}
                         </span>
 
                         <div className="flex items-center gap-1.5">
@@ -497,8 +505,22 @@ export const MessagesPage: React.FC = () => {
                       <h2 className="text-sm font-bold text-slate-900 truncate">
                         {activeThreadData.partner.name}
                       </h2>
-                      <span className="px-2 py-0.2 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 capitalize">
-                        {activeThreadData.my_role === 'assigner' ? 'Assignee' : activeThreadData.my_role === 'assignee' ? 'Assigner' : 'Overseeing'}
+                      <span
+                        className={`px-2 py-0.2 rounded-full text-[10px] font-bold border capitalize ${
+                          (activeThreadData.partner.thread_role || activeThreadData.thread_role) === 'Collaborator'
+                            ? 'bg-purple-50 text-purple-700 border-purple-200'
+                            : (activeThreadData.partner.thread_role || activeThreadData.thread_role) === 'Assigner'
+                            ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        }`}
+                      >
+                        {activeThreadData.partner.thread_role ||
+                          activeThreadData.thread_role ||
+                          (activeThreadData.my_role === 'assigner'
+                            ? 'Assignee'
+                            : activeThreadData.my_role === 'assignee'
+                            ? 'Assigner'
+                            : 'Overseeing')}
                       </span>
                       <span className="text-xs text-slate-400">• {activeThreadData.partner.department}</span>
                     </div>

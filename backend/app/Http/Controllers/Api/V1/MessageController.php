@@ -35,20 +35,20 @@ class MessageController extends Controller
     }
 
     /**
-     * Tab 1: My Chats (Direct Branch Conversations where User is Assigner or Assignee)
+     * Tab 1: My Chats (Direct Branch Conversations with Assignees and Collaborators)
      */
     protected function getMyChatsThreads(User $user): JsonResponse
     {
         // Find all branches where current user is directly involved:
         // - As Assignee (owner_id or current assignment assigned_to_id)
         // - As Assigner (current assignment assigned_by_id or task creator)
-        // - As Collaborator
+        // - As Collaborator (active in task_collaborators)
         $branches = TaskBranch::with([
             'task.creator.department',
             'owner.department',
             'assignments.assignedTo.department',
             'assignments.assignedBy.department',
-            'collaborators',
+            'collaborators.user.department',
         ])
         ->whereHas('task', function ($q) {
             $q->whereNull('deleted_at');
@@ -56,11 +56,20 @@ class MessageController extends Controller
         ->get();
 
         $threads = [];
-        $seenBranchIds = [];
+        $seenThreadKeys = [];
 
         foreach ($branches as $branch) {
             $task = $branch->task;
             if (!$task) continue;
+
+            $activeCollaborators = $branch->collaborators->filter(function ($c) {
+                return $c->isActive() && $c->user;
+            });
+
+            // Exclude work_alone tasks if there are no other collaborators (no chatting with self)
+            if ($task->handling_method === 'work_alone' && $activeCollaborators->isEmpty()) {
+                continue;
+            }
 
             $currentAssignment = $branch->assignments->firstWhere('is_current', true)
                 ?: $branch->assignments->sortByDesc('id')->first();
@@ -70,81 +79,163 @@ class MessageController extends Controller
 
             if (!$assigner || !$assignee) continue;
 
+            // If assigner and assignee are the same user and there are no other collaborators, skip self-chat
+            if ($assigner->id === $assignee->id && $activeCollaborators->where('user_id', '!=', $user->id)->isEmpty()) {
+                continue;
+            }
+
             $isAssigner = ($user->id === $assigner->id);
             $isAssignee = ($user->id === $assignee->id);
-            $isCollaborator = $branch->collaborators->contains('user_id', $user->id);
+            $isCollaborator = $activeCollaborators->contains('user_id', $user->id);
 
-            // In "My Chats", user MUST be directly on this branch
+            // In "My Chats", user MUST be directly involved on this branch
             if (!$isAssigner && !$isAssignee && !$isCollaborator) {
                 continue;
             }
 
-            if (isset($seenBranchIds[$branch->id])) {
-                continue;
+            // Determine all direct counterparts this user can chat with on this branch
+            $counterparts = [];
+
+            if ($isAssigner) {
+                // If user is Assigner, counterpart 1 is Assignee (if not self)
+                if ($assignee->id !== $user->id) {
+                    $counterparts[] = [
+                        'user' => $assignee,
+                        'thread_role' => 'Assignee',
+                        'my_role' => 'assigner',
+                    ];
+                }
+                // Also can chat directly with each active Collaborator
+                foreach ($activeCollaborators as $collab) {
+                    if ($collab->user && $collab->user->id !== $user->id && $collab->user->id !== $assignee->id) {
+                        $counterparts[] = [
+                            'user' => $collab->user,
+                            'thread_role' => 'Collaborator',
+                            'my_role' => 'assigner',
+                        ];
+                    }
+                }
+            } elseif ($isAssignee) {
+                // If user is Assignee, counterpart 1 is Assigner (if not self)
+                if ($assigner->id !== $user->id) {
+                    $counterparts[] = [
+                        'user' => $assigner,
+                        'thread_role' => 'Assigner',
+                        'my_role' => 'assignee',
+                    ];
+                }
+                // Also can chat with Collaborators on their branch
+                foreach ($activeCollaborators as $collab) {
+                    if ($collab->user && $collab->user->id !== $user->id && $collab->user->id !== $assigner->id) {
+                        $counterparts[] = [
+                            'user' => $collab->user,
+                            'thread_role' => 'Collaborator',
+                            'my_role' => 'assignee',
+                        ];
+                    }
+                }
+            } elseif ($isCollaborator) {
+                // If user is Collaborator, can chat with Assigner and Assignee
+                if ($assigner->id !== $user->id) {
+                    $counterparts[] = [
+                        'user' => $assigner,
+                        'thread_role' => 'Assigner',
+                        'my_role' => 'collaborator',
+                    ];
+                }
+                if ($assignee->id !== $user->id && $assignee->id !== $assigner->id) {
+                    $counterparts[] = [
+                        'user' => $assignee,
+                        'thread_role' => 'Assignee',
+                        'my_role' => 'collaborator',
+                    ];
+                }
             }
-            $seenBranchIds[$branch->id] = true;
 
-            // Determine primary counterpart / partner
-            $partner = $isAssigner ? $assignee : $assigner;
-            if ($user->id === $partner->id) {
-                $partner = ($user->id === $task->creator_id && $assignee->id !== $user->id) ? $assignee : $assigner;
+            // For each counterpart, create a distinct chat thread
+            foreach ($counterparts as $cp) {
+                $partner = $cp['user'];
+                $threadRole = $cp['thread_role'];
+                $myRole = $cp['my_role'];
+
+                $key = "b_{$branch->id}_p_{$partner->id}";
+                if (isset($seenThreadKeys[$key])) continue;
+                $seenThreadKeys[$key] = true;
+
+                // Latest message between user & partner on this branch
+                $latestMessage = TaskMessage::with('sender')
+                    ->where('task_branch_id', $branch->id)
+                    ->where(function ($q) use ($user, $partner) {
+                        $q->where(function ($sq) use ($user, $partner) {
+                            $sq->where('sender_id', $user->id)->where('recipient_id', $partner->id);
+                        })->orWhere(function ($sq) use ($user, $partner) {
+                            $sq->where('sender_id', $partner->id)->where('recipient_id', $user->id);
+                        });
+                    })
+                    ->latest()
+                    ->first();
+
+                // If no direct 1-on-1 message exists yet and branch has no collaborators, fallback to latest branch message
+                if (!$latestMessage && $activeCollaborators->isEmpty()) {
+                    $latestMessage = TaskMessage::with('sender')
+                        ->where('task_branch_id', $branch->id)
+                        ->latest()
+                        ->first();
+                }
+
+                // Unread messages from this partner to the user
+                $unreadCount = TaskMessage::where('task_branch_id', $branch->id)
+                    ->where('sender_id', $partner->id)
+                    ->where('recipient_id', $user->id)
+                    ->where('is_read', false)
+                    ->count();
+
+                $lastTimestamp = $latestMessage ? $latestMessage->created_at : $branch->created_at;
+
+                $threads[] = [
+                    'id' => "branch_{$branch->id}_p_{$partner->id}",
+                    'task_id' => $task->id,
+                    'task_code' => 'T-' . str_pad($task->id, 3, '0', STR_PAD_LEFT),
+                    'task_title' => $task->title,
+                    'task_status' => $task->status,
+                    'task_priority' => $task->priority,
+                    'task_handling_method' => $task->handling_method,
+                    'branch_id' => $branch->id,
+                    'branch_title' => $branch->title,
+                    'branch_status' => $branch->status,
+                    'branch_due_date' => $branch->due_date?->toIso8601String(),
+                    'partner' => [
+                        'id' => $partner->id,
+                        'name' => $partner->name,
+                        'email' => $partner->email,
+                        'role' => $partner->role,
+                        'thread_role' => $threadRole,
+                        'department' => $partner->department?->name ?? 'General',
+                        'avatar_url' => $partner->avatar_url,
+                        'gender' => $partner->gender ?? 'female',
+                    ],
+                    'thread_role' => $threadRole,
+                    'assigner' => [
+                        'id' => $assigner->id,
+                        'name' => $assigner->name,
+                        'role' => $assigner->role,
+                    ],
+                    'assignee' => [
+                        'id' => $assignee->id,
+                        'name' => $assignee->name,
+                        'role' => $assignee->role,
+                    ],
+                    'my_role' => $myRole,
+                    'last_message' => $latestMessage ? $latestMessage->message : "Branch chat initialized...",
+                    'last_message_sender' => $latestMessage?->sender?->name ?? '',
+                    'last_message_type' => $latestMessage ? $latestMessage->message_type : 'text',
+                    'last_message_at' => $lastTimestamp->toIso8601String(),
+                    'last_message_time_ago' => $latestMessage ? $latestMessage->created_at->diffForHumans() : $branch->created_at->diffForHumans(),
+                    'unread_count' => $unreadCount,
+                    'has_attachment' => (bool) ($latestMessage?->attachment_id),
+                    'is_overseer' => false,
+                ];
             }
-
-            // Latest message on this branch
-            $latestMessage = TaskMessage::with('sender')
-                ->where('task_branch_id', $branch->id)
-                ->latest()
-                ->first();
-
-            // Unread messages for the current user on this branch
-            $unreadCount = TaskMessage::where('task_branch_id', $branch->id)
-                ->where('sender_id', '!=', $user->id)
-                ->where('is_read', false)
-                ->count();
-
-            $lastTimestamp = $latestMessage ? $latestMessage->created_at : $branch->created_at;
-
-            $threads[] = [
-                'id' => "branch_{$branch->id}",
-                'task_id' => $task->id,
-                'task_code' => 'T-' . str_pad($task->id, 3, '0', STR_PAD_LEFT),
-                'task_title' => $task->title,
-                'task_status' => $task->status,
-                'task_priority' => $task->priority,
-                'task_handling_method' => $task->handling_method,
-                'branch_id' => $branch->id,
-                'branch_title' => $branch->title,
-                'branch_status' => $branch->status,
-                'branch_due_date' => $branch->due_date?->toIso8601String(),
-                'partner' => [
-                    'id' => $partner->id,
-                    'name' => $partner->name,
-                    'email' => $partner->email,
-                    'role' => $partner->role,
-                    'department' => $partner->department?->name ?? 'General',
-                    'avatar_url' => $partner->avatar_url,
-                    'gender' => $partner->gender ?? 'female',
-                ],
-                'assigner' => [
-                    'id' => $assigner->id,
-                    'name' => $assigner->name,
-                    'role' => $assigner->role,
-                ],
-                'assignee' => [
-                    'id' => $assignee->id,
-                    'name' => $assignee->name,
-                    'role' => $assignee->role,
-                ],
-                'my_role' => $isAssigner ? 'assigner' : 'assignee',
-                'last_message' => $latestMessage ? $latestMessage->message : "Branch chat initialized...",
-                'last_message_sender' => $latestMessage?->sender?->name ?? '',
-                'last_message_type' => $latestMessage ? $latestMessage->message_type : 'text',
-                'last_message_at' => $lastTimestamp->toIso8601String(),
-                'last_message_time_ago' => $latestMessage ? $latestMessage->created_at->diffForHumans() : $branch->created_at->diffForHumans(),
-                'unread_count' => $unreadCount,
-                'has_attachment' => (bool) ($latestMessage?->attachment_id),
-                'is_overseer' => false,
-            ];
         }
 
         // Sort by last message timestamp descending
@@ -172,9 +263,11 @@ class MessageController extends Controller
             'owner.department',
             'assignments.assignedTo.department',
             'assignments.assignedBy.department',
+            'collaborators.user.department',
         ])
         ->whereHas('task', function ($q) {
-            $q->whereNull('deleted_at');
+            $q->whereNull('deleted_at')
+              ->where('handling_method', '!=', 'work_alone'); // Skip work_alone tasks in hierarchy oversight
         });
 
         if (!$isAdminOrSubAdmin) {
@@ -197,7 +290,7 @@ class MessageController extends Controller
 
         foreach ($branches as $branch) {
             $task = $branch->task;
-            if (!$task) continue;
+            if (!$task || $task->handling_method === 'work_alone') continue;
 
             $currentAssignment = $branch->assignments->firstWhere('is_current', true)
                 ?: $branch->assignments->sortByDesc('id')->first();
@@ -206,10 +299,11 @@ class MessageController extends Controller
             $assignee = $currentAssignment?->assignedTo ?: $branch->owner;
 
             if (!$assigner || !$assignee) continue;
+            if ($assigner->id === $assignee->id) continue;
 
-            // In "Other Communications", we exclude branches where the user is the direct assignee
-            // because those belong in "My Chats"
-            if (!$isAdminOrSubAdmin && ($user->id === $assignee->id)) {
+            // In "Other Communications", exclude branches where the user is the direct assigner or assignee,
+            // because those direct conversations belong in "My Chats"
+            if ($user->id === $assignee->id || $user->id === $assigner->id) {
                 continue;
             }
 
@@ -235,6 +329,7 @@ class MessageController extends Controller
                 'branch_title' => $branch->title,
                 'branch_status' => $branch->status,
                 'branch_due_date' => $branch->due_date?->toIso8601String(),
+                'thread_role' => 'Delegated Branch',
                 'assigner' => [
                     'id' => $assigner->id,
                     'name' => $assigner->name,
@@ -255,7 +350,8 @@ class MessageController extends Controller
                 'partner' => [
                     'id' => $assignee->id,
                     'name' => "{$assigner->name} ➔ {$assignee->name}",
-                    'role' => "Delegated Branch Conversation",
+                    'role' => $assignee->role,
+                    'thread_role' => 'Delegated Branch',
                     'department' => $assignee->department?->name ?? 'General',
                     'avatar_url' => $assignee->avatar_url,
                     'gender' => $assignee->gender ?? 'female',
@@ -290,13 +386,14 @@ class MessageController extends Controller
     {
         $user = $request->user();
         $isOverseer = filter_var($request->query('is_overseer', false), FILTER_VALIDATE_BOOLEAN);
+        $requestedPartnerId = $request->query('partner_id') ? (int) $request->query('partner_id') : null;
 
         $branch = TaskBranch::with([
             'task.creator.department',
             'owner.department',
             'assignments.assignedTo.department',
             'assignments.assignedBy.department',
-            'collaborators',
+            'collaborators.user.department',
             'attachments.user',
         ])->findOrFail($branchId);
 
@@ -331,31 +428,86 @@ class MessageController extends Controller
             ], 403);
         }
 
-        // Determine default partner for chatting
-        $partner = ($user->id === $assigner->id) ? $assignee : $assigner;
-        if ($user->id === $partner->id) {
-            $partner = ($user->id === $task->creator_id && $assignee->id !== $user->id) ? $assignee : $assigner;
+        // Determine partner and partner's role label
+        $partner = null;
+        $threadRole = 'Assignee';
+
+        if ($requestedPartnerId && $requestedPartnerId !== $user->id) {
+            if ($requestedPartnerId === $assigner->id) {
+                $partner = $assigner;
+                $threadRole = 'Assigner';
+            } elseif ($requestedPartnerId === $assignee->id) {
+                $partner = $assignee;
+                $threadRole = 'Assignee';
+            } else {
+                $collab = $branch->collaborators->firstWhere('user_id', $requestedPartnerId);
+                if ($collab && $collab->user) {
+                    $partner = $collab->user;
+                    $threadRole = 'Collaborator';
+                }
+            }
         }
 
-        // Auto mark incoming messages as read for this user on this branch
+        // Fallback partner resolution if partner not matched by requestedPartnerId
+        if (!$partner) {
+            if ($user->id === $assigner->id) {
+                $partner = ($assignee->id !== $user->id) ? $assignee : null;
+                $threadRole = 'Assignee';
+            } elseif ($user->id === $assignee->id) {
+                $partner = ($assigner->id !== $user->id) ? $assigner : null;
+                $threadRole = 'Assigner';
+            } elseif ($branch->collaborators->contains('user_id', $user->id)) {
+                $partner = ($assigner->id !== $user->id) ? $assigner : $assignee;
+                $threadRole = 'Assigner';
+            }
+        }
+
+        // Overseer or last resort fallback
+        if (!$partner) {
+            $partner = ($user->id === $assignee->id) ? $assigner : $assignee;
+            $threadRole = ($user->id === $assignee->id) ? 'Assigner' : 'Assignee';
+        }
+
+        // Auto mark incoming messages from this partner on this branch as read
         TaskMessage::where('task_branch_id', $branch->id)
-            ->where('sender_id', '!=', $user->id)
+            ->where('sender_id', $partner->id)
+            ->where('recipient_id', $user->id)
             ->where('is_read', false)
             ->update([
                 'is_read' => true,
                 'read_at' => now(),
             ]);
 
-        // Fetch ALL messages exchanged on this branch in chronological order
-        // This ensures assigner, assignee, and senior overseers all participate in the shared branch stream!
-        $rawMessages = TaskMessage::with([
+        // Auto mark general messages where current user is recipient on this branch as read
+        TaskMessage::where('task_branch_id', $branch->id)
+            ->where('recipient_id', $user->id)
+            ->where('is_read', false)
+            ->update([
+                'is_read' => true,
+                'read_at' => now(),
+            ]);
+
+        // Fetch messages for this branch conversation
+        $messagesQuery = TaskMessage::with([
             'sender.department',
             'recipient.department',
             'attachment',
         ])
-        ->where('task_branch_id', $branch->id)
-        ->orderBy('created_at', 'asc')
-        ->get();
+        ->where('task_branch_id', $branch->id);
+
+        // If there are collaborators present, show messages between user and partner (unless overseer/admin reviewing)
+        $hasActiveCollaborators = $branch->collaborators->filter(fn($c) => $c->isActive() && $c->user)->isNotEmpty();
+        if ($hasActiveCollaborators && !$isOverseer && !$isAdminOrSubAdmin) {
+            $messagesQuery->where(function ($q) use ($user, $partner) {
+                $q->where(function ($sq) use ($user, $partner) {
+                    $sq->where('sender_id', $user->id)->where('recipient_id', $partner->id);
+                })->orWhere(function ($sq) use ($user, $partner) {
+                    $sq->where('sender_id', $partner->id)->where('recipient_id', $user->id);
+                });
+            });
+        }
+
+        $rawMessages = $messagesQuery->orderBy('created_at', 'asc')->get();
 
         $messages = $rawMessages->map(function ($m) use ($user, $assigner, $assignee, $task) {
             // Determine badge label for sender
@@ -431,10 +583,12 @@ class MessageController extends Controller
                 'name' => $partner->name,
                 'email' => $partner->email,
                 'role' => $partner->role,
+                'thread_role' => $threadRole,
                 'department' => $partner->department?->name ?? 'General',
                 'avatar_url' => $partner->avatar_url,
                 'gender' => $partner->gender ?? 'female',
             ],
+            'thread_role' => $threadRole,
             'assigner' => [
                 'id' => $assigner->id,
                 'name' => $assigner->name,
@@ -486,6 +640,13 @@ class MessageController extends Controller
             if ($user->id === $recipientId) {
                 $recipientId = ($assignee->id !== $user->id) ? $assignee->id : $assigner->id;
             }
+        }
+
+        // Prevent self-messaging
+        if ((int)$recipientId === (int)$user->id) {
+            return response()->json([
+                'message' => 'Cannot send a message to yourself. Please select an assignee or collaborator to converse with.',
+            ], 422);
         }
 
         $recipient = User::findOrFail($recipientId);
