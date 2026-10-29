@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
 import { notificationsApi } from '../api/tasks';
-import { Search, Bell, Plus, ChevronDown, User, LogOut, Check } from 'lucide-react';
+import { Search, Bell, Plus, ChevronDown, User, LogOut, Check, MessageSquare } from 'lucide-react';
+import { messagesApi } from '../api/messages';
 
 interface NotificationItem {
   id: number;
@@ -18,6 +19,7 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [unreadMessages, setUnreadMessages] = useState<number>(0);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -27,9 +29,22 @@ const Navbar: React.FC = () => {
 
   useEffect(() => {
     loadNotifications();
-    const interval = setInterval(loadNotifications, 30000); // 30s poll
+    loadUnreadMessages();
+    const interval = setInterval(() => {
+      loadNotifications();
+      loadUnreadMessages();
+    }, 15000); // 15s poll
     return () => clearInterval(interval);
   }, []);
+
+  const loadUnreadMessages = async () => {
+    try {
+      const res = await messagesApi.getUnreadCount();
+      setUnreadMessages(res?.unread_count || 0);
+    } catch (err) {
+      // ignore
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -108,6 +123,19 @@ const Navbar: React.FC = () => {
         </button>
 
         {/* Notifications Dropdown */}
+        <button
+          onClick={() => navigate('/messages')}
+          className="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition relative cursor-pointer"
+          title="Work Messages & Branch Communications"
+        >
+          <MessageSquare className="w-4 h-4" />
+          {unreadMessages > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shadow-xs">
+              {unreadMessages > 9 ? '9+' : unreadMessages}
+            </span>
+          )}
+        </button>
+
         <div className="relative" ref={notificationRef}>
           <button
             onClick={() => setShowNotifications(!showNotifications)}

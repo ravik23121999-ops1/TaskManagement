@@ -18,6 +18,7 @@ import NotificationsPage from './features/notifications/NotificationsPage';
 import ReportsPage from './features/reports/ReportsPage';
 import WorkLogsPage from './features/logs/WorkLogsPage';
 import ProfileSettingsPage from './features/profile/ProfileSettingsPage';
+import MessagesPage from './features/messages/MessagesPage';
 import Layout from './components/Layout';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -197,6 +198,14 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <NotificationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/messages"
+            element={
+              <ProtectedRoute>
+                <MessagesPage />
               </ProtectedRoute>
             }
           />

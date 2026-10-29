@@ -22,6 +22,7 @@ import {
   Shield,
   Sparkles,
   ChevronRight,
+  MessageSquare,
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -35,6 +36,7 @@ const Sidebar: React.FC = () => {
     { path: '/tasks/pending-with-others', label: 'Waiting on Others', icon: Clock },
     { path: '/tasks', label: 'All Tasks', icon: ListTodo },
     { path: '/tasks/collaborations', label: 'My Collaborations', icon: Users2 },
+    { path: '/messages', label: 'Work Messages', icon: MessageSquare, badge: 'Direct' },
     { path: '/tasks/review', label: 'Review Queue', icon: FileCheck2 },
     { path: '/tasks/completed', label: 'Completed', icon: CheckCircle2 },
     { path: '/tasks/on-hold', label: 'On Hold', icon: PauseCircle },

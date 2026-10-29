@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\AttachmentController;
 use App\Http\Controllers\Api\V1\ReportsController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\WorkLogController;
+use App\Http\Controllers\Api\V1\MessageController;
 
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
@@ -84,4 +85,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/work-logs/users', [WorkLogController::class, 'usersList']);
     Route::get('/work-logs/journeys', [WorkLogController::class, 'journeys']);
     Route::get('/work-logs/task/{task}', [WorkLogController::class, 'taskJourney']);
+
+    // Work Messages & Branch-wise Communications (Instagram/Messenger-style)
+    Route::get('/messages/threads', [MessageController::class, 'threads']);
+    Route::get('/messages/threads/{branch}', [MessageController::class, 'getThreadMessages']);
+    Route::post('/messages/send', [MessageController::class, 'sendMessage']);
+    Route::post('/messages/upload-attachment', [MessageController::class, 'uploadAttachment']);
+    Route::get('/messages/unread-count', [MessageController::class, 'unreadCount']);
 });
