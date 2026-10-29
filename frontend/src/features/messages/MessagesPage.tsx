@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   FileCheck2,
   Layers,
+  Shield,
   X,
   Download,
   FileText,
@@ -576,6 +577,23 @@ export const MessagesPage: React.FC = () => {
                 </div>
               )}
 
+              {/* Hierarchy Oversight Banner for Below-Branch Reviews */}
+              {activeThreadData.is_overseer && (
+                <div className="p-3 bg-gradient-to-r from-indigo-50/90 via-blue-50/80 to-indigo-50/90 border-b border-indigo-200/80 px-4 sm:px-6 flex items-center justify-between text-xs text-indigo-950 gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <Shield className="w-4 h-4 text-indigo-600 shrink-0" />
+                    <span>
+                      <strong>Hierarchy Oversight & Review:</strong> Reviewing below branch messages between{' '}
+                      <strong className="text-slate-900">{activeThreadData.assigner.name}</strong> (Assigner) and{' '}
+                      <strong className="text-slate-900">{activeThreadData.assignee.name}</strong> (Assignee). You can post review feedback or missing details requests directly into this branch.
+                    </span>
+                  </div>
+                  <span className="hidden sm:inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200 uppercase tracking-wider shrink-0">
+                    Reviewer Mode
+                  </span>
+                </div>
+              )}
+
               {/* Chat Messages Stream */}
               <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-slate-50/30">
                 {loadingMessages ? (
@@ -601,8 +619,13 @@ export const MessagesPage: React.FC = () => {
                         className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
                       >
                         {/* Sender Label for Subordinate Oversight or Left Bubble */}
-                        <div className="flex items-center gap-1.5 mb-1 px-1 text-[11px] text-slate-400 font-medium">
-                          <span>{msg.sender_name}</span>
+                        <div className="flex items-center gap-1.5 mb-1 px-1 text-xs text-slate-400 font-medium">
+                          <span className="font-semibold text-slate-700">{msg.sender_name}</span>
+                          {msg.sender_badge && (
+                            <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                              {msg.sender_badge}
+                            </span>
+                          )}
                           <span>•</span>
                           <span>{msg.time_formatted}</span>
                           {isMe && (
@@ -716,49 +739,98 @@ export const MessagesPage: React.FC = () => {
                 {/* Work Context Action Chips */}
                 <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
                   <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0">
-                    Quick Work Actions:
+                    {activeThreadData.is_overseer ? 'Reviewer Actions:' : 'Quick Work Actions:'}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleQuickPrompt(
-                        'missing_details_request',
-                        'Please provide the missing specifications and document details for this branch so work can proceed.'
-                      )
-                    }
-                    className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-semibold transition cursor-pointer flex items-center gap-1 shrink-0"
-                  >
-                    <AlertTriangle className="w-3 h-3 text-amber-600" />
-                    <span>Request Missing Details</span>
-                  </button>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleQuickPrompt(
-                        'details_provided',
-                        'I have updated the requirements and uploaded the required documents for your review.'
-                      )
-                    }
-                    className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-semibold transition cursor-pointer flex items-center gap-1 shrink-0"
-                  >
-                    <Check className="w-3 h-3 text-emerald-600" />
-                    <span>Provide Details & Docs</span>
-                  </button>
+                  {activeThreadData.is_overseer ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleQuickPrompt(
+                            'missing_details_request',
+                            'Senior Review Notice: Please provide the missing specifications, edge case handling, and required documents for this branch.'
+                          )
+                        }
+                        className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-semibold transition cursor-pointer flex items-center gap-1 shrink-0"
+                      >
+                        <AlertTriangle className="w-3 h-3 text-amber-600" />
+                        <span>Request Missing Specs from Team</span>
+                      </button>
 
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleQuickPrompt(
-                        'review_feedback',
-                        'Review completed. Please see my notes and adjust accordingly.'
-                      )
-                    }
-                    className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-semibold transition cursor-pointer flex items-center gap-1 shrink-0"
-                  >
-                    <FileCheck2 className="w-3 h-3 text-indigo-600" />
-                    <span>Submit Review Feedback</span>
-                  </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleQuickPrompt(
+                            'review_feedback',
+                            'Review Evaluation Feedback: I have reviewed your branch progress. Please make the recommended adjustments before final submission.'
+                          )
+                        }
+                        className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-semibold transition cursor-pointer flex items-center gap-1 shrink-0"
+                      >
+                        <FileCheck2 className="w-3 h-3 text-indigo-600" />
+                        <span>Post Review Feedback</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleQuickPrompt(
+                            'details_provided',
+                            'Approved by Reviewer: Branch deliverables meet acceptance criteria. Approved to proceed.'
+                          )
+                        }
+                        className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-semibold transition cursor-pointer flex items-center gap-1 shrink-0"
+                      >
+                        <Check className="w-3 h-3 text-emerald-600" />
+                        <span>Approve Deliverables</span>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleQuickPrompt(
+                            'missing_details_request',
+                            'Please provide the missing specifications and document details for this branch so work can proceed.'
+                          )
+                        }
+                        className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-semibold transition cursor-pointer flex items-center gap-1 shrink-0"
+                      >
+                        <AlertTriangle className="w-3 h-3 text-amber-600" />
+                        <span>Request Missing Details</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleQuickPrompt(
+                            'details_provided',
+                            'I have updated the requirements and uploaded the required documents for your review.'
+                          )
+                        }
+                        className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-semibold transition cursor-pointer flex items-center gap-1 shrink-0"
+                      >
+                        <Check className="w-3 h-3 text-emerald-600" />
+                        <span>Provide Details & Docs</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleQuickPrompt(
+                            'review_feedback',
+                            'Review completed. Please see my notes and adjust accordingly.'
+                          )
+                        }
+                        className="px-2.5 py-1 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-semibold transition cursor-pointer flex items-center gap-1 shrink-0"
+                      >
+                        <FileCheck2 className="w-3 h-3 text-indigo-600" />
+                        <span>Submit Review Feedback</span>
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 {/* Selected File Preview Pill */}
@@ -811,7 +883,9 @@ export const MessagesPage: React.FC = () => {
                     <input
                       type="text"
                       placeholder={
-                        messageType === 'missing_details_request'
+                        activeThreadData.is_overseer
+                          ? 'Post review remarks, guidance, or missing details request to this branch...'
+                          : messageType === 'missing_details_request'
                           ? 'Specify missing details or requirements needed...'
                           : messageType === 'details_provided'
                           ? 'Describe provided details or attached docs...'

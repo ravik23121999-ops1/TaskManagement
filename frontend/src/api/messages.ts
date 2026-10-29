@@ -45,6 +45,7 @@ export interface ChatMessage {
   sender_name: string;
   sender_avatar: string | null;
   sender_role: string;
+  sender_badge?: string;
   message: string;
   message_type: 'text' | 'missing_details_request' | 'details_provided' | 'review_feedback' | 'deliverable_update';
   is_read: boolean;
