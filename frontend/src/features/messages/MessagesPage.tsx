@@ -24,6 +24,8 @@ import {
   AlertCircle,
   CheckCircle2,
   Sparkles,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
 import { StatusBadge } from '../../components/StatusBadge';
 
@@ -69,6 +71,58 @@ export const MessagesPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Sound notification toggle (persisted in localStorage)
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
+    return localStorage.getItem('chat_sound_enabled') !== 'false';
+  });
+
+  const toggleSound = () => {
+    setSoundEnabled((prev) => {
+      const next = !prev;
+      localStorage.setItem('chat_sound_enabled', next ? 'true' : 'false');
+      return next;
+    });
+  };
+
+  const playMessageChime = () => {
+    if (!soundEnabled) return;
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
+
+      const now = ctx.currentTime;
+      // Note 1: G5 (784 Hz)
+      const osc1 = ctx.createOscillator();
+      const gain1 = ctx.createGain();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(784, now);
+      gain1.gain.setValueAtTime(0.06, now);
+      gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc1.connect(gain1);
+      gain1.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.12);
+
+      // Note 2: C6 (1046.5 Hz)
+      const osc2 = ctx.createOscillator();
+      const gain2 = ctx.createGain();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(1046.5, now + 0.08);
+      gain2.gain.setValueAtTime(0.08, now + 0.08);
+      gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+      osc2.connect(gain2);
+      gain2.connect(ctx.destination);
+      osc2.start(now + 0.08);
+      osc2.stop(now + 0.25);
+    } catch {
+      // Audio policy fallback
+    }
+  };
+
   // Load conversation threads
   useEffect(() => {
     loadThreads(activeTab);
@@ -83,22 +137,73 @@ export const MessagesPage: React.FC = () => {
     }
   }, [selectedBranchId, selectedPartnerId, isOverseerParam]);
 
-  // Auto-scroll to bottom of chat
+  // Real-time Chat Live Polling:
+  // Polls active conversation every 2.5 seconds when window is active without manual refresh
+  useEffect(() => {
+    if (!selectedBranchId) return;
+
+    const chatInterval = setInterval(() => {
+      if (document.hidden) return;
+      loadThreadMessages(selectedBranchId, selectedPartnerId || undefined, isOverseerParam, true);
+    }, 2500);
+
+    return () => clearInterval(chatInterval);
+  }, [selectedBranchId, selectedPartnerId, isOverseerParam]);
+
+  // Background poll for threads list every 5 seconds so incoming chats update badge counts and snippets
+  useEffect(() => {
+    const threadInterval = setInterval(() => {
+      if (document.hidden) return;
+      loadThreads(activeTab, true);
+    }, 5000);
+
+    return () => clearInterval(threadInterval);
+  }, [activeTab, selectedBranchId, selectedPartnerId]);
+
+  // Immediate sync when browser tab regains focus
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        if (selectedBranchId) {
+          loadThreadMessages(selectedBranchId, selectedPartnerId || undefined, isOverseerParam, true);
+        }
+        loadThreads(activeTab, true);
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [selectedBranchId, selectedPartnerId, isOverseerParam, activeTab]);
+
+  // Auto-scroll to bottom of chat smoothly when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [activeThreadData?.messages]);
 
-  const loadThreads = async (tab: 'my_chats' | 'other') => {
-    if (threads.length === 0) {
+  const loadThreads = async (tab: 'my_chats' | 'other', isBackground = false) => {
+    if (threads.length === 0 && !isBackground) {
       setLoadingThreads(true);
     }
     try {
       const data = await messagesApi.getThreads(tab);
-      setThreads(data.threads || []);
+      const incomingThreads = data.threads || [];
+
+      setThreads(() => {
+        if (!isBackground) return incomingThreads;
+        return incomingThreads.map((newT) => {
+          if (
+            selectedBranchId &&
+            newT.branch_id === selectedBranchId &&
+            (!selectedPartnerId || newT.partner.id === selectedPartnerId)
+          ) {
+            return { ...newT, unread_count: 0 };
+          }
+          return newT;
+        });
+      });
 
       // If no branch is selected yet, automatically select the first thread on desktop
-      if (!selectedBranchId && data.threads && data.threads.length > 0 && window.innerWidth >= 1024) {
-        const first = data.threads[0];
+      if (!isBackground && !selectedBranchId && incomingThreads.length > 0 && window.innerWidth >= 1024) {
+        const first = incomingThreads[0];
         setSearchParams({
           tab,
           branch: first.branch_id.toString(),
@@ -107,41 +212,92 @@ export const MessagesPage: React.FC = () => {
         });
       }
     } catch (err) {
-      console.error('Failed to load threads', err);
+      if (!isBackground) {
+        console.error('Failed to load threads', err);
+      }
     } finally {
-      setLoadingThreads(false);
+      if (!isBackground) {
+        setLoadingThreads(false);
+      }
     }
   };
 
-  const loadThreadMessages = async (branchId: number, partnerId?: number, isOverseer?: boolean) => {
+  const loadThreadMessages = async (
+    branchId: number,
+    partnerId?: number,
+    isOverseer?: boolean,
+    isBackground = false
+  ) => {
     const isNewThread =
       !activeThreadData ||
       activeThreadData.branch.id !== branchId ||
       activeThreadData.partner.id !== partnerId;
-    if (isNewThread) {
+
+    if (isNewThread && !isBackground) {
       setLoadingMessages(true);
     }
+
     try {
       const data = await messagesApi.getThreadMessages(branchId, partnerId, isOverseer);
-      setActiveThreadData(data);
 
-      // Decrement unread count locally in threads list
+      setActiveThreadData((prev) => {
+        if (!prev || isNewThread) return data;
+
+        const prevMsgs = prev.messages || [];
+        const newMsgs = data.messages || [];
+
+        // Check if messages list changed
+        const prevCount = prevMsgs.length;
+        const newCount = newMsgs.length;
+        const lastPrevId = prevCount > 0 ? prevMsgs[prevCount - 1].id : null;
+        const lastNewId = newCount > 0 ? newMsgs[newCount - 1].id : null;
+
+        if (prevCount === newCount && lastPrevId === lastNewId) {
+          return prev; // No change: maintain reference to avoid re-rendering
+        }
+
+        // New incoming message from chat partner: play chime
+        if (newCount > prevCount) {
+          const latest = newMsgs[newCount - 1];
+          if (!latest.is_me) {
+            playMessageChime();
+          }
+        }
+
+        return data;
+      });
+
+      // Update unread count and latest message locally in threads list
       setThreads((prev) =>
-        prev.map((t) =>
-          t.branch_id === branchId && (!partnerId || t.partner.id === partnerId)
-            ? { ...t, unread_count: 0 }
-            : t
-        )
+        prev.map((t) => {
+          if (t.branch_id === branchId && (!partnerId || t.partner.id === partnerId)) {
+            const latestMsg = data.messages && data.messages.length > 0 ? data.messages[data.messages.length - 1] : null;
+            return {
+              ...t,
+              unread_count: 0,
+              last_message: latestMsg ? latestMsg.message : t.last_message,
+              last_message_at: latestMsg ? latestMsg.created_at : t.last_message_at,
+              last_message_time_ago: latestMsg ? 'Just now' : t.last_message_time_ago,
+              last_message_type: latestMsg ? latestMsg.message_type : t.last_message_type,
+              has_attachment: latestMsg ? !!latestMsg.attachment : t.has_attachment,
+            };
+          }
+          return t;
+        })
       );
     } catch (err: any) {
-      console.error('Failed to load thread messages', err);
-      if (err?.response?.status === 403) {
-        showToast('Access Denied: Same-level assignees cannot access other branch conversations.', 'error');
-      } else {
-        showToast(err?.response?.data?.message || 'Could not load branch messages.', 'error');
+      if (!isBackground) {
+        console.error('Failed to load thread messages', err);
+        if (err?.response?.status === 403) {
+          showToast('Access Denied: Same-level assignees cannot access other branch conversations.', 'error');
+        } else {
+          showToast(err?.response?.data?.message || 'Could not load branch messages.', 'error');
+        }
       }
     } finally {
-      setLoadingMessages(false);
+      if (isNewThread && !isBackground) {
+        setLoadingMessages(false);
+      }
     }
   };
 
@@ -603,6 +759,26 @@ export const MessagesPage: React.FC = () => {
 
                 {/* Right Action Controls */}
                 <div className="flex items-center gap-2 shrink-0">
+                  {/* Live Sync Status Indicator */}
+                  <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Live Chat</span>
+                  </div>
+
+                  {/* Sound Notification Toggle */}
+                  <button
+                    type="button"
+                    onClick={toggleSound}
+                    className={`h-8 w-8 flex items-center justify-center rounded-xl border transition cursor-pointer ${
+                      soundEnabled
+                        ? 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100'
+                        : 'bg-slate-100 text-slate-400 border-slate-200 hover:bg-slate-200'
+                    }`}
+                    title={soundEnabled ? 'Message sound is ON (Click to mute)' : 'Message sound is MUTED (Click to unmute)'}
+                  >
+                    {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+                  </button>
+
                   <button
                     type="button"
                     onClick={() => setShowTaskContext(!showTaskContext)}

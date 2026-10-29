@@ -37,7 +37,7 @@ const Navbar: React.FC = () => {
       if (document.hidden) return;
       loadNotifications();
       loadUnreadMessages();
-    }, 20000); // 20s active poll
+    }, 8000); // 8s active poll for notifications and message badges
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
