@@ -62,7 +62,7 @@ export const NotificationsPage: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Notifications</h1>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             Stay updated on task assignments, submitted deliverables, review decisions, and team comments.
           </p>
         </div>
@@ -70,7 +70,7 @@ export const NotificationsPage: React.FC = () => {
         {unreadCount > 0 && (
           <button
             onClick={handleMarkAllRead}
-            className="inline-flex items-center gap-1.5 h-9 px-4 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl text-sm font-semibold transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl text-xs font-semibold transition cursor-pointer"
           >
             <Check className="w-3.5 h-3.5" />
             <span>Mark all as read</span>
@@ -80,12 +80,12 @@ export const NotificationsPage: React.FC = () => {
 
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs divide-y divide-slate-100 overflow-hidden">
         {loading ? (
-          <div className="p-12 text-center text-slate-400 text-sm">Loading notifications...</div>
+          <div className="p-12 text-center text-slate-400">Loading notifications...</div>
         ) : notifications.length === 0 ? (
           <div className="p-12 text-center text-slate-400">
             <Bell className="w-8 h-8 mx-auto text-slate-300 mb-2" />
-            <p className="font-semibold text-slate-700 text-sm">No notifications found.</p>
-            <p className="text-xs text-slate-500 mt-1">You are up to date on all task activity.</p>
+            <p className="font-semibold text-slate-600">No notifications found.</p>
+            <p className="text-[11px] text-slate-400 mt-1">You are up to date on all task activity.</p>
           </div>
         ) : (
           notifications.map((notif) => {
@@ -112,18 +112,18 @@ export const NotificationsPage: React.FC = () => {
                 }`}
               >
                 <div className="flex items-start gap-3.5">
-                  <div className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${iconBg}`}>
+                  <div className={`w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 ${iconBg}`}>
                     {icon}
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-slate-900">{notif.title}</h3>
+                      <h3 className="text-xs font-bold text-slate-900">{notif.title}</h3>
                       {!notif.is_read && (
                         <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0" />
                       )}
                     </div>
-                    <p className="text-sm text-slate-600 mt-1 leading-relaxed">{notif.message}</p>
-                    <span className="text-xs text-slate-400 font-medium mt-1.5 inline-block">
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">{notif.message}</p>
+                    <span className="text-[10px] text-slate-400 font-medium mt-1 inline-block">
                       {new Date(notif.created_at).toLocaleString()}
                     </span>
                   </div>

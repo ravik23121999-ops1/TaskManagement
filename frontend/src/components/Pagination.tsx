@@ -23,18 +23,18 @@ export const Pagination: React.FC<PaginationProps> = ({
 
   return (
     <div className="flex items-center justify-between border-t border-slate-100 px-6 py-4 bg-white">
-      <div className="text-sm text-slate-600 font-medium">
-        Showing page <span className="font-bold text-slate-900">{currentPage}</span> of{' '}
-        <span className="font-bold text-slate-900">{lastPage}</span> ({total} items)
+      <div className="text-xs text-slate-500 font-medium">
+        Showing page <span className="font-bold text-slate-700">{currentPage}</span> of{' '}
+        <span className="font-bold text-slate-700">{lastPage}</span> ({total} items)
       </div>
 
       <div className="flex items-center gap-1.5">
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1}
-          className="flex items-center gap-1.5 h-9 px-3.5 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+          className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className="w-3.5 h-3.5" />
           <span>Previous</span>
         </button>
 
@@ -42,10 +42,10 @@ export const Pagination: React.FC<PaginationProps> = ({
           <button
             key={p}
             onClick={() => onPageChange(p)}
-            className={`w-9 h-9 rounded-xl text-sm font-semibold transition cursor-pointer ${
+            className={`w-7 h-7 rounded-lg text-xs font-semibold transition cursor-pointer ${
               p === currentPage
                 ? 'bg-blue-600 text-white shadow-xs font-bold'
-                : 'text-slate-700 hover:bg-slate-100'
+                : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
             {p}
@@ -55,10 +55,10 @@ export const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= lastPage}
-          className="flex items-center gap-1.5 h-9 px-3.5 border border-slate-200 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+          className="flex items-center gap-1 px-3 py-1.5 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
         >
           <span>Next</span>
-          <ChevronRight className="w-4 h-4" />
+          <ChevronRight className="w-3.5 h-3.5" />
         </button>
       </div>
     </div>

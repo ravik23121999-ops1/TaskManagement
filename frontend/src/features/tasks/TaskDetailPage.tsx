@@ -454,13 +454,13 @@ export const TaskDetailPage: React.FC = () => {
       <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-xs text-slate-500 mb-1.5 font-medium">
+            <div className="flex items-center gap-2 text-xs text-slate-400 mb-1.5">
               <span className="hover:text-blue-600 cursor-pointer" onClick={() => navigate('/tasks')}>Tasks</span>
               <span>›</span>
-              <span className="text-slate-700 font-semibold">{task.task_code}</span>
+              <span className="text-slate-600 font-semibold">{task.task_code}</span>
             </div>
             <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-2xl font-bold text-slate-900 tracking-tight">
+              <span className="text-xl font-bold text-slate-900 tracking-tight">
                 <span className="text-blue-600 mr-2">{task.task_code}</span>
                 {task.title}
               </span>
@@ -485,24 +485,24 @@ export const TaskDetailPage: React.FC = () => {
                 }
               />
               <PriorityBadge priority={task.priority} />
-              <span className={`px-3 py-1 rounded-full text-xs font-semibold border flex items-center gap-1.5 ${slaBadge.color}`}>
-                <Clock className="w-4 h-4 shrink-0" />
+              <span className={`px-2.5 py-0.5 rounded-full text-xs border flex items-center gap-1.5 ${slaBadge.color}`}>
+                <Clock className="w-3.5 h-3.5 shrink-0" />
                 <span>{slaBadge.text}</span>
               </span>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             {/* Assign (1 or More) */}
             {task.status !== 'completed' && task.status !== 'cancelled' && (
               <button
                 onClick={() => openAssignModal('assign')}
-                className="h-10 px-4 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl text-sm font-semibold shadow-xs transition flex items-center gap-2 cursor-pointer"
+                className="px-3.5 py-2 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
                 title="Assign one or more employees to this task"
               >
-                <UserPlus className="w-4 h-4 text-sky-600" />
-                <span>+ Assign</span>
+                <UserPlus className="w-3.5 h-3.5 text-sky-600" />
+                <span>+ Assign (1 or More)</span>
               </button>
             )}
 
@@ -510,11 +510,11 @@ export const TaskDetailPage: React.FC = () => {
             {task.status !== 'completed' && task.status !== 'cancelled' && (
               <button
                 onClick={() => openAssignModal('collaborate')}
-                className="h-10 px-4 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-sm font-semibold shadow-xs transition flex items-center gap-2 cursor-pointer"
+                className="px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
                 title="Invite one or more team members to collaborate"
               >
-                <Users className="w-4 h-4 text-purple-600" />
-                <span>+ Collaborate</span>
+                <Users className="w-3.5 h-3.5 text-purple-600" />
+                <span>+ Collaborate (1 or More)</span>
               </button>
             )}
 
@@ -522,9 +522,9 @@ export const TaskDetailPage: React.FC = () => {
             {task.permissions.can_submit && !isWorkAlone && (
               <button
                 onClick={() => setIsSubmitModalOpen(true)}
-                className="h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-sm transition flex items-center gap-2 cursor-pointer"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-3.5 h-3.5" />
                 <span>Submit for Review</span>
               </button>
             )}
@@ -537,11 +537,11 @@ export const TaskDetailPage: React.FC = () => {
                   setRequestDetailsFiles([]);
                   setIsRequestDetailsModalOpen(true);
                 }}
-                className="h-10 px-4 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-sm font-semibold shadow-xs transition flex items-center gap-2 cursor-pointer"
+                className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
                 title="Ask assigner for missing details, instructions, or credentials"
               >
-                <HelpCircle className="w-4 h-4 text-amber-600" />
-                <span>Request Details</span>
+                <HelpCircle className="w-3.5 h-3.5 text-amber-600" />
+                <span>Request Missing Details</span>
               </button>
             )}
 
@@ -553,11 +553,11 @@ export const TaskDetailPage: React.FC = () => {
                   setProvideDetailsFiles([]);
                   setIsProvideDetailsModalOpen(true);
                 }}
-                className="h-10 px-4 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-sm font-bold shadow-sm transition flex items-center gap-2 cursor-pointer"
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
                 title="Answer assignee question and resume work"
               >
-                <Send className="w-4 h-4" />
-                <span>Provide Details</span>
+                <Send className="w-3.5 h-3.5" />
+                <span>Provide Missing Details</span>
               </button>
             )}
 
@@ -568,9 +568,9 @@ export const TaskDetailPage: React.FC = () => {
                   setSelectedSubmission(latestPendingSubmission);
                   setIsReviewModalOpen(true);
                 }}
-                className="h-10 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-sm font-semibold shadow-sm transition flex items-center gap-2 cursor-pointer"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
               >
-                <CheckCircle2 className="w-4 h-4" />
+                <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Review Submission</span>
               </button>
             )}
@@ -587,9 +587,9 @@ export const TaskDetailPage: React.FC = () => {
                   setFinalCompleteFiles([]);
                   setIsFinalCompleteModalOpen(true);
                 }}
-                className="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-bold shadow-sm transition flex items-center gap-2 cursor-pointer"
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
               >
-                <Check className="w-4 h-4" />
+                <Check className="w-3.5 h-3.5" />
                 <span>Final Approval & Complete</span>
               </button>
             )}
@@ -598,9 +598,9 @@ export const TaskDetailPage: React.FC = () => {
             {task.permissions.can_hold && (
               <button
                 onClick={handleHold}
-                className="h-10 px-3.5 border border-amber-300 text-amber-700 hover:bg-amber-50 rounded-xl text-sm font-semibold transition flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 border border-amber-300 text-amber-700 hover:bg-amber-50 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
               >
-                <PauseCircle className="w-4 h-4" />
+                <PauseCircle className="w-3.5 h-3.5" />
                 <span>Hold</span>
               </button>
             )}
@@ -608,9 +608,9 @@ export const TaskDetailPage: React.FC = () => {
             {task.permissions.can_resume && (
               <button
                 onClick={handleResume}
-                className="h-10 px-3.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
               >
-                <PlayCircle className="w-4 h-4" />
+                <PlayCircle className="w-3.5 h-3.5" />
                 <span>Resume</span>
               </button>
             )}
@@ -619,9 +619,9 @@ export const TaskDetailPage: React.FC = () => {
             {task.permissions.can_cancel && (
               <button
                 onClick={handleCancel}
-                className="h-10 px-3.5 border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl text-sm font-semibold transition flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
               >
-                <XCircle className="w-4 h-4" />
+                <XCircle className="w-3.5 h-3.5" />
                 <span>Cancel</span>
               </button>
             )}
@@ -631,8 +631,8 @@ export const TaskDetailPage: React.FC = () => {
         {/* Contextual Workflow Action Banners */}
         {/* 1. Missing Details Requested Banner */}
         {task.latest_clarification && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment')) && (
-          <div className="mt-4 p-4 bg-amber-50/90 border border-amber-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm shadow-2xs animate-in fade-in">
-            <div className="flex items-start gap-3">
+          <div className="mt-4 p-4 bg-amber-50/90 border border-amber-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs animate-in fade-in">
+            <div className="flex items-start gap-2.5">
               <HelpCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div>
                 <p className="font-bold text-amber-950">
@@ -641,7 +641,7 @@ export const TaskDetailPage: React.FC = () => {
                 <p className="text-amber-800 mt-0.5 whitespace-pre-wrap">
                   "{task.latest_clarification.comment.replace(/^❓\s*Missing Details Requested by [^:]*:\s*/, '')}"
                 </p>
-                <p className="text-xs text-amber-600 mt-1">
+                <p className="text-[10px] text-amber-600 mt-1">
                   Requested on {new Date(task.latest_clarification.requested_at).toLocaleString()} • Task is pending assigner input.
                 </p>
               </div>
@@ -654,9 +654,9 @@ export const TaskDetailPage: React.FC = () => {
                   setProvideDetailsFiles([]);
                   setIsProvideDetailsModalOpen(true);
                 }}
-                className="h-10 px-4 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-xs transition flex items-center gap-2 cursor-pointer shrink-0"
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-3.5 h-3.5" />
                 <span>Provide Missing Details</span>
               </button>
             )}
@@ -665,8 +665,8 @@ export const TaskDetailPage: React.FC = () => {
 
         {/* 2. Returned for Correction Banner */}
         {task.latest_return && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment')) && !task.latest_clarification && (
-          <div className="mt-4 p-4 bg-red-50/90 border border-red-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm shadow-2xs animate-in fade-in">
-            <div className="flex items-start gap-3">
+          <div className="mt-4 p-4 bg-red-50/90 border border-red-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs animate-in fade-in">
+            <div className="flex items-start gap-2.5">
               <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
               <div>
                 <p className="font-bold text-red-950">
@@ -675,7 +675,7 @@ export const TaskDetailPage: React.FC = () => {
                 <p className="text-red-800 mt-0.5 whitespace-pre-wrap">
                   "{task.latest_return.comments}"
                 </p>
-                <p className="text-xs text-red-600 mt-1">
+                <p className="text-[10px] text-red-600 mt-1">
                   Reviewed on {new Date(task.latest_return.reviewed_at).toLocaleString()} • Please review the feedback, update your work, and resubmit.
                 </p>
               </div>
@@ -684,9 +684,9 @@ export const TaskDetailPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsSubmitModalOpen(true)}
-                className="h-10 px-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-xs transition flex items-center gap-2 cursor-pointer shrink-0"
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-3.5 h-3.5" />
                 <span>Resubmit Work for Review</span>
               </button>
             )}
@@ -695,8 +695,8 @@ export const TaskDetailPage: React.FC = () => {
 
         {/* 3. Creator Final Approval Ready Banner */}
         {task.permissions.can_final_submit && !isWorkAlone && (
-          <div className="mt-4 p-4 bg-emerald-50/90 border border-emerald-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm shadow-2xs animate-in fade-in">
-            <div className="flex items-start gap-3">
+          <div className="mt-4 p-4 bg-emerald-50/90 border border-emerald-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs animate-in fade-in">
+            <div className="flex items-start gap-2.5">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
               <div>
                 <p className="font-bold text-emerald-950">All Deliverables Approved & Ready for Final Sign-off</p>
@@ -712,21 +712,21 @@ export const TaskDetailPage: React.FC = () => {
                 setFinalCompleteFiles([]);
                 setIsFinalCompleteModalOpen(true);
               }}
-              className="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-xs transition flex items-center gap-2 cursor-pointer shrink-0"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
             >
-              <Check className="w-4 h-4" />
+              <Check className="w-3.5 h-3.5" />
               <span>Final Approval & Complete</span>
             </button>
           </div>
         )}
 
         {/* Real-time Turn & Responsibility Tracker */}
-        <div className="mt-4 p-3.5 rounded-xl bg-slate-50/90 border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+        <div className="mt-4 p-3.5 rounded-xl bg-slate-50/90 border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse shadow-[0_0_8px_#2563eb] shrink-0" />
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-bold text-slate-800">Current Responsibility:</span>
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-white border border-slate-200 text-slate-700 shadow-2xs">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white border border-slate-200 text-slate-700 shadow-2xs">
                 {isCompleted
                   ? 'Completed & Archived'
                   : isReadyForFinalSignOff
@@ -743,7 +743,7 @@ export const TaskDetailPage: React.FC = () => {
           </div>
 
           {(task.permissions.can_submit || task.permissions.can_review || task.permissions.can_final_submit || task.permissions.can_provide_details) && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs self-start sm:self-auto">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs self-start sm:self-auto">
               <Zap className="w-3.5 h-3.5 text-cyan-200 animate-bounce" />
               <span>Ball is in YOUR court</span>
             </div>
@@ -798,10 +798,10 @@ export const TaskDetailPage: React.FC = () => {
                       )}
                     </div>
                     <div className="text-left sm:text-center min-w-0">
-                      <p className={`text-xs font-bold truncate ${isCurrent ? 'text-blue-900' : isCompleted ? 'text-slate-800' : 'text-slate-400'}`}>
+                      <p className={`text-[11px] font-bold truncate ${isCurrent ? 'text-blue-900' : isCompleted ? 'text-slate-800' : 'text-slate-400'}`}>
                         {stg.label}
                       </p>
-                      <p className={`text-xs truncate ${isCurrent ? 'text-blue-600 font-semibold' : 'text-slate-400'}`}>
+                      <p className={`text-[10px] truncate ${isCurrent ? 'text-blue-600 font-semibold' : 'text-slate-400'}`}>
                         {stg.desc}
                       </p>
                     </div>
@@ -813,9 +813,9 @@ export const TaskDetailPage: React.FC = () => {
 
           {/* Stepper Status Alert Banners */}
           {task.status === 'on_hold' && task.hold_record && (
-            <div className="mt-4 p-4 bg-amber-50/90 border border-amber-200 rounded-xl flex items-center justify-between text-sm text-amber-900">
-              <div className="flex items-center gap-2.5">
-                <PauseCircle className="w-5 h-5 text-amber-600 shrink-0" />
+            <div className="mt-4 p-3 bg-amber-50/90 border border-amber-200 rounded-xl flex items-center justify-between text-xs text-amber-900">
+              <div className="flex items-center gap-2">
+                <PauseCircle className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>
                   <strong>Task is currently On Hold:</strong> {task.hold_record.reason} (Held by {task.hold_record.held_by})
                 </span>
@@ -823,7 +823,7 @@ export const TaskDetailPage: React.FC = () => {
               {task.permissions.can_resume && (
                 <button
                   onClick={handleResume}
-                  className="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold transition cursor-pointer text-xs"
+                  className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold transition cursor-pointer text-xs"
                 >
                   Resume Now
                 </button>
@@ -832,9 +832,9 @@ export const TaskDetailPage: React.FC = () => {
           )}
 
           {task.status === 'post_comment' && (
-            <div className="mt-4 p-4 bg-rose-50/90 border border-rose-200 rounded-xl flex items-center justify-between text-sm text-rose-900">
-              <div className="flex items-center gap-2.5">
-                <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+            <div className="mt-4 p-3 bg-rose-50/90 border border-rose-200 rounded-xl flex items-center justify-between text-xs text-rose-900">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
                 <span>
                   <strong>Action Required: Returned For Revision.</strong> The reviewer requested corrections on deliverables. Check notes below.
                 </span>
@@ -842,7 +842,7 @@ export const TaskDetailPage: React.FC = () => {
               {task.permissions.can_submit && (
                 <button
                   onClick={() => setIsSubmitModalOpen(true)}
-                  className="px-4 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-semibold transition cursor-pointer text-xs"
+                  className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-semibold transition cursor-pointer text-xs"
                 >
                   Submit Fixes
                 </button>
@@ -852,76 +852,76 @@ export const TaskDetailPage: React.FC = () => {
         </div>
 
         {/* Navigation Tabs matching Mockup Screen 7 & 8 */}
-        <div className="flex gap-6 border-b border-slate-100 mt-6 -mb-6 px-1 text-sm font-semibold overflow-x-auto">
+        <div className="flex gap-4 border-b border-slate-100 mt-6 -mb-6 px-1 text-xs font-semibold overflow-x-auto">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`py-3.5 border-b-2 flex items-center gap-2 transition whitespace-nowrap cursor-pointer ${
+            className={`py-3.5 border-b-2 flex items-center gap-1.5 transition whitespace-nowrap cursor-pointer ${
               activeTab === 'overview'
                 ? 'border-blue-600 text-blue-600 font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <FileText className="w-4 h-4" />
+            <FileText className="w-3.5 h-3.5" />
             <span>Overview</span>
           </button>
 
           <button
             onClick={() => setActiveTab('workflow')}
-            className={`py-3.5 border-b-2 flex items-center gap-2 transition whitespace-nowrap cursor-pointer ${
+            className={`py-3.5 border-b-2 flex items-center gap-1.5 transition whitespace-nowrap cursor-pointer ${
               activeTab === 'workflow'
                 ? 'border-blue-600 text-blue-600 font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <GitBranch className="w-4 h-4" />
+            <GitBranch className="w-3.5 h-3.5" />
             <span>Workflow & History</span>
           </button>
 
           <button
             onClick={() => setActiveTab('assignments')}
-            className={`py-3.5 border-b-2 flex items-center gap-2 transition whitespace-nowrap cursor-pointer ${
+            className={`py-3.5 border-b-2 flex items-center gap-1.5 transition whitespace-nowrap cursor-pointer ${
               activeTab === 'assignments'
                 ? 'border-blue-600 text-blue-600 font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Users className="w-4 h-4" />
+            <Users className="w-3.5 h-3.5" />
             <span>Assignments & Collaborations ({((task.branches?.length || 0) + (task.collaborators?.length || 0))})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('comments')}
-            className={`py-3.5 border-b-2 flex items-center gap-2 transition whitespace-nowrap cursor-pointer ${
+            className={`py-3.5 border-b-2 flex items-center gap-1.5 transition whitespace-nowrap cursor-pointer ${
               activeTab === 'comments'
                 ? 'border-blue-600 text-blue-600 font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <MessageSquare className="w-4 h-4" />
+            <MessageSquare className="w-3.5 h-3.5" />
             <span>Comments ({task.comments?.length || 0})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('attachments')}
-            className={`py-3.5 border-b-2 flex items-center gap-2 transition whitespace-nowrap cursor-pointer ${
+            className={`py-3.5 border-b-2 flex items-center gap-1.5 transition whitespace-nowrap cursor-pointer ${
               activeTab === 'attachments'
                 ? 'border-blue-600 text-blue-600 font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Paperclip className="w-4 h-4" />
+            <Paperclip className="w-3.5 h-3.5" />
             <span>Attachments ({task.attachments?.length || 0})</span>
           </button>
 
           <button
             onClick={() => setActiveTab('history')}
-            className={`py-3.5 border-b-2 flex items-center gap-2 transition whitespace-nowrap cursor-pointer ${
+            className={`py-3.5 border-b-2 flex items-center gap-1.5 transition whitespace-nowrap cursor-pointer ${
               activeTab === 'history'
                 ? 'border-blue-600 text-blue-600 font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <History className="w-4 h-4" />
+            <History className="w-3.5 h-3.5" />
             <span>Audit Log</span>
           </button>
         </div>
@@ -935,35 +935,35 @@ export const TaskDetailPage: React.FC = () => {
           {/* Left Column: Basic Information */}
           <div className="lg:col-span-2 bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <FileText className="w-4.5 h-4.5 text-blue-600" />
+              <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-blue-600" />
                 <span>Task Overview & Deliverables</span>
               </h2>
-              <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-3 py-1 rounded-full">
+              <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
                 ID: {task.task_code}
               </span>
             </div>
 
-            <div className="space-y-5 text-sm">
+            <div className="space-y-5 text-xs">
               <div>
-                <span className="font-bold text-slate-400 uppercase tracking-wider text-xs block mb-1.5">Task Title</span>
-                <p className="text-slate-900 font-bold text-lg leading-snug">{task.title}</p>
+                <span className="font-bold text-slate-400 uppercase tracking-wider block mb-1">Task Title</span>
+                <p className="text-slate-900 font-bold text-base leading-snug">{task.title}</p>
               </div>
 
               <div>
-                <span className="font-bold text-slate-400 uppercase tracking-wider text-xs block mb-1.5">Description</span>
-                <div className="p-4 bg-slate-50/70 border border-slate-100 rounded-xl text-slate-700 leading-relaxed whitespace-pre-wrap text-sm">
+                <span className="font-bold text-slate-400 uppercase tracking-wider block mb-1">Description</span>
+                <div className="p-4 bg-slate-50/70 border border-slate-100 rounded-xl text-slate-700 leading-relaxed whitespace-pre-wrap">
                   {task.description}
                 </div>
               </div>
 
               {task.expected_result && (
                 <div className="p-4 bg-sky-50/60 border border-sky-100 rounded-xl space-y-1.5">
-                  <div className="flex items-center gap-2 text-sky-900 font-bold text-xs uppercase tracking-wider">
-                    <Target className="w-4 h-4 text-sky-600" />
+                  <div className="flex items-center gap-2 text-sky-900 font-bold text-[11px] uppercase tracking-wider">
+                    <Target className="w-3.5 h-3.5 text-sky-600" />
                     <span>Expected Result & Outcome</span>
                   </div>
-                  <p className="text-slate-700 leading-relaxed whitespace-pre-wrap text-sm pl-6">
+                  <p className="text-slate-700 leading-relaxed whitespace-pre-wrap text-xs pl-5">
                     {task.expected_result}
                   </p>
                 </div>
@@ -972,11 +972,11 @@ export const TaskDetailPage: React.FC = () => {
               {task.acceptance_criteria && (
                 <div className="p-4 bg-slate-50/80 border border-slate-200/80 rounded-xl space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-800 uppercase tracking-wider text-xs flex items-center gap-2">
+                    <span className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-2">
                       <CheckSquare className="w-4 h-4 text-blue-600" />
                       <span>Acceptance Criteria Checklist</span>
                     </span>
-                    <span className="text-xs text-slate-400">Required quality gates</span>
+                    <span className="text-[10px] text-slate-400">Required quality gates</span>
                   </div>
 
                   <div className="space-y-2">
@@ -986,10 +986,10 @@ export const TaskDetailPage: React.FC = () => {
                       .map((criterion: string, cIdx: number) => (
                         <div
                           key={cIdx}
-                          className="flex items-start gap-3 text-sm text-slate-800 bg-white p-3.5 rounded-xl border border-slate-200/60 shadow-2xs hover:border-blue-200 transition"
+                          className="flex items-start gap-2.5 text-xs text-slate-800 bg-white p-3 rounded-xl border border-slate-200/60 shadow-2xs hover:border-blue-200 transition"
                         >
-                          <span className="w-4.5 h-4.5 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 border border-blue-200">
-                            <Check className="w-3 h-3 stroke-[3]" />
+                          <span className="w-4 h-4 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 border border-blue-200">
+                            <Check className="w-2.5 h-2.5 stroke-[3]" />
                           </span>
                           <span className="leading-relaxed font-medium">
                             {criterion.replace(/^[-*•\d\.\s]+/, '')}
@@ -1002,46 +1002,46 @@ export const TaskDetailPage: React.FC = () => {
 
               {/* Metadata Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
-                <div className="p-3.5 bg-slate-50/60 rounded-xl border border-slate-100/80">
-                  <span className="font-bold text-slate-400 uppercase tracking-wider text-xs block mb-1">Department</span>
-                  <p className="font-semibold text-slate-800 text-sm">{task.department?.name || 'Unassigned'}</p>
+                <div className="p-3 bg-slate-50/60 rounded-xl border border-slate-100/80">
+                  <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px] block mb-1">Department</span>
+                  <p className="font-semibold text-slate-800 text-xs">{task.department?.name || 'Unassigned'}</p>
                 </div>
 
-                <div className="p-3.5 bg-slate-50/60 rounded-xl border border-slate-100/80">
-                  <span className="font-bold text-slate-400 uppercase tracking-wider text-xs block mb-1">Handling Method</span>
+                <div className="p-3 bg-slate-50/60 rounded-xl border border-slate-100/80">
+                  <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px] block mb-1">Handling Method</span>
                   <p className="font-bold text-blue-600 uppercase text-xs tracking-wide">
                     {task.handling_method.replace('_', ' ')}
                   </p>
                 </div>
 
-                <div className="p-3.5 bg-slate-50/60 rounded-xl border border-slate-100/80">
-                  <span className="font-bold text-slate-400 uppercase tracking-wider text-xs block mb-1">Created By</span>
-                  <p className="font-semibold text-slate-800 text-sm">{task.creator?.name || 'Creator'}</p>
+                <div className="p-3 bg-slate-50/60 rounded-xl border border-slate-100/80">
+                  <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px] block mb-1">Created By</span>
+                  <p className="font-semibold text-slate-800 text-xs">{task.creator?.name || 'Creator'}</p>
                 </div>
 
-                <div className="p-3.5 bg-slate-50/60 rounded-xl border border-slate-100/80">
-                  <span className="font-bold text-slate-400 uppercase tracking-wider text-xs block mb-1">Start Date</span>
-                  <p className="font-semibold text-slate-800 text-sm">
+                <div className="p-3 bg-slate-50/60 rounded-xl border border-slate-100/80">
+                  <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px] block mb-1">Start Date</span>
+                  <p className="font-semibold text-slate-800 text-xs">
                     {task.start_date ? new Date(task.start_date).toLocaleDateString() : 'Not set'}
                   </p>
                 </div>
 
-                <div className="p-3.5 bg-slate-50/60 rounded-xl border border-slate-100/80">
-                  <span className="font-bold text-slate-400 uppercase tracking-wider text-xs block mb-1">Due Date</span>
+                <div className="p-3 bg-slate-50/60 rounded-xl border border-slate-100/80">
+                  <span className="font-bold text-slate-400 uppercase tracking-wider text-[10px] block mb-1">Due Date</span>
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <p className="font-semibold text-slate-800 text-sm">
+                    <p className="font-semibold text-slate-800 text-xs">
                       {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'Not set'}
                     </p>
-                    <span className={`px-2 py-0.5 rounded-md text-xs border ${slaBadge.color}`}>
+                    <span className={`px-2 py-0.5 rounded-md text-[10px] border ${slaBadge.color}`}>
                       {slaBadge.text}
                     </span>
                   </div>
                 </div>
 
                 {task.completed_at && (
-                  <div className="p-3.5 bg-emerald-50/60 rounded-xl border border-emerald-100">
-                    <span className="font-bold text-emerald-700 uppercase tracking-wider text-xs block mb-1">Completed At</span>
-                    <p className="font-bold text-emerald-800 text-sm">
+                  <div className="p-3 bg-emerald-50/60 rounded-xl border border-emerald-100">
+                    <span className="font-bold text-emerald-700 uppercase tracking-wider text-[10px] block mb-1">Completed At</span>
+                    <p className="font-bold text-emerald-800 text-xs">
                       {new Date(task.completed_at).toLocaleString()}
                     </p>
                   </div>
@@ -1054,9 +1054,9 @@ export const TaskDetailPage: React.FC = () => {
           <div className="space-y-6">
             {/* Task Progress Card matching Mockup */}
             <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-              <div className="flex items-center justify-between mb-2.5">
-                <h3 className="text-base font-bold text-slate-800">Task Progress</h3>
-                <span className="text-sm font-bold text-blue-600">{task.progress}%</span>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-bold text-slate-800">Task Progress</h3>
+                <span className="text-xs font-bold text-blue-600">{task.progress}%</span>
               </div>
               <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden mb-5">
                 <div
@@ -1066,27 +1066,27 @@ export const TaskDetailPage: React.FC = () => {
               </div>
 
               {/* Progress Milestones Checklist */}
-              <div className="space-y-3 text-sm">
+              <div className="space-y-3 text-xs">
                 {isWorkAlone ? (
                   <div className="space-y-2.5">
                     <div className="flex items-center gap-2.5">
-                      <span className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-600">
-                        <Check className="w-3 h-3 stroke-[3]" />
+                      <span className="w-4 h-4 rounded-full flex items-center justify-center shrink-0 bg-emerald-100 text-emerald-600">
+                        <Check className="w-2.5 h-2.5" />
                       </span>
                       <span className="font-semibold text-slate-800">Direct Execution Mode (Work Alone)</span>
                     </div>
                     <div className="flex items-center gap-2.5">
                       <span
-                        className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                        className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
                           task.status === 'completed'
                             ? 'bg-emerald-100 text-emerald-600'
                             : 'bg-blue-100 text-blue-600'
                         }`}
                       >
                         {task.status === 'completed' ? (
-                          <Check className="w-3 h-3 stroke-[3]" />
+                          <Check className="w-2.5 h-2.5" />
                         ) : (
-                          <div className="w-2 h-2 rounded-full bg-current" />
+                          <div className="w-1.5 h-1.5 rounded-full bg-current" />
                         )}
                       </span>
                       <span
@@ -1122,12 +1122,12 @@ export const TaskDetailPage: React.FC = () => {
                     return (
                       <div
                         key={b.id}
-                        className="p-3 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-slate-50 transition-colors space-y-1.5"
+                        className="p-2.5 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-slate-50 transition-colors space-y-1.5"
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="flex items-center gap-2 min-w-0">
                             <span
-                              className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                              className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
                                 b.status === 'completed'
                                   ? 'bg-emerald-100 text-emerald-600'
                                   : b.status === 'review'
@@ -1138,17 +1138,17 @@ export const TaskDetailPage: React.FC = () => {
                               }`}
                             >
                               {b.status === 'completed' ? (
-                                <Check className="w-3 h-3 stroke-[3]" />
+                                <Check className="w-2.5 h-2.5" />
                               ) : (
-                                <div className="w-2 h-2 rounded-full bg-current" />
+                                <div className="w-1.5 h-1.5 rounded-full bg-current" />
                               )}
                             </span>
                             <div className="min-w-0">
-                              <span className="font-semibold text-slate-800 text-sm block truncate">
+                              <span className="font-semibold text-slate-800 text-xs block truncate">
                                 {ownerName}
                               </span>
                               {b.assigned_by && b.owner && b.assigned_by.id !== b.owner.id && (
-                                <span className="text-xs text-slate-400 block truncate">
+                                <span className="text-[10px] text-slate-400 block truncate">
                                   Assigned by {b.assigned_by.name}
                                 </span>
                               )}
@@ -1159,17 +1159,17 @@ export const TaskDetailPage: React.FC = () => {
                           </span>
                         </div>
                         {b.status === 'review' && (
-                          <div className="mt-1 pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs">
+                          <div className="mt-1 pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
                             <span className="text-slate-500">Under Review by:</span>
-                            <span className="font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded border border-indigo-100">
+                            <span className="font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
                               {reviewerName}
                             </span>
                           </div>
                         )}
                         {b.status === 'post_comment' && (
-                          <div className="mt-1 pt-2 border-t border-rose-100 flex items-center justify-between text-xs">
+                          <div className="mt-1 pt-1.5 border-t border-rose-100 flex items-center justify-between text-[11px]">
                             <span className="text-rose-600 font-medium">Returned for Correction</span>
-                            <span className="text-xs text-slate-500">Awaiting revision</span>
+                            <span className="text-[10px] text-slate-500">Awaiting revision</span>
                           </div>
                         )}
                       </div>
@@ -1178,12 +1178,12 @@ export const TaskDetailPage: React.FC = () => {
                 ) : (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-emerald-600" />
+                      <Check className="w-3.5 h-3.5 text-emerald-600" />
                       <span className="font-semibold text-slate-800">Work in Progress</span>
                     </div>
                     {task.status === 'completed' && (
                       <div className="flex items-center gap-2">
-                        <Check className="w-4 h-4 text-emerald-600" />
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
                         <span className="font-semibold text-emerald-600">Final Verification Complete</span>
                       </div>
                     )}
@@ -1194,44 +1194,44 @@ export const TaskDetailPage: React.FC = () => {
 
             {/* Current Owner Card matching Mockup */}
             <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Current Owner</h3>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Current Owner</h3>
               {task.current_owner ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
                       {task.current_owner.name.charAt(0)}
                     </div>
                     <div className="min-w-0">
-                      <h4 className="text-sm font-bold text-slate-900 truncate">{task.current_owner.name}</h4>
-                      <p className="text-xs text-slate-500 capitalize">{task.current_owner.role?.replace('_', ' ') || 'Assignee'}</p>
-                      <p className="text-xs text-slate-400 truncate">{task.current_owner.email}</p>
+                      <h4 className="text-xs font-bold text-slate-900 truncate">{task.current_owner.name}</h4>
+                      <p className="text-[11px] text-slate-500 capitalize">{task.current_owner.role?.replace('_', ' ') || 'Assignee'}</p>
+                      <p className="text-[10px] text-slate-400 truncate">{task.current_owner.email}</p>
                     </div>
                   </div>
                   <button
                     onClick={() => setActiveTab('comments')}
-                    className="w-full py-2.5 px-3.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl text-sm font-semibold transition flex items-center justify-between border border-slate-200/80 cursor-pointer"
+                    className="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center justify-between border border-slate-200/80 cursor-pointer"
                   >
-                    <span className="flex items-center gap-2">
-                      <MessageSquare className="w-4 h-4 text-blue-600" />
+                    <span className="flex items-center gap-1.5">
+                      <MessageSquare className="w-3.5 h-3.5 text-blue-600" />
                       <span>Leave Message / Note</span>
                     </span>
-                    <ArrowRight className="w-4 h-4 text-slate-400" />
+                    <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
                   </button>
                 </div>
               ) : (
-                <p className="text-sm text-slate-400 italic">No owner assigned.</p>
+                <p className="text-xs text-slate-400 italic">No owner assigned.</p>
               )}
             </div>
 
             {/* On Hold alert if currently on hold */}
             {task.status === 'on_hold' && task.hold_record && (
-              <div className="bg-rose-50 border border-rose-200 p-4 rounded-2xl text-sm space-y-1">
-                <div className="flex items-center gap-2 text-rose-700 font-bold">
-                  <AlertCircle className="w-4.5 h-4.5" />
+              <div className="bg-rose-50 border border-rose-200 p-4 rounded-2xl text-xs space-y-1">
+                <div className="flex items-center gap-1.5 text-rose-700 font-bold">
+                  <AlertCircle className="w-4 h-4" />
                   <span>Task is On Hold</span>
                 </div>
                 <p className="text-rose-600">{task.hold_record.reason}</p>
-                <p className="text-xs text-rose-400 mt-1">
+                <p className="text-[10px] text-rose-400 mt-1">
                   Put on hold by {task.hold_record.held_by} on {new Date(task.hold_record.held_at).toLocaleDateString()}
                 </p>
               </div>
@@ -1246,8 +1246,8 @@ export const TaskDetailPage: React.FC = () => {
       {activeTab === 'workflow' && (
         <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs">
           <div className="mb-6">
-            <h2 className="text-base font-bold text-slate-900">Task Journey / Chronological Workflow</h2>
-            <p className="text-sm text-slate-500 mt-1">
+            <h2 className="text-sm font-bold text-slate-900">Task Journey / Chronological Workflow</h2>
+            <p className="text-xs text-slate-500 mt-0.5">
               Visual history of assignments, submissions, review decisions, returns, and stage handovers.
             </p>
           </div>
@@ -1270,18 +1270,18 @@ export const TaskDetailPage: React.FC = () => {
                     />
 
                     <div className="bg-slate-50/60 p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition">
-                      <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-slate-800">
+                          <span className="text-xs font-bold text-slate-800">
                             {item.reason || `Transitioned to ${item.to_status.replace('_', ' ')}`}
                           </span>
                           {isLast && task.status !== 'completed' && (
-                            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
                               Current Stage
                             </span>
                           )}
                         </div>
-                        <span className="text-xs font-medium text-slate-400">
+                        <span className="text-[11px] font-medium text-slate-400">
                           {new Date(item.changed_at).toLocaleString()}
                         </span>
                       </div>
@@ -1289,14 +1289,14 @@ export const TaskDetailPage: React.FC = () => {
                       <div className="flex items-center gap-2 text-xs text-slate-500">
                         <span>Action by:</span>
                         <span className="font-semibold text-slate-700">{item.changed_by?.name || 'System'}</span>
-                        <span className="text-xs text-slate-400 capitalize">({item.changed_by?.role?.replace('_', ' ') || 'User'})</span>
+                        <span className="text-[10px] text-slate-400 capitalize">({item.changed_by?.role?.replace('_', ' ') || 'User'})</span>
                       </div>
                     </div>
                   </div>
                 );
               })
             ) : (
-              <p className="text-sm text-slate-400 italic">No workflow history records yet.</p>
+              <p className="text-xs text-slate-400 italic">No workflow history records yet.</p>
             )}
           </div>
         </div>
@@ -1311,20 +1311,20 @@ export const TaskDetailPage: React.FC = () => {
           <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
               <div>
-                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <UserPlus className="w-5 h-5 text-sky-600" />
+                <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <UserPlus className="w-4 h-4 text-sky-600" />
                   <span>Assigned Team Members & Work Branches ({task.branches?.length || 0})</span>
                 </h2>
-                <p className="text-sm text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-500 mt-0.5">
                   Accountable owners managing parallel branches or assigned deliverables.
                 </p>
               </div>
               {task.status !== 'completed' && task.status !== 'cancelled' && (
                 <button
                   onClick={() => openAssignModal('assign')}
-                  className="h-9 px-4 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer shrink-0"
+                  className="px-3.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer shrink-0"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-3.5 h-3.5" />
                   <span>Assign More (1 or Many)</span>
                 </button>
               )}
@@ -1335,20 +1335,20 @@ export const TaskDetailPage: React.FC = () => {
                 {task.branches.map((b) => (
                   <div
                     key={b.id}
-                    className="p-4.5 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-slate-50 transition flex flex-col justify-between space-y-3"
+                    className="p-4 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-slate-50 transition flex flex-col justify-between space-y-3"
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-sky-100 text-sky-700 font-bold flex items-center justify-center text-sm shrink-0">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-full bg-sky-100 text-sky-700 font-bold flex items-center justify-center text-xs shrink-0">
                           {b.owner?.name?.charAt(0) || 'U'}
                         </div>
                         <div>
-                          <h4 className="font-bold text-slate-900 text-sm">{b.owner?.name || 'Unassigned'}</h4>
-                          <p className="text-xs text-slate-500 capitalize">
+                          <h4 className="font-bold text-slate-900 text-xs">{b.owner?.name || 'Unassigned'}</h4>
+                          <p className="text-[10px] text-slate-400 capitalize">
                             {b.owner?.role?.replace('_', ' ') || 'Assignee'} • {b.owner?.email || ''}
                           </p>
                           {b.assigned_by && (
-                            <p className="text-xs text-sky-700 font-medium mt-0.5">
+                            <p className="text-[10px] text-sky-700 font-medium">
                               Delegated by: {b.assigned_by.name} ({b.assigned_by.role?.replace('_', ' ')})
                             </p>
                           )}
@@ -1367,12 +1367,12 @@ export const TaskDetailPage: React.FC = () => {
                       />
                     </div>
 
-                    <div className="pt-2.5 border-t border-slate-200/60 text-xs">
-                      <p className="font-semibold text-slate-800 text-sm">{b.title}</p>
+                    <div className="pt-2 border-t border-slate-200/60 text-xs">
+                      <p className="font-semibold text-slate-800">{b.title}</p>
                       {b.description && (
-                        <p className="text-slate-600 text-xs mt-1 line-clamp-2">{b.description}</p>
+                        <p className="text-slate-500 text-[11px] mt-0.5 line-clamp-2">{b.description}</p>
                       )}
-                      <div className="flex items-center justify-between text-xs text-slate-400 mt-2.5">
+                      <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2">
                         <span>Due: {b.due_date ? new Date(b.due_date).toLocaleDateString() : 'Task deadline'}</span>
                         {b.completed_at && (
                           <span className="text-emerald-600 font-semibold">Done: {new Date(b.completed_at).toLocaleDateString()}</span>
@@ -1383,8 +1383,8 @@ export const TaskDetailPage: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 border border-dashed border-slate-200 rounded-xl">
-                <p className="text-sm text-slate-400 italic">No assigned members or branches yet.</p>
+              <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl">
+                <p className="text-xs text-slate-400 italic">No assigned members or branches yet.</p>
               </div>
             )}
           </div>
@@ -1393,39 +1393,39 @@ export const TaskDetailPage: React.FC = () => {
           <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
               <div>
-                <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-purple-600" />
+                <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <Users className="w-4 h-4 text-purple-600" />
                   <span>Task Collaborators ({task.collaborators?.length || 0})</span>
                 </h2>
-                <p className="text-sm text-slate-500 mt-0.5">
+                <p className="text-xs text-slate-500 mt-0.5">
                   Team members collaborating, contributing, or reviewing alongside the primary owners.
                 </p>
               </div>
               {task.status !== 'completed' && task.status !== 'cancelled' && (
                 <button
                   onClick={() => openAssignModal('collaborate')}
-                  className="h-9 px-4 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer shrink-0"
+                  className="px-3.5 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer shrink-0"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-3.5 h-3.5" />
                   <span>Invite Collaborators (1 or Many)</span>
                 </button>
               )}
             </div>
 
             {task.collaborators && task.collaborators.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {task.collaborators.map((c) => (
                   <div
                     key={c.id}
-                    className="p-4 rounded-xl border border-slate-100 bg-slate-50/60 flex items-center gap-3 text-xs"
+                    className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/60 flex items-center gap-3 text-xs"
                   >
-                    <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-700 font-bold flex items-center justify-center text-sm shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-purple-100 text-purple-700 font-bold flex items-center justify-center text-xs shrink-0">
                       {c.name?.charAt(0) || 'C'}
                     </div>
                     <div className="truncate flex-1">
-                      <p className="font-bold text-slate-900 text-sm truncate">{c.name}</p>
-                      <p className="text-xs text-slate-400 truncate">{c.email}</p>
-                      <span className="inline-block px-2 py-0.5 rounded-md text-xs font-semibold bg-purple-100 text-purple-700 capitalize mt-1.5">
+                      <p className="font-bold text-slate-900 truncate">{c.name}</p>
+                      <p className="text-[10px] text-slate-400 truncate">{c.email}</p>
+                      <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-700 capitalize mt-1">
                         {c.role?.replace('_', ' ') || 'Collaborator'}
                       </span>
                     </div>
@@ -1433,12 +1433,12 @@ export const TaskDetailPage: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 border border-dashed border-slate-200 rounded-xl">
-                <p className="text-sm text-slate-400 italic">No external collaborators invited yet.</p>
+              <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl">
+                <p className="text-xs text-slate-400 italic">No external collaborators invited yet.</p>
                 {task.status !== 'completed' && (
                   <button
                     onClick={() => openAssignModal('collaborate')}
-                    className="mt-2 text-sm font-semibold text-purple-600 hover:underline cursor-pointer"
+                    className="mt-2 text-xs font-semibold text-purple-600 hover:underline cursor-pointer"
                   >
                     + Invite one or more collaborators
                   </button>
@@ -1453,8 +1453,8 @@ export const TaskDetailPage: React.FC = () => {
       {/* COMMENTS TAB                                             */}
       {/* ======================================================== */}
       {activeTab === 'comments' && (
-        <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
-          <h2 className="text-base font-bold text-slate-900">Task Discussion & Review Notes</h2>
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
+          <h2 className="text-sm font-bold text-slate-900">Task Discussion & Review Notes</h2>
 
           {/* Assigner / Delegator Direct Communication Banner */}
           {(() => {
@@ -1463,9 +1463,9 @@ export const TaskDetailPage: React.FC = () => {
             if (!assigner || assigner.id === currentUser?.id) return null;
 
             return (
-              <div className="p-4 bg-sky-50/80 border border-sky-100 rounded-xl flex items-center justify-between text-sm text-sky-900">
-                <div className="flex items-center gap-2.5">
-                  <MessageSquare className="w-4.5 h-4.5 text-sky-600 shrink-0" />
+              <div className="p-3 bg-sky-50/80 border border-sky-100 rounded-xl flex items-center justify-between text-xs text-sky-900">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-sky-600 shrink-0" />
                   <span>
                     Need clarification or something missing? Post a comment to discuss directly with your assigner (<strong>{assigner.name}</strong>).
                   </span>
@@ -1481,39 +1481,39 @@ export const TaskDetailPage: React.FC = () => {
               placeholder="Write a comment or update for this task..."
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              className="w-full p-3.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+              className="w-full p-3.5 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
             />
             <div className="flex justify-end">
               <button
                 type="submit"
                 disabled={postingComment || !commentText.trim()}
-                className="h-10 px-5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl text-sm font-semibold shadow-xs transition flex items-center gap-2 cursor-pointer"
+                className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-3.5 h-3.5" />
                 <span>{postingComment ? 'Posting...' : 'Post Comment'}</span>
               </button>
             </div>
           </form>
 
           {/* Comment Stream */}
-          <div className="divide-y divide-slate-100 pt-2">
+          <div className="divide-y divide-slate-100 pt-4">
             {task.comments && task.comments.length > 0 ? (
               task.comments.map((c) => (
-                <div key={c.id} className="py-4.5 flex gap-3.5 text-sm">
-                  <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs shrink-0">
+                <div key={c.id} className="py-4 flex gap-3 text-xs">
+                  <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-xs shrink-0">
                     {c.user?.name?.charAt(0) || 'U'}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="font-semibold text-slate-900 text-sm">{c.user?.name}</span>
-                      <span className="text-xs text-slate-400">{new Date(c.created_at).toLocaleString()}</span>
+                      <span className="font-bold text-slate-900">{c.user?.name}</span>
+                      <span className="text-[10px] text-slate-400">{new Date(c.created_at).toLocaleString()}</span>
                     </div>
-                    <p className="text-slate-700 leading-relaxed whitespace-pre-wrap text-sm">{c.comment}</p>
+                    <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">{c.comment}</p>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-slate-400 italic text-center py-8">No comments posted yet.</p>
+              <p className="text-xs text-slate-400 italic text-center py-6">No comments posted yet.</p>
             )}
           </div>
         </div>
@@ -1523,11 +1523,11 @@ export const TaskDetailPage: React.FC = () => {
       {/* ATTACHMENTS TAB                                          */}
       {/* ======================================================== */}
       {activeTab === 'attachments' && (
-        <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-900">Task Attachments & Deliverables</h2>
-            <label className="h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-xs transition flex items-center gap-2 cursor-pointer">
-              <Upload className="w-4 h-4" />
+            <h2 className="text-sm font-bold text-slate-900">Task Attachments & Deliverables</h2>
+            <label className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+              <Upload className="w-3.5 h-3.5" />
               <span>{uploadingFile ? 'Uploading...' : 'Upload File'}</span>
               <input type="file" onChange={handleFileUpload} className="hidden" disabled={uploadingFile} />
             </label>
@@ -1536,12 +1536,12 @@ export const TaskDetailPage: React.FC = () => {
           <div className="divide-y divide-slate-100">
             {task.attachments && task.attachments.length > 0 ? (
               task.attachments.map((att) => (
-                <div key={att.id} className="py-4 flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-3.5 truncate">
-                    <Paperclip className="w-4.5 h-4.5 text-blue-600 shrink-0" />
+                <div key={att.id} className="py-3.5 flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-3 truncate">
+                    <Paperclip className="w-4 h-4 text-blue-600 shrink-0" />
                     <div>
-                      <p className="font-semibold text-slate-800 truncate text-sm">{att.file_name}</p>
-                      <p className="text-xs text-slate-400">
+                      <p className="font-bold text-slate-800 truncate">{att.file_name}</p>
+                      <p className="text-[10px] text-slate-400">
                         {Math.round(att.file_size / 1024)} KB • Uploaded by {att.uploaded_by?.name || 'User'}
                       </p>
                     </div>
@@ -1549,7 +1549,7 @@ export const TaskDetailPage: React.FC = () => {
                   <button
                     onClick={() => handleDownloadAttachment(att.id, att.file_name)}
                     disabled={downloadingId === att.id}
-                    className="h-8 px-3.5 bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5"
+                    className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5"
                   >
                     <Download className="w-3.5 h-3.5" />
                     <span>{downloadingId === att.id ? 'Downloading...' : 'Download'}</span>
@@ -1557,7 +1557,7 @@ export const TaskDetailPage: React.FC = () => {
                 </div>
               ))
             ) : (
-              <p className="text-sm text-slate-400 italic text-center py-8">No attachments uploaded yet.</p>
+              <p className="text-xs text-slate-400 italic text-center py-6">No attachments uploaded yet.</p>
             )}
           </div>
         </div>
@@ -1567,32 +1567,32 @@ export const TaskDetailPage: React.FC = () => {
       {/* AUDIT LOG TAB                                            */}
       {/* ======================================================== */}
       {activeTab === 'history' && (
-        <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-          <h2 className="text-base font-bold text-slate-900 mb-2">Immutable Audit Trail</h2>
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+          <h2 className="text-sm font-bold text-slate-900 mb-2">Immutable Audit Trail</h2>
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-500 font-bold uppercase tracking-wider text-xs">
-                  <th className="py-3.5 px-4">Date & Time</th>
-                  <th className="py-3.5 px-4">Actor</th>
-                  <th className="py-3.5 px-4">Status Change</th>
-                  <th className="py-3.5 px-4">Reason / Notes</th>
+                <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-500 font-bold uppercase tracking-wider">
+                  <th className="py-3 px-4">Date & Time</th>
+                  <th className="py-3 px-4">Actor</th>
+                  <th className="py-3 px-4">Status Change</th>
+                  <th className="py-3 px-4">Reason / Notes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {task.status_history?.map((h) => (
                   <tr key={h.id} className="hover:bg-slate-50/50">
-                    <td className="py-3.5 px-4 text-slate-500 whitespace-nowrap text-xs">
+                    <td className="py-3 px-4 text-slate-500 whitespace-nowrap">
                       {new Date(h.changed_at).toLocaleString()}
                     </td>
-                    <td className="py-3.5 px-4 font-semibold text-slate-800 whitespace-nowrap text-sm">
+                    <td className="py-3 px-4 font-semibold text-slate-800 whitespace-nowrap">
                       {h.changed_by?.name || 'System'}
                     </td>
-                    <td className="py-3.5 px-4 whitespace-nowrap text-sm">
+                    <td className="py-3 px-4 whitespace-nowrap">
                       <span className="text-slate-400 mr-1.5">{h.from_status || 'Initial'}</span>
                       <span className="text-blue-600 font-bold">→ {h.to_status}</span>
                     </td>
-                    <td className="py-3.5 px-4 text-slate-600 text-sm">{h.reason || '—'}</td>
+                    <td className="py-3 px-4 text-slate-600">{h.reason || '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1604,14 +1604,14 @@ export const TaskDetailPage: React.FC = () => {
       {/* SUBMISSION MODAL (Intermediate Submit for Review) */}
       {isSubmitModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg p-6 sm:p-7 space-y-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg p-6 space-y-4">
             <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
                   <Send className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">Submit Work for Review</h3>
+                  <h3 className="text-sm font-bold text-slate-900">Submit Work for Review</h3>
                   <p className="text-xs text-slate-500">Provide a summary of deliverables, work completed, and attach relevant files.</p>
                 </div>
               </div>
@@ -1623,13 +1623,13 @@ export const TaskDetailPage: React.FC = () => {
                 }}
                 className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
               >
-                <XCircle className="w-5 h-5" />
+                <XCircle className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleSubmitWork} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                   <span>Work Description / Deliverables Summary <span className="text-rose-500">*</span></span>
                 </label>
                 <textarea
@@ -1638,23 +1638,23 @@ export const TaskDetailPage: React.FC = () => {
                   placeholder="Describe your work, completed checklist items, or links to assets..."
                   value={submissionDesc}
                   onChange={(e) => setSubmissionDesc(e.target.value)}
-                  className="w-full p-3.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                  className="w-full p-3 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                 />
               </div>
 
               {/* Attachments Section */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
-                    <Paperclip className="w-4 h-4 text-slate-500" />
+                    <Paperclip className="w-3.5 h-3.5 text-slate-500" />
                     <span>Attach Deliverables / Files (Optional)</span>
                   </span>
-                  <span className="text-xs text-slate-400 font-normal">PDF, Images, Zip, Docs (up to 20MB)</span>
+                  <span className="text-[10px] text-slate-400 font-normal">PDF, Images, Zip, Docs (up to 20MB)</span>
                 </label>
 
-                <label className="border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-xl p-4 flex flex-col items-center justify-center gap-1 bg-slate-50/50 hover:bg-blue-50/20 transition cursor-pointer">
-                  <Upload className="w-5 h-5 text-slate-400" />
-                  <span className="text-sm font-medium text-slate-600">Click to browse or drop files</span>
+                <label className="border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-xl p-3 flex flex-col items-center justify-center gap-1 bg-slate-50/50 hover:bg-blue-50/20 transition cursor-pointer">
+                  <Upload className="w-4 h-4 text-slate-400" />
+                  <span className="text-xs font-medium text-slate-600">Click to browse or drop files</span>
                   <input
                     type="file"
                     multiple
@@ -1669,23 +1669,23 @@ export const TaskDetailPage: React.FC = () => {
                 </label>
 
                 {submissionFiles.length > 0 && (
-                  <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
+                  <div className="space-y-1.5 max-h-28 overflow-y-auto pr-1">
                     {submissionFiles.map((file, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-between p-2.5 bg-blue-50/60 border border-blue-100 rounded-xl text-xs"
+                        className="flex items-center justify-between p-2 bg-blue-50/60 border border-blue-100 rounded-lg text-xs"
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <FileText className="w-4 h-4 text-blue-600 shrink-0" />
-                          <span className="font-medium text-slate-800 truncate text-xs">{file.name}</span>
-                          <span className="text-xs text-slate-400 shrink-0">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                          <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          <span className="font-medium text-slate-800 truncate text-[11px]">{file.name}</span>
+                          <span className="text-[10px] text-slate-400 shrink-0">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
                         </div>
                         <button
                           type="button"
                           onClick={() => setSubmissionFiles((prev) => prev.filter((_, i) => i !== idx))}
                           className="text-rose-500 hover:text-rose-700 p-0.5 rounded cursor-pointer"
                         >
-                          <XCircle className="w-4 h-4" />
+                          <XCircle className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     ))}
@@ -1693,23 +1693,23 @@ export const TaskDetailPage: React.FC = () => {
                 )}
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => {
                     setIsSubmitModalOpen(false);
                     setSubmissionFiles([]);
                   }}
-                  className="h-10 px-4 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 cursor-pointer"
+                  className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submittingWork}
-                  className="h-10 px-5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl text-sm font-semibold shadow-xs transition flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="w-3.5 h-3.5" />
                   <span>{submittingWork ? 'Submitting...' : 'Submit for Review'}</span>
                 </button>
               </div>
@@ -1721,14 +1721,14 @@ export const TaskDetailPage: React.FC = () => {
       {/* FINAL TASK COMPLETION MODAL */}
       {isFinalCompleteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg p-6 sm:p-7 space-y-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg p-6 space-y-4">
             <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
                   <CheckCircle2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">
+                  <h3 className="text-sm font-bold text-slate-900">
                     {isWorkAlone ? 'Final Task Completion & Deliverables' : 'Final Approval & Task Completion'}
                   </h3>
                   <p className="text-xs text-slate-500">
@@ -1746,17 +1746,17 @@ export const TaskDetailPage: React.FC = () => {
                 }}
                 className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
               >
-                <XCircle className="w-5 h-5" />
+                <XCircle className="w-4 h-4" />
               </button>
             </div>
 
             {/* Task Info Pill */}
-            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between text-xs">
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between text-xs">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="font-bold text-blue-600">{task.task_code}</span>
-                <span className="text-slate-700 font-semibold truncate text-sm">{task.title}</span>
+                <span className="text-slate-700 font-semibold truncate">{task.title}</span>
               </div>
-              <span className="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 font-semibold rounded-full text-xs border border-emerald-200 shrink-0">
+              <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-semibold rounded-full text-[10px] border border-emerald-200 shrink-0">
                 {isWorkAlone ? 'Work Alone Mode' : 'Final Sign-off'}
               </span>
             </div>
@@ -1764,9 +1764,9 @@ export const TaskDetailPage: React.FC = () => {
             <form onSubmit={handleFinalSubmit} className="space-y-4">
               {/* Description */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                   <span>Deliverables & Completion Description <span className="text-rose-500">*</span></span>
-                  <span className="text-xs text-slate-400 font-normal">Summary of completed work</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Summary of completed work</span>
                 </label>
                 <textarea
                   rows={4}
@@ -1774,24 +1774,24 @@ export const TaskDetailPage: React.FC = () => {
                   placeholder="Describe your final deliverables, outcome, checklist verification, or closing remarks..."
                   value={finalCompleteDesc}
                   onChange={(e) => setFinalCompleteDesc(e.target.value)}
-                  className="w-full p-3.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+                  className="w-full p-3 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
                 />
               </div>
 
               {/* Attachments */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
-                    <Paperclip className="w-4 h-4 text-slate-500" />
+                    <Paperclip className="w-3.5 h-3.5 text-slate-500" />
                     <span>Attach Deliverables / Files (Optional)</span>
                   </span>
-                  <span className="text-xs text-slate-400 font-normal">PDF, Images, Zip, Docs (up to 20MB)</span>
+                  <span className="text-[10px] text-slate-400 font-normal">PDF, Images, Zip, Docs (up to 20MB)</span>
                 </label>
 
-                <label className="border-2 border-dashed border-slate-200 hover:border-emerald-400 rounded-xl p-4 flex flex-col items-center justify-center gap-1 bg-slate-50/50 hover:bg-emerald-50/20 transition cursor-pointer">
+                <label className="border-2 border-dashed border-slate-200 hover:border-emerald-400 rounded-xl p-3 flex flex-col items-center justify-center gap-1 bg-slate-50/50 hover:bg-emerald-50/20 transition cursor-pointer">
                   <Upload className="w-5 h-5 text-slate-400" />
-                  <span className="text-sm font-medium text-slate-600">Click to browse files or drag & drop here</span>
-                  <span className="text-xs text-slate-400">Attach receipts, screenshots, deliverables, or final reports</span>
+                  <span className="text-xs font-medium text-slate-600">Click to browse files or drag & drop here</span>
+                  <span className="text-[10px] text-slate-400">Attach receipts, screenshots, deliverables, or final reports</span>
                   <input
                     type="file"
                     multiple
@@ -1806,23 +1806,23 @@ export const TaskDetailPage: React.FC = () => {
                 </label>
 
                 {finalCompleteFiles.length > 0 && (
-                  <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
+                  <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
                     {finalCompleteFiles.map((file, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-between p-2.5 bg-emerald-50/60 border border-emerald-100 rounded-xl text-xs"
+                        className="flex items-center justify-between p-2 bg-emerald-50/60 border border-emerald-100 rounded-lg text-xs"
                       >
                         <div className="flex items-center gap-2 min-w-0">
-                          <FileText className="w-4 h-4 text-emerald-600 shrink-0" />
-                          <span className="font-medium text-slate-800 truncate text-xs">{file.name}</span>
-                          <span className="text-xs text-slate-400 shrink-0">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                          <FileText className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span className="font-medium text-slate-800 truncate text-[11px]">{file.name}</span>
+                          <span className="text-[10px] text-slate-400 shrink-0">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
                         </div>
                         <button
                           type="button"
                           onClick={() => setFinalCompleteFiles((prev) => prev.filter((_, i) => i !== idx))}
                           className="text-rose-500 hover:text-rose-700 p-0.5 rounded cursor-pointer"
                         >
-                          <XCircle className="w-4 h-4" />
+                          <XCircle className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     ))}
@@ -1831,23 +1831,23 @@ export const TaskDetailPage: React.FC = () => {
               </div>
 
               {/* Modal footer buttons */}
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => {
                     setIsFinalCompleteModalOpen(false);
                     setFinalCompleteFiles([]);
                   }}
-                  className="h-10 px-4 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 cursor-pointer"
+                  className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submittingFinal}
-                  className="h-10 px-5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white rounded-xl text-sm font-bold shadow-xs transition flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Check className="w-4 h-4" />
+                  <Check className="w-3.5 h-3.5" />
                   <span>{submittingFinal ? 'Completing Task...' : 'Submit & Complete Task'}</span>
                 </button>
               </div>
@@ -1859,15 +1859,15 @@ export const TaskDetailPage: React.FC = () => {
       {/* REQUEST MISSING DETAILS MODAL (Assignee -> Assigner) */}
       {isRequestDetailsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-150 p-6 sm:p-7 space-y-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-150 p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
-                  <HelpCircle className="w-5 h-5" />
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+                  <HelpCircle className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">Request Missing Details</h3>
-                  <p className="text-xs text-slate-500">
+                  <h3 className="text-sm font-bold text-slate-900">Request Missing Details</h3>
+                  <p className="text-[11px] text-slate-500">
                     Ask your assigner for required credentials, assets, or instructions.
                   </p>
                 </div>
@@ -1880,22 +1880,22 @@ export const TaskDetailPage: React.FC = () => {
                 }}
                 className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
               >
-                <XCircle className="w-5 h-5" />
+                <XCircle className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-xl text-xs text-amber-800">
-              <p className="font-bold text-xs uppercase tracking-wide">Workflow Notice:</p>
-              <p className="text-xs mt-1 text-amber-700 leading-relaxed">
+            <div className="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl text-xs text-amber-800">
+              <p className="font-semibold">Workflow Notice:</p>
+              <p className="text-[11px] mt-0.5 text-amber-700">
                 Sending this request moves the task directly into your assigner's Pending Tasks queue. Once your assigner provides the details, the task will return to your Pending queue so you can resume work.
               </p>
             </div>
 
             <form onSubmit={handleRequestDetailsSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                   <span>Questions / Missing Details <span className="text-rose-500">*</span></span>
-                  <span className="text-xs text-slate-400 font-normal">Be specific about what you need</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Be specific about what you need</span>
                 </label>
                 <textarea
                   rows={4}
@@ -1903,22 +1903,22 @@ export const TaskDetailPage: React.FC = () => {
                   placeholder="Describe what information, API keys, credentials, design assets, or clarifications you need..."
                   value={requestDetailsQuestion}
                   onChange={(e) => setRequestDetailsQuestion(e.target.value)}
-                  className="w-full p-3.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600"
+                  className="w-full p-3 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600"
                 />
               </div>
 
               {/* Attachments */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
-                    <Paperclip className="w-4 h-4 text-slate-500" />
+                    <Paperclip className="w-3.5 h-3.5 text-slate-500" />
                     <span>Attach Reference Screenshots / Error Logs (Optional)</span>
                   </span>
                 </label>
 
-                <label className="border-2 border-dashed border-slate-200 hover:border-amber-400 rounded-xl p-4 flex flex-col items-center justify-center gap-1 bg-slate-50/50 hover:bg-amber-50/20 transition cursor-pointer">
-                  <Upload className="w-5 h-5 text-slate-400" />
-                  <span className="text-sm font-medium text-slate-600">Click to attach error logs or references</span>
+                <label className="border-2 border-dashed border-slate-200 hover:border-amber-400 rounded-xl p-3 flex flex-col items-center justify-center gap-1 bg-slate-50/50 hover:bg-amber-50/20 transition cursor-pointer">
+                  <Upload className="w-4 h-4 text-slate-400" />
+                  <span className="text-xs font-medium text-slate-600">Click to attach error logs or references</span>
                   <input
                     type="file"
                     multiple
@@ -1933,19 +1933,19 @@ export const TaskDetailPage: React.FC = () => {
                 </label>
 
                 {requestDetailsFiles.length > 0 && (
-                  <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
+                  <div className="space-y-1.5 max-h-28 overflow-y-auto pr-1">
                     {requestDetailsFiles.map((file, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-between p-2.5 bg-amber-50/60 border border-amber-100 rounded-xl text-xs"
+                        className="flex items-center justify-between p-2 bg-amber-50/60 border border-amber-100 rounded-lg text-xs"
                       >
-                        <span className="font-medium text-slate-800 truncate text-xs">{file.name}</span>
+                        <span className="font-medium text-slate-800 truncate text-[11px]">{file.name}</span>
                         <button
                           type="button"
                           onClick={() => setRequestDetailsFiles((prev) => prev.filter((_, i) => i !== idx))}
                           className="text-rose-500 hover:text-rose-700 p-0.5 rounded cursor-pointer"
                         >
-                          <XCircle className="w-4 h-4" />
+                          <XCircle className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     ))}
@@ -1953,23 +1953,23 @@ export const TaskDetailPage: React.FC = () => {
                 )}
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => {
                     setIsRequestDetailsModalOpen(false);
                     setRequestDetailsFiles([]);
                   }}
-                  className="h-10 px-4 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 cursor-pointer"
+                  className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submittingRequestDetails}
-                  className="h-10 px-5 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 text-white rounded-xl text-sm font-bold shadow-xs transition flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-2 bg-amber-600 hover:bg-amber-700 disabled:bg-amber-300 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="w-3.5 h-3.5" />
                   <span>{submittingRequestDetails ? 'Sending Request...' : 'Send Request to Assigner'}</span>
                 </button>
               </div>
@@ -1981,15 +1981,15 @@ export const TaskDetailPage: React.FC = () => {
       {/* PROVIDE MISSING DETAILS MODAL (Assigner -> Assignee) */}
       {isProvideDetailsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-150 p-6 sm:p-7 space-y-4">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-150 p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                  <Send className="w-5 h-5" />
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                  <Send className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">Provide Missing Details</h3>
-                  <p className="text-xs text-slate-500">
+                  <h3 className="text-sm font-bold text-slate-900">Provide Missing Details</h3>
+                  <p className="text-[11px] text-slate-500">
                     Respond with required information and return task to assignee.
                   </p>
                 </div>
@@ -2002,16 +2002,16 @@ export const TaskDetailPage: React.FC = () => {
                 }}
                 className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
               >
-                <XCircle className="w-5 h-5" />
+                <XCircle className="w-4 h-4" />
               </button>
             </div>
 
             {task.latest_clarification && (
-              <div className="p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs">
-                <p className="font-bold text-amber-950 mb-1 text-xs">
+              <div className="p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-xs">
+                <p className="font-bold text-amber-950 mb-1">
                   Question from {task.latest_clarification.requested_by?.name || 'Assignee'}:
                 </p>
-                <p className="text-amber-850 whitespace-pre-wrap text-xs leading-relaxed">
+                <p className="text-amber-800 whitespace-pre-wrap">
                   "{task.latest_clarification.comment.replace(/^❓\s*Missing Details Requested by [^:]*:\s*/, '')}"
                 </p>
               </div>
@@ -2019,9 +2019,9 @@ export const TaskDetailPage: React.FC = () => {
 
             <form onSubmit={handleProvideDetailsSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                   <span>Your Clarification / Details <span className="text-rose-500">*</span></span>
-                  <span className="text-xs text-slate-400 font-normal">Answers and instructions</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Answers and instructions</span>
                 </label>
                 <textarea
                   rows={4}
@@ -2029,22 +2029,22 @@ export const TaskDetailPage: React.FC = () => {
                   placeholder="Provide the missing instructions, credentials, explanations, or links..."
                   value={provideDetailsResponse}
                   onChange={(e) => setProvideDetailsResponse(e.target.value)}
-                  className="w-full p-3.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
+                  className="w-full p-3 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
                 />
               </div>
 
               {/* Attachments */}
               <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
-                    <Paperclip className="w-4 h-4 text-slate-500" />
+                    <Paperclip className="w-3.5 h-3.5 text-slate-500" />
                     <span>Attach Assets / Documents (Optional)</span>
                   </span>
                 </label>
 
-                <label className="border-2 border-dashed border-slate-200 hover:border-emerald-400 rounded-xl p-4 flex flex-col items-center justify-center gap-1 bg-slate-50/50 hover:bg-emerald-50/20 transition cursor-pointer">
-                  <Upload className="w-5 h-5 text-slate-400" />
-                  <span className="text-sm font-medium text-slate-600">Click to attach specifications or credentials</span>
+                <label className="border-2 border-dashed border-slate-200 hover:border-emerald-400 rounded-xl p-3 flex flex-col items-center justify-center gap-1 bg-slate-50/50 hover:bg-emerald-50/20 transition cursor-pointer">
+                  <Upload className="w-4 h-4 text-slate-400" />
+                  <span className="text-xs font-medium text-slate-600">Click to attach specifications or credentials</span>
                   <input
                     type="file"
                     multiple
@@ -2059,19 +2059,19 @@ export const TaskDetailPage: React.FC = () => {
                 </label>
 
                 {provideDetailsFiles.length > 0 && (
-                  <div className="space-y-2 max-h-32 overflow-y-auto pr-1">
+                  <div className="space-y-1.5 max-h-28 overflow-y-auto pr-1">
                     {provideDetailsFiles.map((file, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center justify-between p-2.5 bg-emerald-50/60 border border-emerald-100 rounded-xl text-xs"
+                        className="flex items-center justify-between p-2 bg-emerald-50/60 border border-emerald-100 rounded-lg text-xs"
                       >
-                        <span className="font-medium text-slate-800 truncate text-xs">{file.name}</span>
+                        <span className="font-medium text-slate-800 truncate text-[11px]">{file.name}</span>
                         <button
                           type="button"
                           onClick={() => setProvideDetailsFiles((prev) => prev.filter((_, i) => i !== idx))}
                           className="text-rose-500 hover:text-rose-700 p-0.5 rounded cursor-pointer"
                         >
-                          <XCircle className="w-4 h-4" />
+                          <XCircle className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     ))}
@@ -2079,23 +2079,23 @@ export const TaskDetailPage: React.FC = () => {
                 )}
               </div>
 
-              <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => {
                     setIsProvideDetailsModalOpen(false);
                     setProvideDetailsFiles([]);
                   }}
-                  className="h-10 px-4 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-50 cursor-pointer"
+                  className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submittingProvideDetails}
-                  className="h-10 px-5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white rounded-xl text-sm font-bold shadow-xs transition flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="w-3.5 h-3.5" />
                   <span>{submittingProvideDetails ? 'Submitting Details...' : 'Submit Details & Resume Work'}</span>
                 </button>
               </div>
@@ -2120,10 +2120,10 @@ export const TaskDetailPage: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in duration-150">
             {/* Modal Header */}
-            <div className="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-              <div className="flex items-center gap-3">
+            <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+              <div className="flex items-center gap-2.5">
                 <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center ${
                     assignModalType === 'assign'
                       ? 'bg-sky-100 text-sky-700'
                       : 'bg-purple-100 text-purple-700'
@@ -2136,12 +2136,12 @@ export const TaskDetailPage: React.FC = () => {
                   )}
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900">
+                  <h3 className="text-sm font-bold text-slate-900">
                     {assignModalType === 'assign'
                       ? 'Assign Team Members (1 to Many)'
                       : 'Invite Collaborators (1 to Many)'}
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-[11px] text-slate-500">
                     {assignModalType === 'assign'
                       ? 'Select one or more employees to assign to this task.'
                       : 'Select one or more employees to collaborate together.'}
@@ -2151,14 +2151,14 @@ export const TaskDetailPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsAssignModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition cursor-pointer"
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1">
+            <div className="p-5 space-y-4 overflow-y-auto flex-1">
               {modalError && (
                 <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
@@ -2168,19 +2168,19 @@ export const TaskDetailPage: React.FC = () => {
 
               {/* Search Filter */}
               <div className="relative">
-                <Search className="w-4.5 h-4.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="Filter by name, department, email, or role..."
                   value={modalSearch}
                   onChange={(e) => setModalSearch(e.target.value)}
-                  className="w-full h-10 pl-10 pr-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                 />
               </div>
 
               {/* Quick Actions & Counter */}
               <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-600 text-sm">
+                <span className="font-semibold text-slate-600">
                   {selectedModalUserIds.length} employee{selectedModalUserIds.length !== 1 ? 's' : ''} selected
                 </span>
                 <div className="flex items-center gap-2">
@@ -2197,7 +2197,7 @@ export const TaskDetailPage: React.FC = () => {
                       );
                       setSelectedModalUserIds(filtered.map((u) => u.id));
                     }}
-                    className="text-xs text-blue-600 hover:underline font-semibold cursor-pointer"
+                    className="text-[11px] text-blue-600 hover:underline font-semibold cursor-pointer"
                   >
                     Select All
                   </button>
@@ -2205,7 +2205,7 @@ export const TaskDetailPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setSelectedModalUserIds([])}
-                    className="text-xs text-slate-500 hover:underline cursor-pointer"
+                    className="text-[11px] text-slate-500 hover:underline cursor-pointer"
                   >
                     Clear All
                   </button>
@@ -2232,15 +2232,15 @@ export const TaskDetailPage: React.FC = () => {
                       <div
                         key={u.id}
                         onClick={() => toggleModalUser(u.id)}
-                        className={`p-3 rounded-xl flex items-center justify-between text-sm cursor-pointer transition ${
+                        className={`p-2.5 rounded-lg flex items-center justify-between text-xs cursor-pointer transition ${
                           isSelected
                             ? 'bg-blue-50/80 border border-blue-200'
                             : 'hover:bg-slate-50'
                         }`}
                       >
-                        <div className="flex items-center gap-3 truncate">
+                        <div className="flex items-center gap-2.5 truncate">
                           <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
+                            className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
                               isSelected
                                 ? 'bg-blue-600 text-white'
                                 : 'bg-slate-100 text-slate-700'
@@ -2249,8 +2249,8 @@ export const TaskDetailPage: React.FC = () => {
                             {u.name.charAt(0)}
                           </div>
                           <div className="truncate">
-                            <p className="font-semibold text-slate-800 text-sm truncate">{u.name}</p>
-                            <p className="text-xs text-slate-400 truncate">
+                            <p className="font-bold text-slate-800 truncate">{u.name}</p>
+                            <p className="text-[10px] text-slate-400 truncate">
                               {u.email} {u.department ? `• ${u.department.name}` : ''}
                             </p>
                           </div>
@@ -2258,23 +2258,23 @@ export const TaskDetailPage: React.FC = () => {
 
                         <div className="flex items-center gap-2 shrink-0">
                           {alreadyBranchOwner && (
-                            <span className="px-2 py-0.5 rounded-md text-xs bg-slate-100 text-slate-500 font-medium">
+                            <span className="px-1.5 py-0.5 rounded text-[9px] bg-slate-100 text-slate-500 font-medium">
                               Already Assigned
                             </span>
                           )}
                           {alreadyCollaborator && (
-                            <span className="px-2 py-0.5 rounded-md text-xs bg-purple-50 text-purple-600 font-medium">
+                            <span className="px-1.5 py-0.5 rounded text-[9px] bg-purple-50 text-purple-600 font-medium">
                               Collaborating
                             </span>
                           )}
                           <span
-                            className={`w-4.5 h-4.5 rounded-md border flex items-center justify-center ${
+                            className={`w-4 h-4 rounded-md border flex items-center justify-center ${
                               isSelected
                                 ? 'border-blue-600 bg-blue-600 text-white'
                                 : 'border-slate-300'
                             }`}
                           >
-                            {isSelected && <Check className="w-3.5 h-3.5" />}
+                            {isSelected && <Check className="w-3 h-3" />}
                           </span>
                         </div>
                       </div>
@@ -2284,11 +2284,11 @@ export const TaskDetailPage: React.FC = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 sm:p-5 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-3">
+            <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-2.5">
               <button
                 type="button"
                 onClick={() => setIsAssignModalOpen(false)}
-                className="h-10 px-4 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+                className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
               >
                 Cancel
               </button>
@@ -2296,7 +2296,7 @@ export const TaskDetailPage: React.FC = () => {
                 type="button"
                 disabled={submittingModal || selectedModalUserIds.length === 0}
                 onClick={handleAssignModalSubmit}
-                className={`h-10 px-5 rounded-xl text-sm font-semibold text-white shadow-xs transition cursor-pointer ${
+                className={`px-5 py-2 rounded-xl text-xs font-bold text-white shadow-xs transition cursor-pointer ${
                   assignModalType === 'assign'
                     ? 'bg-sky-600 hover:bg-sky-700 disabled:bg-sky-300'
                     : 'bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300'

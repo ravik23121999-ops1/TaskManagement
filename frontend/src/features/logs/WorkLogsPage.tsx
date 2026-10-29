@@ -276,7 +276,7 @@ export const WorkLogsPage: React.FC = () => {
               Task History & Timelines
             </span>
           </div>
-          <p className="text-sm text-slate-600 mt-1">
+          <p className="text-xs text-slate-500 mt-1">
             See the story of every task from start to finish: track assignments, deliverables, comments, and approvals in simple chronological order.
           </p>
         </div>
@@ -285,7 +285,7 @@ export const WorkLogsPage: React.FC = () => {
         <div className="flex items-center bg-slate-200/70 p-1 rounded-xl self-start md:self-auto shadow-inner">
           <button
             onClick={() => setViewMode('journeys')}
-            className={`flex items-center gap-2 h-9 px-4 rounded-xl text-sm font-semibold transition cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
               viewMode === 'journeys'
                 ? 'bg-white text-blue-600 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
@@ -296,7 +296,7 @@ export const WorkLogsPage: React.FC = () => {
           </button>
           <button
             onClick={() => setViewMode('stream')}
-            className={`flex items-center gap-2 h-9 px-4 rounded-xl text-sm font-semibold transition cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
               viewMode === 'stream'
                 ? 'bg-white text-blue-600 shadow-xs'
                 : 'text-slate-600 hover:text-slate-900'
@@ -308,7 +308,7 @@ export const WorkLogsPage: React.FC = () => {
           {dossierTaskId && (
             <button
               onClick={() => setViewMode('dossier')}
-              className={`flex items-center gap-2 h-9 px-4 rounded-xl text-sm font-semibold transition cursor-pointer ${
+              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                 viewMode === 'dossier'
                   ? 'bg-white text-blue-600 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
@@ -334,7 +334,7 @@ export const WorkLogsPage: React.FC = () => {
         >
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-sky-500" />
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Total Work Events</span>
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Work Events</span>
             <span className="p-2 bg-blue-50 text-blue-600 rounded-xl group-hover:scale-110 transition-transform">
               <Activity className="w-4 h-4" />
             </span>
@@ -342,7 +342,7 @@ export const WorkLogsPage: React.FC = () => {
           <div className="text-3xl font-bold text-slate-900 mt-2 tracking-tight group-hover:text-blue-600 transition-colors">
             {stats.total_logs}
           </div>
-          <div className="text-xs text-slate-500 mt-2.5 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+          <div className="text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
             <span>Across all tasks</span>
             <span className="text-blue-600 font-semibold group-hover:underline">Explore Journeys →</span>
           </div>
@@ -359,7 +359,7 @@ export const WorkLogsPage: React.FC = () => {
         >
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-500 to-purple-500" />
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Team Communications</span>
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Team Communications</span>
             <span className="p-2 bg-indigo-50 text-indigo-600 rounded-xl group-hover:scale-110 transition-transform">
               <MessageSquare className="w-4 h-4" />
             </span>
@@ -367,7 +367,7 @@ export const WorkLogsPage: React.FC = () => {
           <div className="text-3xl font-bold text-indigo-600 mt-2 tracking-tight">
             {stats.total_comments}
           </div>
-          <div className="text-xs text-slate-500 mt-2.5 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+          <div className="text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
             <span>Clarifications & team chat</span>
             <span className="text-indigo-600 font-semibold group-hover:underline">Review Chat →</span>
           </div>
@@ -384,7 +384,7 @@ export const WorkLogsPage: React.FC = () => {
         >
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-yellow-400" />
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Stage Transitions</span>
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Stage Transitions</span>
             <span className="p-2 bg-amber-50 text-amber-600 rounded-xl group-hover:scale-110 transition-transform">
               <GitBranch className="w-4 h-4" />
             </span>
@@ -392,7 +392,7 @@ export const WorkLogsPage: React.FC = () => {
           <div className="text-3xl font-bold text-amber-600 mt-2 tracking-tight">
             {stats.total_status_changes}
           </div>
-          <div className="text-xs text-slate-500 mt-2.5 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+          <div className="text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
             <span>Handovers & reviews</span>
             <span className="text-amber-600 font-semibold group-hover:underline">View Stages →</span>
           </div>
@@ -409,7 +409,7 @@ export const WorkLogsPage: React.FC = () => {
         >
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-400" />
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Deliverables Uploaded</span>
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Deliverables Uploaded</span>
             <span className="p-2 bg-emerald-50 text-emerald-600 rounded-xl group-hover:scale-110 transition-transform">
               <Paperclip className="w-4 h-4" />
             </span>
@@ -417,7 +417,7 @@ export const WorkLogsPage: React.FC = () => {
           <div className="text-3xl font-bold text-emerald-600 mt-2 tracking-tight">
             {stats.total_attachments}
           </div>
-          <div className="text-xs text-slate-500 mt-2.5 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+          <div className="text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
             <span>Files & deliverables</span>
             <span className="text-emerald-600 font-semibold group-hover:underline">Browse Vault →</span>
           </div>
@@ -434,12 +434,12 @@ export const WorkLogsPage: React.FC = () => {
               placeholder="Search by task title, ID (e.g. T-016), actor, remarks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-10 pl-10 pr-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
           </div>
 
           {/* Task Dropdown */}
-          <div className="w-52">
+          <div className="w-44">
             <select
               value={selectedTaskId || ''}
               onChange={(e) => {
@@ -447,7 +447,7 @@ export const WorkLogsPage: React.FC = () => {
                 setJourneysPage(1);
                 setStreamPage(1);
               }}
-              className="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
             >
               <option value="">Filter by Task...</option>
               {tasksList.map((t) => (
@@ -459,7 +459,7 @@ export const WorkLogsPage: React.FC = () => {
           </div>
 
           {/* User / Employee Dropdown */}
-          <div className="w-48">
+          <div className="w-40">
             <select
               value={selectedUserId || ''}
               onChange={(e) => {
@@ -467,7 +467,7 @@ export const WorkLogsPage: React.FC = () => {
                 setJourneysPage(1);
                 setStreamPage(1);
               }}
-              className="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
             >
               <option value="">Filter by Employee...</option>
               {usersList.map((u) => (
@@ -480,14 +480,14 @@ export const WorkLogsPage: React.FC = () => {
 
           {/* Status Filter for Journeys */}
           {viewMode === 'journeys' && (
-            <div className="w-44">
+            <div className="w-36">
               <select
                 value={statusFilter}
                 onChange={(e) => {
                   setStatusFilter(e.target.value);
                   setJourneysPage(1);
                 }}
-                className="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer"
               >
                 <option value="all">All Statuses</option>
                 <option value="completed">Completed</option>
@@ -502,7 +502,7 @@ export const WorkLogsPage: React.FC = () => {
 
           <button
             type="submit"
-            className="h-10 px-5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-xs transition cursor-pointer"
+            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer"
           >
             Filter
           </button>
@@ -511,7 +511,7 @@ export const WorkLogsPage: React.FC = () => {
             <button
               type="button"
               onClick={handleResetFilters}
-              className="h-10 px-4 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-semibold transition cursor-pointer"
+              className="px-3.5 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl text-xs font-semibold transition cursor-pointer"
             >
               Reset
             </button>
@@ -523,7 +523,7 @@ export const WorkLogsPage: React.FC = () => {
               <button
                 type="button"
                 onClick={expandAll}
-                className="h-9 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1"
               >
                 <ChevronDown className="w-3.5 h-3.5" />
                 <span>Expand All</span>
@@ -531,7 +531,7 @@ export const WorkLogsPage: React.FC = () => {
               <button
                 type="button"
                 onClick={collapseAll}
-                className="h-9 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1"
               >
                 <ChevronUp className="w-3.5 h-3.5" />
                 <span>Collapse All</span>
@@ -589,7 +589,7 @@ export const WorkLogsPage: React.FC = () => {
                           </h2>
                           <StatusBadge status={task.status} size="sm" />
                           <PriorityBadge priority={task.priority} />
-                          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 capitalize">
+                          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200 capitalize">
                             {task.handling_method?.replace('_', ' ')}
                           </span>
                         </div>
@@ -632,7 +632,7 @@ export const WorkLogsPage: React.FC = () => {
                         {/* Progress Meter */}
                         <div className="flex items-center gap-2.5 bg-white px-3.5 py-2 rounded-xl border border-slate-200 shadow-2xs">
                           <div className="text-right">
-                            <span className="text-xs text-slate-500 font-bold uppercase tracking-wider block">Progress</span>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Progress</span>
                             <span className="text-sm font-bold text-blue-600">{task.progress}%</span>
                           </div>
                           <div className="w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -646,7 +646,7 @@ export const WorkLogsPage: React.FC = () => {
                         {/* Open Task in Workspace */}
                         <button
                           onClick={() => navigate(`/tasks/${task.id}`)}
-                          className="h-9 px-3.5 bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-xl text-xs font-semibold border border-slate-200/80 transition flex items-center gap-1.5 cursor-pointer shrink-0"
+                          className="px-3 py-2 bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-xl text-xs font-semibold border border-slate-200/80 transition flex items-center gap-1 cursor-pointer shrink-0"
                           title="Open Task Workspace"
                         >
                           <span>Open Task</span>
@@ -656,7 +656,7 @@ export const WorkLogsPage: React.FC = () => {
                         {/* Expand / Collapse Button */}
                         <button
                           onClick={() => toggleTaskExpansion(task.id)}
-                          className="h-9 w-9 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition cursor-pointer shrink-0 flex items-center justify-center"
+                          className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition cursor-pointer shrink-0"
                           title={isExpanded ? 'Collapse Journey' : 'Expand Journey'}
                         >
                           {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -667,7 +667,7 @@ export const WorkLogsPage: React.FC = () => {
                     {/* Quick Journey Statistics Ribbon */}
                     <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center justify-between text-xs text-slate-500 flex-wrap gap-2">
                       <div className="flex items-center gap-3 flex-wrap font-medium">
-                        <span className="px-3 py-1 rounded-lg bg-blue-50 text-blue-700 font-bold text-xs flex items-center gap-1.5">
+                        <span className="px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 font-bold text-[11px] flex items-center gap-1.5">
                           <GitBranch className="w-3.5 h-3.5" />
                           <span>{journey.length} Journey Milestones (Creation → Completion)</span>
                         </span>
@@ -711,7 +711,7 @@ export const WorkLogsPage: React.FC = () => {
                             Every event is recorded in chronological sequence so you can follow the entire project lifecycle seamlessly.
                           </p>
                         </div>
-                        <span className="text-xs font-semibold text-slate-500">
+                        <span className="text-[11px] font-semibold text-slate-400">
                           Step 1 of {journey.length} to Step {journey.length} of {journey.length}
                         </span>
                       </div>
@@ -770,19 +770,19 @@ export const WorkLogsPage: React.FC = () => {
                                   {/* Milestone Top Row: Number, Stage Badge, Title, Timestamp */}
                                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
                                     <div className="flex items-center gap-2 flex-wrap">
-                                      <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-700 font-bold text-xs flex items-center justify-center shrink-0">
+                                      <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-700 font-bold text-[10px] flex items-center justify-center shrink-0">
                                         {step.milestone_index}
                                       </span>
-                                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold border flex items-center gap-1 ${badgeClass}`}>
+                                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border flex items-center gap-1 ${badgeClass}`}>
                                         <IconComponent className="w-3 h-3" />
                                         <span>{step.badge_label}</span>
                                       </span>
-                                      <h4 className="text-sm font-bold text-slate-900">
+                                      <h4 className="text-xs font-bold text-slate-900">
                                         {step.title}
                                       </h4>
                                     </div>
 
-                                    <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                                    <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
                                       <Clock className="w-3 h-3 text-slate-400" />
                                       <span>{step.formatted_time}</span>
                                       <span className="text-slate-300">({step.time_ago})</span>
@@ -791,16 +791,16 @@ export const WorkLogsPage: React.FC = () => {
 
                                   {/* Actor Information */}
                                   <div className="flex items-center gap-2 text-xs">
-                                    <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 text-white font-bold flex items-center justify-center text-xs shadow-2xs shrink-0">
+                                    <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 text-white font-bold flex items-center justify-center text-[10px] shadow-2xs shrink-0">
                                       {step.actor?.name?.charAt(0) || 'U'}
                                     </div>
-                                    <div className="flex items-center gap-2 flex-wrap text-xs">
+                                    <div className="flex items-center gap-2 flex-wrap text-[11px]">
                                       <span className="font-semibold text-slate-800">{step.actor?.name}</span>
-                                      <span className="px-2 py-0.5 rounded text-xs bg-slate-100 text-slate-600 capitalize">
+                                      <span className="px-1.5 py-0.2 rounded text-[10px] bg-slate-100 text-slate-600 capitalize">
                                         {step.actor?.role?.replace('_', ' ')}
                                       </span>
                                       {step.actor?.department && (
-                                        <span className="text-slate-400 text-xs">
+                                        <span className="text-slate-400 text-[10px]">
                                           • {step.actor.department}
                                         </span>
                                       )}
@@ -817,7 +817,7 @@ export const WorkLogsPage: React.FC = () => {
                                   {/* Attached Deliverable Files (if any uploaded during this step) */}
                                   {step.attachments && step.attachments.length > 0 && (
                                     <div className="pt-2 border-t border-slate-100 space-y-2">
-                                      <span className="text-xs font-bold text-slate-600 uppercase tracking-wider block">
+                                      <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
                                         Attached Deliverables ({step.attachments.length}):
                                       </span>
                                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -832,7 +832,7 @@ export const WorkLogsPage: React.FC = () => {
                                                 <p className="font-semibold text-slate-800 text-xs truncate" title={file.file_name}>
                                                   {file.file_name}
                                                 </p>
-                                                <span className="text-xs text-slate-500">{file.file_size}</span>
+                                                <span className="text-[10px] text-slate-400">{file.file_size}</span>
                                               </div>
                                             </div>
                                             <button
@@ -970,7 +970,7 @@ export const WorkLogsPage: React.FC = () => {
                       <td colSpan={6} className="py-12 text-center text-slate-400">
                         <Activity className="w-8 h-8 mx-auto text-slate-300 mb-2" />
                         <p className="font-semibold text-slate-600">No logs found matching your filters.</p>
-                        <p className="text-xs text-slate-500 mt-1">Try resetting the filter criteria to see all activities.</p>
+                        <p className="text-[11px] text-slate-400 mt-1">Try resetting the filter criteria to see all activities.</p>
                       </td>
                     </tr>
                   ) : (
@@ -995,7 +995,7 @@ export const WorkLogsPage: React.FC = () => {
                         <tr key={item.id} className="hover:bg-slate-50/70 transition group">
                           {/* Type */}
                           <td className="py-4 px-6 whitespace-nowrap">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${typePill.bg}`}>
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${typePill.bg}`}>
                               <TypeIcon className="w-3.5 h-3.5" />
                               <span>{typePill.label}</span>
                             </span>
@@ -1022,12 +1022,12 @@ export const WorkLogsPage: React.FC = () => {
                           {/* Actor */}
                           <td className="py-4 px-6 whitespace-nowrap">
                             <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 text-white font-bold flex items-center justify-center text-xs shadow-2xs shrink-0">
+                              <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 text-white font-bold flex items-center justify-center text-[10px] shadow-2xs shrink-0">
                                 {item.actor?.name?.charAt(0) || 'U'}
                               </div>
                               <div className="min-w-0">
                                 <p className="font-bold text-slate-800 text-xs truncate">{item.actor?.name}</p>
-                                <p className="text-xs text-slate-500 capitalize truncate">
+                                <p className="text-[10px] text-slate-400 capitalize truncate">
                                   {item.actor?.role?.replace('_', ' ')} • {item.actor?.department}
                                 </p>
                               </div>
@@ -1040,7 +1040,7 @@ export const WorkLogsPage: React.FC = () => {
                               <div className="p-3 bg-indigo-50/40 border border-indigo-100 rounded-xl text-slate-800 leading-relaxed text-xs">
                                 <p className="whitespace-pre-wrap">{item.content}</p>
                                 {item.details?.is_internal && (
-                                  <span className="mt-1 inline-block px-1.5 py-0.5 rounded text-xs font-bold bg-amber-100 text-amber-800">
+                                  <span className="mt-1 inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800">
                                     Internal Memo
                                   </span>
                                 )}
@@ -1048,16 +1048,16 @@ export const WorkLogsPage: React.FC = () => {
                             ) : item.event_type === 'status_change' ? (
                               <div className="flex flex-col gap-1">
                                 <span className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
-                                  <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-mono text-xs uppercase">
+                                  <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 font-mono text-[10px] uppercase">
                                     {item.details?.from_status || 'draft'}
                                   </span>
                                   <ArrowRight className="w-3 h-3 text-slate-400" />
-                                  <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 font-mono text-xs uppercase">
+                                  <span className="px-2 py-0.5 rounded-md bg-blue-100 text-blue-700 font-mono text-[10px] uppercase">
                                     {item.details?.to_status}
                                   </span>
                                 </span>
                                 {item.content && (
-                                  <p className="text-slate-600 text-xs italic">"{item.content}"</p>
+                                  <p className="text-slate-500 text-[11px] italic">"{item.content}"</p>
                                 )}
                               </div>
                             ) : item.event_type === 'review' ? (
@@ -1065,7 +1065,7 @@ export const WorkLogsPage: React.FC = () => {
                                 <div className="font-bold text-slate-800">{item.action_title}</div>
                                 {item.content && <p className="text-slate-600 leading-relaxed">{item.content}</p>}
                                 {item.details?.return_to && (
-                                  <p className="text-xs text-rose-600 font-medium">
+                                  <p className="text-[10px] text-rose-600 font-medium">
                                     Returned directly to: {item.details.return_to}
                                   </p>
                                 )}
@@ -1077,7 +1077,7 @@ export const WorkLogsPage: React.FC = () => {
                                 </div>
                                 <div className="min-w-0 flex-1">
                                   <p className="font-bold text-slate-800 text-xs truncate">{item.details?.file_name}</p>
-                                  <p className="text-xs text-slate-500">{item.details?.file_size_formatted}</p>
+                                  <p className="text-[10px] text-slate-400">{item.details?.file_size_formatted}</p>
                                 </div>
                                 <button
                                   onClick={() => handleDownloadAttachment(item.details?.attachment_id || item.raw_id, item.details?.file_name || 'download')}
@@ -1095,11 +1095,11 @@ export const WorkLogsPage: React.FC = () => {
 
                           {/* Timestamp */}
                           <td className="py-4 px-6 whitespace-nowrap">
-                            <div className="flex flex-col text-xs">
+                            <div className="flex flex-col text-[11px]">
                               <span className="font-semibold text-slate-700">
                                 {new Date(item.created_at).toLocaleDateString()}
                               </span>
-                              <span className="text-slate-500 text-xs">
+                              <span className="text-slate-400 text-[10px]">
                                 {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({item.time_ago})
                               </span>
                             </div>
@@ -1109,7 +1109,7 @@ export const WorkLogsPage: React.FC = () => {
                           <td className="py-4 px-6 text-right whitespace-nowrap">
                             <button
                               onClick={() => inspectSingleTaskDossier(item.task.id)}
-                              className="h-8 px-3.5 bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-600 rounded-xl font-semibold text-xs transition inline-flex items-center gap-1 border border-slate-200 cursor-pointer group-hover:border-blue-300"
+                              className="px-3 py-1.5 bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-600 rounded-xl font-semibold text-xs transition inline-flex items-center gap-1 border border-slate-200/80 cursor-pointer group-hover:border-blue-200"
                             >
                               <span>Inspect</span>
                               <ChevronRight className="w-3 h-3" />
@@ -1207,7 +1207,7 @@ export const WorkLogsPage: React.FC = () => {
 
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <span className="text-xs text-slate-500 font-bold uppercase tracking-wider block">Execution Progress</span>
+                      <span className="text-[11px] text-slate-400 font-semibold block">Execution Progress</span>
                       <span className="text-lg font-bold text-blue-600">{dossierData.task.progress}%</span>
                     </div>
                     <div className="w-24 h-2.5 bg-slate-100 rounded-full overflow-hidden">
@@ -1222,25 +1222,25 @@ export const WorkLogsPage: React.FC = () => {
                 {/* Metadata Pills */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-slate-100 text-xs">
                   <div className="p-2.5 bg-slate-50/70 rounded-xl border border-slate-100">
-                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wider block">Creator</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Creator</span>
                     <span className="font-semibold text-slate-800">{dossierData.task.creator?.name || 'Creator'}</span>
                   </div>
                   <div className="p-2.5 bg-slate-50/70 rounded-xl border border-slate-100">
-                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wider block">Current Owner</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Current Owner</span>
                     <span className="font-semibold text-slate-800">{dossierData.task.current_owner?.name || 'Unassigned'}</span>
                   </div>
                   <div className="p-2.5 bg-slate-50/70 rounded-xl border border-slate-100">
-                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wider block">Handling Method</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Handling Method</span>
                     <span className="font-bold text-blue-600 uppercase">{dossierData.task.handling_method.replace('_', ' ')}</span>
                   </div>
                   <div className="p-2.5 bg-slate-50/70 rounded-xl border border-slate-100">
-                    <span className="text-xs text-slate-500 font-bold uppercase tracking-wider block">Department</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Department</span>
                     <span className="font-semibold text-slate-800">{dossierData.task.department?.name || 'General'}</span>
                   </div>
                 </div>
 
                 {/* Dossier Tabs Navigation */}
-                <div className="flex gap-6 border-b border-slate-100 -mb-7 pt-2 text-sm font-semibold overflow-x-auto">
+                <div className="flex gap-4 border-b border-slate-100 -mb-7 pt-2 text-xs font-semibold overflow-x-auto">
                   <button
                     onClick={() => setDossierTab('timeline')}
                     className={`py-3.5 border-b-2 flex items-center gap-1.5 transition whitespace-nowrap cursor-pointer ${
@@ -1320,14 +1320,14 @@ export const WorkLogsPage: React.FC = () => {
                             <div className="bg-slate-50/70 p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition space-y-1.5">
                               <div className="flex flex-wrap items-center justify-between gap-2">
                                 <span className="text-xs font-bold text-slate-800">{step.title}</span>
-                                <span className="text-xs font-medium text-slate-500">
+                                <span className="text-[11px] font-medium text-slate-400">
                                   {step.formatted_time || step.timestamp}
                                 </span>
                               </div>
 
                               <p className="text-xs text-slate-600 leading-relaxed">{step.summary || step.details}</p>
 
-                              <div className="flex items-center gap-2 pt-1 text-xs text-slate-600">
+                              <div className="flex items-center gap-2 pt-1 text-[11px] text-slate-500">
                                 <span>Action by:</span>
                                 <span className="font-semibold text-slate-800">{step.actor?.name || step.actor}</span>
                                 <span className="capitalize text-slate-400">
@@ -1368,22 +1368,22 @@ export const WorkLogsPage: React.FC = () => {
                         <div key={msg.id} className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-2">
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2.5">
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-bold flex items-center justify-center text-xs shadow-2xs">
+                              <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-bold flex items-center justify-center text-[10px] shadow-2xs">
                                 {msg.user?.name?.charAt(0) || 'U'}
                               </div>
                               <div>
                                 <span className="font-bold text-slate-900 text-xs">{msg.user?.name}</span>
-                                <span className="ml-2 px-2 py-0.2 rounded-full text-xs font-bold bg-slate-200/80 text-slate-700 capitalize">
+                                <span className="ml-2 px-2 py-0.2 rounded-full text-[10px] font-bold bg-slate-200/80 text-slate-700 capitalize">
                                   {msg.user?.role?.replace('_', ' ')}
                                 </span>
                                 {msg.branch && (
-                                  <span className="ml-1.5 text-xs text-slate-500">
+                                  <span className="ml-1.5 text-[10px] text-slate-400">
                                     Branch: {msg.branch.title}
                                   </span>
                                 )}
                               </div>
                             </div>
-                            <span className="text-xs text-slate-500 font-medium">
+                            <span className="text-[11px] text-slate-400 font-medium">
                               {new Date(msg.created_at).toLocaleString()} ({msg.time_ago})
                             </span>
                           </div>
@@ -1432,7 +1432,7 @@ export const WorkLogsPage: React.FC = () => {
                               <h4 className="font-bold text-slate-900 text-xs truncate" title={file.file_name}>
                                 {file.file_name}
                               </h4>
-                              <p className="text-xs text-slate-500 mt-0.5">
+                              <p className="text-[10px] text-slate-400 mt-0.5">
                                 {file.file_size_formatted} • {file.uploaded_by?.name || 'User'}
                               </p>
                             </div>
@@ -1477,7 +1477,7 @@ export const WorkLogsPage: React.FC = () => {
                             <strong>Owner:</strong> {b.owner?.name || 'Unassigned'} ({b.owner?.role?.replace('_', ' ') || 'Assignee'})
                           </div>
                           {b.description && (
-                            <p className="text-xs text-slate-600">{b.description}</p>
+                            <p className="text-[11px] text-slate-500">{b.description}</p>
                           )}
                         </div>
                       ))

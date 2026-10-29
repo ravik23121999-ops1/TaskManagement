@@ -92,10 +92,10 @@ export const PendingWithOthersPage: React.FC = () => {
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Tracked</span>
+            <span className="text-xs font-semibold text-slate-500">Total Tracked</span>
             <Clock className="w-4 h-4 text-blue-600" />
           </div>
-          <div className="text-3xl font-bold text-slate-900 mt-2">{total}</div>
+          <div className="text-2xl font-bold text-slate-900 mt-2">{total}</div>
         </div>
 
         <div
@@ -107,10 +107,10 @@ export const PendingWithOthersPage: React.FC = () => {
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">With Assignee</span>
+            <span className="text-xs font-semibold text-slate-500">With Assignee</span>
             <Users className="w-4 h-4 text-sky-500" />
           </div>
-          <div className="text-3xl font-bold text-sky-600 mt-2">{inProgressCount}</div>
+          <div className="text-2xl font-bold text-sky-600 mt-2">{inProgressCount}</div>
         </div>
 
         <div
@@ -122,10 +122,10 @@ export const PendingWithOthersPage: React.FC = () => {
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">In Review</span>
+            <span className="text-xs font-semibold text-slate-500">In Review</span>
             <CheckCircle2 className="w-4 h-4 text-amber-500" />
           </div>
-          <div className="text-3xl font-bold text-amber-600 mt-2">{reviewCount}</div>
+          <div className="text-2xl font-bold text-amber-600 mt-2">{reviewCount}</div>
         </div>
 
         <div
@@ -137,7 +137,7 @@ export const PendingWithOthersPage: React.FC = () => {
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">On Hold</span>
+            <span className="text-xs font-semibold text-slate-500">On Hold</span>
             <PauseCircle className="w-4 h-4 text-rose-500" />
           </div>
           <div className="text-2xl font-bold text-rose-600 mt-2">{holdCount}</div>
@@ -154,7 +154,7 @@ export const PendingWithOthersPage: React.FC = () => {
               placeholder="Search tracked tasks..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-10 pl-10 pr-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
           </div>
 
@@ -165,7 +165,7 @@ export const PendingWithOthersPage: React.FC = () => {
                 setStatus(e.target.value);
                 setPage(1);
               }}
-              className="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -183,7 +183,7 @@ export const PendingWithOthersPage: React.FC = () => {
                 setPriority(e.target.value);
                 setPage(1);
               }}
-              className="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             >
               <option value="all">All Priority</option>
               <option value="urgent">Urgent</option>
@@ -195,7 +195,7 @@ export const PendingWithOthersPage: React.FC = () => {
 
           <button
             type="submit"
-            className="h-10 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-xs transition cursor-pointer"
+            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer"
           >
             Search
           </button>
@@ -204,7 +204,7 @@ export const PendingWithOthersPage: React.FC = () => {
             <button
               type="button"
               onClick={handleClearFilters}
-              className="h-10 px-4 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-medium transition cursor-pointer"
+              className="px-3 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-xs font-semibold transition cursor-pointer"
             >
               Clear
             </button>
@@ -215,7 +215,7 @@ export const PendingWithOthersPage: React.FC = () => {
       {/* Table */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-500 font-bold uppercase tracking-wider">
                 <th className="py-4 px-6 w-24"># Task ID</th>
@@ -252,34 +252,34 @@ export const PendingWithOthersPage: React.FC = () => {
                     onClick={() => navigate(`/tasks/${task.id}`)}
                     className="hover:bg-blue-50/20 transition cursor-pointer group"
                   >
-                    <td className="py-4 px-6 whitespace-nowrap">
-                      <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200/60 inline-block">{task.task_code}</span>
+                    <td className="py-4 px-6 font-bold text-blue-600 whitespace-nowrap">
+                      {task.task_code}
                     </td>
                     <td className="py-4 px-6">
-                      <div className="font-semibold text-slate-900 text-sm group-hover:text-blue-600 transition">
+                      <div className="font-bold text-slate-900 group-hover:text-blue-600 transition">
                         {task.title}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         {task.department && (
-                          <span className="px-2.5 py-0.5 rounded text-xs bg-slate-100 text-slate-700 font-medium">
+                          <span className="px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-600 font-medium">
                             {task.department.name}
                           </span>
                         )}
-                        <span className="text-xs text-slate-500">
+                        <span className="text-[11px] text-slate-400">
                           Created by {task.creator?.name || 'You'}
                         </span>
                       </div>
                     </td>
                     <td className="py-4 px-6 whitespace-nowrap">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-xs shadow-2xs border border-slate-200">
+                        <div className="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-[11px] shadow-2xs border border-slate-200">
                           {task.current_owner?.name?.charAt(0) || 'U'}
                         </div>
                         <div>
                           <p className="font-semibold text-slate-800 leading-tight">
                             {task.current_owner?.name || 'Unassigned'}
                           </p>
-                          <p className="text-xs text-slate-500 capitalize">
+                          <p className="text-[10px] text-slate-400 capitalize">
                             {task.current_owner?.role?.replace('_', ' ') || 'Assignee'}
                           </p>
                         </div>
@@ -302,7 +302,7 @@ export const PendingWithOthersPage: React.FC = () => {
                         {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'Not set'}
                       </div>
                       {task.is_overdue && (
-                        <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-xs font-bold bg-rose-100 text-rose-700">
+                        <span className="inline-block mt-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-600">
                           Overdue
                         </span>
                       )}
@@ -313,7 +313,7 @@ export const PendingWithOthersPage: React.FC = () => {
                           e.stopPropagation();
                           navigate(`/tasks/${task.id}`);
                         }}
-                        className="h-8 px-3.5 bg-slate-100 hover:bg-blue-600 text-slate-700 hover:text-white font-semibold rounded-xl text-xs transition inline-flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                        className="px-3.5 py-1.5 bg-slate-100 hover:bg-blue-600 text-slate-700 hover:text-white font-semibold rounded-xl text-xs transition inline-flex items-center gap-1.5 shadow-2xs cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>View</span>

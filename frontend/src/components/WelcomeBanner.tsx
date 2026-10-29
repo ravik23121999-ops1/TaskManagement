@@ -168,13 +168,13 @@ export const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ user, metrics }) =
           {/* Top Tag & Live Status Pill */}
           <div className="flex items-center gap-3 flex-wrap">
             <span
-              className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-gradient-to-r ${current.tagColor} shadow-md`}
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-gradient-to-r ${current.tagColor} shadow-md`}
             >
               <RoleIcon className="w-3.5 h-3.5 shrink-0" />
               <span>{current.tag}</span>
             </span>
 
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white/10 border border-white/10 text-slate-200 backdrop-blur-md">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-white/10 border border-white/10 text-slate-200 backdrop-blur-md">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
               <span>System Operational</span>
             </span>
@@ -186,23 +186,23 @@ export const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ user, metrics }) =
               <span>{greeting}, {user?.name || 'Commander'}!</span>
               <span className="text-2xl animate-bounce">👋</span>
             </h1>
-            <p className="text-sm sm:text-base text-slate-200/90 mt-1.5 font-normal leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-300/90 mt-1 font-medium leading-relaxed">
               {current.tagline}
             </p>
           </div>
 
           {/* Quick Metrics Bar inside Banner */}
           <div className="flex items-center gap-3 pt-1 flex-wrap">
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/[0.08] border border-white/10 backdrop-blur-md">
-              <TrendingUp className="w-4 h-4 text-blue-400" />
-              <span className="text-xs text-slate-300 font-medium">{current.kpi1Label}:</span>
-              <span className="text-sm font-bold text-white">{current.kpi1Val}</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.07] border border-white/10 backdrop-blur-md">
+              <TrendingUp className="w-3.5 h-3.5 text-blue-400" />
+              <span className="text-[11px] text-slate-300 font-medium">{current.kpi1Label}:</span>
+              <span className="text-xs font-bold text-white">{current.kpi1Val}</span>
             </div>
 
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/[0.08] border border-white/10 backdrop-blur-md">
-              <Clock className="w-4 h-4 text-amber-400" />
-              <span className="text-xs text-slate-300 font-medium">{current.kpi2Label}:</span>
-              <span className="text-sm font-bold text-white">{current.kpi2Val}</span>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/[0.07] border border-white/10 backdrop-blur-md">
+              <Clock className="w-3.5 h-3.5 text-amber-400" />
+              <span className="text-[11px] text-slate-300 font-medium">{current.kpi2Label}:</span>
+              <span className="text-xs font-bold text-white">{current.kpi2Val}</span>
             </div>
           </div>
 
@@ -214,7 +214,7 @@ export const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ user, metrics }) =
                 <button
                   key={idx}
                   onClick={act.onClick}
-                  className={`inline-flex items-center gap-2 h-10 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer shadow-md ${
+                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer shadow-md ${
                     act.primary
                       ? 'bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white shadow-blue-500/25 hover:shadow-lg hover:shadow-blue-500/35 hover:-translate-y-0.5'
                       : 'bg-white/10 hover:bg-white/20 text-white border border-white/15 backdrop-blur-md hover:-translate-y-0.5'
@@ -222,7 +222,7 @@ export const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ user, metrics }) =
                 >
                   <ActionIcon className="w-4 h-4" />
                   <span>{act.label}</span>
-                  <ChevronRight className="w-4 h-4 opacity-70" />
+                  <ChevronRight className="w-3.5 h-3.5 opacity-70" />
                 </button>
               );
             })}
@@ -269,7 +269,7 @@ export const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ user, metrics }) =
                   >
                     <RoleIcon className="w-9 h-9" />
                   </div>
-                  <span className="text-xs font-bold text-white uppercase tracking-wider">
+                  <span className="text-[11px] font-bold text-white uppercase tracking-wider">
                     {current.roleTitle}
                   </span>
                 </div>
@@ -278,14 +278,14 @@ export const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ user, metrics }) =
               {/* Hover Badge to change avatar */}
               <div className="absolute inset-0 bg-slate-950/70 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex flex-col items-center justify-center text-white backdrop-blur-xs">
                 <Camera className="w-5 h-5 text-cyan-400 mb-1" />
-                <span className="text-xs font-extrabold tracking-wide uppercase">Change Photo</span>
+                <span className="text-[10px] font-extrabold tracking-wide uppercase">Change Photo</span>
               </div>
             </div>
 
             {/* Orbiting Floating Badge with Edit Button */}
             <button
               onClick={() => setIsModalOpen(true)}
-              className="absolute -bottom-2 -right-1 px-3 py-1 rounded-full bg-slate-900/90 hover:bg-slate-800 border border-white/20 text-xs font-bold text-white shadow-xl flex items-center gap-1.5 backdrop-blur-md cursor-pointer transition hover:scale-105"
+              className="absolute -bottom-2 -right-1 px-3 py-1 rounded-full bg-slate-900/90 hover:bg-slate-800 border border-white/20 text-[10px] font-bold text-white shadow-xl flex items-center gap-1.5 backdrop-blur-md cursor-pointer transition hover:scale-105"
             >
               <Camera className="w-3 h-3 text-cyan-400" />
               <span>{isAdmin ? 'Commander' : isSubAdmin ? 'Operations' : 'Active Contributor'}</span>

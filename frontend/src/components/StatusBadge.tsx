@@ -85,10 +85,10 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, size = 'md', c
 
   const sizeClass =
     size === 'sm'
-      ? 'px-2.5 py-0.5 text-xs font-semibold'
+      ? 'px-2 py-0.5 text-[11px] font-medium'
       : size === 'lg'
-      ? 'px-3.5 py-1.5 text-sm font-semibold'
-      : 'px-3 py-1 text-xs font-semibold';
+      ? 'px-3.5 py-1.5 text-xs font-bold'
+      : 'px-2.5 py-1 text-xs font-semibold';
 
   return (
     <span
@@ -133,13 +133,13 @@ export const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority, size = '
     dotColor = 'bg-emerald-500';
   }
 
-  const sizeClass = size === 'sm' ? 'px-2.5 py-0.5 text-xs font-semibold' : 'px-3 py-1 text-xs font-semibold';
+  const sizeClass = size === 'sm' ? 'px-2 py-0.5 text-[10px]' : 'px-2.5 py-1 text-[11px] font-semibold';
 
   return (
     <span
       className={`inline-flex items-center rounded-full border ${badgeClass} ${sizeClass} tracking-tight select-none shadow-2xs`}
     >
-      <span className={`w-2 h-2 rounded-full mr-1.5 ${dotColor}`} />
+      <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${dotColor}`} />
       <span>{label}</span>
     </span>
   );

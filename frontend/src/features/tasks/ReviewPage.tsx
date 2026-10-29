@@ -91,7 +91,7 @@ export const ReviewPage: React.FC = () => {
 
         <button
           onClick={() => navigate('/tasks')}
-          className="h-10 px-4 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-sm font-semibold shadow-2xs transition cursor-pointer self-start sm:self-auto"
+          className="px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-semibold shadow-2xs transition cursor-pointer self-start sm:self-auto"
         >
           View All Tasks
         </button>
@@ -101,38 +101,38 @@ export const ReviewPage: React.FC = () => {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Total in Queue</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total in Queue</span>
             <FileCheck2 className="w-4 h-4 text-amber-500" />
           </div>
-          <div className="text-3xl font-bold text-slate-900">{total}</div>
-          <div className="text-xs text-slate-500 mt-1">Pending evaluation</div>
+          <div className="text-2xl font-bold text-slate-900">{total}</div>
+          <div className="text-[10px] text-slate-400 mt-1">Pending evaluation</div>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-rose-600">High / Urgent</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-rose-600">High / Urgent</span>
             <AlertTriangle className="w-4 h-4 text-rose-500" />
           </div>
-          <div className="text-3xl font-bold text-rose-600">{urgentCount}</div>
-          <div className="text-xs text-slate-500 mt-1">Requires fast response</div>
+          <div className="text-2xl font-bold text-rose-600">{urgentCount}</div>
+          <div className="text-[10px] text-slate-400 mt-1">Requires fast response</div>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-purple-600">Final Sign-off</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600">Final Sign-off</span>
             <ShieldCheck className="w-4 h-4 text-purple-500" />
           </div>
-          <div className="text-3xl font-bold text-purple-600">{finalCheckCount}</div>
-          <div className="text-xs text-slate-500 mt-1">Creator completion approval</div>
+          <div className="text-2xl font-bold text-purple-600">{finalCheckCount}</div>
+          <div className="text-[10px] text-slate-400 mt-1">Creator completion approval</div>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-red-600">Overdue SLA</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-red-600">Overdue SLA</span>
             <Clock className="w-4 h-4 text-red-500" />
           </div>
           <div className="text-2xl font-bold text-red-600">{overdueCount}</div>
-          <div className="text-xs text-slate-500 mt-1">Past scheduled due date</div>
+          <div className="text-[10px] text-slate-400 mt-1">Past scheduled due date</div>
         </div>
       </div>
 
@@ -146,7 +146,7 @@ export const ReviewPage: React.FC = () => {
               placeholder="Search by task code, title, or keywords..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full h-10 pl-10 pr-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
           </div>
 
@@ -169,7 +169,7 @@ export const ReviewPage: React.FC = () => {
 
           <button
             type="submit"
-            className="h-10 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-xs transition cursor-pointer"
+            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer"
           >
             Search
           </button>
@@ -179,7 +179,7 @@ export const ReviewPage: React.FC = () => {
       {/* Table */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 font-bold uppercase tracking-wider">
                 <th className="py-3.5 px-6 w-24">Task Code</th>
@@ -204,7 +204,7 @@ export const ReviewPage: React.FC = () => {
                   <td colSpan={7} className="py-12 text-center text-slate-400">
                     <FileCheck2 className="w-8 h-8 mx-auto text-slate-300 mb-2" />
                     <p className="font-semibold text-slate-600">No submissions awaiting review.</p>
-                    <p className="text-xs text-slate-500 mt-1">When team members submit deliverables, they will appear here.</p>
+                    <p className="text-[11px] text-slate-400 mt-1">When team members submit deliverables, they will appear here.</p>
                   </td>
                 </tr>
               ) : (
@@ -231,7 +231,7 @@ export const ReviewPage: React.FC = () => {
                             {task.title}
                           </span>
                           {task.department && (
-                            <span className="text-xs text-slate-500 font-medium">
+                            <span className="text-[10px] text-slate-400 font-medium">
                               Dept: {task.department.name}
                             </span>
                           )}
@@ -239,14 +239,14 @@ export const ReviewPage: React.FC = () => {
                       </td>
                       <td className="py-4 px-6 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 text-white font-bold flex items-center justify-center text-xs shadow-2xs">
+                          <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 text-white font-bold flex items-center justify-center text-[10px] shadow-2xs">
                             {latestSub?.submitted_by?.name?.charAt(0) || task.current_owner?.name?.charAt(0) || 'U'}
                           </div>
                           <div>
                             <p className="font-semibold text-slate-800 text-xs">
                               {latestSub?.submitted_by?.name || task.current_owner?.name || 'Assignee'}
                             </p>
-                            <p className="text-xs text-slate-500">
+                            <p className="text-[10px] text-slate-400">
                               {latestSub?.submitted_at ? new Date(latestSub.submitted_at).toLocaleDateString() : 'Pending'}
                             </p>
                           </div>
@@ -256,7 +256,7 @@ export const ReviewPage: React.FC = () => {
                         <PriorityBadge priority={task.priority} />
                       </td>
                       <td className="py-4 px-6 whitespace-nowrap">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
                           task.progress >= 90
                             ? 'bg-purple-50 text-purple-700 border-purple-200'
                             : 'bg-amber-50 text-amber-700 border-amber-200'
@@ -268,7 +268,7 @@ export const ReviewPage: React.FC = () => {
                         <div className="flex items-center gap-1.5 text-xs text-slate-600">
                           <span>{task.due_date ? new Date(task.due_date).toLocaleDateString() : 'Not set'}</span>
                           {task.is_overdue && (
-                            <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-rose-50 text-rose-600 border border-rose-200">
+                            <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-50 text-rose-600 border border-rose-200">
                               Late
                             </span>
                           )}

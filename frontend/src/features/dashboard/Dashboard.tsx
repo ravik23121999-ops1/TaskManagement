@@ -105,15 +105,15 @@ export const Dashboard: React.FC = () => {
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-sky-500" />
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Tasks</span>
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Tasks</span>
               <span className="p-2 bg-blue-50 text-blue-600 rounded-xl group-hover:scale-110 transition-transform">
-                <Sparkles className="w-4.5 h-4.5" />
+                <Sparkles className="w-4 h-4" />
               </span>
             </div>
             <div className="text-3xl font-bold text-slate-900 mt-2 tracking-tight group-hover:text-blue-600 transition-colors">
               {adminData.total_tasks}
             </div>
-            <div className="flex items-center justify-between text-xs text-slate-500 mt-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
               <span>All tasks across company</span>
               <span className="text-blue-600 font-semibold group-hover:underline">View all →</span>
             </div>
@@ -126,9 +126,9 @@ export const Dashboard: React.FC = () => {
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 to-cyan-400" />
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">In Progress</span>
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">In Progress</span>
               <span className="p-2 bg-sky-50 text-sky-600 rounded-xl group-hover:scale-110 transition-transform">
-                <Activity className="w-4.5 h-4.5" />
+                <Activity className="w-4 h-4" />
               </span>
             </div>
             <div className="text-3xl font-bold text-sky-600 mt-2 tracking-tight flex items-center gap-2">
@@ -138,7 +138,7 @@ export const Dashboard: React.FC = () => {
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500" />
               </span>
             </div>
-            <div className="flex items-center justify-between text-xs text-slate-500 mt-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
               <span>Currently being worked on</span>
               <span className="text-sky-600 font-semibold group-hover:underline">See active →</span>
             </div>
@@ -151,15 +151,15 @@ export const Dashboard: React.FC = () => {
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-600 to-violet-400" />
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Pending Review</span>
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Pending Review</span>
               <span className="p-2 bg-purple-50 text-purple-600 rounded-xl group-hover:scale-110 transition-transform">
-                <Clock className="w-4.5 h-4.5" />
+                <Clock className="w-4 h-4" />
               </span>
             </div>
             <div className="text-3xl font-bold text-purple-600 mt-2 tracking-tight">
               {adminData.pending_review}
             </div>
-            <div className="flex items-center justify-between text-xs text-slate-500 mt-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
               <span>Waiting for review & approval</span>
               <span className="text-purple-600 font-semibold group-hover:underline">Review now →</span>
             </div>
@@ -172,15 +172,15 @@ export const Dashboard: React.FC = () => {
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-400" />
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Completed</span>
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Completed</span>
               <span className="p-2 bg-emerald-50 text-emerald-600 rounded-xl group-hover:scale-110 transition-transform">
-                <Sparkles className="w-4.5 h-4.5 text-emerald-600" />
+                <Sparkles className="w-4 h-4 text-emerald-600" />
               </span>
             </div>
             <div className="text-3xl font-bold text-emerald-600 mt-2 tracking-tight">
               {adminData.completed}
             </div>
-            <div className="flex items-center justify-between text-xs text-slate-500 mt-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
               <span>Finished & approved tasks</span>
               <span className="text-emerald-600 font-semibold group-hover:underline">View completed →</span>
             </div>
@@ -194,10 +194,10 @@ export const Dashboard: React.FC = () => {
             className="bg-white p-3.5 rounded-xl border border-slate-200/80 hover:border-orange-200 hover:bg-orange-50/20 transition cursor-pointer flex items-center justify-between"
           >
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Not Started Yet</p>
-              <p className="text-xl font-bold text-orange-600 mt-0.5">{adminData.open_tasks}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Not Started Yet</p>
+              <p className="text-lg font-bold text-orange-600 mt-0.5">{adminData.open_tasks}</p>
             </div>
-            <span className="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-orange-100 text-orange-700">Ready</span>
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-orange-100 text-orange-700">Ready</span>
           </div>
 
           <div
@@ -205,10 +205,10 @@ export const Dashboard: React.FC = () => {
             className="bg-white p-3.5 rounded-xl border border-slate-200/80 hover:border-rose-200 hover:bg-rose-50/20 transition cursor-pointer flex items-center justify-between"
           >
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Returned for Changes</p>
-              <p className="text-xl font-bold text-rose-600 mt-0.5">{adminData.returned ?? 0}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Returned for Changes</p>
+              <p className="text-lg font-bold text-rose-600 mt-0.5">{adminData.returned ?? 0}</p>
             </div>
-            <span className="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-rose-100 text-rose-700">Needs Fix</span>
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 text-rose-700">Needs Fix</span>
           </div>
 
           <div
@@ -216,10 +216,10 @@ export const Dashboard: React.FC = () => {
             className="bg-white p-3.5 rounded-xl border border-slate-200/80 hover:border-red-200 hover:bg-red-50/20 transition cursor-pointer flex items-center justify-between"
           >
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Past Due Date</p>
-              <p className="text-xl font-bold text-red-600 mt-0.5">{adminData.overdue ?? 0}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Past Due Date</p>
+              <p className="text-lg font-bold text-red-600 mt-0.5">{adminData.overdue ?? 0}</p>
             </div>
-            <span className="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-red-100 text-red-700">Late</span>
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-100 text-red-700">Late</span>
           </div>
 
           <div
@@ -227,10 +227,10 @@ export const Dashboard: React.FC = () => {
             className="bg-white p-3.5 rounded-xl border border-slate-200/80 hover:border-amber-200 hover:bg-amber-50/20 transition cursor-pointer flex items-center justify-between"
           >
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">On Hold</p>
-              <p className="text-xl font-bold text-amber-600 mt-0.5">{adminData.on_hold}</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">On Hold</p>
+              <p className="text-lg font-bold text-amber-600 mt-0.5">{adminData.on_hold}</p>
             </div>
-            <span className="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-amber-100 text-amber-700">Paused</span>
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-700">Paused</span>
           </div>
         </div>
 
@@ -238,7 +238,7 @@ export const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Donut Chart: Tasks by Status */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-            <h2 className="text-base font-bold text-slate-800 mb-4">Tasks by Status</h2>
+            <h2 className="text-sm font-bold text-slate-800 mb-4">Tasks by Status</h2>
             <div className="flex flex-col sm:flex-row items-center justify-around gap-6 pt-2">
               <div className="relative w-44 h-44 shrink-0 flex items-center justify-center">
                 <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
@@ -267,17 +267,17 @@ export const Dashboard: React.FC = () => {
                   })()}
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="text-3xl font-bold text-slate-800 leading-none">{adminData.total_tasks}</span>
-                  <span className="text-xs text-slate-500 font-medium mt-1">Total Tasks</span>
+                  <span className="text-2xl font-bold text-slate-800 leading-none">{adminData.total_tasks}</span>
+                  <span className="text-[11px] text-slate-400 font-medium mt-0.5">Total Tasks</span>
                 </div>
               </div>
 
               {/* Legend */}
               <div className="space-y-2.5 w-full sm:w-auto">
                 {adminData.tasks_by_status?.map((item: any, idx: number) => (
-                  <div key={idx} className="flex items-center justify-between sm:justify-start gap-4 text-sm">
+                  <div key={idx} className="flex items-center justify-between sm:justify-start gap-4 text-xs">
                     <div className="flex items-center gap-2">
-                      <span className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
                       <span className="text-slate-600 font-medium">{item.name}</span>
                     </div>
                     <span className="font-bold text-slate-800">{item.value}</span>
@@ -289,7 +289,7 @@ export const Dashboard: React.FC = () => {
 
           {/* Bar Chart: Tasks by Department */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-            <h2 className="text-base font-bold text-slate-800 mb-4">Tasks by Department</h2>
+            <h2 className="text-sm font-bold text-slate-800 mb-4">Tasks by Department</h2>
             <div className="space-y-3.5 pt-2">
               {adminData.tasks_by_department?.map((dept: any, idx: number) => {
                 const maxVal = Math.max(...adminData.tasks_by_department.map((d: any) => d.count), 1);
@@ -298,8 +298,8 @@ export const Dashboard: React.FC = () => {
                 const color = colors[idx % colors.length];
 
                 return (
-                  <div key={idx} className="space-y-1.5">
-                    <div className="flex justify-between text-sm font-semibold">
+                  <div key={idx} className="space-y-1">
+                    <div className="flex justify-between text-xs font-semibold">
                       <span className="text-slate-700">{dept.name}</span>
                       <span className="text-slate-500 font-medium">{dept.count} tasks</span>
                     </div>
@@ -320,40 +320,40 @@ export const Dashboard: React.FC = () => {
         {adminData.employee_workload && adminData.employee_workload.length > 0 && (
           <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <Users className="w-4.5 h-4.5 text-blue-600" />
+              <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <Users className="w-4 h-4 text-blue-600" />
                 Employee Workload Summary
               </h2>
               <button
                 onClick={() => navigate('/reports')}
-                className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition cursor-pointer"
+                className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition"
               >
                 View Full Analytics →
               </button>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
+              <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 font-bold uppercase tracking-wider text-xs">
-                    <th className="py-3.5 px-4">Employee</th>
-                    <th className="py-3.5 px-4">Role</th>
-                    <th className="py-3.5 px-4">Department</th>
-                    <th className="py-3.5 px-4">Active Tasks</th>
-                    <th className="py-3.5 px-4">Completed</th>
+                  <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-500 font-bold uppercase tracking-wider">
+                    <th className="py-3 px-4">Employee</th>
+                    <th className="py-3 px-4">Role</th>
+                    <th className="py-3 px-4">Department</th>
+                    <th className="py-3 px-4">Active Tasks</th>
+                    <th className="py-3 px-4">Completed</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {adminData.employee_workload.map((emp: any) => (
                     <tr key={emp.id} className="hover:bg-slate-50 transition">
-                      <td className="py-3.5 px-4 font-bold text-slate-800">{emp.name}</td>
-                      <td className="py-3.5 px-4 capitalize text-slate-500">{emp.role.replace('_', ' ')}</td>
-                      <td className="py-3.5 px-4 text-slate-600 font-medium">{emp.department}</td>
-                      <td className="py-3.5 px-4">
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                      <td className="py-3 px-4 font-bold text-slate-800">{emp.name}</td>
+                      <td className="py-3 px-4 capitalize text-slate-500">{emp.role.replace('_', ' ')}</td>
+                      <td className="py-3 px-4 text-slate-600 font-medium">{emp.department}</td>
+                      <td className="py-3 px-4">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
                           {emp.active_tasks} active
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 font-semibold text-emerald-600">{emp.completed_tasks}</td>
+                      <td className="py-3 px-4 font-semibold text-emerald-600">{emp.completed_tasks}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -366,26 +366,26 @@ export const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Activity */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-            <h2 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <Activity className="w-4.5 h-4.5 text-blue-600" />
+            <h2 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <Activity className="w-4 h-4 text-blue-600" />
               Recent Activity
             </h2>
             <div className="divide-y divide-slate-100">
               {adminData.recent_activity?.length === 0 ? (
-                <p className="text-sm text-slate-400 italic py-4">No recent activity recorded.</p>
+                <p className="text-xs text-slate-400 italic py-4">No recent activity recorded.</p>
               ) : (
                 adminData.recent_activity?.slice(0, 5).map((log: any) => (
-                  <div key={log.id} className="py-3.5 flex items-center justify-between text-sm">
+                  <div key={log.id} className="py-3 flex items-center justify-between text-xs">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 font-bold flex items-center justify-center text-xs shrink-0 border border-blue-100">
+                      <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 font-bold flex items-center justify-center text-[10px] shrink-0 border border-blue-100">
                         {log.actor?.name?.charAt(0) || 'U'}
                       </div>
                       <div>
                         <p className="font-semibold text-slate-800">{log.description}</p>
-                        <p className="text-xs text-slate-400 mt-0.5">By {log.actor?.name || 'System'}</p>
+                        <p className="text-[10px] text-slate-400">By {log.actor?.name || 'System'}</p>
                       </div>
                     </div>
-                    <span className="text-xs text-slate-400 shrink-0 font-medium">{log.time_ago}</span>
+                    <span className="text-[11px] text-slate-400 shrink-0 font-medium">{log.time_ago}</span>
                   </div>
                 ))
               )}
@@ -394,30 +394,30 @@ export const Dashboard: React.FC = () => {
 
           {/* Upcoming Deadlines */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-            <h2 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <Clock className="w-4.5 h-4.5 text-amber-500" />
+            <h2 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-amber-500" />
               Upcoming Deadlines
             </h2>
             <div className="divide-y divide-slate-100">
               {adminData.upcoming_deadlines?.length === 0 ? (
-                <p className="text-sm text-slate-400 italic py-4">No upcoming deadlines.</p>
+                <p className="text-xs text-slate-400 italic py-4">No upcoming deadlines.</p>
               ) : (
                 adminData.upcoming_deadlines?.slice(0, 5).map((task: any) => (
                   <div
                     key={task.id}
                     onClick={() => navigate(`/tasks/${task.id}`)}
-                    className="py-3 flex items-center justify-between text-sm hover:bg-slate-50 transition p-2.5 rounded-xl cursor-pointer"
+                    className="py-3 flex items-center justify-between text-xs hover:bg-slate-50 transition p-2 rounded-xl cursor-pointer"
                   >
                     <div>
                       <p className="font-semibold text-slate-800 hover:text-blue-600 transition">
-                        <span className="font-bold text-blue-600 mr-2">{task.task_code}</span>
+                        <span className="font-bold text-blue-600 mr-1.5">{task.task_code}</span>
                         {task.title}
                       </p>
-                      <p className="text-xs text-slate-500 mt-0.5">Due: {task.due_date}</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">Due: {task.due_date}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       {task.is_overdue && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-600 border border-rose-200">
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200">
                           Overdue
                         </span>
                       )}
@@ -471,24 +471,24 @@ export const Dashboard: React.FC = () => {
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-sky-500" />
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">My Action Tasks</span>
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">My Action Tasks</span>
               <span className="p-2 bg-blue-50 text-blue-600 rounded-xl group-hover:scale-110 transition-transform">
-                <Zap className="w-4.5 h-4.5" />
+                <Zap className="w-4 h-4" />
               </span>
             </div>
             <div className="flex items-baseline gap-2 mt-2">
               <span className="text-3xl font-bold text-slate-900 tracking-tight group-hover:text-blue-600 transition-colors">
                 {employeeData.my_action}
               </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
-                <span className="w-2 h-2 rounded-full bg-blue-600 animate-ping" />
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-ping" />
                 Active Now
               </span>
             </div>
-            <div className="flex items-center justify-between text-xs text-slate-500 mt-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
               <span>Items waiting for your step</span>
               <span className="text-blue-600 font-semibold flex items-center gap-1 group-hover:underline">
-                View tasks <ArrowRight className="w-3.5 h-3.5" />
+                View tasks <ArrowRight className="w-3 h-3" />
               </span>
             </div>
           </div>
@@ -500,18 +500,18 @@ export const Dashboard: React.FC = () => {
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 to-teal-400" />
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Assigned to Me</span>
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Assigned to Me</span>
               <span className="p-2 bg-cyan-50 text-cyan-600 rounded-xl group-hover:scale-110 transition-transform">
-                <UserCheck className="w-4.5 h-4.5" />
+                <UserCheck className="w-4 h-4" />
               </span>
             </div>
             <div className="text-3xl font-bold text-slate-900 mt-2 tracking-tight group-hover:text-cyan-600 transition-colors">
               {employeeData.assigned_to_me}
             </div>
-            <div className="flex items-center justify-between text-xs text-slate-500 mt-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
               <span>Tasks assigned to you</span>
               <span className="text-cyan-600 font-semibold flex items-center gap-1 group-hover:underline">
-                See all <ArrowRight className="w-3.5 h-3.5" />
+                See all <ArrowRight className="w-3 h-3" />
               </span>
             </div>
           </div>
@@ -523,18 +523,18 @@ export const Dashboard: React.FC = () => {
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-yellow-400" />
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Submitted for Review</span>
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Submitted for Review</span>
               <span className="p-2 bg-amber-50 text-amber-600 rounded-xl group-hover:scale-110 transition-transform">
-                <FileCheck2 className="w-4.5 h-4.5" />
+                <FileCheck2 className="w-4 h-4" />
               </span>
             </div>
             <div className="text-3xl font-bold text-slate-900 mt-2 tracking-tight group-hover:text-amber-600 transition-colors">
               {employeeData.awaiting_review ?? 0}
             </div>
-            <div className="flex items-center justify-between text-xs text-slate-500 mt-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
               <span>Waiting for reviewer approval</span>
               <span className="text-amber-600 font-semibold flex items-center gap-1 group-hover:underline">
-                View list <ArrowRight className="w-3.5 h-3.5" />
+                View list <ArrowRight className="w-3 h-3" />
               </span>
             </div>
           </div>
@@ -546,18 +546,18 @@ export const Dashboard: React.FC = () => {
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-600 to-pink-500" />
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Team Collaborations</span>
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Team Collaborations</span>
               <span className="p-2 bg-purple-50 text-purple-600 rounded-xl group-hover:scale-110 transition-transform">
-                <Users className="w-4.5 h-4.5" />
+                <Users className="w-4 h-4" />
               </span>
             </div>
             <div className="text-3xl font-bold text-slate-900 mt-2 tracking-tight group-hover:text-purple-600 transition-colors">
               {employeeData.my_collaborations}
             </div>
-            <div className="flex items-center justify-between text-xs text-slate-500 mt-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
               <span>Tasks you are helping with</span>
               <span className="text-purple-600 font-semibold flex items-center gap-1 group-hover:underline">
-                See team tasks <ArrowRight className="w-3.5 h-3.5" />
+                See team tasks <ArrowRight className="w-3 h-3" />
               </span>
             </div>
           </div>
@@ -567,20 +567,20 @@ export const Dashboard: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div
             onClick={() => navigate('/tasks/pending?status=post_comment')}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-sm hover:border-rose-300 transition cursor-pointer flex items-center justify-between group"
+            className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-sm hover:border-rose-300 transition cursor-pointer flex items-center justify-between group"
           >
-            <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <RotateCcw className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Returned For Revision</p>
-                <p className="text-sm text-slate-600 mt-0.5">Submissions that need changes or re-work</p>
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Returned For Revision</p>
+                <p className="text-xs text-slate-400">Submissions that need changes or re-work</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-2xl font-bold text-rose-600">{employeeData.returned_tasks ?? 0}</span>
-              <span className="px-3 py-1 rounded-xl text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+              <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
                 Needs Correction
               </span>
             </div>
@@ -588,20 +588,20 @@ export const Dashboard: React.FC = () => {
 
           <div
             onClick={() => navigate('/tasks/pending-with-others')}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-sm hover:border-emerald-300 transition cursor-pointer flex items-center justify-between group"
+            className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-sm hover:border-emerald-300 transition cursor-pointer flex items-center justify-between group"
           >
-            <div className="flex items-center gap-3.5">
-              <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <GitBranch className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">My Initiated Tasks</p>
-                <p className="text-sm text-slate-600 mt-0.5">Tasks created and delegated by you</p>
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">My Initiated Tasks</p>
+                <p className="text-xs text-slate-400">Tasks created and delegated by you</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-2xl font-bold text-emerald-600">{employeeData.my_created}</span>
-              <span className="px-3 py-1 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                 Tracked
               </span>
             </div>
@@ -616,8 +616,8 @@ export const Dashboard: React.FC = () => {
             <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-base font-bold text-slate-800">My Upcoming Tasks</h2>
-                  <p className="text-xs text-slate-500 mt-0.5">High priority and active milestones scheduled for delivery</p>
+                  <h2 className="text-sm font-bold text-slate-800">My Upcoming Tasks</h2>
+                  <p className="text-[11px] text-slate-400">High priority and active milestones scheduled for delivery</p>
                 </div>
                 <button
                   onClick={() => navigate('/tasks/pending')}
@@ -628,14 +628,14 @@ export const Dashboard: React.FC = () => {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 font-bold text-xs uppercase tracking-wider text-left">
-                      <th className="py-3 px-4 font-bold">Task</th>
-                      <th className="py-3 px-4 font-bold">Status</th>
-                      <th className="py-3 px-4 font-bold">Priority</th>
-                      <th className="py-3 px-4 font-bold">Due Date</th>
-                      <th className="py-3 px-4 font-bold text-right">Action</th>
+                    <tr className="border-b border-slate-100 text-slate-400 font-semibold text-left">
+                      <th className="pb-3 font-semibold">Task</th>
+                      <th className="pb-3 font-semibold">Status</th>
+                      <th className="pb-3 font-semibold">Priority</th>
+                      <th className="pb-3 font-semibold">Due Date</th>
+                      <th className="pb-3 font-semibold text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -648,11 +648,11 @@ export const Dashboard: React.FC = () => {
                     ) : (
                       employeeData.upcoming_tasks?.map((task: any) => (
                         <tr key={task.id} className="hover:bg-slate-50/70 transition group">
-                          <td className="py-3.5 px-4 font-medium text-slate-800">
+                          <td className="py-3.5 font-medium text-slate-800">
                             <div className="flex items-center gap-2">
                               <span
                                 onClick={() => navigate(`/tasks/${task.id}`)}
-                                className="font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-md cursor-pointer transition text-xs"
+                                className="font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-md cursor-pointer transition"
                               >
                                 {task.task_code}
                               </span>
@@ -664,26 +664,26 @@ export const Dashboard: React.FC = () => {
                               </span>
                             </div>
                           </td>
-                          <td className="py-3.5 px-4">
+                          <td className="py-3.5">
                             <StatusBadge status={task.status} size="sm" />
                           </td>
-                          <td className="py-3.5 px-4">
+                          <td className="py-3.5">
                             <PriorityBadge priority={task.priority} />
                           </td>
-                          <td className="py-3.5 px-4 text-slate-600">
+                          <td className="py-3.5 text-slate-500">
                             <div className="flex items-center gap-1.5">
                               <span>{task.due_date}</span>
                               {task.is_overdue && (
-                                <span className="px-2 py-0.5 rounded-md text-xs font-bold bg-rose-50 text-rose-600 border border-rose-200">
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200">
                                   Overdue
                                 </span>
                               )}
                             </div>
                           </td>
-                          <td className="py-3.5 px-4 text-right">
+                          <td className="py-3.5 text-right">
                             <button
                               onClick={() => navigate(`/tasks/${task.id}`)}
-                              className="h-8 px-3.5 text-xs font-semibold text-blue-600 hover:text-white hover:bg-blue-600 bg-blue-50 rounded-xl transition cursor-pointer group-hover:shadow-2xs"
+                              className="px-3 py-1.5 text-xs font-semibold text-blue-600 hover:text-white hover:bg-blue-600 bg-blue-50 rounded-xl transition cursor-pointer group-hover:shadow-2xs"
                             >
                               Open Task →
                             </button>
@@ -698,7 +698,7 @@ export const Dashboard: React.FC = () => {
 
             {/* Status Donut Graphic for Employee */}
             <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-              <h2 className="text-base font-bold text-slate-800 mb-4">My Task Status Distribution</h2>
+              <h2 className="text-sm font-bold text-slate-800 mb-4">My Task Status Distribution</h2>
               <div className="flex flex-col sm:flex-row items-center justify-around gap-6">
                 <div className="relative w-44 h-44 shrink-0 flex items-center justify-center">
                   <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
@@ -727,17 +727,17 @@ export const Dashboard: React.FC = () => {
                     })()}
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                    <span className="text-3xl font-bold text-slate-800 leading-none">
+                    <span className="text-2xl font-bold text-slate-800 leading-none">
                       {employeeData.my_action}
                     </span>
-                    <span className="text-xs text-slate-500 font-medium mt-1">My Action</span>
+                    <span className="text-[11px] text-slate-400 font-medium mt-0.5">My Action</span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
                   {employeeData.tasks_by_status?.map((item: any, idx: number) => (
-                    <div key={idx} className="flex items-center gap-2.5 text-sm p-2.5 rounded-xl bg-slate-50/70 border border-slate-100">
-                      <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                    <div key={idx} className="flex items-center gap-2 text-xs p-2 rounded-xl bg-slate-50/70">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
                       <span className="text-slate-600 truncate">{item.name}:</span>
                       <span className="font-bold text-slate-800 ml-auto">{item.value}</span>
                     </div>
@@ -750,8 +750,8 @@ export const Dashboard: React.FC = () => {
           {/* Right Column: Recent Notifications Feed */}
           <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <Bell className="w-4.5 h-4.5 text-blue-600" />
+              <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <Bell className="w-4 h-4 text-blue-600" />
                 Recent Notifications
               </h2>
               <button
@@ -764,7 +764,7 @@ export const Dashboard: React.FC = () => {
 
             <div className="divide-y divide-slate-100">
               {employeeData.recent_notifications?.length === 0 ? (
-                <p className="text-sm text-slate-400 italic py-6 text-center">No recent notifications.</p>
+                <p className="text-xs text-slate-400 italic py-6 text-center">No recent notifications.</p>
               ) : (
                 employeeData.recent_notifications?.map((notif: any) => (
                   <div
@@ -773,12 +773,12 @@ export const Dashboard: React.FC = () => {
                     className="py-3 hover:bg-slate-50 transition p-2.5 rounded-xl cursor-pointer group"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <h4 className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition">
+                      <h4 className="text-xs font-bold text-slate-800 group-hover:text-blue-600 transition">
                         {notif.title}
                       </h4>
-                      <span className="text-xs text-slate-400 shrink-0">{notif.time_ago}</span>
+                      <span className="text-[10px] text-slate-400 shrink-0">{notif.time_ago}</span>
                     </div>
-                    <p className="text-xs text-slate-600 mt-1 line-clamp-2 leading-relaxed">{notif.message}</p>
+                    <p className="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">{notif.message}</p>
                   </div>
                 ))
               )}
