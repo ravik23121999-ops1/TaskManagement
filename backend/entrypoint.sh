@@ -14,10 +14,11 @@ php artisan package:discover --ansi || true
 # Create storage directory links if missing
 php artisan storage:link || true
 
-# Cache configuration, routes, and views for high performance
+# Cache configuration, routes, events, and views for high performance
 php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true
+php artisan event:cache || true
 
 # Handle Database Configuration
 if [ "$DB_CONNECTION" = "sqlite" ] || [ -z "$DB_HOST" -a -z "$DATABASE_URL" -a -z "$DB_URL" -a "$DB_CONNECTION" != "mysql" -a "$DB_CONNECTION" != "pgsql" ]; then
