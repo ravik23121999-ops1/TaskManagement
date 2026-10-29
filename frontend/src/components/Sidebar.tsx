@@ -23,6 +23,7 @@ import {
   Sparkles,
   ChevronRight,
   MessageSquare,
+  Ban,
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -40,6 +41,7 @@ const Sidebar: React.FC = () => {
     { path: '/tasks/review', label: 'Review Queue', icon: FileCheck2 },
     { path: '/tasks/completed', label: 'Completed', icon: CheckCircle2 },
     { path: '/tasks/on-hold', label: 'On Hold', icon: PauseCircle },
+    { path: '/tasks/cancelled', label: 'Cancelled Tasks', icon: Ban },
   ];
 
   const manageMenuItems = [

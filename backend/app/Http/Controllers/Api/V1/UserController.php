@@ -124,11 +124,11 @@ class UserController extends Controller
     public function destroy(User $user, Request $request): JsonResponse
     {
         $currentUser = $request->user();
+        $subAdminCanDelete = $currentUser->role === 'sub_admin' && \App\Models\SystemSetting::get('allow_subadmin_delete_records', false);
 
-        // Sub-admin cannot delete protected records
-        if ($currentUser->role !== 'admin') {
+        if ($currentUser->role !== 'admin' && !$subAdminCanDelete) {
             return response()->json([
-                'message' => 'Unauthorized: Only Admin can delete user records'
+                'message' => 'Unauthorized: Deleting user records is restricted to Administrators (or authorized Sub-Administrators).'
             ], 403);
         }
 

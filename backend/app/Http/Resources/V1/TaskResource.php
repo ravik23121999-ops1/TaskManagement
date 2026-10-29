@@ -160,7 +160,12 @@ class TaskResource extends JsonResource
             }
         }
 
-        $canCancel = ($isCreator || $isAdmin) && !in_array($this->status, ['completed', 'cancelled']);
+        $subAdminCanCancel = $user && $user->role === 'sub_admin' && \App\Models\SystemSetting::get('allow_subadmin_cancel_tasks', false);
+        $subAdminCanDelete = $user && $user->role === 'sub_admin' && \App\Models\SystemSetting::get('allow_subadmin_delete_records', false);
+        $isFullAdmin = $user && $user->role === 'admin';
+
+        $canCancel = ($isCreator || $isFullAdmin || $subAdminCanCancel) && !in_array($this->status, ['completed', 'cancelled']);
+        $canDelete = ($isFullAdmin || $subAdminCanDelete);
         $canHold = ($isCreator || $isAdmin || $isBranchOwner) && !in_array($this->status, ['completed', 'cancelled', 'on_hold']);
         $canResume = ($isCreator || $isAdmin || $isBranchOwner) && $this->status === 'on_hold';
         $canEdit = ($isCreator || $isAdmin) && !in_array($this->status, ['completed', 'cancelled']);
@@ -219,6 +224,12 @@ class TaskResource extends JsonResource
             'completed_at' => $this->completed_at?->toISOString(),
             'cancelled_at' => $this->cancelled_at?->toISOString(),
             'cancellation_reason' => $this->cancellation_reason,
+            'cancelled_by' => $this->cancelledBy ? [
+                'id' => $this->cancelledBy->id,
+                'name' => $this->cancelledBy->name,
+                'email' => $this->cancelledBy->email,
+                'role' => $this->cancelledBy->role,
+            ] : null,
             'progress' => $progress,
             'creator' => $this->creator ? [
                 'id' => $this->creator->id,
@@ -352,6 +363,7 @@ class TaskResource extends JsonResource
                 'can_hold' => $canHold,
                 'can_resume' => $canResume,
                 'can_cancel' => $canCancel,
+                'can_delete' => $canDelete,
                 'can_assign' => ($isCreator || $isAdmin || $isBranchOwner) && !in_array($this->status, ['completed', 'cancelled']),
                 'can_collaborate' => ($isCreator || $isAdmin || $isBranchOwner) && !in_array($this->status, ['completed', 'cancelled']),
             ],

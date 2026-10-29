@@ -79,6 +79,7 @@ export interface Task {
   completed_at: string | null;
   cancelled_at: string | null;
   cancellation_reason: string | null;
+  cancelled_by?: UserSummary | null;
   progress: number;
   creator: UserSummary | null;
   current_owner: UserSummary | null;
@@ -113,6 +114,7 @@ export interface Task {
     can_hold: boolean;
     can_resume: boolean;
     can_cancel: boolean;
+    can_delete?: boolean;
     can_assign?: boolean;
     can_collaborate?: boolean;
   };
@@ -175,6 +177,11 @@ export const tasksApi = {
 
   cancel: async (id: number, reason: string) => {
     const response = await apiClient.post(`/tasks/${id}/cancel`, { reason });
+    return response.data;
+  },
+
+  delete: async (id: number) => {
+    const response = await apiClient.delete(`/tasks/${id}`);
     return response.data;
   },
 

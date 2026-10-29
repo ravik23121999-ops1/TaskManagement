@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\V1\ReportsController;
 use App\Http\Controllers\Api\V1\ProfileController;
 use App\Http\Controllers\Api\V1\WorkLogController;
 use App\Http\Controllers\Api\V1\MessageController;
+use App\Http\Controllers\Api\V1\SystemSettingController;
 
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
@@ -30,6 +31,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/profile', [ProfileController::class, 'update']);
     Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar']);
+    Route::get('/settings/system', [SystemSettingController::class, 'index']);
+    Route::put('/settings/system', [SystemSettingController::class, 'update']);
 
     // Dashboards & Reports
     Route::get('/dashboard/admin', [ReportsController::class, 'adminDashboard']);

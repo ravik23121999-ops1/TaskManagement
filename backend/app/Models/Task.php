@@ -26,6 +26,7 @@ class Task extends Model
         'completed_at',
         'cancelled_at',
         'cancellation_reason',
+        'cancelled_by_id',
     ];
 
     protected $casts = [
@@ -38,6 +39,11 @@ class Task extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'creator_id');
+    }
+
+    public function cancelledBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'cancelled_by_id');
     }
 
     public function department(): BelongsTo

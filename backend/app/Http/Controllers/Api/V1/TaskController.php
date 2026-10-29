@@ -270,6 +270,7 @@ class TaskController extends Controller
         $perPage = (int) $request->input('per_page', 15);
         $tasks = $query->with([
             'creator',
+            'cancelledBy',
             'department',
             'branches.owner',
             'branches.assignments.assignedBy',
@@ -514,6 +515,7 @@ class TaskController extends Controller
         return response()->json([
             'data' => new TaskResource($task->load([
                 'creator',
+                'cancelledBy',
                 'department',
                 'branches.owner',
                 'branches.assignments.assignedBy',
@@ -679,11 +681,15 @@ class TaskController extends Controller
     {
         $request->validate(['reason' => 'required|string|min:3']);
         $user = $request->user();
-        $isAdmin = $user->role === 'admin' || $user->role === 'sub_admin';
+        $isCreator = (int) $task->creator_id === (int) $user->id;
+        $isAdmin = $user->role === 'admin';
+        $subAdminCanCancel = $user->role === 'sub_admin' && \App\Models\SystemSetting::get('allow_subadmin_cancel_tasks', false);
 
-        // Enforce rule: ONLY creator, Admin, or Sub-Admin can cancel
-        if (!$isAdmin && $task->creator_id !== $user->id) {
-            return response()->json(['message' => 'Unauthorized: Only the creator, Admin, or Sub-Admin can cancel a task'], 403);
+        // Enforce rule: ONLY task creator, Admin, or authorized Sub-Admin can cancel
+        if (!$isCreator && !$isAdmin && !$subAdminCanCancel) {
+            return response()->json([
+                'message' => 'Unauthorized: Only the task creator, Admin, or authorized Sub-Admin can cancel this task.'
+            ], 403);
         }
 
         if (in_array($task->status, ['completed', 'cancelled'])) {
@@ -695,6 +701,7 @@ class TaskController extends Controller
             'status' => 'cancelled',
             'cancelled_at' => now(),
             'cancellation_reason' => $request->reason,
+            'cancelled_by_id' => $user->id,
         ]);
 
         TaskStatusHistory::create([
@@ -706,12 +713,13 @@ class TaskController extends Controller
             'changed_at' => now(),
         ]);
 
-        ActivityLogger::log('task_cancelled', "Cancelled task: {$task->title}. Reason: {$request->reason}", $task->id);
+        ActivityLogger::log('task_cancelled', "Cancelled task: {$task->title}. Reason: {$request->reason}", $task->id, $user->id);
 
         return response()->json([
             'message' => 'Task cancelled successfully',
             'data' => new TaskResource($task->fresh()->load([
                 'creator',
+                'cancelledBy',
                 'department',
                 'branches.owner',
                 'branches.collaborators.user',
@@ -722,6 +730,29 @@ class TaskController extends Controller
                 'submissions.reviews.reviewer',
                 'holdRecords.putOnHoldBy'
             ])),
+        ]);
+    }
+
+    public function destroy(Request $request, Task $task): JsonResponse
+    {
+        $user = $request->user();
+        $subAdminCanDelete = $user->role === 'sub_admin' && \App\Models\SystemSetting::get('allow_subadmin_delete_records', false);
+
+        if ($user->role !== 'admin' && !$subAdminCanDelete) {
+            return response()->json([
+                'message' => 'Unauthorized: Deleting tasks is restricted to Administrators (or authorized Sub-Administrators).'
+            ], 403);
+        }
+
+        $taskTitle = $task->title;
+        $taskId = $task->id;
+
+        $task->delete();
+
+        ActivityLogger::log('task_deleted', "Deleted task: {$taskTitle} (ID: {$taskId})", null, $user->id);
+
+        return response()->json([
+            'message' => 'Task deleted successfully',
         ]);
     }
 

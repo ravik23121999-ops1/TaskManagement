@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { departmentsApi } from '../../api/departments';
+import { settingsApi } from '../../api/settings';
 import type { Department, DepartmentMember } from '../../api/departments';
+import { useAuth } from '../auth/AuthContext';
 import { Pagination } from '../../components/Pagination';
 import { TableSkeleton } from '../../components/TableSkeleton';
-import { Building2, Plus, Edit2, Search, X, Users, MessageSquare, ChevronRight, ExternalLink } from 'lucide-react';
+import { Building2, Plus, Edit2, Search, X, Users, MessageSquare, ChevronRight, ExternalLink, Trash2, AlertCircle } from 'lucide-react';
 
 export const DepartmentsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user: currentUser } = useAuth();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -15,6 +18,12 @@ export const DepartmentsPage: React.FC = () => {
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [total, setTotal] = useState(0);
+
+  // Deletion permission & modal state
+  const [canDeleteRecords, setCanDeleteRecords] = useState(false);
+  const [deletingDept, setDeletingDept] = useState<Department | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   // Edit / Create Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,6 +39,42 @@ export const DepartmentsPage: React.FC = () => {
   const [membersList, setMembersList] = useState<DepartmentMember[]>([]);
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [memberSearchQuery, setMemberSearchQuery] = useState('');
+
+  useEffect(() => {
+    checkPermissions();
+  }, [currentUser?.role]);
+
+  const checkPermissions = async () => {
+    if (currentUser?.role === 'admin') {
+      setCanDeleteRecords(true);
+      return;
+    }
+    if (currentUser?.role === 'sub_admin') {
+      try {
+        const res = await settingsApi.getSystemSettings();
+        setCanDeleteRecords(Boolean(res.user_capabilities?.can_delete_records));
+      } catch {
+        setCanDeleteRecords(false);
+      }
+    } else {
+      setCanDeleteRecords(false);
+    }
+  };
+
+  const handleDeleteDepartment = async () => {
+    if (!deletingDept) return;
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      await departmentsApi.delete(deletingDept.id);
+      setDeletingDept(null);
+      loadDepartments();
+    } catch (err: any) {
+      setDeleteError(err.response?.data?.message || 'Failed to delete department.');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     loadDepartments();
@@ -262,6 +307,21 @@ export const DepartmentsPage: React.FC = () => {
                           <Edit2 className="w-3 h-3" />
                           <span>Edit</span>
                         </button>
+
+                        {canDeleteRecords && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteError('');
+                              setDeletingDept(d);
+                            }}
+                            className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg font-semibold text-xs transition inline-flex items-center gap-1 cursor-pointer"
+                            title="Delete department"
+                          >
+                            <Trash2 className="w-3 h-3 text-rose-500" />
+                            <span>Delete</span>
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -556,6 +616,65 @@ export const DepartmentsPage: React.FC = () => {
                 className="px-4 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl transition cursor-pointer"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Department Confirmation Modal */}
+      {deletingDept && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 text-slate-800 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
+                  <Trash2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Delete Department</h3>
+                  <p className="text-xs text-slate-500">Department record removal</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setDeletingDept(null)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {deleteError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Are you sure you want to delete <span className="font-bold text-slate-900">"{deletingDept.name}"</span>?
+              {deletingDept.tasks_count > 0 && (
+                <span className="block mt-2 p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-[11px]">
+                  Note: This department has {deletingDept.tasks_count} associated task(s) and will be deactivated to preserve historical integrity.
+                </span>
+              )}
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setDeletingDept(null)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteDepartment}
+                disabled={deleting}
+                className="px-5 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 text-white rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+              >
+                {deleting ? 'Deleting...' : 'Delete Department'}
               </button>
             </div>
           </div>

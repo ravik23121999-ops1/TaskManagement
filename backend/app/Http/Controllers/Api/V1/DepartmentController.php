@@ -79,8 +79,10 @@ class DepartmentController extends Controller
     public function destroy(Department $department, Request $request): JsonResponse
     {
         $user = $request->user();
-        if ($user->role !== 'admin') {
-            return response()->json(['message' => 'Unauthorized: Only Admin can delete departments'], 403);
+        $subAdminCanDelete = $user->role === 'sub_admin' && \App\Models\SystemSetting::get('allow_subadmin_delete_records', false);
+
+        if ($user->role !== 'admin' && !$subAdminCanDelete) {
+            return response()->json(['message' => 'Unauthorized: Deleting departments is restricted to Administrators (or authorized Sub-Administrators)'], 403);
         }
 
         // Rule: If a department is already used by historical tasks, deactivate it rather than permanently deleting

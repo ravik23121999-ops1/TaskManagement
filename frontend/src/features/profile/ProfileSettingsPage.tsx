@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { authApi } from '../../api/auth';
-import { User, Lock, Sliders, CheckCircle2, AlertCircle, Camera, Sparkles } from 'lucide-react';
+import { settingsApi } from '../../api/settings';
+import { User, Lock, Sliders, CheckCircle2, AlertCircle, Camera, Sparkles, ShieldCheck } from 'lucide-react';
 import { AvatarCustomizerModal } from '../../components/AvatarCustomizerModal';
 
 export const ProfileSettingsPage: React.FC = () => {
   const { user, updateUser } = useAuth();
 
-  const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'preferences'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'password' | 'preferences' | 'permissions'>('profile');
 
   // Profile Form
   const [name, setName] = useState(user?.name || '');
@@ -28,6 +29,53 @@ export const ProfileSettingsPage: React.FC = () => {
   const [emailNotifs, setEmailNotifs] = useState(true);
   const [inAppNotifs, setInAppNotifs] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(false);
+
+  // System Settings & Permissions (Admin only)
+  const [subAdminDelete, setSubAdminDelete] = useState(false);
+  const [subAdminCancel, setSubAdminCancel] = useState(false);
+  const [loadingSettings, setLoadingSettings] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [settingsMsg, setSettingsMsg] = useState('');
+  const [settingsError, setSettingsError] = useState('');
+
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      loadSystemSettings();
+    }
+  }, [user?.role]);
+
+  const loadSystemSettings = async () => {
+    setLoadingSettings(true);
+    try {
+      const data = await settingsApi.getSystemSettings();
+      setSubAdminDelete(Boolean(data.settings?.allow_subadmin_delete_records));
+      setSubAdminCancel(Boolean(data.settings?.allow_subadmin_cancel_tasks));
+    } catch (err: any) {
+      console.error('Failed to load system settings', err);
+    } finally {
+      setLoadingSettings(false);
+    }
+  };
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingSettings(true);
+    setSettingsMsg('');
+    setSettingsError('');
+    try {
+      const res = await settingsApi.updateSystemSettings({
+        allow_subadmin_delete_records: subAdminDelete,
+        allow_subadmin_cancel_tasks: subAdminCancel,
+      });
+      setSubAdminDelete(Boolean(res.settings?.allow_subadmin_delete_records));
+      setSubAdminCancel(Boolean(res.settings?.allow_subadmin_cancel_tasks));
+      setSettingsMsg('System permissions updated successfully.');
+    } catch (err: any) {
+      setSettingsError(err.response?.data?.message || 'Failed to update system permissions.');
+    } finally {
+      setSavingSettings(false);
+    }
+  };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,6 +171,21 @@ export const ProfileSettingsPage: React.FC = () => {
             <Sliders className="w-3.5 h-3.5" />
             <span>Preferences</span>
           </button>
+
+          {user?.role === 'admin' && (
+            <button
+              onClick={() => setActiveTab('permissions')}
+              className={`py-3.5 border-b-2 flex items-center gap-1.5 transition cursor-pointer ${
+                activeTab === 'permissions'
+                  ? 'border-indigo-600 text-indigo-600 font-bold'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" />
+              <span>System Permissions</span>
+              <span className="px-1.5 py-0.2 rounded text-[9px] bg-indigo-100 text-indigo-700 font-bold">Admin</span>
+            </button>
+          )}
         </div>
 
         {/* Tab 1: Profile Details */}
@@ -333,6 +396,107 @@ export const ProfileSettingsPage: React.FC = () => {
               </label>
             </div>
           </div>
+        )}
+
+        {/* Tab 4: System Access & Permissions (Admin Only) */}
+        {activeTab === 'permissions' && user?.role === 'admin' && (
+          <form onSubmit={handleSaveSettings} className="p-6 sm:p-8 space-y-6 text-xs">
+            <div>
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-indigo-600" />
+                <h3 className="font-bold text-slate-900 text-sm">Administrative Permission Controls</h3>
+              </div>
+              <p className="text-slate-500 text-[11px] mt-1">
+                Configure role-based privileges and control whether Sub-Administrators can delete records or cancel operational tasks.
+              </p>
+            </div>
+
+            {settingsMsg && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl font-medium flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <span>{settingsMsg}</span>
+              </div>
+            )}
+
+            {settingsError && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl font-medium flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{settingsError}</span>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              {/* Setting 1: Sub-Admin Delete Records */}
+              <div className="p-4 rounded-2xl border border-slate-200 hover:border-slate-300 transition bg-slate-50/40">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-slate-900 text-xs">Allow Sub-Admins to Delete Records</p>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        subAdminDelete ? 'bg-amber-100 text-amber-800' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {subAdminDelete ? 'Access Granted' : 'Admin Only (Default)'}
+                      </span>
+                    </div>
+                    <p className="text-slate-500 text-[11px] leading-relaxed">
+                      When enabled, Sub-Administrators are authorized to delete user accounts, departments, and tasks. When disabled, only Full Administrators have deletion authority.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={subAdminDelete}
+                      onChange={(e) => setSubAdminDelete(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Setting 2: Sub-Admin Cancel Tasks */}
+              <div className="p-4 rounded-2xl border border-slate-200 hover:border-slate-300 transition bg-slate-50/40">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-slate-900 text-xs">Allow Sub-Admins to Cancel Tasks with Reason Note</p>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        subAdminCancel ? 'bg-amber-100 text-amber-800' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {subAdminCancel ? 'Access Granted' : 'Creator & Admin Only (Default)'}
+                      </span>
+                    </div>
+                    <p className="text-slate-500 text-[11px] leading-relaxed">
+                      Task creators and Full Administrators can always cancel tasks. When this setting is enabled, Sub-Admins can also cancel tasks by providing a mandatory reason note.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={subAdminCancel}
+                      onChange={(e) => setSubAdminCancel(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+              <span className="text-[11px] text-slate-400">
+                Changes take effect immediately across all system API endpoints.
+              </span>
+              <button
+                type="submit"
+                disabled={savingSettings || loadingSettings}
+                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-300 text-white font-semibold rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1.5"
+              >
+                <ShieldCheck className="w-4 h-4" />
+                <span>{savingSettings ? 'Saving Settings...' : 'Save System Permissions'}</span>
+              </button>
+            </div>
+          </form>
         )}
       </div>
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { usersApi } from '../../api/users';
 import { departmentsApi } from '../../api/departments';
+import { settingsApi } from '../../api/settings';
 import type { User } from '../../api/auth';
 import { Pagination } from '../../components/Pagination';
 import { useAuth } from '../auth/AuthContext';
@@ -9,7 +10,9 @@ import {
   UserPlus,
   Search,
   Edit2,
-  X
+  X,
+  Trash2,
+  AlertCircle,
 } from 'lucide-react';
 
 export const UsersPage: React.FC = () => {
@@ -42,6 +45,48 @@ export const UsersPage: React.FC = () => {
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  // Delete records permission & modal state
+  const [canDeleteRecords, setCanDeleteRecords] = useState(false);
+  const [deletingUser, setDeletingUser] = useState<User | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
+  useEffect(() => {
+    checkPermissions();
+  }, [currentUser?.role]);
+
+  const checkPermissions = async () => {
+    if (currentUser?.role === 'admin') {
+      setCanDeleteRecords(true);
+      return;
+    }
+    if (currentUser?.role === 'sub_admin') {
+      try {
+        const res = await settingsApi.getSystemSettings();
+        setCanDeleteRecords(Boolean(res.user_capabilities?.can_delete_records));
+      } catch {
+        setCanDeleteRecords(false);
+      }
+    } else {
+      setCanDeleteRecords(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deletingUser) return;
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      await usersApi.delete(deletingUser.id);
+      setDeletingUser(null);
+      loadUsers();
+    } catch (err: any) {
+      setDeleteError(err.response?.data?.message || 'Failed to delete user.');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     loadUsers();
@@ -297,13 +342,26 @@ export const UsersPage: React.FC = () => {
                         </button>
                       </td>
                       <td className="py-4 px-6 text-right whitespace-nowrap">
-                        <button
-                          onClick={() => openEditModal(u)}
-                          className="px-3 py-1 bg-slate-100 hover:bg-blue-50 text-blue-600 rounded-lg font-semibold text-xs transition inline-flex items-center gap-1 cursor-pointer"
-                        >
-                          <Edit2 className="w-3 h-3" />
-                          <span>Edit</span>
-                        </button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => openEditModal(u)}
+                            className="px-3 py-1 bg-slate-100 hover:bg-blue-50 text-blue-600 rounded-lg font-semibold text-xs transition inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                            <span>Edit</span>
+                          </button>
+
+                          {canDeleteRecords && u.id !== currentUser?.id && (
+                            <button
+                              onClick={() => { setDeleteError(''); setDeletingUser(u); }}
+                              className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg font-semibold text-xs transition inline-flex items-center gap-1 cursor-pointer"
+                              title="Delete user account"
+                            >
+                              <Trash2 className="w-3 h-3 text-rose-500" />
+                              <span>Delete</span>
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -438,6 +496,60 @@ export const UsersPage: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete User Confirmation Modal */}
+      {deletingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 text-slate-800 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center">
+                  <Trash2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Delete User Account</h3>
+                  <p className="text-xs text-slate-500">Permanent record deletion</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setDeletingUser(null)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {deleteError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{deleteError}</span>
+              </div>
+            )}
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Are you sure you want to delete <span className="font-bold text-slate-900">"{deletingUser.name}"</span> ({deletingUser.email})? This action cannot be undone.
+            </p>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setDeletingUser(null)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteUser}
+                disabled={deleting}
+                className="px-5 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 text-white rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+              >
+                {deleting ? 'Deleting...' : 'Delete User'}
+              </button>
+            </div>
           </div>
         </div>
       )}

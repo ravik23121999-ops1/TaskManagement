@@ -12,6 +12,7 @@ import CollaborationsPage from './features/tasks/CollaborationsPage';
 import ReviewPage from './features/tasks/ReviewPage';
 import CompletedPage from './features/tasks/CompletedPage';
 import OnHoldPage from './features/tasks/OnHoldPage';
+import CancelledPage from './features/tasks/CancelledPage';
 import UsersPage from './features/users/UsersPage';
 import DepartmentsPage from './features/departments/DepartmentsPage';
 import NotificationsPage from './features/notifications/NotificationsPage';
@@ -160,6 +161,14 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <OnHoldPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tasks/cancelled"
+            element={
+              <ProtectedRoute>
+                <CancelledPage />
               </ProtectedRoute>
             }
           />

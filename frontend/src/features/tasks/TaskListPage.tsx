@@ -5,7 +5,7 @@ import type { Task } from '../../api/tasks';
 import { StatusBadge, PriorityBadge } from '../../components/StatusBadge';
 import { Pagination } from '../../components/Pagination';
 import { TableSkeleton } from '../../components/TableSkeleton';
-import { Search, Plus, AlertCircle, Eye, Building2, Calendar, CheckCircle2 } from 'lucide-react';
+import { Search, Plus, AlertCircle, Eye, Building2, Calendar, CheckCircle2, Ban } from 'lucide-react';
 
 export const TaskListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -78,7 +78,7 @@ export const TaskListPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 self-start sm:self-auto">
+        <div className="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
           <button
             onClick={() => navigate('/tasks/completed')}
             className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold shadow-2xs transition cursor-pointer"
@@ -86,6 +86,15 @@ export const TaskListPage: React.FC = () => {
           >
             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
             <span>View Completed Phase</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/tasks/cancelled')}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-semibold shadow-2xs transition cursor-pointer"
+            title="View archive of cancelled tasks"
+          >
+            <Ban className="w-3.5 h-3.5 text-rose-600" />
+            <span>View Cancelled Archive</span>
           </button>
 
           <button
