@@ -9,6 +9,8 @@ use App\Models\TaskBranch;
 use App\Models\TaskAssignment;
 use App\Models\TaskMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class BranchMessageTest extends TestCase
 {
@@ -286,5 +288,92 @@ class BranchMessageTest extends TestCase
         ]);
 
         $response->assertStatus(422);
+    }
+
+    public function test_can_upload_attachment_and_send_message_with_attachment_to_assignee()
+    {
+        Storage::fake('public');
+
+        $assigner = User::create([
+            'name' => 'Ravi Singh',
+            'email' => 'ravi@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'admin',
+        ]);
+
+        $priya = User::create([
+            'name' => 'Priya Sharma',
+            'email' => 'priya@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'employee',
+        ]);
+
+        $task = Task::create([
+            'title' => 'Corporate Operations & Compliance Audit',
+            'description' => 'Facility Operations & Vendor Audit',
+            'creator_id' => $assigner->id,
+            'handling_method' => 'assign',
+            'priority' => 'high',
+            'status' => 'in_progress',
+        ]);
+
+        $branch = TaskBranch::create([
+            'task_id' => $task->id,
+            'title' => 'Facility Operations & Vendor Audit',
+            'status' => 'in_progress',
+            'owner_id' => $priya->id,
+        ]);
+
+        TaskAssignment::create([
+            'task_branch_id' => $branch->id,
+            'assigned_by_id' => $assigner->id,
+            'assigned_to_id' => $priya->id,
+            'is_current' => true,
+            'assigned_at' => now(),
+        ]);
+
+        // 1. Upload setup_guide.pdf attachment
+        $fakePdf = UploadedFile::fake()->create('setup_guide.pdf', 227, 'application/pdf');
+
+        $uploadRes = $this->actingAs($assigner, 'sanctum')->postJson('/api/messages/upload-attachment', [
+            'file' => $fakePdf,
+            'task_id' => $task->id,
+            'task_branch_id' => $branch->id,
+        ]);
+
+        $uploadRes->assertStatus(200);
+        $attachmentId = $uploadRes->json('attachment.id');
+        $this->assertNotNull($attachmentId);
+
+        // Verify attachment saved in task_attachments with correct uploaded_by_id
+        $this->assertDatabaseHas('task_attachments', [
+            'id' => $attachmentId,
+            'task_id' => $task->id,
+            'task_branch_id' => $branch->id,
+            'uploaded_by_id' => $assigner->id,
+            'file_name' => 'setup_guide.pdf',
+        ]);
+
+        // 2. Assigner sends message with attachment to Priya
+        $sendRes = $this->actingAs($assigner, 'sanctum')->postJson('/api/messages/send', [
+            'task_id' => $task->id,
+            'task_branch_id' => $branch->id,
+            'recipient_id' => $priya->id,
+            'message' => 'Review completed. Please see my notes and adjust accordingly.',
+            'message_type' => 'review_feedback',
+            'attachment_id' => $attachmentId,
+        ]);
+
+        $sendRes->assertStatus(201);
+        $sendRes->assertJsonPath('message.attachment.id', $attachmentId);
+        $sendRes->assertJsonPath('message.attachment.file_name', 'setup_guide.pdf');
+
+        // 3. Priya retrieves thread messages and sees the attachment
+        $threadRes = $this->actingAs($priya, 'sanctum')->getJson("/api/messages/threads/{$branch->id}?partner_id={$assigner->id}");
+        $threadRes->assertStatus(200);
+        $this->assertCount(1, $threadRes->json('messages'));
+        $this->assertEquals($attachmentId, $threadRes->json('messages.0.attachment.id'));
+        $this->assertEquals('setup_guide.pdf', $threadRes->json('messages.0.attachment.file_name'));
+        $this->assertEquals('Review completed. Please see my notes and adjust accordingly.', $threadRes->json('messages.0.message'));
     }
 }

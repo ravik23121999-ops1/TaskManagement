@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { messagesApi } from '../../api/messages';
+import { tasksApi } from '../../api/tasks';
 import type { MessageThread, ThreadDetailResponse } from '../../api/messages';
 import {
   MessageSquare,
@@ -48,6 +49,7 @@ export const MessagesPage: React.FC = () => {
   >('text');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [downloadingAttachmentId, setDownloadingAttachmentId] = useState<number | null>(null);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [showTaskContext, setShowTaskContext] = useState(false);
 
@@ -209,12 +211,30 @@ export const MessagesPage: React.FC = () => {
       setSelectedFile(null);
       setMessageType('text');
       if (fileInputRef.current) fileInputRef.current.value = '';
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to send message', err);
-      alert('Could not deliver message. Please verify network and try again.');
+      const errorMsg =
+        err.response?.data?.message ||
+        (typeof err.response?.data?.errors === 'object'
+          ? Object.values(err.response.data.errors).flat().join(' ')
+          : null) ||
+        'Could not deliver message. Please verify network and try again.';
+      alert(errorMsg);
     } finally {
       setSendingMessage(false);
       setUploadingFile(false);
+    }
+  };
+
+  const handleDownloadAttachment = async (attachmentId: number, fileName: string) => {
+    setDownloadingAttachmentId(attachmentId);
+    try {
+      await tasksApi.downloadAttachment(attachmentId, fileName);
+    } catch (err: any) {
+      console.error('Download error:', err);
+      alert(err.response?.data?.message || 'Failed to download attachment');
+    } finally {
+      setDownloadingAttachmentId(null);
     }
   };
 
@@ -784,19 +804,19 @@ export const MessagesPage: React.FC = () => {
                                 </div>
                               </div>
 
-                              <a
-                                href={msg.attachment.download_url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className={`px-2.5 py-1 rounded-lg font-semibold text-xs transition flex items-center gap-1 shrink-0 ${
+                              <button
+                                type="button"
+                                onClick={() => handleDownloadAttachment(msg.attachment!.id, msg.attachment!.file_name)}
+                                disabled={downloadingAttachmentId === msg.attachment.id}
+                                className={`px-2.5 py-1 rounded-lg font-semibold text-xs transition flex items-center gap-1 shrink-0 cursor-pointer ${
                                   isMe
-                                    ? 'bg-white text-blue-700 hover:bg-slate-100'
-                                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                                    ? 'bg-white text-blue-700 hover:bg-slate-100 disabled:opacity-75'
+                                    : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-75'
                                 }`}
                               >
                                 <Download className="w-3 h-3" />
-                                <span>Download</span>
-                              </a>
+                                <span>{downloadingAttachmentId === msg.attachment.id ? 'Downloading...' : 'Download'}</span>
+                              </button>
                             </div>
                           )}
                         </div>

@@ -12,11 +12,20 @@ class TaskAttachment extends Model
         'task_branch_id',
         'task_comment_id',
         'uploaded_by_id',
+        'user_id',
         'file_name',
         'file_path',
         'file_size',
         'file_type',
     ];
+
+    /**
+     * Alias mutator so both user_id and uploaded_by_id set the underlying column
+     */
+    public function setUserIdAttribute($value): void
+    {
+        $this->attributes['uploaded_by_id'] = $value;
+    }
 
     protected $casts = [
         'file_size' => 'integer',
@@ -40,6 +49,11 @@ class TaskAttachment extends Model
     public function uploadedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by_id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->uploadedBy();
     }
 
     public function getFileSizeInMB(): float

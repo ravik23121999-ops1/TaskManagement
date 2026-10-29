@@ -19,7 +19,7 @@ class ActivityLogger
                 'actor_id' => $actorId,
                 'action' => $action,
                 'subject_type' => 'App\\Models\\Task',
-                'subject_id' => $taskId,
+                'subject_id' => $taskId ?? 0,
                 'description' => $description,
                 'properties' => [
                     'ip_address' => request()->ip(),

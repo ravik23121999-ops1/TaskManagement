@@ -392,7 +392,7 @@ class MessageController extends Controller
             'assignments.assignedTo.department',
             'assignments.assignedBy.department',
             'collaborators.user.department',
-            'attachments.user',
+            'attachments.uploadedBy',
         ])->findOrFail($branchId);
 
         $task = $branch->task;
@@ -764,7 +764,7 @@ class MessageController extends Controller
         $attachment = TaskAttachment::create([
             'task_id' => $request->task_id,
             'task_branch_id' => $request->task_branch_id,
-            'user_id' => $user->id,
+            'uploaded_by_id' => $user->id,
             'file_name' => $fileName,
             'file_path' => $path,
             'file_type' => $fileType,
