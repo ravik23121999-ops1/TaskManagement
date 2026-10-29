@@ -29,6 +29,7 @@ export interface MessageThread {
   assignee?: UserSummary;
   my_role: 'assigner' | 'assignee' | 'collaborator' | 'overseer';
   last_message: string;
+  last_message_sender?: string;
   last_message_type: 'text' | 'missing_details_request' | 'details_provided' | 'review_feedback' | 'deliverable_update';
   last_message_at: string;
   last_message_time_ago: string;

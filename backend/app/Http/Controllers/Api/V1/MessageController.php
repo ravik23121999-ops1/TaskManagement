@@ -162,32 +162,22 @@ class MessageController extends Controller
                 if (isset($seenThreadKeys[$key])) continue;
                 $seenThreadKeys[$key] = true;
 
-                // Latest message between user & partner on this branch
+                // Latest message on this branch involving this branch conversation
                 $latestMessage = TaskMessage::with('sender')
                     ->where('task_branch_id', $branch->id)
-                    ->where(function ($q) use ($user, $partner) {
-                        $q->where(function ($sq) use ($user, $partner) {
-                            $sq->where('sender_id', $user->id)->where('recipient_id', $partner->id);
-                        })->orWhere(function ($sq) use ($user, $partner) {
-                            $sq->where('sender_id', $partner->id)->where('recipient_id', $user->id);
-                        });
-                    })
                     ->latest()
                     ->first();
 
-                // If no direct 1-on-1 message exists yet and branch has no collaborators, fallback to latest branch message
-                if (!$latestMessage && $activeCollaborators->isEmpty()) {
-                    $latestMessage = TaskMessage::with('sender')
-                        ->where('task_branch_id', $branch->id)
-                        ->latest()
-                        ->first();
-                }
-
-                // Unread messages from this partner to the user
+                // Unread messages for this user on this branch
+                // (any unread message sent by someone else on this branch addressed to user or branch)
                 $unreadCount = TaskMessage::where('task_branch_id', $branch->id)
-                    ->where('sender_id', $partner->id)
-                    ->where('recipient_id', $user->id)
+                    ->where('sender_id', '!=', $user->id)
                     ->where('is_read', false)
+                    ->where(function ($q) use ($user, $partner) {
+                        $q->where('recipient_id', $user->id)
+                          ->orWhere('recipient_id', $partner->id)
+                          ->orWhereNull('recipient_id');
+                    })
                     ->count();
 
                 $lastTimestamp = $latestMessage ? $latestMessage->created_at : $branch->created_at;
@@ -676,6 +666,13 @@ class MessageController extends Controller
         // If an overseer/manager is reviewing and messaging in below branch, notify both assigner & assignee
         if ($user->id !== $assigner->id && $user->id !== $assignee->id) {
             $notifRecipients = array_unique([$assigner->id, $assignee->id]);
+        } else {
+            // If assignee or assigner is communicating on a branch created by a senior manager/creator,
+            // also notify the creator so they stay updated on the branch progress
+            if ($task->creator_id && $task->creator_id !== $user->id) {
+                $notifRecipients[] = $task->creator_id;
+            }
+            $notifRecipients = array_unique($notifRecipients);
         }
 
         foreach ($notifRecipients as $notifUser) {

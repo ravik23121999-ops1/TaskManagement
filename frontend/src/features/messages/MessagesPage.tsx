@@ -338,7 +338,7 @@ export const MessagesPage: React.FC = () => {
                 <p className="text-slate-500">
                   {activeTab === 'my_chats'
                     ? 'When you assign tasks to employees, collaborate on branches, or are assigned work, direct chats appear here.'
-                    : 'No subordinate branch communications under your management tree.'}
+                    : 'Subordinate hierarchy oversight is for managers, task creators, and administrators to review branches delegated down their management tree. Direct work assigned to you is in "My Chats".'}
                 </p>
               </div>
             ) : (
@@ -425,6 +425,15 @@ export const MessagesPage: React.FC = () => {
                         {thread.last_message_type === 'details_provided' && (
                           <span className="text-emerald-600 font-bold mr-1">✅ Details:</span>
                         )}
+                        {thread.last_message_type === 'review_feedback' && (
+                          <span className="text-sky-600 font-bold mr-1">📋 Feedback:</span>
+                        )}
+                        {thread.last_message_sender &&
+                          thread.last_message_sender !== thread.partner.name && (
+                            <span className="font-semibold text-slate-700 mr-1">
+                              {thread.last_message_sender}:
+                            </span>
+                          )}
                         {thread.last_message}
                       </p>
 
