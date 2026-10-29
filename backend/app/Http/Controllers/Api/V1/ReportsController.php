@@ -45,7 +45,7 @@ class ReportsController extends Controller
             $tasksByDepartment = $departments->map(fn($d) => [
                 'name' => $d->name,
                 'count' => $d->tasks_count,
-            ]);
+            ])->values()->all();
 
             // Recent Activity
             $recentActivity = ActivityLog::with('actor')
@@ -63,7 +63,7 @@ class ReportsController extends Controller
                         'name' => $log->actor->name,
                         'role' => $log->actor->role,
                     ] : null,
-                ]);
+                ])->values()->all();
 
             // Upcoming Deadlines
             $upcomingDeadlines = Task::whereNotNull('due_date')
@@ -79,7 +79,7 @@ class ReportsController extends Controller
                     'is_overdue' => $t->due_date->isPast(),
                     'priority' => $t->priority,
                     'status' => $t->status,
-                ]);
+                ])->values()->all();
 
             // Employee Workload Summary
             $employeeWorkload = User::withCount([
@@ -96,7 +96,7 @@ class ReportsController extends Controller
                 'department' => $u->department?->name ?? 'General',
                 'active_tasks' => $u->active_count,
                 'completed_tasks' => $u->completed_count,
-            ]);
+            ])->values()->all();
 
             return [
                 'total_tasks' => $totalTasks,
@@ -183,7 +183,7 @@ class ReportsController extends Controller
                 'priority' => $t->priority,
                 'due_date' => $t->due_date ? $t->due_date->format('d M Y') : 'No Date',
                 'is_overdue' => $t->due_date ? $t->due_date->isPast() && $t->status !== 'completed' : false,
-            ]);
+            ])->values()->all();
 
             // Status Breakdown for Employee
             $userTasks = Task::where(function ($q) use ($user) {
@@ -213,7 +213,7 @@ class ReportsController extends Controller
                     'task_id' => $n->task_id,
                     'created_at' => $n->created_at->toISOString(),
                     'time_ago' => $n->created_at->diffForHumans(),
-                ]);
+                ])->values()->all();
 
             return [
                 'my_action' => $myActionCount,

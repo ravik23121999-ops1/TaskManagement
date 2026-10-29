@@ -72,7 +72,12 @@ export const Dashboard: React.FC = () => {
   // SCREEN 2: ADMIN DASHBOARD
   // ==========================================
   if (isAdmin && adminData) {
-    const totalStatusCount = adminData.tasks_by_status?.reduce((acc: number, item: any) => acc + item.value, 0) || 1;
+    const tasksByStatus: any[] = Array.isArray(adminData.tasks_by_status) ? adminData.tasks_by_status : [];
+    const tasksByDepartment: any[] = Array.isArray(adminData.tasks_by_department) ? adminData.tasks_by_department : [];
+    const employeeWorkload: any[] = Array.isArray(adminData.employee_workload) ? adminData.employee_workload : [];
+    const recentActivity: any[] = Array.isArray(adminData.recent_activity) ? adminData.recent_activity : [];
+    const upcomingDeadlines: any[] = Array.isArray(adminData.upcoming_deadlines) ? adminData.upcoming_deadlines : [];
+    const totalStatusCount = tasksByStatus.reduce((acc: number, item: any) => acc + (item?.value || 0), 0) || 1;
 
     return (
       <div className="space-y-8">
@@ -246,7 +251,7 @@ export const Dashboard: React.FC = () => {
                 <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
                   {(() => {
                     let accumulated = 0;
-                    return adminData.tasks_by_status?.map((item: any, idx: number) => {
+                    return tasksByStatus.map((item: any, idx: number) => {
                       const pct = (item.value / totalStatusCount) * 100;
                       const strokeDasharray = `${pct} ${100 - pct}`;
                       const strokeDashoffset = -accumulated;
@@ -276,7 +281,7 @@ export const Dashboard: React.FC = () => {
 
               {/* Legend */}
               <div className="space-y-2.5 w-full sm:w-auto">
-                {adminData.tasks_by_status?.map((item: any, idx: number) => (
+                {tasksByStatus.map((item: any, idx: number) => (
                   <div key={idx} className="flex items-center justify-between sm:justify-start gap-4 text-xs">
                     <div className="flex items-center gap-2">
                       <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
@@ -293,9 +298,9 @@ export const Dashboard: React.FC = () => {
           <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
             <h2 className="text-sm font-bold text-slate-800 mb-4">Tasks by Department</h2>
             <div className="space-y-3.5 pt-2">
-              {adminData.tasks_by_department?.map((dept: any, idx: number) => {
-                const maxVal = Math.max(...adminData.tasks_by_department.map((d: any) => d.count), 1);
-                const percent = Math.round((dept.count / maxVal) * 100);
+              {tasksByDepartment.map((dept: any, idx: number) => {
+                const maxVal = Math.max(...tasksByDepartment.map((d: any) => d.count || 0), 1);
+                const percent = Math.round(((dept.count || 0) / maxVal) * 100);
                 const colors = ['#3b82f6', '#06b6d4', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
                 const color = colors[idx % colors.length];
 
@@ -303,7 +308,7 @@ export const Dashboard: React.FC = () => {
                   <div key={idx} className="space-y-1">
                     <div className="flex justify-between text-xs font-semibold">
                       <span className="text-slate-700">{dept.name}</span>
-                      <span className="text-slate-500 font-medium">{dept.count} tasks</span>
+                      <span className="text-slate-500 font-medium">{dept.count || 0} tasks</span>
                     </div>
                     <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
                       <div
@@ -319,7 +324,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Employee Workload Distribution */}
-        {adminData.employee_workload && adminData.employee_workload.length > 0 && (
+        {employeeWorkload.length > 0 && (
           <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
@@ -345,10 +350,10 @@ export const Dashboard: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {adminData.employee_workload.map((emp: any) => (
+                  {employeeWorkload.map((emp: any) => (
                     <tr key={emp.id} className="hover:bg-slate-50 transition">
                       <td className="py-3 px-4 font-bold text-slate-800">{emp.name}</td>
-                      <td className="py-3 px-4 capitalize text-slate-500">{emp.role.replace('_', ' ')}</td>
+                      <td className="py-3 px-4 capitalize text-slate-500">{emp.role?.replace('_', ' ')}</td>
                       <td className="py-3 px-4 text-slate-600 font-medium">{emp.department}</td>
                       <td className="py-3 px-4">
                         <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
@@ -373,10 +378,10 @@ export const Dashboard: React.FC = () => {
               Recent Activity
             </h2>
             <div className="divide-y divide-slate-100">
-              {adminData.recent_activity?.length === 0 ? (
+              {recentActivity.length === 0 ? (
                 <p className="text-xs text-slate-400 italic py-4">No recent activity recorded.</p>
               ) : (
-                adminData.recent_activity?.slice(0, 5).map((log: any) => (
+                recentActivity.slice(0, 5).map((log: any) => (
                   <div key={log.id} className="py-3 flex items-center justify-between text-xs">
                     <div className="flex items-center gap-3">
                       <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 font-bold flex items-center justify-center text-[10px] shrink-0 border border-blue-100">
@@ -401,10 +406,10 @@ export const Dashboard: React.FC = () => {
               Upcoming Deadlines
             </h2>
             <div className="divide-y divide-slate-100">
-              {adminData.upcoming_deadlines?.length === 0 ? (
+              {upcomingDeadlines.length === 0 ? (
                 <p className="text-xs text-slate-400 italic py-4">No upcoming deadlines.</p>
               ) : (
-                adminData.upcoming_deadlines?.slice(0, 5).map((task: any) => (
+                upcomingDeadlines.slice(0, 5).map((task: any) => (
                   <div
                     key={task.id}
                     onClick={() => navigate(`/tasks/${task.id}`)}
@@ -439,7 +444,10 @@ export const Dashboard: React.FC = () => {
   // SCREEN 3: EMPLOYEE DASHBOARD
   // ==========================================
   if (employeeData) {
-    const totalEmpStatus = employeeData.tasks_by_status?.reduce((acc: number, item: any) => acc + item.value, 0) || 1;
+    const tasksByStatus: any[] = Array.isArray(employeeData.tasks_by_status) ? employeeData.tasks_by_status : [];
+    const upcomingTasks: any[] = Array.isArray(employeeData.upcoming_tasks) ? employeeData.upcoming_tasks : [];
+    const recentNotifications: any[] = Array.isArray(employeeData.recent_notifications) ? employeeData.recent_notifications : [];
+    const totalEmpStatus = tasksByStatus.reduce((acc: number, item: any) => acc + (item?.value || 0), 0) || 1;
 
     return (
       <div className="space-y-8">
@@ -641,14 +649,14 @@ export const Dashboard: React.FC = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {employeeData.upcoming_tasks?.length === 0 ? (
+                    {upcomingTasks.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="py-8 text-center text-slate-400 italic">
                           No upcoming tasks pending. You are completely caught up!
                         </td>
                       </tr>
                     ) : (
-                      employeeData.upcoming_tasks?.map((task: any) => (
+                      upcomingTasks.map((task: any) => (
                         <tr key={task.id} className="hover:bg-slate-50/70 transition group">
                           <td className="py-3.5 font-medium text-slate-800">
                             <div className="flex items-center gap-2">
@@ -706,7 +714,7 @@ export const Dashboard: React.FC = () => {
                   <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
                     {(() => {
                       let accumulated = 0;
-                      return employeeData.tasks_by_status?.map((item: any, idx: number) => {
+                      return tasksByStatus.map((item: any, idx: number) => {
                         const pct = (item.value / totalEmpStatus) * 100;
                         const strokeDasharray = `${pct} ${100 - pct}`;
                         const strokeDashoffset = -accumulated;
@@ -737,7 +745,7 @@ export const Dashboard: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
-                  {employeeData.tasks_by_status?.map((item: any, idx: number) => (
+                  {tasksByStatus.map((item: any, idx: number) => (
                     <div key={idx} className="flex items-center gap-2 text-xs p-2 rounded-xl bg-slate-50/70">
                       <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
                       <span className="text-slate-600 truncate">{item.name}:</span>
@@ -765,10 +773,10 @@ export const Dashboard: React.FC = () => {
             </div>
 
             <div className="divide-y divide-slate-100">
-              {employeeData.recent_notifications?.length === 0 ? (
+              {recentNotifications.length === 0 ? (
                 <p className="text-xs text-slate-400 italic py-6 text-center">No recent notifications.</p>
               ) : (
-                employeeData.recent_notifications?.map((notif: any) => (
+                recentNotifications.map((notif: any) => (
                   <div
                     key={notif.id}
                     onClick={() => notif.task_id && navigate(`/tasks/${notif.task_id}`)}
