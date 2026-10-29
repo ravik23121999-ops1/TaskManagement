@@ -85,73 +85,73 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 animate-in fade-in duration-150">
       <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="p-5 border-b border-slate-100 flex items-start justify-between bg-slate-50/50">
+        <div className="p-6 border-b border-slate-100 flex items-start justify-between bg-slate-50/50">
           <div>
-            <h2 className="text-base font-bold text-slate-900">Review Submission</h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              <span className="font-semibold text-slate-700">{task.task_code}</span>: {task.title}
+            <h2 className="text-lg font-bold text-slate-900">Review Submission</h2>
+            <p className="text-sm text-slate-600 mt-0.5">
+              <span className="font-semibold text-slate-800">{task.task_code}</span>: {task.title}
             </p>
-            <p className="text-[11px] text-slate-400 mt-0.5">
-              Submitted by <span className="font-medium text-slate-600">{submission.submitted_by?.name || 'Assignee'}</span> on{' '}
+            <p className="text-xs text-slate-400 mt-1">
+              Submitted by <span className="font-semibold text-slate-700">{submission.submitted_by?.name || 'Assignee'}</span> on{' '}
               {new Date(submission.submitted_at).toLocaleString()}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-slate-100 px-5 flex gap-4 text-xs font-semibold bg-white">
+        <div className="border-b border-slate-100 px-6 flex gap-6 text-sm font-semibold bg-white">
           <button
             type="button"
             onClick={() => setActiveTab('submission')}
-            className={`py-3 border-b-2 flex items-center gap-1.5 transition cursor-pointer ${
+            className={`py-3.5 border-b-2 flex items-center gap-2 transition cursor-pointer ${
               activeTab === 'submission'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <FileText className="w-3.5 h-3.5" />
+            <FileText className="w-4 h-4" />
             <span>Submission</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('comments')}
-            className={`py-3 border-b-2 flex items-center gap-1.5 transition cursor-pointer ${
+            className={`py-3.5 border-b-2 flex items-center gap-2 transition cursor-pointer ${
               activeTab === 'comments'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <MessageSquare className="w-3.5 h-3.5" />
+            <MessageSquare className="w-4 h-4" />
             <span>Comments ({task.comments?.length || 0})</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('attachments')}
-            className={`py-3 border-b-2 flex items-center gap-1.5 transition cursor-pointer ${
+            className={`py-3.5 border-b-2 flex items-center gap-2 transition cursor-pointer ${
               activeTab === 'attachments'
                 ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Paperclip className="w-3.5 h-3.5" />
+            <Paperclip className="w-4 h-4" />
             <span>Attachments ({task.attachments?.length || 0})</span>
           </button>
         </div>
 
         {/* Tab Content */}
-        <div className="p-5 max-h-56 overflow-y-auto bg-slate-50/30 text-xs">
+        <div className="p-6 max-h-56 overflow-y-auto bg-slate-50/30 text-sm">
           {activeTab === 'submission' && (
-            <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-2xs">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
+            <div className="bg-white p-4.5 rounded-xl border border-slate-200/80 shadow-2xs">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1.5">
                 Work Summary
               </span>
-              <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+              <p className="text-slate-700 leading-relaxed whitespace-pre-wrap text-sm">
                 {submission.description || 'No additional submission notes provided.'}
               </p>
             </div>
@@ -160,15 +160,15 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
           {activeTab === 'comments' && (
             <div className="space-y-3">
               {task.comments?.length === 0 ? (
-                <p className="text-slate-400 italic text-center py-4">No comments on this task yet.</p>
+                <p className="text-slate-400 italic text-center py-6 text-sm">No comments on this task yet.</p>
               ) : (
                 task.comments?.map((c) => (
-                  <div key={c.id} className="bg-white p-3 rounded-xl border border-slate-200/80 shadow-2xs">
+                  <div key={c.id} className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-2xs">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="font-bold text-slate-800">{c.user?.name}</span>
-                      <span className="text-[10px] text-slate-400">{new Date(c.created_at).toLocaleDateString()}</span>
+                      <span className="font-semibold text-slate-800 text-sm">{c.user?.name}</span>
+                      <span className="text-xs text-slate-400">{new Date(c.created_at).toLocaleDateString()}</span>
                     </div>
-                    <p className="text-slate-600">{c.comment}</p>
+                    <p className="text-slate-600 text-sm">{c.comment}</p>
                   </div>
                 ))
               )}
@@ -176,19 +176,19 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
           )}
 
           {activeTab === 'attachments' && (
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {task.attachments?.length === 0 ? (
-                <p className="text-slate-400 italic text-center py-4">No attachments uploaded.</p>
+                <p className="text-slate-400 italic text-center py-6 text-sm">No attachments uploaded.</p>
               ) : (
                 task.attachments?.map((att) => (
-                  <div key={att.id} className="bg-white p-3 rounded-xl border border-slate-200/80 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5 truncate">
-                      <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                        <Paperclip className="w-4 h-4" />
+                  <div key={att.id} className="bg-white p-3.5 rounded-xl border border-slate-200/80 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 truncate">
+                      <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                        <Paperclip className="w-4.5 h-4.5" />
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold text-slate-800 text-xs truncate">{att.file_name}</p>
-                        <p className="text-[10px] text-slate-400">
+                        <p className="font-semibold text-slate-800 text-sm truncate">{att.file_name}</p>
+                        <p className="text-xs text-slate-400">
                           {Math.round(att.file_size / 1024)} KB • {att.uploaded_by?.name || 'Deliverable file'}
                         </p>
                       </div>
@@ -197,7 +197,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
                       type="button"
                       onClick={() => handleDownloadAttachment(att.id, att.file_name)}
                       disabled={downloadingId === att.id}
-                      className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shrink-0 disabled:opacity-50"
+                      className="h-8 px-3.5 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shrink-0 disabled:opacity-50"
                     >
                       <Download className="w-3.5 h-3.5" />
                       <span>{downloadingId === att.id ? 'Downloading...' : 'Download'}</span>
@@ -210,27 +210,27 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
         </div>
 
         {/* Review Action Form */}
-        <form onSubmit={handleSubmit} className="p-5 border-t border-slate-100 bg-white space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 border-t border-slate-100 bg-white space-y-4">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              Review Comments {decision === 'returned' && <span className="text-red-500">*</span>}
+            <label className="block text-xs font-bold uppercase tracking-wide text-slate-700 mb-1.5">
+              Review Comments {decision === 'returned' && <span className="text-rose-500">*</span>}
             </label>
             <textarea
               rows={3}
               value={comments}
               onChange={(e) => setComments(e.target.value)}
               placeholder={decision === 'returned' ? 'Explain what changes or missing items are required...' : 'Optional approval comments...'}
-              className="w-full p-3 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="w-full p-3.5 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-2">Review Decision</label>
-            <div className="grid grid-cols-2 gap-3">
+            <label className="block text-xs font-bold uppercase tracking-wide text-slate-700 mb-2">Review Decision</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <label
-                className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition ${
+                className={`flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition ${
                   decision === 'approved'
-                    ? 'border-emerald-500 bg-emerald-50/40 text-emerald-900 font-semibold'
+                    ? 'border-emerald-500 bg-emerald-50/50 text-emerald-950 font-semibold ring-1 ring-emerald-500'
                     : 'border-slate-200 hover:bg-slate-50 text-slate-700'
                 }`}
               >
@@ -240,16 +240,16 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
                   value="approved"
                   checked={decision === 'approved'}
                   onChange={() => setDecision('approved')}
-                  className="text-emerald-600 focus:ring-emerald-500"
+                  className="w-4 h-4 text-emerald-600 focus:ring-emerald-500"
                 />
-                <CheckCircle className="w-4 h-4 text-emerald-600" />
-                <span className="text-xs">Approve (Ready for next step)</span>
+                <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+                <span className="text-sm">Approve (Ready for next step)</span>
               </label>
 
               <label
-                className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition ${
+                className={`flex items-center gap-3 p-3.5 rounded-xl border cursor-pointer transition ${
                   decision === 'returned'
-                    ? 'border-red-500 bg-red-50/40 text-red-900 font-semibold'
+                    ? 'border-rose-500 bg-rose-50/50 text-rose-950 font-semibold ring-1 ring-rose-500'
                     : 'border-slate-200 hover:bg-slate-50 text-slate-700'
                 }`}
               >
@@ -259,16 +259,16 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
                   value="returned"
                   checked={decision === 'returned'}
                   onChange={() => setDecision('returned')}
-                  className="text-red-600 focus:ring-red-500"
+                  className="w-4 h-4 text-rose-600 focus:ring-rose-500"
                 />
-                <AlertCircle className="w-4 h-4 text-red-600" />
-                <span className="text-xs">Request Changes (Send back with feedback)</span>
+                <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                <span className="text-sm">Request Changes (Send back)</span>
               </label>
             </div>
           </div>
 
           {isSelfSubmission && (
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center gap-2">
+            <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
               <span>
                 You cannot review your own work. Your assigner or the task creator must review this submission.
@@ -277,21 +277,21 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
           )}
 
           {error && (
-            <p className="text-xs text-red-600 font-medium bg-red-50 p-2.5 rounded-lg border border-red-200">
+            <p className="text-xs text-rose-600 font-medium bg-rose-50 p-3 rounded-xl border border-rose-200">
               {error}
             </p>
           )}
 
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-slate-100">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-4 py-2 border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-semibold transition cursor-pointer order-last sm:order-first"
+              className="h-10 px-4 border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-sm font-medium transition cursor-pointer order-last sm:order-first"
             >
               Cancel
             </button>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2.5">
               <button
                 type="button"
                 onClick={() => {
@@ -299,7 +299,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
                   handleSubmitDecision('returned');
                 }}
                 disabled={loading || isSelfSubmission}
-                className="flex-1 sm:flex-none px-4 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
+                className="h-10 px-4 bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 text-white rounded-xl text-sm font-semibold shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
                 title="Send work back to submitter with feedback for changes"
               >
                 <AlertCircle className="w-4 h-4" />
@@ -312,7 +312,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
                   handleSubmitDecision('approved');
                 }}
                 disabled={loading || isSelfSubmission}
-                className="flex-1 sm:flex-none px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
+                className="h-10 px-5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white rounded-xl text-sm font-semibold shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
                 title="Approve work and advance to next stage"
               >
                 <CheckCircle className="w-4 h-4" />

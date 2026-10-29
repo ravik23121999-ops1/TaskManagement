@@ -80,14 +80,14 @@ export const ProfileSettingsPage: React.FC = () => {
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Profile & Settings</h1>
-        <p className="text-xs text-slate-500 mt-1">
+        <p className="text-sm text-slate-600 mt-1">
           Manage your personal credentials, account details, and notification preferences.
         </p>
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
         {/* Navigation Tabs matching Mockup Screen 19 */}
-        <div className="flex border-b border-slate-100 px-6 pt-2 text-xs font-semibold gap-6">
+        <div className="flex border-b border-slate-100 px-6 pt-2 text-sm font-semibold gap-8">
           <button
             onClick={() => setActiveTab('profile')}
             className={`py-3.5 border-b-2 flex items-center gap-1.5 transition cursor-pointer ${
@@ -127,7 +127,7 @@ export const ProfileSettingsPage: React.FC = () => {
 
         {/* Tab 1: Profile Details */}
         {activeTab === 'profile' && (
-          <form onSubmit={handleUpdateProfile} className="p-6 sm:p-8 space-y-6 text-xs">
+          <form onSubmit={handleUpdateProfile} className="p-6 sm:p-8 space-y-6 text-sm">
             {profileMsg && (
               <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl font-medium flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
@@ -171,10 +171,10 @@ export const ProfileSettingsPage: React.FC = () => {
                   <h3 className="text-base font-bold text-slate-900">{user?.name}</h3>
                   <p className="text-slate-400">{user?.email}</p>
                   <div className="mt-1 flex items-center gap-2 flex-wrap">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 capitalize">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 capitalize">
                       {user?.role?.replace('_', ' ') || 'User'}
                     </span>
-                    <span className="text-[11px] text-slate-400">
+                    <span className="text-xs text-slate-500">
                       Department: {user?.department?.name || 'Unassigned'}
                     </span>
                   </div>
@@ -184,7 +184,7 @@ export const ProfileSettingsPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsAvatarModalOpen(true)}
-                className="px-3.5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 self-start sm:self-center cursor-pointer"
+                className="h-10 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-sm font-semibold shadow-xs transition flex items-center gap-2 self-start sm:self-center cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Customize 3D Avatar / Photo</span>
@@ -199,7 +199,7 @@ export const ProfileSettingsPage: React.FC = () => {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                  className="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                 />
               </div>
 
@@ -209,7 +209,7 @@ export const ProfileSettingsPage: React.FC = () => {
                   type="email"
                   disabled
                   value={user?.email || ''}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-500 cursor-not-allowed"
+                  className="w-full h-10 px-3.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-500 cursor-not-allowed"
                 />
               </div>
             </div>
@@ -218,7 +218,7 @@ export const ProfileSettingsPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={savingProfile}
-                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold rounded-xl shadow-xs transition cursor-pointer"
+                className="h-10 px-6 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-semibold text-sm rounded-xl shadow-xs transition cursor-pointer"
               >
                 {savingProfile ? 'Updating...' : 'Update Profile'}
               </button>
@@ -228,7 +228,7 @@ export const ProfileSettingsPage: React.FC = () => {
 
         {/* Tab 2: Change Password */}
         {activeTab === 'password' && (
-          <form onSubmit={handleChangePassword} className="p-6 sm:p-8 space-y-4 text-xs max-w-md">
+          <form onSubmit={handleChangePassword} className="p-6 sm:p-8 space-y-4 text-sm max-w-md">
             {passwordMsg && (
               <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl font-medium flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4" />
@@ -249,7 +249,7 @@ export const ProfileSettingsPage: React.FC = () => {
                 required
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                className="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
               />
             </div>
 
@@ -260,7 +260,7 @@ export const ProfileSettingsPage: React.FC = () => {
                 required
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                className="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
               />
             </div>
 
@@ -271,7 +271,7 @@ export const ProfileSettingsPage: React.FC = () => {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                className="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
               />
             </div>
 
@@ -289,14 +289,14 @@ export const ProfileSettingsPage: React.FC = () => {
 
         {/* Tab 3: Preferences */}
         {activeTab === 'preferences' && (
-          <div className="p-6 sm:p-8 space-y-6 text-xs">
-            <h3 className="font-bold text-slate-900 text-sm">Notification Channels</h3>
+          <div className="p-6 sm:p-8 space-y-6 text-sm">
+            <h3 className="font-bold text-slate-900 text-base">Notification Channels</h3>
 
             <div className="space-y-4">
               <label className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition">
                 <div>
                   <p className="font-bold text-slate-800">Email Notifications</p>
-                  <p className="text-slate-400 text-[11px]">Receive summary emails when tasks are assigned or returned</p>
+                  <p className="text-slate-500 text-xs mt-0.5">Receive summary emails when tasks are assigned or returned</p>
                 </div>
                 <input
                   type="checkbox"
@@ -309,7 +309,7 @@ export const ProfileSettingsPage: React.FC = () => {
               <label className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition">
                 <div>
                   <p className="font-bold text-slate-800">In-App Live Alerts</p>
-                  <p className="text-slate-400 text-[11px]">Display bell badge and dropdown notifications in header</p>
+                  <p className="text-slate-500 text-xs mt-0.5">Display bell badge and dropdown notifications in header</p>
                 </div>
                 <input
                   type="checkbox"
@@ -322,7 +322,7 @@ export const ProfileSettingsPage: React.FC = () => {
               <label className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition">
                 <div>
                   <p className="font-bold text-slate-800">Sound Notifications</p>
-                  <p className="text-slate-400 text-[11px]">Play subtle audio tone when new assignment is received</p>
+                  <p className="text-slate-500 text-xs mt-0.5">Play subtle audio tone when new assignment is received</p>
                 </div>
                 <input
                   type="checkbox"

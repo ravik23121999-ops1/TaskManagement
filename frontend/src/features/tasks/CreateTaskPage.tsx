@@ -242,50 +242,50 @@ export const CreateTaskPage: React.FC = () => {
       </div>
 
       {/* Stepper Header */}
-      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
         <div className="flex items-center justify-between max-w-xl mx-auto">
           {/* Step 1 */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
             <div
-              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition ${
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition ${
                 currentStep >= 1 ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-400'
               }`}
             >
-              {currentStep > 1 ? <Check className="w-3.5 h-3.5" /> : '1'}
+              {currentStep > 1 ? <Check className="w-4 h-4" /> : '1'}
             </div>
-            <span className={`text-xs font-semibold ${currentStep === 1 ? 'text-blue-600' : 'text-slate-600'}`}>
+            <span className={`text-sm font-semibold ${currentStep === 1 ? 'text-blue-600' : 'text-slate-600'}`}>
               Basic Details
             </span>
           </div>
 
-          <div className={`h-0.5 w-16 sm:w-24 ${currentStep >= 2 ? 'bg-blue-600' : 'bg-slate-200'} transition-colors`} />
+          <div className={`h-0.5 w-14 sm:w-24 ${currentStep >= 2 ? 'bg-blue-600' : 'bg-slate-200'} transition-colors`} />
 
           {/* Step 2 */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
             <div
-              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition ${
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition ${
                 currentStep >= 2 ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-400'
               }`}
             >
-              {currentStep > 2 ? <Check className="w-3.5 h-3.5" /> : '2'}
+              {currentStep > 2 ? <Check className="w-4 h-4" /> : '2'}
             </div>
-            <span className={`text-xs font-semibold ${currentStep === 2 ? 'text-blue-600' : 'text-slate-600'}`}>
+            <span className={`text-sm font-semibold ${currentStep === 2 ? 'text-blue-600' : 'text-slate-600'}`}>
               Assignment (1 to Many)
             </span>
           </div>
 
-          <div className={`h-0.5 w-16 sm:w-24 ${currentStep >= 3 ? 'bg-blue-600' : 'bg-slate-200'} transition-colors`} />
+          <div className={`h-0.5 w-14 sm:w-24 ${currentStep >= 3 ? 'bg-blue-600' : 'bg-slate-200'} transition-colors`} />
 
           {/* Step 3 */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
             <div
-              className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition ${
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition ${
                 currentStep === 3 ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-400'
               }`}
             >
               3
             </div>
-            <span className={`text-xs font-semibold ${currentStep === 3 ? 'text-blue-600' : 'text-slate-600'}`}>
+            <span className={`text-sm font-semibold ${currentStep === 3 ? 'text-blue-600' : 'text-slate-600'}`}>
               Review & Submit
             </span>
           </div>
@@ -293,8 +293,8 @@ export const CreateTaskPage: React.FC = () => {
       </div>
 
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 shrink-0" />
+        <div className="p-3.5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl font-medium flex items-center gap-2">
+          <AlertCircle className="w-4.5 h-4.5 shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -304,25 +304,25 @@ export const CreateTaskPage: React.FC = () => {
       {/* ======================================================== */}
       {currentStep === 1 && (
         <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-5">
-          <h2 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3">Basic Information</h2>
+          <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3">Basic Information</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Task Title *</label>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-700 mb-1.5">Task Title *</label>
               <input
                 type="text"
                 placeholder="Enter task title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                className="w-full h-10 px-3.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Priority</label>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-700 mb-1.5">Priority</label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as any)}
-                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                className="w-full h-10 px-3.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
               >
                 <option value="low">Low</option>
                 <option value="medium">Medium</option>
@@ -333,46 +333,46 @@ export const CreateTaskPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">Description *</label>
+            <label className="block text-xs font-bold uppercase tracking-wide text-slate-700 mb-1.5">Description *</label>
             <textarea
               rows={5}
               placeholder="Enter detailed description regarding this task..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full p-3.5 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+              className="w-full p-3.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Expected Result</label>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-700 mb-1.5">Expected Result</label>
               <textarea
                 rows={3}
                 placeholder="What is the expected outcome or deliverable?"
                 value={expectedResult}
                 onChange={(e) => setExpectedResult(e.target.value)}
-                className="w-full p-3 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                className="w-full p-3.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Acceptance Criteria</label>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-700 mb-1.5">Acceptance Criteria</label>
               <textarea
                 rows={3}
                 placeholder="List acceptance criteria, thresholds, and conditions..."
                 value={acceptanceCriteria}
                 onChange={(e) => setAcceptanceCriteria(e.target.value)}
-                className="w-full p-3 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                className="w-full p-3.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Department (Optional)</label>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-700 mb-1.5">Department (Optional)</label>
               <select
                 value={departmentId || ''}
                 onChange={(e) => setDepartmentId(e.target.value ? Number(e.target.value) : undefined)}
-                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                className="w-full h-10 px-3.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
               >
                 <option value="">Select Department</option>
                 {departments.map((d) => (
@@ -383,29 +383,29 @@ export const CreateTaskPage: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Start Date</label>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-700 mb-1.5">Start Date</label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                className="w-full h-10 px-3.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Due Date</label>
+              <label className="block text-xs font-bold uppercase tracking-wide text-slate-700 mb-1.5">Due Date</label>
               <input
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                className="w-full h-10 px-3.5 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
               />
             </div>
           </div>
 
           {/* Attachments Upload */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">Attachments</label>
-            <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center hover:bg-slate-50 transition">
+            <label className="block text-xs font-bold uppercase tracking-wide text-slate-700 mb-1.5">Attachments</label>
+            <div className="border-2 border-dashed border-slate-200 rounded-xl p-5 text-center hover:bg-slate-50 transition">
               <input
                 type="file"
                 multiple
@@ -414,23 +414,23 @@ export const CreateTaskPage: React.FC = () => {
                 className="hidden"
               />
               <label htmlFor="file-upload" className="cursor-pointer">
-                <Paperclip className="w-5 h-5 mx-auto text-slate-400 mb-1" />
-                <span className="text-xs font-semibold text-blue-600 hover:underline">Choose files</span>
-                <span className="text-xs text-slate-400"> or drag & drop here (max 10MB each)</span>
+                <Paperclip className="w-5 h-5 mx-auto text-slate-400 mb-1.5" />
+                <span className="text-sm font-semibold text-blue-600 hover:underline">Choose files</span>
+                <span className="text-sm text-slate-400"> or drag & drop here (max 10MB each)</span>
               </label>
             </div>
 
             {files.length > 0 && (
-              <div className="mt-3 space-y-1.5">
+              <div className="mt-3 space-y-2">
                 {files.map((file, i) => (
-                  <div key={i} className="flex items-center justify-between p-2 bg-slate-50 rounded-lg text-xs">
+                  <div key={i} className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl text-sm">
                     <span className="truncate text-slate-700 font-medium">{file.name}</span>
                     <button
                       type="button"
                       onClick={() => removeFile(i)}
                       className="text-slate-400 hover:text-red-500 p-1"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
                 ))}
@@ -443,10 +443,10 @@ export const CreateTaskPage: React.FC = () => {
             <button
               type="button"
               onClick={handleNextStep}
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-2 cursor-pointer"
+              className="h-10 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-xs transition flex items-center gap-2 cursor-pointer"
             >
               <span>Next: Assignment</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -458,8 +458,8 @@ export const CreateTaskPage: React.FC = () => {
       {currentStep === 2 && (
         <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
           <div>
-            <h2 className="text-sm font-bold text-slate-900">How would you like to handle this task?</h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <h2 className="text-base font-bold text-slate-900">How would you like to handle this task?</h2>
+            <p className="text-sm text-slate-500 mt-0.5">
               Choose whether you are completing this task yourself, delegating it to team members, or collaborating together.
             </p>
           </div>
@@ -479,18 +479,18 @@ export const CreateTaskPage: React.FC = () => {
                   : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
               }`}
             >
-              <div className="w-11 h-11 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-3">
-                <User className="w-5 h-5" />
+              <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-3">
+                <User className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 mb-1">Work Solo</h3>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
+                <h3 className="text-base font-bold text-slate-900 mb-1">Work Solo</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
                   You will complete this task yourself without delegating to anyone else.
                 </p>
               </div>
               <div className="mt-3">
                 <span
-                  className={`inline-block w-4 h-4 rounded-full border-2 ${
+                  className={`inline-block w-4.5 h-4.5 rounded-full border-2 ${
                     handlingMethod === 'work_alone' ? 'border-blue-600 bg-blue-600' : 'border-slate-300'
                   }`}
                 />
@@ -506,18 +506,18 @@ export const CreateTaskPage: React.FC = () => {
                   : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
               }`}
             >
-              <div className="w-11 h-11 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center mb-3">
-                <UserPlus className="w-5 h-5" />
+              <div className="w-12 h-12 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center mb-3">
+                <UserPlus className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 mb-1">Assign to Teammates</h3>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
+                <h3 className="text-base font-bold text-slate-900 mb-1">Assign to Teammates</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
                   Delegate this task to <strong>one or more colleagues</strong>. They will do the work and submit deliverables for review.
                 </p>
               </div>
               <div className="mt-3">
                 <span
-                  className={`inline-block w-4 h-4 rounded-full border-2 ${
+                  className={`inline-block w-4.5 h-4.5 rounded-full border-2 ${
                     handlingMethod === 'assign' ? 'border-blue-600 bg-blue-600' : 'border-slate-300'
                   }`}
                 />
@@ -533,18 +533,18 @@ export const CreateTaskPage: React.FC = () => {
                   : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
               }`}
             >
-              <div className="w-11 h-11 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mb-3">
-                <Users className="w-5 h-5" />
+              <div className="w-12 h-12 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mb-3">
+                <Users className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 mb-1">Collaborate with Team</h3>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
+                <h3 className="text-base font-bold text-slate-900 mb-1">Collaborate with Team</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
                   Invite <strong>one or more team members</strong> to work together as equal partners on shared milestones.
                 </p>
               </div>
               <div className="mt-3">
                 <span
-                  className={`inline-block w-4 h-4 rounded-full border-2 ${
+                  className={`inline-block w-4.5 h-4.5 rounded-full border-2 ${
                     handlingMethod === 'collaborate' ? 'border-blue-600 bg-blue-600' : 'border-slate-300'
                   }`}
                 />
@@ -561,7 +561,7 @@ export const CreateTaskPage: React.FC = () => {
                     <UserPlus className="w-4 h-4 text-sky-600" />
                     <span>Select Assignee</span>
                   </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
+                  <p className="text-sm text-slate-500 mt-0.5">
                     Assign this task to another employee. (Use <strong>"Work Alone"</strong> if you want to execute it yourself).
                   </p>
                 </div>
@@ -600,19 +600,19 @@ export const CreateTaskPage: React.FC = () => {
 
               {/* Single Assignee Confirmation Banner */}
               {assignMode === 'single' && selectedUsers.length > 0 && (
-                <div className="p-3 bg-sky-50 border border-sky-200 rounded-xl flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-sky-600 text-white font-bold flex items-center justify-center text-xs shrink-0">
+                <div className="p-3.5 bg-sky-50 border border-sky-200 rounded-xl flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-sky-600 text-white font-bold flex items-center justify-center text-xs shrink-0">
                       {selectedUsers[0].name.charAt(0)}
                     </div>
                     <div>
-                      <p className="font-bold text-slate-900 flex items-center gap-1.5">
+                      <p className="font-bold text-slate-900 flex items-center gap-2 text-sm">
                         <span>Assigned to: {selectedUsers[0].name}</span>
-                        <span className="px-1.5 py-0.2 bg-sky-200 text-sky-800 rounded text-[9px] font-bold">
+                        <span className="px-2 py-0.5 bg-sky-200 text-sky-800 rounded-md text-xs font-bold">
                           Selected
                         </span>
                       </p>
-                      <p className="text-[10px] text-slate-500">
+                      <p className="text-xs text-slate-500 mt-0.5">
                         {selectedUsers[0].email} • <span className="capitalize">{selectedUsers[0].role?.replace('_', ' ')}</span>
                         {selectedUsers[0].department && ` • ${selectedUsers[0].department.name}`}
                       </p>
@@ -621,7 +621,7 @@ export const CreateTaskPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setSelectedUsers([])}
-                    className="text-[11px] font-semibold text-sky-700 hover:underline cursor-pointer"
+                    className="text-xs font-semibold text-sky-700 hover:underline cursor-pointer"
                   >
                     Change
                   </button>
@@ -631,7 +631,7 @@ export const CreateTaskPage: React.FC = () => {
               {/* Multiple Assignees Count & Actions */}
               {assignMode === 'multiple' && (
                 <div className="flex items-center justify-between text-xs pt-1">
-                  <span className="font-semibold text-slate-600">
+                  <span className="font-semibold text-slate-600 text-sm">
                     {selectedUsers.length} employee{selectedUsers.length !== 1 ? 's' : ''} selected
                   </span>
                   <div className="flex items-center gap-2">
@@ -647,7 +647,7 @@ export const CreateTaskPage: React.FC = () => {
                           });
                           setSelectedUsers(merged);
                         }}
-                        className="text-[11px] font-semibold text-blue-600 hover:underline cursor-pointer"
+                        className="text-xs font-semibold text-blue-600 hover:underline cursor-pointer"
                       >
                         Select All Filtered
                       </button>
@@ -658,7 +658,7 @@ export const CreateTaskPage: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setSelectedUsers([])}
-                          className="text-[11px] font-semibold text-slate-500 hover:underline cursor-pointer"
+                          className="text-xs font-semibold text-slate-500 hover:underline cursor-pointer"
                         >
                           Clear
                         </button>
@@ -670,20 +670,20 @@ export const CreateTaskPage: React.FC = () => {
 
               {/* Real-time Search Input */}
               <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="Type to filter employees by name, department, role, or email..."
                   value={userSearch}
                   onChange={(e) => setUserSearch(e.target.value)}
-                  className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                  className="w-full h-10 pl-10 pr-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                 />
               </div>
 
               {/* Embedded Employee Selection Cards List (NOT a hidden floating dropdown) */}
               <div className="border border-slate-200 rounded-xl max-h-64 overflow-y-auto divide-y divide-slate-100 bg-white">
                 {filteredUsers.length === 0 ? (
-                  <div className="p-6 text-center text-xs text-slate-400">
+                  <div className="p-6 text-center text-sm text-slate-400">
                     No matching employees found.
                   </div>
                 ) : (
@@ -699,21 +699,21 @@ export const CreateTaskPage: React.FC = () => {
                             toggleUserSelection(u);
                           }
                         }}
-                        className={`p-3 transition cursor-pointer flex items-center justify-between text-xs ${
+                        className={`p-3.5 transition cursor-pointer flex items-center justify-between text-sm ${
                           isSelected ? 'bg-sky-50/70 border-l-4 border-l-sky-600' : 'hover:bg-slate-50'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <div
-                            className={`w-8 h-8 rounded-full font-bold flex items-center justify-center text-xs shrink-0 ${
+                            className={`w-9 h-9 rounded-full font-bold flex items-center justify-center text-xs shrink-0 ${
                               isSelected ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-700'
                             }`}
                           >
                             {u.name.charAt(0)}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900">{u.name}</p>
-                            <p className="text-[10px] text-slate-400">
+                            <p className="font-semibold text-slate-900 text-sm">{u.name}</p>
+                            <p className="text-xs text-slate-400">
                               {u.email} • <span className="capitalize">{u.role?.replace('_', ' ')}</span>
                               {u.department && ` • ${u.department.name}`}
                             </p>
@@ -749,7 +749,7 @@ export const CreateTaskPage: React.FC = () => {
               {/* Multiple Assignees Chips */}
               {assignMode === 'multiple' && selectedUsers.length > 0 && (
                 <div className="space-y-2 pt-2">
-                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                  <span className="text-xs font-bold text-slate-500 uppercase text-xs uppercase tracking-wider block">
                     Selected Assignees ({selectedUsers.length})
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -759,12 +759,12 @@ export const CreateTaskPage: React.FC = () => {
                         className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs"
                       >
                         <div className="flex items-center gap-2.5 truncate">
-                          <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shrink-0">
                             {u.name.charAt(0)}
                           </div>
                           <div className="truncate">
-                            <p className="font-bold text-slate-800 truncate">{u.name}</p>
-                            <p className="text-[10px] text-slate-400 capitalize">
+                            <p className="font-bold text-slate-800 truncate text-xs">{u.name}</p>
+                            <p className="text-xs text-slate-500 capitalize">
                               {u.role?.replace('_', ' ')} {u.department ? `• ${u.department.name}` : ''}
                             </p>
                           </div>
@@ -793,12 +793,12 @@ export const CreateTaskPage: React.FC = () => {
                     <Users className="w-4 h-4 text-purple-600" />
                     <span>Select Collaborator(s)</span>
                   </h3>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
+                  <p className="text-xs text-slate-500 mt-0.5">
                     Choose one or more team members to collaborate and contribute on this task.
                   </p>
                 </div>
                 {selectedUsers.length > 0 && (
-                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700">
+                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-700">
                     {selectedUsers.length} selected
                   </span>
                 )}
@@ -806,20 +806,20 @@ export const CreateTaskPage: React.FC = () => {
 
               {/* Real-time Search Input */}
               <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   placeholder="Type to filter employees by name, department, or email..."
                   value={userSearch}
                   onChange={(e) => setUserSearch(e.target.value)}
-                  className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                  className="w-full h-10 pl-10 pr-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                 />
               </div>
 
               {/* Embedded Collaborators List */}
               <div className="border border-slate-200 rounded-xl max-h-60 overflow-y-auto divide-y divide-slate-100 bg-white">
                 {filteredUsers.length === 0 ? (
-                  <div className="p-6 text-center text-xs text-slate-400">
+                  <div className="p-6 text-center text-sm text-slate-400">
                     No matching employees found.
                   </div>
                 ) : (
@@ -829,21 +829,21 @@ export const CreateTaskPage: React.FC = () => {
                       <div
                         key={u.id}
                         onClick={() => toggleUserSelection(u)}
-                        className={`p-3 transition cursor-pointer flex items-center justify-between text-xs ${
+                        className={`p-3.5 transition cursor-pointer flex items-center justify-between text-sm ${
                           isSelected ? 'bg-purple-50/70 border-l-4 border-l-purple-600' : 'hover:bg-slate-50'
                         }`}
                       >
                         <div className="flex items-center gap-3">
                           <div
-                            className={`w-8 h-8 rounded-full font-bold flex items-center justify-center text-xs shrink-0 ${
+                            className={`w-9 h-9 rounded-full font-bold flex items-center justify-center text-xs shrink-0 ${
                               isSelected ? 'bg-purple-600 text-white' : 'bg-slate-100 text-slate-700'
                             }`}
                           >
                             {u.name.charAt(0)}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900">{u.name}</p>
-                            <p className="text-[10px] text-slate-400">
+                            <p className="font-semibold text-slate-900 text-sm">{u.name}</p>
+                            <p className="text-xs text-slate-400">
                               {u.email} • <span className="capitalize">{u.role?.replace('_', ' ')}</span>
                               {u.department && ` • ${u.department.name}`}
                             </p>
@@ -865,7 +865,7 @@ export const CreateTaskPage: React.FC = () => {
               {/* Selected Collaborator Chips */}
               {selectedUsers.length > 0 && (
                 <div className="space-y-2 pt-2">
-                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                  <span className="text-xs font-bold text-slate-500 uppercase text-xs uppercase tracking-wider block">
                     Selected Collaborators ({selectedUsers.length})
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -875,12 +875,12 @@ export const CreateTaskPage: React.FC = () => {
                         className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs"
                       >
                         <div className="flex items-center gap-2.5 truncate">
-                          <div className="w-7 h-7 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center text-[10px] shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-purple-600 text-white font-bold flex items-center justify-center text-xs shrink-0">
                             {u.name.charAt(0)}
                           </div>
                           <div className="truncate">
                             <p className="font-bold text-slate-800 truncate">{u.name}</p>
-                            <p className="text-[10px] text-slate-400 capitalize">
+                            <p className="text-xs text-slate-500 capitalize">
                               {u.role?.replace('_', ' ')} {u.department ? `• ${u.department.name}` : ''}
                             </p>
                           </div>
@@ -905,7 +905,7 @@ export const CreateTaskPage: React.FC = () => {
                     <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
                       Optional: Split into Custom Subtasks / Branches
                     </span>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-xs text-slate-400">
                       If you want specific milestones (e.g. Frontend, Backend, QA), add them here. Otherwise, leave empty to collaborate directly.
                     </p>
                   </div>
@@ -914,7 +914,7 @@ export const CreateTaskPage: React.FC = () => {
                     onClick={() => {
                       setBranches([...branches, { title: '', owner_id: selectedUsers[0]?.id || eligibleUsers[0]?.id || 0 }]);
                     }}
-                    className="px-3 py-1.5 bg-slate-100 hover:bg-blue-50 text-blue-600 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1 cursor-pointer"
+                    className="h-9 px-3.5 bg-slate-100 hover:bg-blue-50 text-blue-600 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>+ Add Subtask</span>
@@ -924,7 +924,7 @@ export const CreateTaskPage: React.FC = () => {
                 {branches.length > 0 && (
                   <div className="space-y-2 mt-2">
                     {branches.map((b, idx) => (
-                      <div key={idx} className="flex gap-2 items-center bg-slate-50 p-2 rounded-xl border border-slate-200">
+                      <div key={idx} className="flex gap-2 items-center bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                         <input
                           type="text"
                           placeholder={`Subtask ${idx + 1} Title (e.g. UI Design, API Integration)`}
@@ -934,7 +934,7 @@ export const CreateTaskPage: React.FC = () => {
                             newB[idx].title = e.target.value;
                             setBranches(newB);
                           }}
-                          className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs"
+                          className="flex-1 h-9 px-3 bg-white border border-slate-200 rounded-lg text-sm"
                         />
                         <select
                           value={b.owner_id}
@@ -943,7 +943,7 @@ export const CreateTaskPage: React.FC = () => {
                             newB[idx].owner_id = Number(e.target.value);
                             setBranches(newB);
                           }}
-                          className="w-48 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs"
+                          className="w-48 h-9 px-3 bg-white border border-slate-200 rounded-lg text-sm"
                         >
                           <option value={0}>Select Subtask Owner</option>
                           {eligibleUsers.map((u) => (
@@ -972,7 +972,7 @@ export const CreateTaskPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setCurrentStep(1)}
-              className="px-5 py-2.5 border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-xs font-semibold transition flex items-center gap-2 cursor-pointer"
+              className="h-10 px-5 border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-sm font-medium transition flex items-center gap-2 cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back</span>
@@ -980,7 +980,7 @@ export const CreateTaskPage: React.FC = () => {
             <button
               type="button"
               onClick={handleNextStep}
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-2 cursor-pointer"
+              className="h-10 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-xs transition flex items-center gap-2 cursor-pointer"
             >
               <span>Next: Review & Submit</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -995,19 +995,19 @@ export const CreateTaskPage: React.FC = () => {
       {currentStep === 3 && (
         <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
           <div>
-            <h2 className="text-sm font-bold text-slate-900">Review & Submit</h2>
+            <h2 className="text-base font-bold text-slate-900">Review & Submit</h2>
             <p className="text-xs text-slate-500 mt-0.5">
               Confirm your task configuration before creating it.
             </p>
           </div>
 
-          <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 space-y-4 text-xs">
+          <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200/80 space-y-4 text-sm">
             <div className="flex justify-between border-b border-slate-200/60 pb-3">
-              <span className="font-bold text-slate-500">Title:</span>
+              <span className="font-bold text-slate-500 uppercase text-xs">Title:</span>
               <span className="font-bold text-slate-900">{title}</span>
             </div>
             <div className="flex justify-between border-b border-slate-200/60 pb-3">
-              <span className="font-bold text-slate-500">Handling Method:</span>
+              <span className="font-bold text-slate-500 uppercase text-xs">Handling Method:</span>
               <span className="font-bold text-blue-600 uppercase tracking-wide">
                 {handlingMethod === 'assign'
                   ? `Assign (${selectedUsers.length} Assignee${selectedUsers.length > 1 ? 's' : ''})`
@@ -1017,20 +1017,20 @@ export const CreateTaskPage: React.FC = () => {
               </span>
             </div>
             <div className="flex justify-between border-b border-slate-200/60 pb-3">
-              <span className="font-bold text-slate-500">Priority:</span>
+              <span className="font-bold text-slate-500 uppercase text-xs">Priority:</span>
               <span className="font-bold text-slate-800 capitalize">{priority}</span>
             </div>
             <div className="flex justify-between border-b border-slate-200/60 pb-3">
-              <span className="font-bold text-slate-500">Due Date:</span>
+              <span className="font-bold text-slate-500 uppercase text-xs">Due Date:</span>
               <span className="font-medium text-slate-800">{dueDate || 'Not set'}</span>
             </div>
             <div>
-              <span className="font-bold text-slate-500 block mb-1">Description:</span>
+              <span className="font-bold text-slate-500 uppercase text-xs block mb-1">Description:</span>
               <p className="text-slate-700 whitespace-pre-wrap">{description}</p>
             </div>
             {handlingMethod !== 'work_alone' && (
               <div>
-                <span className="font-bold text-slate-500 block mb-1">
+                <span className="font-bold text-slate-500 uppercase text-xs block mb-1">
                   {handlingMethod === 'assign' ? 'Assignees:' : 'Collaborators:'}
                 </span>
                 <div className="flex flex-wrap gap-2 pt-1">
@@ -1047,7 +1047,7 @@ export const CreateTaskPage: React.FC = () => {
             )}
             {branches.length > 0 && (
               <div>
-                <span className="font-bold text-slate-500 block mb-1">Subtasks / Branches:</span>
+                <span className="font-bold text-slate-500 uppercase text-xs block mb-1">Subtasks / Branches:</span>
                 <div className="space-y-1 pt-1">
                   {branches.map((b, i) => (
                     <div key={i} className="text-slate-700 font-medium">
@@ -1059,7 +1059,7 @@ export const CreateTaskPage: React.FC = () => {
             )}
             {files.length > 0 && (
               <div>
-                <span className="font-bold text-slate-500 block mb-1">Attachments:</span>
+                <span className="font-bold text-slate-500 uppercase text-xs block mb-1">Attachments:</span>
                 <span className="text-slate-700 font-medium">{files.length} file(s) attached</span>
               </div>
             )}
@@ -1079,7 +1079,7 @@ export const CreateTaskPage: React.FC = () => {
               type="button"
               disabled={loading}
               onClick={handleSubmit}
-              className="px-8 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-500/20 transition flex items-center gap-2 cursor-pointer"
+              className="h-10 px-8 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl text-sm font-bold shadow-xs transition flex items-center gap-2 cursor-pointer"
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>{loading ? 'Creating Task...' : 'Create Task'}</span>

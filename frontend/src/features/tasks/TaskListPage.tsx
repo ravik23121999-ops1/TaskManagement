@@ -80,25 +80,25 @@ export const TaskListPage: React.FC = () => {
         <div className="flex items-center gap-2.5 self-start sm:self-auto">
           <button
             onClick={() => navigate('/tasks/completed')}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs font-semibold shadow-2xs transition cursor-pointer"
+            className="inline-flex items-center gap-2 h-10 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-sm font-semibold shadow-2xs transition cursor-pointer"
             title="View archive of 100% completed tasks"
           >
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
             <span>View Completed Phase</span>
           </button>
 
           <button
             onClick={() => navigate('/tasks/create')}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer"
+            className="inline-flex items-center gap-2 h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-xs transition cursor-pointer"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="w-4 h-4" />
             <span>New Task</span>
           </button>
         </div>
       </div>
 
       {/* Quick Filter Status Chips */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 text-sm">
         {statusPills.map((pill) => (
           <button
             key={pill.key}
@@ -106,10 +106,10 @@ export const TaskListPage: React.FC = () => {
               setStatus(pill.key);
               setPage(1);
             }}
-            className={`px-3.5 py-1.5 rounded-xl font-semibold transition cursor-pointer whitespace-nowrap ${
+            className={`px-4 py-2 rounded-xl font-medium transition cursor-pointer whitespace-nowrap ${
               status === pill.key
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-white border border-slate-200/80 text-slate-600 hover:bg-slate-50'
+                ? 'bg-blue-600 text-white shadow-xs font-semibold'
+                : 'bg-white border border-slate-200/90 text-slate-700 hover:bg-slate-50'
             }`}
           >
             {pill.label}
@@ -121,24 +121,24 @@ export const TaskListPage: React.FC = () => {
       <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
         <form onSubmit={handleSearchSubmit} className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4.5 h-4.5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Search task title, description, or ID..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="w-full pl-10 pr-4 h-10 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white"
             />
           </div>
 
-          <div className="w-36">
+          <div className="w-40">
             <select
               value={status}
               onChange={(e) => {
                 setStatus(e.target.value);
                 setPage(1);
               }}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
+              className="w-full px-3.5 h-10 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
             >
               <option value="all">All Status</option>
               <option value="pending">Pending</option>
@@ -151,14 +151,14 @@ export const TaskListPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="w-36">
+          <div className="w-40">
             <select
               value={priority}
               onChange={(e) => {
                 setPriority(e.target.value);
                 setPage(1);
               }}
-              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
+              className="w-full px-3.5 h-10 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
             >
               <option value="all">All Priority</option>
               <option value="urgent">Urgent</option>
@@ -170,7 +170,7 @@ export const TaskListPage: React.FC = () => {
 
           <button
             type="submit"
-            className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer"
+            className="h-10 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-xs transition cursor-pointer"
           >
             Search
           </button>
@@ -180,10 +180,10 @@ export const TaskListPage: React.FC = () => {
       {/* Table */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-sm">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 font-bold uppercase tracking-wider">
-                <th className="py-3.5 px-6 w-24">Task Code</th>
+              <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 font-bold uppercase tracking-wider text-xs">
+                <th className="py-3.5 px-6 w-28">Task Code</th>
                 <th className="py-3.5 px-6">Task Title & Department</th>
                 <th className="py-3.5 px-6">Status</th>
                 <th className="py-3.5 px-6">Priority</th>
@@ -205,7 +205,7 @@ export const TaskListPage: React.FC = () => {
                   <td colSpan={7} className="py-12 text-center text-slate-400">
                     <AlertCircle className="w-8 h-8 mx-auto text-slate-300 mb-2" />
                     <p className="font-semibold text-slate-600">No tasks found matching your filters.</p>
-                    <p className="text-[11px] text-slate-400 mt-1">Try broadening your search or resetting the status filter.</p>
+                    <p className="text-xs text-slate-400 mt-1">Try broadening your search or resetting the status filter.</p>
                   </td>
                 </tr>
               ) : (
@@ -216,18 +216,18 @@ export const TaskListPage: React.FC = () => {
                     className="hover:bg-slate-50/80 transition cursor-pointer group"
                   >
                     <td className="py-4 px-6 whitespace-nowrap">
-                      <span className="font-bold text-blue-600 bg-blue-50 group-hover:bg-blue-100 px-2.5 py-1 rounded-md transition">
+                      <span className="font-bold text-blue-600 bg-blue-50 group-hover:bg-blue-100 px-2.5 py-1 rounded-md transition text-xs">
                         {task.task_code}
                       </span>
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex flex-col gap-0.5">
-                        <span className="font-bold text-slate-800 group-hover:text-blue-600 transition text-xs">
+                        <span className="font-bold text-slate-900 group-hover:text-blue-600 transition text-sm">
                           {task.title}
                         </span>
                         {task.department && (
-                          <span className="text-[10px] text-slate-400 flex items-center gap-1 font-medium">
-                            <Building2 className="w-3 h-3 text-slate-400" />
+                          <span className="text-xs text-slate-400 flex items-center gap-1 font-medium">
+                            <Building2 className="w-3.5 h-3.5 text-slate-400" />
                             {task.department.name}
                           </span>
                         )}
@@ -246,15 +246,15 @@ export const TaskListPage: React.FC = () => {
                       <PriorityBadge priority={task.priority} />
                     </td>
                     <td className="py-4 px-6 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-blue-50 text-blue-700 font-bold flex items-center justify-center text-[10px] border border-blue-100">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-700 font-bold flex items-center justify-center text-xs border border-blue-100 shrink-0">
                           {task.current_owner?.name?.charAt(0) || task.creator?.name?.charAt(0) || 'U'}
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-semibold text-slate-700">
+                          <span className="font-semibold text-slate-800 text-sm">
                             {task.current_owner?.name || task.creator?.name || 'Unassigned'}
                           </span>
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-xs text-slate-400">
                             {task.status === 'review' || task.branches?.some((b) => b.status === 'review')
                               ? 'Under Review'
                               : task.permissions?.can_final_submit && task.handling_method !== 'work_alone'
@@ -265,11 +265,11 @@ export const TaskListPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-4 px-6 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5 text-xs text-slate-600">
-                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                      <div className="flex items-center gap-1.5 text-sm text-slate-600">
+                        <Calendar className="w-4 h-4 text-slate-400" />
                         <span>{task.due_date ? new Date(task.due_date).toLocaleDateString() : 'Not set'}</span>
                         {task.is_overdue && (
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-50 text-rose-600 border border-rose-200">
+                          <span className="px-2 py-0.5 rounded text-xs font-bold bg-rose-50 text-rose-600 border border-rose-200">
                             Late
                           </span>
                         )}
@@ -281,7 +281,7 @@ export const TaskListPage: React.FC = () => {
                           e.stopPropagation();
                           navigate(`/tasks/${task.id}`);
                         }}
-                        className="px-3 py-1.5 bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-600 rounded-lg font-semibold text-xs transition inline-flex items-center gap-1.5 border border-slate-200/80 cursor-pointer"
+                        className="h-8 px-3.5 bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-600 rounded-xl font-semibold text-xs transition inline-flex items-center gap-1.5 border border-slate-200/80 cursor-pointer"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         <span>View</span>

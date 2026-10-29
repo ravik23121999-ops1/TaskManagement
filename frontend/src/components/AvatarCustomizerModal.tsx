@@ -87,7 +87,7 @@ export const AvatarCustomizerModal: React.FC<AvatarCustomizerModalProps> = ({
             </div>
             <div>
               <h2 className="text-base font-bold text-white tracking-tight">Customize Profile Avatar</h2>
-              <p className="text-[11px] text-slate-400">Choose your 3D role character or upload your real photo</p>
+              <p className="text-xs text-slate-400">Choose your 3D role character or upload your real photo</p>
             </div>
           </div>
           <button
@@ -102,24 +102,24 @@ export const AvatarCustomizerModal: React.FC<AvatarCustomizerModalProps> = ({
         <div className="flex rounded-xl bg-slate-900/80 p-1 border border-slate-800 mt-5">
           <button
             onClick={() => setActiveTab('preset')}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition cursor-pointer flex items-center justify-center gap-2 ${
               activeTab === 'preset'
                 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5" />
+            <Sparkles className="w-4 h-4" />
             <span>3D Gender Characters</span>
           </button>
           <button
             onClick={() => setActiveTab('custom')}
-            className={`flex-1 py-2 text-xs font-bold rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
+            className={`flex-1 py-2.5 text-sm font-semibold rounded-lg transition cursor-pointer flex items-center justify-center gap-2 ${
               activeTab === 'custom'
                 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            <Upload className="w-3.5 h-3.5" />
+            <Upload className="w-4 h-4" />
             <span>Upload Self Photo</span>
           </button>
         </div>
@@ -168,11 +168,11 @@ export const AvatarCustomizerModal: React.FC<AvatarCustomizerModalProps> = ({
                   />
                 </div>
                 <div className="text-center">
-                  <p className="text-xs font-bold text-white flex items-center justify-center gap-1">
+                  <p className="text-sm font-bold text-white flex items-center justify-center gap-1">
                     <span>Female Avatar</span>
                     <span className="text-pink-400">♀</span>
                   </p>
-                  <p className="text-[10px] text-slate-400">Executive 3D Character</p>
+                  <p className="text-xs text-slate-400">Executive 3D Character</p>
                 </div>
               </div>
 
@@ -198,11 +198,11 @@ export const AvatarCustomizerModal: React.FC<AvatarCustomizerModalProps> = ({
                   />
                 </div>
                 <div className="text-center">
-                  <p className="text-xs font-bold text-white flex items-center justify-center gap-1">
+                  <p className="text-sm font-bold text-white flex items-center justify-center gap-1">
                     <span>Male Avatar</span>
                     <span className="text-blue-400">♂</span>
                   </p>
-                  <p className="text-[10px] text-slate-400">Executive 3D Character</p>
+                  <p className="text-xs text-slate-400">Executive 3D Character</p>
                 </div>
               </div>
             </div>
@@ -240,8 +240,8 @@ export const AvatarCustomizerModal: React.FC<AvatarCustomizerModalProps> = ({
                 </div>
               )}
 
-              <label className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-md transition cursor-pointer flex items-center gap-1.5">
-                <Camera className="w-3.5 h-3.5" />
+              <label className="h-10 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-sm font-semibold shadow-md transition cursor-pointer flex items-center gap-2">
+                <Camera className="w-4 h-4" />
                 <span>{photoPreview ? 'Select Different Photo' : 'Choose Photo File'}</span>
                 <input
                   type="file"
@@ -250,7 +250,7 @@ export const AvatarCustomizerModal: React.FC<AvatarCustomizerModalProps> = ({
                   className="hidden"
                 />
               </label>
-              <p className="text-[10px] text-slate-400 mt-2">JPG, PNG or WEBP up to 5MB</p>
+              <p className="text-xs text-slate-400 mt-2">JPG, PNG or WEBP up to 5MB</p>
             </div>
           </div>
         )}
@@ -259,20 +259,20 @@ export const AvatarCustomizerModal: React.FC<AvatarCustomizerModalProps> = ({
         <div className="mt-6 pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
+            className="h-10 px-4 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={saving || (activeTab === 'custom' && !photoFile)}
-            className="px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-lg shadow-blue-500/25 transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+            className="h-10 px-5 rounded-xl text-sm font-semibold bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-lg shadow-blue-500/25 transition disabled:opacity-50 cursor-pointer flex items-center gap-2"
           >
             {saving ? (
               <span>Saving...</span>
             ) : (
               <>
-                <Check className="w-3.5 h-3.5" />
+                <Check className="w-4 h-4" />
                 <span>Apply & Save</span>
               </>
             )}

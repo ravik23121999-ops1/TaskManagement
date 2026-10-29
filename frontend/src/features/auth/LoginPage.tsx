@@ -84,7 +84,7 @@ export const LoginPage: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xl font-extrabold text-slate-900 tracking-tight">QuickLifeNow</span>
-                <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200">
+                <span className="px-2 py-0.5 rounded-full text-xs font-bold uppercase bg-blue-50 text-blue-700 border border-blue-200">
                   ENTERPRISE
                 </span>
               </div>
@@ -105,10 +105,10 @@ export const LoginPage: React.FC = () => {
           {/* 1-CLICK QUICK ACCESS ROLE CARDS */}
           <div className="space-y-2.5 mb-6">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
                 Authorized Role Accounts
               </span>
-              <span className="text-[11px] font-bold text-blue-600 flex items-center gap-1">
+              <span className="text-xs font-bold text-blue-600 flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5 text-amber-500" />
                 <span>1-Click Instant Login</span>
               </span>
@@ -130,11 +130,11 @@ export const LoginPage: React.FC = () => {
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-bold text-slate-900 truncate">System Administrator</span>
-                    <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-amber-100 text-amber-800">
+                    <span className="px-1.5 py-0.2 rounded text-xs font-bold uppercase bg-amber-100 text-amber-800">
                       Admin
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 truncate">ravi@company.com • Full Audit & Logs</p>
+                  <p className="text-xs text-slate-600 truncate">ravi@company.com • Full Audit & Logs</p>
                 </div>
               </div>
 
@@ -169,11 +169,11 @@ export const LoginPage: React.FC = () => {
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-bold text-slate-900 truncate">Operations Sub-Admin</span>
-                    <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-purple-100 text-purple-800">
+                    <span className="px-1.5 py-0.2 rounded text-xs font-bold uppercase bg-purple-100 text-purple-800">
                       Operations
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 truncate">priya@company.com • Review Queue Gate</p>
+                  <p className="text-xs text-slate-600 truncate">priya@company.com • Review Queue Gate</p>
                 </div>
               </div>
 
@@ -208,11 +208,11 @@ export const LoginPage: React.FC = () => {
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs font-bold text-slate-900 truncate">Team Contributor</span>
-                    <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-emerald-100 text-emerald-800">
+                    <span className="px-1.5 py-0.2 rounded text-xs font-bold uppercase bg-emerald-100 text-emerald-800">
                       Employee
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 truncate">karan@gmail.com • Tasks & Branch Work</p>
+                  <p className="text-xs text-slate-600 truncate">karan@gmail.com • Tasks & Branch Work</p>
                 </div>
               </div>
 
@@ -238,7 +238,7 @@ export const LoginPage: React.FC = () => {
               <div className="w-full border-t border-slate-200" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-3 text-slate-400 font-bold text-[10px] tracking-wider">
+              <span className="bg-white px-3 text-slate-500 font-bold text-xs tracking-wider">
                 Or sign in with email credentials
               </span>
             </div>
@@ -258,7 +258,7 @@ export const LoginPage: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 focus:bg-white transition"
+                  className="w-full h-11 pl-10 pr-4 bg-slate-50/80 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 focus:bg-white transition"
                 />
               </div>
             </div>
@@ -275,7 +275,7 @@ export const LoginPage: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full pl-10 pr-11 py-2.5 bg-slate-50/80 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 focus:bg-white transition"
+                  className="w-full h-11 pl-10 pr-11 bg-slate-50/80 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 focus:bg-white transition"
                 />
                 <button
                   type="button"
@@ -316,7 +316,7 @@ export const LoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 active:from-blue-700 active:to-cyan-700 text-white font-bold text-xs sm:text-sm rounded-xl shadow-lg shadow-blue-500/25 transition-all duration-200 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 hover:-translate-y-0.5"
+              className="w-full h-11 px-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 active:from-blue-700 active:to-cyan-700 text-white font-semibold text-sm rounded-xl shadow-md shadow-blue-500/20 transition-all duration-200 cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 hover:-translate-y-0.5"
             >
               {loading ? (
                 <span>Signing in...</span>
@@ -374,13 +374,13 @@ export const LoginPage: React.FC = () => {
             </div>
 
             {/* Floating Glassmorphism Badge 1 (Top Left) */}
-            <div className="absolute top-5 left-5 px-3 py-1.5 rounded-xl bg-slate-900/85 border border-white/20 text-[11px] font-bold text-white shadow-xl flex items-center gap-2 backdrop-blur-md">
+            <div className="absolute top-5 left-5 px-3 py-1.5 rounded-xl bg-slate-900/85 border border-white/20 text-xs font-bold text-white shadow-xl flex items-center gap-2 backdrop-blur-md">
               <GitBranch className="w-3.5 h-3.5 text-cyan-400" />
               <span>Multi-Branch Collaboration</span>
             </div>
 
             {/* Floating Glassmorphism Badge 2 (Top Right) */}
-            <div className="absolute top-5 right-5 px-3 py-1.5 rounded-xl bg-slate-900/85 border border-white/20 text-[11px] font-bold text-white shadow-xl flex items-center gap-2 backdrop-blur-md">
+            <div className="absolute top-5 right-5 px-3 py-1.5 rounded-xl bg-slate-900/85 border border-white/20 text-xs font-bold text-white shadow-xl flex items-center gap-2 backdrop-blur-md">
               <FileCheck2 className="w-3.5 h-3.5 text-purple-400" />
               <span>Stage Review Gates</span>
             </div>
@@ -391,7 +391,7 @@ export const LoginPage: React.FC = () => {
                 <ClipboardList className="w-4 h-4 text-amber-400" />
                 <span>Work Logs & Audit Dossier</span>
               </div>
-              <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              <span className="text-xs font-bold uppercase px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                 100% Verified
               </span>
             </div>
