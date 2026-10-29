@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { tasksApi } from '../../api/tasks';
 import type { Task } from '../../api/tasks';
 import { Pagination } from '../../components/Pagination';
+import { TableSkeleton } from '../../components/TableSkeleton';
 import { Search, CheckCircle2, Eye, Calendar, Sparkles, Building2 } from 'lucide-react';
 
 export const CompletedPage: React.FC = () => {
@@ -137,12 +138,7 @@ export const CompletedPage: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
-                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-emerald-600 border-t-transparent mb-2" />
-                    <p>Loading completed archive...</p>
-                  </td>
-                </tr>
+                <TableSkeleton rows={6} cols={6} />
               ) : tasks.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">

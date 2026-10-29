@@ -15,18 +15,34 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
   const [user, setUser] = useState<User | null>(() => {
-    const cached = localStorage.getItem('user');
-    return cached ? JSON.parse(cached) : null;
+    try {
+      const cached = localStorage.getItem('user');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
   });
-  const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Zero-flicker: if token & user are already in localStorage, don't flash a full-page loading screen
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    const cachedToken = localStorage.getItem('token');
+    const cachedUser = localStorage.getItem('user');
+    return !(cachedToken && cachedUser);
+  });
 
   useEffect(() => {
     if (token) {
       authApi.me()
         .then((userData) => {
-          setUser(userData);
+          setUser((prev) => {
+            // Keep identical reference if user data hasn't changed to prevent unnecessary downstream re-renders
+            if (prev && JSON.stringify(prev) === JSON.stringify(userData)) {
+              return prev;
+            }
+            return userData;
+          });
           localStorage.setItem('user', JSON.stringify(userData));
         })
         .catch(() => {

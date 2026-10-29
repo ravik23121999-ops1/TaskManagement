@@ -74,7 +74,9 @@ export const MessagesPage: React.FC = () => {
   }, [activeThreadData?.messages]);
 
   const loadThreads = async (tab: 'my_chats' | 'other') => {
-    setLoadingThreads(true);
+    if (threads.length === 0) {
+      setLoadingThreads(true);
+    }
     try {
       const data = await messagesApi.getThreads(tab);
       setThreads(data.threads || []);
@@ -97,7 +99,13 @@ export const MessagesPage: React.FC = () => {
   };
 
   const loadThreadMessages = async (branchId: number, partnerId?: number, isOverseer?: boolean) => {
-    setLoadingMessages(true);
+    const isNewThread =
+      !activeThreadData ||
+      activeThreadData.branch.id !== branchId ||
+      activeThreadData.partner.id !== partnerId;
+    if (isNewThread) {
+      setLoadingMessages(true);
+    }
     try {
       const data = await messagesApi.getThreadMessages(branchId, partnerId, isOverseer);
       setActiveThreadData(data);
@@ -327,9 +335,20 @@ export const MessagesPage: React.FC = () => {
           {/* Threads List */}
           <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
             {loadingThreads ? (
-              <div className="p-12 text-center text-slate-400 text-xs">
-                <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-blue-600 border-t-transparent mb-2" />
-                <p className="font-semibold text-slate-700">Loading branch chats...</p>
+              <div className="p-3 divide-y divide-slate-100 animate-pulse">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div key={i} className="p-3 flex items-start gap-3">
+                    <div className="w-11 h-11 rounded-2xl bg-slate-200/80 shrink-0" />
+                    <div className="flex-1 space-y-2 py-0.5">
+                      <div className="flex justify-between items-center">
+                        <div className="h-3.5 w-24 bg-slate-200/80 rounded" />
+                        <div className="h-2.5 w-10 bg-slate-100 rounded" />
+                      </div>
+                      <div className="h-3 w-40 bg-slate-200/70 rounded" />
+                      <div className="h-2.5 w-28 bg-slate-100 rounded" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : filteredThreads.length === 0 ? (
               <div className="p-8 text-center text-slate-400 text-xs space-y-2">
@@ -628,9 +647,32 @@ export const MessagesPage: React.FC = () => {
               {/* Chat Messages Stream */}
               <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-slate-50/30">
                 {loadingMessages ? (
-                  <div className="p-12 text-center text-slate-400 text-xs">
-                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-blue-600 border-t-transparent mb-2" />
-                    <p className="font-semibold text-slate-700">Loading conversation history...</p>
+                  <div className="p-6 space-y-4 animate-pulse">
+                    <div className="flex items-start gap-3 max-w-[70%]">
+                      <div className="w-8 h-8 rounded-full bg-slate-200 shrink-0 mt-1" />
+                      <div className="space-y-1.5 flex-1">
+                        <div className="h-3 w-20 bg-slate-200 rounded" />
+                        <div className="h-16 bg-white border border-slate-200/80 rounded-2xl rounded-tl-xs p-3 shadow-2xs" />
+                      </div>
+                    </div>
+                    <div className="flex items-end justify-end gap-3 max-w-[70%] ml-auto">
+                      <div className="space-y-1.5 flex-1 items-end">
+                        <div className="h-3 w-16 bg-slate-200 rounded ml-auto" />
+                        <div className="h-12 bg-blue-100/70 border border-blue-200/40 rounded-2xl rounded-tr-xs ml-auto w-full shadow-2xs" />
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-blue-100 shrink-0 mb-1" />
+                    </div>
+                    <div className="flex items-start gap-3 max-w-[75%]">
+                      <div className="w-8 h-8 rounded-full bg-slate-200 shrink-0 mt-1" />
+                      <div className="space-y-1.5 flex-1">
+                        <div className="h-3 w-24 bg-slate-200 rounded" />
+                        <div className="h-20 bg-white border border-slate-200/80 rounded-2xl rounded-tl-xs p-3 shadow-2xs" />
+                      </div>
+                    </div>
+                    <div className="flex items-end justify-end gap-3 max-w-[60%] ml-auto">
+                      <div className="h-12 bg-blue-100/70 border border-blue-200/40 rounded-2xl rounded-tr-xs w-full shadow-2xs" />
+                      <div className="w-8 h-8 rounded-full bg-blue-100 shrink-0" />
+                    </div>
                   </div>
                 ) : activeThreadData.messages.length === 0 ? (
                   <div className="p-8 text-center text-slate-400 text-xs space-y-2">

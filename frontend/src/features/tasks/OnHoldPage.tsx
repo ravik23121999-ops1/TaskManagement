@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { tasksApi } from '../../api/tasks';
 import type { Task } from '../../api/tasks';
 import { Pagination } from '../../components/Pagination';
+import { TableSkeleton } from '../../components/TableSkeleton';
 import { Search, PauseCircle, PlayCircle, Eye, AlertCircle, Building2, Calendar } from 'lucide-react';
 
 export const OnHoldPage: React.FC = () => {
@@ -148,12 +149,7 @@ export const OnHoldPage: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400">
-                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-amber-600 border-t-transparent mb-2" />
-                    <p>Loading paused tasks...</p>
-                  </td>
-                </tr>
+                <TableSkeleton rows={6} cols={6} />
               ) : tasks.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-12 text-center text-slate-400">

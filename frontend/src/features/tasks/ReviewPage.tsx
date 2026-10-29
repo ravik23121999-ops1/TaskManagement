@@ -4,6 +4,7 @@ import { tasksApi } from '../../api/tasks';
 import type { Task, TaskSubmission } from '../../api/tasks';
 import { ReviewModal } from '../../components/ReviewModal';
 import { Pagination } from '../../components/Pagination';
+import { TableSkeleton } from '../../components/TableSkeleton';
 import { PriorityBadge } from '../../components/StatusBadge';
 import { Search, FileCheck2, Clock, CheckCircle2, AlertTriangle, ShieldCheck, Eye } from 'lucide-react';
 
@@ -193,12 +194,7 @@ export const ReviewPage: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
-                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-blue-600 border-t-transparent mb-2" />
-                    <p>Loading review queue...</p>
-                  </td>
-                </tr>
+                <TableSkeleton rows={6} cols={7} />
               ) : tasks.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-slate-400">

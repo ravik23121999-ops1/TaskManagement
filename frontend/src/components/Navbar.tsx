@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
 import { notificationsApi } from '../api/tasks';
 import { Search, Bell, Plus, ChevronDown, User, LogOut, Check, MessageSquare } from 'lucide-react';
@@ -17,6 +17,7 @@ interface NotificationItem {
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadMessages, setUnreadMessages] = useState<number>(0);
@@ -137,10 +138,14 @@ const Navbar: React.FC = () => {
           <span>New Task</span>
         </button>
 
-        {/* Notifications Dropdown */}
+        {/* Work Messages Button */}
         <button
           onClick={() => navigate('/messages')}
-          className="w-9 h-9 rounded-lg border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition relative cursor-pointer"
+          className={`w-9 h-9 rounded-lg border transition relative cursor-pointer flex items-center justify-center ${
+            location.pathname === '/messages'
+              ? 'bg-blue-50 text-blue-600 border-blue-300 shadow-2xs font-bold'
+              : 'border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600'
+          }`}
           title="Work Messages & Branch Communications"
         >
           <MessageSquare className="w-4 h-4" />

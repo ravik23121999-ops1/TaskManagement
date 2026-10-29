@@ -4,6 +4,7 @@ import { tasksApi } from '../../api/tasks';
 import type { Task, UserSummary } from '../../api/tasks';
 import { StatusBadge, PriorityBadge } from '../../components/StatusBadge';
 import { Pagination } from '../../components/Pagination';
+import { TableSkeleton } from '../../components/TableSkeleton';
 import { Search, Users2, Eye, Plus, CheckCircle2, Clock, GitBranch } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 
@@ -195,9 +196,7 @@ export const CollaborationsPage: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr>
-                  <td colSpan={8} className="py-12 text-center text-slate-400">Loading collaborations...</td>
-                </tr>
+                <TableSkeleton rows={6} cols={8} />
               ) : tasks.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-slate-400">

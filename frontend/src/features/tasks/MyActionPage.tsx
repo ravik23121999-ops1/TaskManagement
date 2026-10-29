@@ -4,6 +4,7 @@ import { tasksApi } from '../../api/tasks';
 import type { Task } from '../../api/tasks';
 import { StatusBadge, PriorityBadge } from '../../components/StatusBadge';
 import { Pagination } from '../../components/Pagination';
+import { TableSkeleton } from '../../components/TableSkeleton';
 import { Search, AlertCircle, Eye, Zap, Clock, FileCheck2, RotateCcw } from 'lucide-react';
 
 export const MyActionPage: React.FC = () => {
@@ -239,12 +240,7 @@ export const MyActionPage: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
-                <tr>
-                  <td colSpan={7} className="py-16 text-center text-slate-400">
-                    <div className="inline-block animate-spin rounded-full h-6 w-6 border-2 border-blue-600 border-t-transparent mb-2" />
-                    <p className="font-medium">Loading pending tasks...</p>
-                  </td>
-                </tr>
+                <TableSkeleton rows={6} cols={7} />
               ) : tasks.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-16 text-center text-slate-400">

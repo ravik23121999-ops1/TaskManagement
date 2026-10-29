@@ -25,8 +25,15 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   const { isAuthenticated, isLoading } = useAuth();
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 text-slate-400 text-xs">
-        Loading QuickLifeNow...
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#070b18] text-white">
+        <div className="relative flex items-center justify-center mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center shadow-[0_0_25px_rgba(37,99,235,0.5)]">
+            <span className="font-black text-lg">Q</span>
+          </div>
+          <div className="absolute -inset-1.5 rounded-2xl border border-cyan-400/30 animate-ping pointer-events-none" />
+        </div>
+        <p className="text-sm font-bold tracking-tight text-white">QuickLifeNow</p>
+        <p className="text-[11px] text-slate-400 mt-0.5">Enterprise Management</p>
       </div>
     );
   }
@@ -37,8 +44,11 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white text-slate-400 text-xs">
-        Loading...
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#070b18] text-white">
+        <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.5)] mb-3">
+          <span className="font-black text-base">Q</span>
+        </div>
+        <p className="text-xs font-semibold text-slate-400">Loading...</p>
       </div>
     );
   }

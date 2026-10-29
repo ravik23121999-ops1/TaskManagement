@@ -30,10 +30,12 @@ export const Dashboard: React.FC = () => {
 
   useEffect(() => {
     loadDashboardData();
-  }, [user]);
+  }, [user?.id, user?.role]);
 
   const loadDashboardData = async () => {
-    setLoading(true);
+    if (!adminData && !employeeData) {
+      setLoading(true);
+    }
     try {
       if (isAdmin) {
         const data = await dashboardApi.getAdminMetrics();
