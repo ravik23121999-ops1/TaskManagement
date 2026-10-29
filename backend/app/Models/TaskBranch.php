@@ -54,6 +54,16 @@ class TaskBranch extends Model
         return $this->hasMany(TaskCollaborator::class);
     }
 
+    public function messages(): HasMany
+    {
+        return $this->hasMany(TaskMessage::class);
+    }
+
+    public function latestMessage(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(TaskMessage::class)->latestOfMany();
+    }
+
     public function submissions(): HasMany
     {
         return $this->hasMany(TaskSubmission::class);

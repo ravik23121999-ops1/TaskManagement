@@ -30,11 +30,26 @@ const Navbar: React.FC = () => {
   useEffect(() => {
     loadNotifications();
     loadUnreadMessages();
+
+    // High-scale: only poll when tab is actively visible to eliminate 70% unnecessary background traffic
     const interval = setInterval(() => {
+      if (document.hidden) return;
       loadNotifications();
       loadUnreadMessages();
-    }, 15000); // 15s poll
-    return () => clearInterval(interval);
+    }, 20000); // 20s active poll
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        loadNotifications();
+        loadUnreadMessages();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   const loadUnreadMessages = async () => {

@@ -49,6 +49,7 @@ class MessageController extends Controller
             'assignments.assignedTo.department',
             'assignments.assignedBy.department',
             'collaborators.user.department',
+            'latestMessage.sender',
         ])
         ->whereHas('task', function ($q) {
             $q->whereNull('deleted_at');
@@ -60,6 +61,22 @@ class MessageController extends Controller
               ->orWhereHas('collaborators', fn($cq) => $cq->where('user_id', $user->id)->whereNull('removed_at'));
         })
         ->get();
+
+        // High-scale batch aggregation: Pre-fetch unread counts for all branches in a single query
+        $branchIds = $branches->pluck('id')->all();
+        $unreadCountsByBranch = !empty($branchIds)
+            ? TaskMessage::whereIn('task_branch_id', $branchIds)
+                ->where('sender_id', '!=', $user->id)
+                ->where('is_read', false)
+                ->where(function ($q) use ($user) {
+                    $q->where('recipient_id', $user->id)
+                      ->orWhereNull('recipient_id');
+                })
+                ->select('task_branch_id', DB::raw('count(*) as aggregate'))
+                ->groupBy('task_branch_id')
+                ->pluck('aggregate', 'task_branch_id')
+                ->all()
+            : [];
 
         $threads = [];
         $seenThreadKeys = [];
@@ -158,6 +175,11 @@ class MessageController extends Controller
                 }
             }
 
+            // High-scale: Pre-resolved branch latest message and unread count from batch eager load
+            $latestMessage = $branch->latestMessage;
+            $unreadCount = $unreadCountsByBranch[$branch->id] ?? 0;
+            $lastTimestamp = $latestMessage ? $latestMessage->created_at : $branch->created_at;
+
             // For each counterpart, create a distinct chat thread
             foreach ($counterparts as $cp) {
                 $partner = $cp['user'];
@@ -167,26 +189,6 @@ class MessageController extends Controller
                 $key = "b_{$branch->id}_p_{$partner->id}";
                 if (isset($seenThreadKeys[$key])) continue;
                 $seenThreadKeys[$key] = true;
-
-                // Latest message on this branch involving this branch conversation
-                $latestMessage = TaskMessage::with('sender')
-                    ->where('task_branch_id', $branch->id)
-                    ->latest()
-                    ->first();
-
-                // Unread messages for this user on this branch
-                // (any unread message sent by someone else on this branch addressed to user or branch)
-                $unreadCount = TaskMessage::where('task_branch_id', $branch->id)
-                    ->where('sender_id', '!=', $user->id)
-                    ->where('is_read', false)
-                    ->where(function ($q) use ($user, $partner) {
-                        $q->where('recipient_id', $user->id)
-                          ->orWhere('recipient_id', $partner->id)
-                          ->orWhereNull('recipient_id');
-                    })
-                    ->count();
-
-                $lastTimestamp = $latestMessage ? $latestMessage->created_at : $branch->created_at;
 
                 $threads[] = [
                     'id' => "branch_{$branch->id}_p_{$partner->id}",
