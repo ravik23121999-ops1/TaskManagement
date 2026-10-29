@@ -53,6 +53,12 @@ class MessageController extends Controller
         ->whereHas('task', function ($q) {
             $q->whereNull('deleted_at');
         })
+        ->where(function ($q) use ($user) {
+            $q->where('owner_id', $user->id)
+              ->orWhereHas('task', fn($tq) => $tq->where('creator_id', $user->id))
+              ->orWhereHas('assignments', fn($aq) => $aq->where('assigned_to_id', $user->id)->orWhere('assigned_by_id', $user->id))
+              ->orWhereHas('collaborators', fn($cq) => $cq->where('user_id', $user->id)->whereNull('removed_at'));
+        })
         ->get();
 
         $threads = [];
