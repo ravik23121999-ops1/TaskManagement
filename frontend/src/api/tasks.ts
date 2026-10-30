@@ -273,8 +273,18 @@ export const tasksApi = {
     return response.data.data;
   },
 
-  addAssignees: async (id: number, userIds: number[]) => {
-    const response = await apiClient.post(`/tasks/${id}/assignees`, { user_ids: userIds });
+  addAssignees: async (id: number, data: { user_ids: number[]; branches?: any[]; share_previous_branch_details?: boolean } | FormData | number[]) => {
+    let payload: any;
+    let headers: any = undefined;
+    if (data instanceof FormData) {
+      payload = data;
+      headers = { 'Content-Type': undefined };
+    } else if (Array.isArray(data)) {
+      payload = { user_ids: data };
+    } else {
+      payload = data;
+    }
+    const response = await apiClient.post(`/tasks/${id}/assignees`, payload, { headers });
     return response.data;
   },
 

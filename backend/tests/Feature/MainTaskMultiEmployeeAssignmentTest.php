@@ -244,4 +244,101 @@ class MainTaskMultiEmployeeAssignmentTest extends TestCase
         $this->assertEquals(1, $summaryAfter['pending']);
         $this->assertEquals(50, $managerResAfter->json('data.progress'));
     }
+
+    public function test_assignee_can_assign_further_with_new_note_attachments_and_share_previous_toggled()
+    {
+        $taskData = $this->test_manager_can_create_main_task_with_shared_attachments_and_individual_allocations();
+        $taskId = $taskData['taskId'];
+
+        $neha = User::factory()->create([
+            'name' => 'Neha Gupta',
+            'email' => 'neha.gupta@quicklifenow.com',
+            'role' => 'employee',
+            'department_id' => $this->department->id,
+        ]);
+
+        $vikas = User::factory()->create([
+            'name' => 'Vikas Kumar',
+            'email' => 'vikas.kumar@quicklifenow.com',
+            'role' => 'employee',
+            'department_id' => $this->department->id,
+        ]);
+
+        $jwtPdf = UploadedFile::fake()->create('JWT_Specs.pdf', 250, 'application/pdf');
+        $loggingPdf = UploadedFile::fake()->create('Logging_Guide.pdf', 180, 'application/pdf');
+
+        // Rohit Mehta assigns further to Neha (share_previous = true) and Vikas (share_previous = false)
+        $assignResponse = $this->actingAs($this->rohit, 'sanctum')->post("/api/tasks/{$taskId}/assignees", [
+            'user_ids' => [$neha->id, $vikas->id],
+            'branches' => [
+                [
+                    'owner_id' => $neha->id,
+                    'mode' => 'new_subtask',
+                    'title' => 'Subtask - JWT Validation',
+                    'description' => 'Neha, implement JWT validation and route protection.',
+                    'expected_result' => 'Protected API endpoints with token verification.',
+                    'share_previous_branch_details' => true,
+                    'files' => [$jwtPdf],
+                ],
+                [
+                    'owner_id' => $vikas->id,
+                    'mode' => 'new_subtask',
+                    'title' => 'Subtask - Logging Utility',
+                    'description' => 'Vikas, build isolated logging utility for requests.',
+                    'expected_result' => 'Standardized JSON request logs.',
+                    'share_previous_branch_details' => false,
+                    'files' => [$loggingPdf],
+                ],
+            ],
+            'branch_files' => [
+                $neha->id => [$jwtPdf],
+                $vikas->id => [$loggingPdf],
+            ],
+        ]);
+
+        $assignResponse->assertStatus(200);
+
+        // 1. Neha logs in (share_previous was TRUE)
+        $nehaRes = $this->actingAs($neha, 'sanctum')->getJson("/api/tasks/{$taskId}");
+        $nehaRes->assertStatus(200);
+
+        $nehaBranch = $nehaRes->json('data.my_branch');
+        $this->assertNotNull($nehaBranch);
+        $this->assertEquals('Subtask - JWT Validation', $nehaBranch['title']);
+        $this->assertStringContainsString('Neha, implement JWT validation', $nehaBranch['description']);
+        $this->assertStringContainsString('Develop employee CRUD APIs', $nehaBranch['description']);
+
+        $nehaAtts = $nehaRes->json('data.attachments');
+        $nehaAttNames = collect($nehaAtts)->pluck('file_name')->all();
+        $this->assertContains('JWT_Specs.pdf', $nehaAttNames);
+        $this->assertContains('Backend_Requirements.pdf', $nehaAttNames);
+        $this->assertContains('Project_Overview.pdf', $nehaAttNames);
+        $this->assertNotContains('Logging_Guide.pdf', $nehaAttNames); // Vikas's attachment must not be visible
+
+        $nehaJwtAtt = collect($nehaAtts)->firstWhere('file_name', 'JWT_Specs.pdf');
+        $this->actingAs($neha, 'sanctum')->get("/api/attachments/{$nehaJwtAtt['id']}/download")->assertStatus(200);
+
+        // 2. Vikas logs in (share_previous was FALSE)
+        $vikasRes = $this->actingAs($vikas, 'sanctum')->getJson("/api/tasks/{$taskId}");
+        $vikasRes->assertStatus(200);
+
+        $vikasBranch = $vikasRes->json('data.my_branch');
+        $this->assertNotNull($vikasBranch);
+        $this->assertEquals('Subtask - Logging Utility', $vikasBranch['title']);
+        $this->assertEquals('Vikas, build isolated logging utility for requests.', $vikasBranch['description']);
+        // Crucial: prior description must NOT be included because share_previous was false
+        $this->assertStringNotContainsString('Develop employee CRUD APIs', $vikasBranch['description']);
+
+        $vikasAtts = $vikasRes->json('data.attachments');
+        $vikasAttNames = collect($vikasAtts)->pluck('file_name')->all();
+        $this->assertContains('Logging_Guide.pdf', $vikasAttNames);
+        $this->assertNotContains('Backend_Requirements.pdf', $vikasAttNames); // Rohit's doc hidden
+        $this->assertNotContains('JWT_Specs.pdf', $vikasAttNames); // Neha's doc hidden
+
+        $vikasLogAtt = collect($vikasAtts)->firstWhere('file_name', 'Logging_Guide.pdf');
+        $this->actingAs($vikas, 'sanctum')->get("/api/attachments/{$vikasLogAtt['id']}/download")->assertStatus(200);
+
+        // Vikas attempts to access Neha's file -> 403 Forbidden!
+        $this->actingAs($vikas, 'sanctum')->get("/api/attachments/{$nehaJwtAtt['id']}/download")->assertStatus(403);
+    }
 }

@@ -30,6 +30,7 @@ import {
   CheckSquare,
   AlertTriangle,
   ArrowRight,
+  ArrowLeft,
   Download,
   HelpCircle,
   Zap,
@@ -134,10 +135,71 @@ export const TaskDetailPage: React.FC = () => {
     }
   };
 
+  interface ModalWorkData {
+    mode: 'new_subtask' | 'reassign';
+    title: string;
+    description: string;
+    expected_result: string;
+    acceptance_criteria: string;
+    due_date: string;
+    share_previous: boolean;
+    files: File[];
+  }
+
+  const [assignModalStep, setAssignModalStep] = useState<1 | 2>(1);
+  const [modalAssigneeWork, setModalAssigneeWork] = useState<Record<number, ModalWorkData>>({});
+
+  const initModalWork = (u: any): ModalWorkData => ({
+    mode: 'new_subtask',
+    title: task ? `${task.title} - ${u.name}` : `${u.name}'s Scope`,
+    description: '',
+    expected_result: '',
+    acceptance_criteria: '',
+    due_date: task?.due_date ? task.due_date.split('T')[0] : '',
+    share_previous: true,
+    files: [],
+  });
+
+  const updateModalWork = (userId: number, updates: Partial<ModalWorkData>) => {
+    setModalAssigneeWork((prev) => {
+      const cur = prev[userId] || initModalWork(allUsersList.find((u) => u.id === userId) || { name: 'Teammate' });
+      return {
+        ...prev,
+        [userId]: { ...cur, ...updates },
+      };
+    });
+  };
+
+  const handleModalFileChange = (userId: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setModalAssigneeWork((prev) => {
+        const cur = prev[userId] || initModalWork(allUsersList.find((u) => u.id === userId) || { name: 'Teammate' });
+        return {
+          ...prev,
+          [userId]: { ...cur, files: [...cur.files, ...newFiles] },
+        };
+      });
+    }
+  };
+
+  const removeModalFile = (userId: number, fileIdx: number) => {
+    setModalAssigneeWork((prev) => {
+      const cur = prev[userId];
+      if (!cur) return prev;
+      return {
+        ...prev,
+        [userId]: { ...cur, files: cur.files.filter((_, i) => i !== fileIdx) },
+      };
+    });
+  };
+
   const openAssignModal = async (type: 'assign' | 'collaborate') => {
     setAssignModalType(type);
+    setAssignModalStep(1);
     setModalSearch('');
     setSelectedModalUserIds([]);
+    setModalAssigneeWork({});
     setModalError('');
     setIsAssignModalOpen(true);
     if (allUsersList.length === 0) {
@@ -151,25 +213,105 @@ export const TaskDetailPage: React.FC = () => {
   };
 
   const toggleModalUser = (userId: number) => {
-    setSelectedModalUserIds((prev) =>
-      prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
-    );
+    setSelectedModalUserIds((prev) => {
+      const exists = prev.includes(userId);
+      const next = exists ? prev.filter((id) => id !== userId) : [...prev, userId];
+      if (!exists) {
+        const u = allUsersList.find((usr) => usr.id === userId);
+        setModalAssigneeWork((mPrev) => ({
+          ...mPrev,
+          [userId]: mPrev[userId] || initModalWork(u || { name: 'Teammate' }),
+        }));
+      }
+      return next;
+    });
   };
 
-  const handleAssignModalSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAssignModalSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if (!task || selectedModalUserIds.length === 0) return;
+
+    // Transition from Selection (Step 1) to Work & Scope Configuration (Step 2)
+    if (assignModalType === 'assign' && assignModalStep === 1) {
+      setAssignModalStep(2);
+      setModalAssigneeWork((prev) => {
+        const next = { ...prev };
+        selectedModalUserIds.forEach((uid) => {
+          if (!next[uid]) {
+            const u = allUsersList.find((usr) => usr.id === uid);
+            next[uid] = initModalWork(u || { name: 'Teammate' });
+          }
+        });
+        return next;
+      });
+      return;
+    }
 
     setSubmittingModal(true);
     setModalError('');
     try {
-      if (assignModalType === 'assign') {
-        await tasksApi.addAssignees(task.id, selectedModalUserIds);
-      } else {
+      if (assignModalType === 'collaborate') {
         await tasksApi.addCollaborators(task.id, selectedModalUserIds);
+      } else {
+        // Validate Step 2 inputs
+        for (const uid of selectedModalUserIds) {
+          const work = modalAssigneeWork[uid];
+          const u = allUsersList.find((usr) => usr.id === uid);
+          if (!work?.title?.trim()) {
+            setModalError(`Subtask Title is required for ${u?.name || 'employee'}.`);
+            setSubmittingModal(false);
+            return;
+          }
+          if (!work?.description?.trim()) {
+            setModalError(`Please provide a note or description for ${u?.name || 'employee'}.`);
+            setSubmittingModal(false);
+            return;
+          }
+        }
+
+        const formData = new FormData();
+        selectedModalUserIds.forEach((uid) => {
+          formData.append('user_ids[]', String(uid));
+        });
+
+        selectedModalUserIds.forEach((uid, idx) => {
+          const work = modalAssigneeWork[uid] || initModalWork(allUsersList.find((u) => u.id === uid) || { name: 'Teammate' });
+          formData.append(`branches[${idx}][owner_id]`, String(uid));
+          formData.append(`branches[${idx}][mode]`, work.mode);
+          formData.append(`branches[${idx}][title]`, work.title.trim());
+          formData.append(`branches[${idx}][description]`, work.description.trim());
+          if (work.expected_result?.trim()) {
+            formData.append(`branches[${idx}][expected_result]`, work.expected_result.trim());
+          }
+          if (work.acceptance_criteria?.trim()) {
+            formData.append(`branches[${idx}][acceptance_criteria]`, work.acceptance_criteria.trim());
+          }
+          if (work.due_date) {
+            formData.append(`branches[${idx}][due_date]`, work.due_date);
+          }
+          formData.append(`branches[${idx}][share_previous_branch_details]`, work.share_previous ? '1' : '0');
+
+          if (work.files && work.files.length > 0) {
+            work.files.forEach((file) => {
+              formData.append(`branches[${idx}][files][]`, file);
+              formData.append(`branch_files[${uid}][]`, file);
+            });
+          }
+        });
+
+        await tasksApi.addAssignees(task.id, formData);
       }
+
       setIsAssignModalOpen(false);
       setSelectedModalUserIds([]);
+      setModalAssigneeWork({});
+      setAssignModalStep(1);
+      showToast(
+        assignModalType === 'assign'
+          ? `Successfully assigned task to ${selectedModalUserIds.length} employee(s).`
+          : `Successfully invited ${selectedModalUserIds.length} collaborator(s).`,
+        'success'
+      );
       loadTask(task.id);
     } catch (err: any) {
       setModalError(err.response?.data?.message || 'Failed to update task');
@@ -1259,15 +1401,28 @@ export const TaskDetailPage: React.FC = () => {
                       )}
                     </div>
 
-                    {task.permissions.can_submit && (
-                      <button
-                        onClick={() => setIsSubmitModalOpen(true)}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
-                      >
-                        <Upload className="w-3.5 h-3.5" />
-                        <span>Submit Work Deliverables</span>
-                      </button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {task.status !== 'completed' && task.status !== 'cancelled' && (
+                        <button
+                          type="button"
+                          onClick={() => openAssignModal('assign')}
+                          className="px-3.5 py-2 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                          title="Assign further / delegate with independent subtasks and attachments"
+                        >
+                          <UserPlus className="w-3.5 h-3.5" />
+                          <span>+ Assign Further</span>
+                        </button>
+                      )}
+                      {task.permissions.can_submit && (
+                        <button
+                          onClick={() => setIsSubmitModalOpen(true)}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>Submit Work Deliverables</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -2610,33 +2765,54 @@ export const TaskDetailPage: React.FC = () => {
       {/* ASSIGN OR COLLABORATE MODAL (1 TO MANY) */}
       {isAssignModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in duration-150">
+          <div
+            className={`bg-white rounded-2xl shadow-2xl border border-slate-200 w-full flex flex-col overflow-hidden animate-in fade-in duration-150 ${
+              assignModalType === 'assign' && assignModalStep === 2
+                ? 'max-w-3xl max-h-[92vh]'
+                : 'max-w-lg max-h-[90vh]'
+            }`}
+          >
             {/* Modal Header */}
             <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
               <div className="flex items-center gap-2.5">
-                <div
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center ${
-                    assignModalType === 'assign'
-                      ? 'bg-sky-100 text-sky-700'
-                      : 'bg-purple-100 text-purple-700'
-                  }`}
-                >
-                  {assignModalType === 'assign' ? (
-                    <UserPlus className="w-5 h-5" />
-                  ) : (
-                    <Users className="w-5 h-5" />
-                  )}
-                </div>
+                {assignModalType === 'assign' && assignModalStep === 2 ? (
+                  <button
+                    type="button"
+                    onClick={() => setAssignModalStep(1)}
+                    className="p-1.5 -ml-1 text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 rounded-lg transition cursor-pointer"
+                    title="Back to employee selection"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+                ) : (
+                  <div
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                      assignModalType === 'assign'
+                        ? 'bg-sky-100 text-sky-700'
+                        : 'bg-purple-100 text-purple-700'
+                    }`}
+                  >
+                    {assignModalType === 'assign' ? (
+                      <UserPlus className="w-5 h-5" />
+                    ) : (
+                      <Users className="w-5 h-5" />
+                    )}
+                  </div>
+                )}
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">
-                    {assignModalType === 'assign'
-                      ? 'Assign Team Members (1 to Many)'
-                      : 'Invite Collaborators (1 to Many)'}
+                    {assignModalType === 'collaborate'
+                      ? 'Invite Collaborators (1 to Many)'
+                      : assignModalStep === 1
+                      ? 'Assign Team Members (1 to Many) - Step 1 of 2'
+                      : `Configure Work Allocation (${selectedModalUserIds.length}) - Step 2 of 2`}
                   </h3>
                   <p className="text-[11px] text-slate-500">
-                    {assignModalType === 'assign'
-                      ? 'Select one or more employees to assign to this task.'
-                      : 'Select one or more employees to collaborate together.'}
+                    {assignModalType === 'collaborate'
+                      ? 'Select one or more employees to collaborate together on this task.'
+                      : assignModalStep === 1
+                      ? 'Select employees who will receive individual work allocations.'
+                      : 'Set individual instructions, attachments, and sharing permissions for each assignee.'}
                   </p>
                 </div>
               </div>
@@ -2650,154 +2826,479 @@ export const TaskDetailPage: React.FC = () => {
             </div>
 
             {/* Modal Body */}
-            <div className="p-5 space-y-4 overflow-y-auto flex-1">
-              {modalError && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{modalError}</span>
+            {assignModalType === 'assign' && assignModalStep === 2 ? (
+              <div className="p-5 space-y-5 overflow-y-auto flex-1">
+                {modalError && (
+                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{modalError}</span>
+                  </div>
+                )}
+
+                <div className="p-3.5 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 border border-blue-100 rounded-xl text-xs text-blue-900 flex items-start gap-2.5">
+                  <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold block">Independent Allocation & Peer Privacy</span>
+                    <p className="text-[11px] text-slate-600 mt-0.5">
+                      Each employee gets their own assignment card, note, and attachments. Check or uncheck
+                      <span className="font-semibold text-slate-800"> "Share previous document & description" </span>
+                      on each card to determine whether prior branch context and attachments are shared or kept strictly confidential.
+                    </p>
+                  </div>
                 </div>
-              )}
 
-              {/* Search Filter */}
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Filter by name, department, email, or role..."
-                  value={modalSearch}
-                  onChange={(e) => setModalSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
-                />
-              </div>
-
-              {/* Quick Actions & Counter */}
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold text-slate-600">
-                  {selectedModalUserIds.length} employee{selectedModalUserIds.length !== 1 ? 's' : ''} selected
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const filtered = allUsersList.filter(
-                        (u) =>
-                          u.id !== currentUser?.id &&
-                          (u.name.toLowerCase().includes(modalSearch.toLowerCase()) ||
-                            u.email?.toLowerCase().includes(modalSearch.toLowerCase()) ||
-                            u.department?.name?.toLowerCase().includes(modalSearch.toLowerCase()) ||
-                            u.role?.toLowerCase().includes(modalSearch.toLowerCase()))
-                      );
-                      setSelectedModalUserIds(filtered.map((u) => u.id));
-                    }}
-                    className="text-[11px] text-blue-600 hover:underline font-semibold cursor-pointer"
-                  >
-                    Select All
-                  </button>
-                  <span className="text-slate-300">|</span>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedModalUserIds([])}
-                    className="text-[11px] text-slate-500 hover:underline cursor-pointer"
-                  >
-                    Clear All
-                  </button>
-                </div>
-              </div>
-
-              {/* User Selection List */}
-              <div className="space-y-1.5 max-h-60 overflow-y-auto border border-slate-200/80 rounded-xl p-2 divide-y divide-slate-100">
-                {allUsersList
-                  .filter(
-                    (u) =>
-                      u.id !== currentUser?.id &&
-                      (u.name.toLowerCase().includes(modalSearch.toLowerCase()) ||
-                        u.email?.toLowerCase().includes(modalSearch.toLowerCase()) ||
-                        u.department?.name?.toLowerCase().includes(modalSearch.toLowerCase()) ||
-                        u.role?.toLowerCase().includes(modalSearch.toLowerCase()))
-                  )
-                  .map((u) => {
-                    const isSelected = selectedModalUserIds.includes(u.id);
-                    const alreadyBranchOwner = task.branches?.some((b) => b.owner?.id === u.id);
-                    const alreadyCollaborator = task.collaborators?.some((c) => c.id === u.id);
+                <div className="space-y-4">
+                  {selectedModalUserIds.map((uid) => {
+                    const u = allUsersList.find((usr) => usr.id === uid) || { id: uid, name: 'Employee', email: '' };
+                    const work = modalAssigneeWork[uid] || initModalWork(u);
 
                     return (
                       <div
-                        key={u.id}
-                        onClick={() => toggleModalUser(u.id)}
-                        className={`p-2.5 rounded-lg flex items-center justify-between text-xs cursor-pointer transition ${
-                          isSelected
-                            ? 'bg-blue-50/80 border border-blue-200'
-                            : 'hover:bg-slate-50'
-                        }`}
+                        key={uid}
+                        className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden transition hover:border-slate-300"
                       >
-                        <div className="flex items-center gap-2.5 truncate">
-                          <div
-                            className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
-                              isSelected
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-slate-100 text-slate-700'
-                            }`}
+                        {/* Card Header */}
+                        <div className="p-3.5 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                              {u.name.charAt(0)}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-bold text-xs text-slate-900 truncate">{u.name}</span>
+                                {u.department && (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-200/70 text-slate-700 font-medium">
+                                    {u.department.name}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] text-slate-400 truncate block">{u.email}</span>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              toggleModalUser(uid);
+                              if (selectedModalUserIds.length <= 1) {
+                                setAssignModalStep(1);
+                              }
+                            }}
+                            className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer flex items-center gap-1 text-[11px]"
+                            title="Remove assignment"
                           >
-                            {u.name.charAt(0)}
-                          </div>
-                          <div className="truncate">
-                            <p className="font-bold text-slate-800 truncate">{u.name}</p>
-                            <p className="text-[10px] text-slate-400 truncate">
-                              {u.email} {u.department ? `• ${u.department.name}` : ''}
-                            </p>
-                          </div>
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Remove</span>
+                          </button>
                         </div>
 
-                        <div className="flex items-center gap-2 shrink-0">
-                          {alreadyBranchOwner && (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] bg-slate-100 text-slate-500 font-medium">
-                              Already Assigned
-                            </span>
+                        {/* Card Form */}
+                        <div className="p-4 space-y-3.5">
+                          {/* Assignment Method / Mode Selection (if user owns a branch) */}
+                          {task.my_branch && (
+                            <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 flex items-center justify-between flex-wrap gap-2 text-xs">
+                              <div>
+                                <span className="font-semibold text-slate-700 block">Assignment Action:</span>
+                                <span className="text-[10px] text-slate-400">
+                                  {work.mode === 'reassign'
+                                    ? 'Delegate/Forward your entire branch to this employee'
+                                    : 'Create an independent subtask branch under your supervision'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 bg-white p-1 rounded-lg border border-slate-200">
+                                <button
+                                  type="button"
+                                  onClick={() => updateModalWork(uid, { mode: 'new_subtask' })}
+                                  className={`px-2.5 py-1 text-xs rounded-md font-semibold transition cursor-pointer ${
+                                    work.mode === 'new_subtask'
+                                      ? 'bg-blue-600 text-white shadow-xs'
+                                      : 'text-slate-600 hover:bg-slate-50'
+                                  }`}
+                                >
+                                  + Subtask Branch
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => updateModalWork(uid, { mode: 'reassign' })}
+                                  className={`px-2.5 py-1 text-xs rounded-md font-semibold transition cursor-pointer ${
+                                    work.mode === 'reassign'
+                                      ? 'bg-amber-600 text-white shadow-xs'
+                                      : 'text-slate-600 hover:bg-slate-50'
+                                  }`}
+                                >
+                                  Forward My Branch
+                                </button>
+                              </div>
+                            </div>
                           )}
-                          {alreadyCollaborator && (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] bg-purple-50 text-purple-600 font-medium">
-                              Collaborating
-                            </span>
-                          )}
-                          <span
-                            className={`w-4 h-4 rounded-md border flex items-center justify-center ${
-                              isSelected
-                                ? 'border-blue-600 bg-blue-600 text-white'
-                                : 'border-slate-300'
+
+                          {/* Subtask Title & Due Date */}
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="sm:col-span-2 space-y-1">
+                              <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                                <span>Subtask / Allocation Title</span>
+                                <span className="text-rose-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={work.title}
+                                onChange={(e) => updateModalWork(uid, { title: e.target.value })}
+                                placeholder="e.g. Develop APIs / UI Module"
+                                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                                <span>Due Date</span>
+                              </label>
+                              <input
+                                type="date"
+                                value={work.due_date}
+                                onChange={(e) => updateModalWork(uid, { due_date: e.target.value })}
+                                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                              />
+                            </div>
+                          </div>
+
+                          {/* THE TICK / UNTICK OPTION FOR PREVIOUS BRANCH DOCS & NOTE */}
+                          <div
+                            className={`p-3 rounded-xl border transition ${
+                              work.share_previous
+                                ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
+                                : 'bg-slate-50 border-slate-200 text-slate-800'
                             }`}
                           >
-                            {isSelected && <Check className="w-3 h-3" />}
-                          </span>
+                            <label className="flex items-start gap-2.5 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={work.share_previous}
+                                onChange={(e) => updateModalWork(uid, { share_previous: e.target.checked })}
+                                className="mt-0.5 w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                              />
+                              <div className="text-xs">
+                                <span className="font-bold flex items-center gap-1.5">
+                                  <span>Share previous document & description with this assignment</span>
+                                  {work.share_previous ? (
+                                    <span className="px-1.5 py-0.2 bg-emerald-200 text-emerald-800 rounded font-semibold text-[10px]">
+                                      Shared
+                                    </span>
+                                  ) : (
+                                    <span className="px-1.5 py-0.2 bg-slate-200 text-slate-700 rounded font-semibold text-[10px]">
+                                      Private Note Only
+                                    </span>
+                                  )}
+                                </span>
+                                <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
+                                  {work.share_previous
+                                    ? '✓ Ticked: This assignee will have access to previous branch / main task documents and previous instructions, in addition to the new note and files below.'
+                                    : '✗ Unticked (Strictly Confidential): This assignee will only receive the specific note and attachments uploaded below. Previous branch documents and instructions remain hidden.'}
+                                </p>
+                              </div>
+                            </label>
+                          </div>
+
+                          {/* Individual Note & Description */}
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                              <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                                <span>Individual Work Note / Instructions</span>
+                                <span className="text-rose-500">*</span>
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updateModalWork(uid, {
+                                    description: task.my_branch?.description || task.description || '',
+                                  })
+                                }
+                                className="text-[11px] text-blue-600 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                                title="Copy parent task description as a starting point"
+                              >
+                                <Sparkles className="w-3 h-3" />
+                                <span>Copy Current Instructions</span>
+                              </button>
+                            </div>
+                            <textarea
+                              rows={3}
+                              value={work.description}
+                              onChange={(e) => updateModalWork(uid, { description: e.target.value })}
+                              placeholder="Detail the specific tasks, instructions, or delegation details for this assignee..."
+                              className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 resize-y"
+                            />
+                          </div>
+
+                          {/* Expected Result & Acceptance Criteria */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">
+                                Expected Result (Optional)
+                              </label>
+                              <input
+                                type="text"
+                                value={work.expected_result}
+                                onChange={(e) => updateModalWork(uid, { expected_result: e.target.value })}
+                                placeholder="e.g. Working API endpoints"
+                                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">
+                                Acceptance Criteria (Optional)
+                              </label>
+                              <input
+                                type="text"
+                                value={work.acceptance_criteria}
+                                onChange={(e) => updateModalWork(uid, { acceptance_criteria: e.target.value })}
+                                placeholder="e.g. All unit tests pass"
+                                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Individual Attachments for this subtask */}
+                          <div className="space-y-2 pt-1 border-t border-slate-100">
+                            <div className="flex items-center justify-between">
+                              <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
+                                <Paperclip className="w-3.5 h-3.5 text-slate-400" />
+                                <span>Individual Subtask Attachments</span>
+                              </label>
+                              <label
+                                htmlFor={`subtask-file-upload-${uid}`}
+                                className="text-[11px] text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1 cursor-pointer"
+                              >
+                                <Plus className="w-3 h-3" />
+                                <span>Add Files</span>
+                              </label>
+                              <input
+                                id={`subtask-file-upload-${uid}`}
+                                type="file"
+                                multiple
+                                accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+                                onChange={(e) => handleModalFileChange(uid, e)}
+                                className="hidden"
+                              />
+                            </div>
+
+                            {work.files && work.files.length > 0 ? (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {work.files.map((file, fIdx) => (
+                                  <div
+                                    key={fIdx}
+                                    className="flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs"
+                                  >
+                                    <div className="flex items-center gap-1.5 truncate">
+                                      <Paperclip className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                      <span className="truncate font-medium text-slate-800 text-[11px]">
+                                        {file.name}
+                                      </span>
+                                      <span className="text-[10px] text-slate-400 shrink-0">
+                                        ({Math.round(file.size / 1024)} KB)
+                                      </span>
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => removeModalFile(uid, fIdx)}
+                                      className="text-slate-400 hover:text-rose-600 p-0.5 rounded cursor-pointer"
+                                      title="Remove attachment"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-[11px] text-slate-400 italic">
+                                No individual files attached yet for {u.name}.
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
                   })}
+                </div>
               </div>
-            </div>
+            ) : (
+              /* Step 1 User Selection (or Collaborate Selection) */
+              <div className="p-5 space-y-4 overflow-y-auto flex-1">
+                {modalError && (
+                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl font-medium flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>{modalError}</span>
+                  </div>
+                )}
+
+                {/* Search Filter */}
+                <div className="relative">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Filter by name, department, email, or role..."
+                    value={modalSearch}
+                    onChange={(e) => setModalSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                  />
+                </div>
+
+                {/* Quick Actions & Counter */}
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-600">
+                    {selectedModalUserIds.length} employee{selectedModalUserIds.length !== 1 ? 's' : ''} selected
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const filtered = allUsersList.filter(
+                          (u) =>
+                            u.id !== currentUser?.id &&
+                            (u.name.toLowerCase().includes(modalSearch.toLowerCase()) ||
+                              u.email?.toLowerCase().includes(modalSearch.toLowerCase()) ||
+                              u.department?.name?.toLowerCase().includes(modalSearch.toLowerCase()) ||
+                              u.role?.toLowerCase().includes(modalSearch.toLowerCase()))
+                        );
+                        setSelectedModalUserIds(filtered.map((u) => u.id));
+                        filtered.forEach((u) => {
+                          setModalAssigneeWork((mPrev) => ({
+                            ...mPrev,
+                            [u.id]: mPrev[u.id] || initModalWork(u),
+                          }));
+                        });
+                      }}
+                      className="text-[11px] text-blue-600 hover:underline font-semibold cursor-pointer"
+                    >
+                      Select All
+                    </button>
+                    <span className="text-slate-300">|</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedModalUserIds([])}
+                      className="text-[11px] text-slate-500 hover:underline cursor-pointer"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                </div>
+
+                {/* User Selection List */}
+                <div className="space-y-1.5 max-h-60 overflow-y-auto border border-slate-200/80 rounded-xl p-2 divide-y divide-slate-100">
+                  {allUsersList
+                    .filter(
+                      (u) =>
+                        u.id !== currentUser?.id &&
+                        (u.name.toLowerCase().includes(modalSearch.toLowerCase()) ||
+                          u.email?.toLowerCase().includes(modalSearch.toLowerCase()) ||
+                          u.department?.name?.toLowerCase().includes(modalSearch.toLowerCase()) ||
+                          u.role?.toLowerCase().includes(modalSearch.toLowerCase()))
+                    )
+                    .map((u) => {
+                      const isSelected = selectedModalUserIds.includes(u.id);
+                      const alreadyBranchOwner = task.branches?.some((b) => b.owner?.id === u.id);
+                      const alreadyCollaborator = task.collaborators?.some((c) => c.id === u.id);
+
+                      return (
+                        <div
+                          key={u.id}
+                          onClick={() => toggleModalUser(u.id)}
+                          className={`p-2.5 rounded-lg flex items-center justify-between text-xs cursor-pointer transition ${
+                            isSelected
+                              ? 'bg-blue-50/80 border border-blue-200'
+                              : 'hover:bg-slate-50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 truncate">
+                            <div
+                              className={`w-7 h-7 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
+                                isSelected
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-slate-100 text-slate-700'
+                              }`}
+                            >
+                              {u.name.charAt(0)}
+                            </div>
+                            <div className="truncate">
+                              <p className="font-bold text-slate-800 truncate">{u.name}</p>
+                              <p className="text-[10px] text-slate-400 truncate">
+                                {u.email} {u.department ? `• ${u.department.name}` : ''}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            {alreadyBranchOwner && (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] bg-slate-100 text-slate-500 font-medium">
+                                Already Assigned
+                              </span>
+                            )}
+                            {alreadyCollaborator && (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] bg-purple-50 text-purple-600 font-medium">
+                                Collaborating
+                              </span>
+                            )}
+                            <span
+                              className={`w-4 h-4 rounded-md border flex items-center justify-center ${
+                                isSelected
+                                  ? 'border-blue-600 bg-blue-600 text-white'
+                                  : 'border-slate-300'
+                              }`}
+                            >
+                              {isSelected && <Check className="w-3 h-3" />}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
 
             {/* Modal Footer */}
-            <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-end gap-2.5">
-              <button
-                type="button"
-                onClick={() => setIsAssignModalOpen(false)}
-                className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={submittingModal || selectedModalUserIds.length === 0}
-                onClick={handleAssignModalSubmit}
-                className={`px-5 py-2 rounded-xl text-xs font-bold text-white shadow-xs transition cursor-pointer ${
-                  assignModalType === 'assign'
-                    ? 'bg-sky-600 hover:bg-sky-700 disabled:bg-sky-300'
-                    : 'bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300'
-                }`}
-              >
-                {submittingModal
-                  ? 'Saving...'
-                  : `Confirm ${assignModalType === 'assign' ? 'Assignment' : 'Invitation'} (${selectedModalUserIds.length})`}
-              </button>
+            <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between gap-2.5">
+              <div>
+                {assignModalType === 'assign' && assignModalStep === 2 ? (
+                  <button
+                    type="button"
+                    onClick={() => setAssignModalStep(1)}
+                    className="px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>Back to Selection</span>
+                  </button>
+                ) : null}
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setIsAssignModalOpen(false)}
+                  className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={submittingModal || selectedModalUserIds.length === 0}
+                  onClick={handleAssignModalSubmit}
+                  className={`px-5 py-2 rounded-xl text-xs font-bold text-white shadow-xs transition flex items-center gap-1.5 cursor-pointer ${
+                    assignModalType === 'assign'
+                      ? 'bg-sky-600 hover:bg-sky-700 disabled:bg-sky-300'
+                      : 'bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300'
+                  }`}
+                >
+                  {submittingModal ? (
+                    'Saving...'
+                  ) : assignModalType === 'assign' && assignModalStep === 1 ? (
+                    <>
+                      <span>Next: Configure Work & Attachments ({selectedModalUserIds.length})</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </>
+                  ) : (
+                    <span>
+                      Confirm {assignModalType === 'assign' ? 'Assignment' : 'Invitation'} ({selectedModalUserIds.length})
+                    </span>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

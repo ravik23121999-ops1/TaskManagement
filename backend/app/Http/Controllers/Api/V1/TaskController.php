@@ -990,48 +990,179 @@ class TaskController extends Controller
 
         $addedCount = 0;
         $branchesData = (array) $request->input('branches', []);
+        $userBranch = $task->branches()->where('owner_id', $user->id)->first();
 
-        foreach ($targetUserIds as $assigneeId) {
+        foreach ($targetUserIds as $idx => $assigneeId) {
             $exists = $task->branches()->where('owner_id', $assigneeId)->whereNotIn('status', ['cancelled'])->exists();
-            if (!$exists) {
-                $bData = collect($branchesData)->firstWhere('owner_id', $assigneeId);
-                $branchTitle = !empty($bData['title']) ? trim($bData['title']) : $task->title;
-                $branchDesc = !empty($bData['description']) ? trim($bData['description']) : $task->description;
-                $branchExpected = !empty($bData['expected_result']) ? trim($bData['expected_result']) : $task->expected_result;
-                $branchCriteria = !empty($bData['acceptance_criteria']) ? trim($bData['acceptance_criteria']) : $task->acceptance_criteria;
-                $branchStart = !empty($bData['start_date']) ? now()->parse($bData['start_date']) : $task->start_date;
-                $branchDue = !empty($bData['due_date']) ? now()->parse($bData['due_date']) : $task->due_date;
+            if ($exists) {
+                continue;
+            }
 
-                $branch = $task->branches()->create([
-                    'title' => $branchTitle,
-                    'description' => $branchDesc,
-                    'expected_result' => $branchExpected,
-                    'acceptance_criteria' => $branchCriteria,
-                    'owner_id' => $assigneeId,
-                    'start_date' => $branchStart,
-                    'status' => 'pending',
-                    'due_date' => $branchDue,
-                ]);
+            $bData = collect($branchesData)->firstWhere('owner_id', $assigneeId) ?: ($branchesData[$idx] ?? []);
+            $mode = $bData['mode'] ?? $request->input('mode', 'new_subtask');
+            $sharePrevious = filter_var($bData['share_previous_branch_details'] ?? $request->input('share_previous_branch_details', true), FILTER_VALIDATE_BOOLEAN);
 
-                $branch->assignments()->create([
+            // MODE A: Forward / Reassign existing branch to the new assignee
+            if ($mode === 'reassign' && $userBranch) {
+                $oldOwnerId = $userBranch->owner_id;
+                $userBranch->owner_id = $assigneeId;
+
+                if (!empty($bData['title'])) {
+                    $userBranch->title = trim($bData['title']);
+                }
+
+                $newNote = !empty($bData['description']) ? trim($bData['description']) : '';
+                if ($sharePrevious) {
+                    if ($newNote) {
+                        $userBranch->description = ($userBranch->description ? $userBranch->description . "\n\n--- Delegation Note from {$user->name} ---\n" : '') . $newNote;
+                    }
+                } else {
+                    $userBranch->description = $newNote ?: "Assigned by {$user->name}";
+                }
+
+                if (!empty($bData['due_date'])) {
+                    $userBranch->due_date = now()->parse($bData['due_date']);
+                }
+                $userBranch->save();
+
+                // Update assignment chain
+                $userBranch->assignments()->update(['is_current' => false]);
+                $userBranch->assignments()->create([
                     'assigned_to_id' => $assigneeId,
                     'assigned_by_id' => $user->id,
                     'is_current' => true,
                     'assigned_at' => now(),
                 ]);
 
-                if ($assigneeId !== $user->id) {
-                    SendTaskNotification::dispatch(
-                        $assigneeId,
-                        'task_assigned',
-                        "Task assigned to you — {$branchTitle}",
-                        $task->id,
-                        'Task Assigned',
-                        $branch->id
-                    );
+                // Attach any new files to this forwarded branch
+                $newFiles = $request->file("branch_files.{$assigneeId}")
+                    ?? $request->file("branches.{$idx}.files")
+                    ?? ($idx === 0 ? $request->file('files') : null)
+                    ?? [];
+                if (is_array($newFiles)) {
+                    foreach ($newFiles as $file) {
+                        $path = $file->store("tasks/{$task->id}/attachments", 'public');
+                        TaskAttachment::create([
+                            'task_id' => $task->id,
+                            'task_branch_id' => $userBranch->id,
+                            'file_name' => $file->getClientOriginalName(),
+                            'file_path' => $path,
+                            'file_size' => $file->getSize(),
+                            'file_type' => $file->getClientOriginalExtension(),
+                            'uploaded_by_id' => $user->id,
+                        ]);
+                    }
                 }
+
+                SendTaskNotification::dispatch(
+                    $assigneeId,
+                    'task_assigned',
+                    "Task branch delegated to you — {$userBranch->title}",
+                    $task->id,
+                    'Task Assigned',
+                    $userBranch->id
+                );
                 $addedCount++;
+                continue;
             }
+
+            // MODE B: Create New Subtask Branch (Standard for Creator, Admin, and Subtask Split)
+            $newNote = !empty($bData['description']) ? trim($bData['description']) : '';
+            if ($sharePrevious) {
+                $baseDesc = $userBranch ? $userBranch->description : $task->description;
+                $branchDesc = $newNote
+                    ? ($baseDesc ? ($baseDesc . "\n\n--- Subtask Note from {$user->name} ---\n" . $newNote) : $newNote)
+                    : ($baseDesc ?: $task->title);
+                $branchExpected = !empty($bData['expected_result']) ? trim($bData['expected_result']) : ($userBranch?->expected_result ?? $task->expected_result);
+                $branchCriteria = !empty($bData['acceptance_criteria']) ? trim($bData['acceptance_criteria']) : ($userBranch?->acceptance_criteria ?? $task->acceptance_criteria);
+            } else {
+                $branchDesc = $newNote ?: (!empty($bData['title']) ? trim($bData['title']) : "Subtask assigned by {$user->name}");
+                $branchExpected = !empty($bData['expected_result']) ? trim($bData['expected_result']) : null;
+                $branchCriteria = !empty($bData['acceptance_criteria']) ? trim($bData['acceptance_criteria']) : null;
+            }
+
+            $branchTitle = !empty($bData['title'])
+                ? trim($bData['title'])
+                : ($userBranch ? "{$userBranch->title} - Subtask" : "{$task->title} - Subtask");
+            $branchStart = !empty($bData['start_date']) ? now()->parse($bData['start_date']) : now();
+            $branchDue = !empty($bData['due_date']) ? now()->parse($bData['due_date']) : ($userBranch?->due_date ?? $task->due_date);
+
+            $parentAssignment = $userBranch?->assignments()->where('is_current', true)->first();
+
+            $branch = $task->branches()->create([
+                'title' => $branchTitle,
+                'description' => $branchDesc,
+                'expected_result' => $branchExpected,
+                'acceptance_criteria' => $branchCriteria,
+                'owner_id' => $assigneeId,
+                'parent_assignment_id' => $parentAssignment?->id,
+                'start_date' => $branchStart,
+                'status' => 'pending',
+                'due_date' => $branchDue,
+            ]);
+
+            $branch->assignments()->create([
+                'assigned_to_id' => $assigneeId,
+                'assigned_by_id' => $user->id,
+                'is_current' => true,
+                'assigned_at' => now(),
+            ]);
+
+            // If sharePrevious is ticked, link previous attachments to the new branch
+            if ($sharePrevious) {
+                $previousAtts = collect();
+                if ($userBranch) {
+                    $previousAtts = TaskAttachment::where('task_id', $task->id)
+                        ->where(function ($q) use ($userBranch) {
+                            $q->where('task_branch_id', $userBranch->id)
+                              ->orWhereNull('task_branch_id');
+                        })->get();
+                } else {
+                    $previousAtts = TaskAttachment::where('task_id', $task->id)->whereNull('task_branch_id')->get();
+                }
+
+                foreach ($previousAtts as $prevAtt) {
+                    TaskAttachment::create([
+                        'task_id' => $task->id,
+                        'task_branch_id' => $branch->id,
+                        'file_name' => $prevAtt->file_name,
+                        'file_path' => $prevAtt->file_path,
+                        'file_size' => $prevAtt->file_size,
+                        'file_type' => $prevAtt->file_type,
+                        'uploaded_by_id' => $user->id,
+                    ]);
+                }
+            }
+
+            // Upload any new individual files for this subtask branch
+            $newFiles = $request->file("branch_files.{$assigneeId}")
+                ?? $request->file("branches.{$idx}.files")
+                ?? ($idx === 0 ? $request->file('files') : null)
+                ?? [];
+            if (is_array($newFiles)) {
+                foreach ($newFiles as $file) {
+                    $path = $file->store("tasks/{$task->id}/attachments", 'public');
+                    TaskAttachment::create([
+                        'task_id' => $task->id,
+                        'task_branch_id' => $branch->id,
+                        'file_name' => $file->getClientOriginalName(),
+                        'file_path' => $path,
+                        'file_size' => $file->getSize(),
+                        'file_type' => $file->getClientOriginalExtension(),
+                        'uploaded_by_id' => $user->id,
+                    ]);
+                }
+            }
+
+            SendTaskNotification::dispatch(
+                $assigneeId,
+                'task_assigned',
+                "Task assigned to you — {$branchTitle}",
+                $task->id,
+                'Task Assigned',
+                $branch->id
+            );
+            $addedCount++;
         }
 
         ActivityLogger::log('task_assigned', "Assigned task to {$addedCount} team members", $task->id);
