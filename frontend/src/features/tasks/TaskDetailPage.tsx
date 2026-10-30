@@ -2931,63 +2931,68 @@ export const TaskDetailPage: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* TOGGLE: PASS MY TASK WITH SUBTASK OR RESTRICT */}
-                          <div
-                            className={`p-3.5 rounded-2xl border transition-all duration-150 ${
-                              work.share_previous
-                                ? 'bg-emerald-50/80 border-emerald-300'
-                                : 'bg-rose-50/70 border-rose-200'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between flex-wrap gap-2.5">
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="font-bold text-xs text-slate-900">
-                                    Pass My Task With Subtask:
-                                  </span>
-                                  <span
-                                    className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
-                                      work.share_previous
-                                        ? 'bg-emerald-600 text-white'
-                                        : 'bg-rose-600 text-white'
-                                    }`}
-                                  >
-                                    {work.share_previous ? '✓ PASS / YES' : '✕ RESTRICT / STOP'}
-                                  </span>
+                          {/* DELEGATION OPTION FOR FURTHER ASSIGNMENT */}
+                          <div className="space-y-1.5">
+                            <label className="text-[11px] font-bold text-slate-700 block">
+                              Delegation Option:
+                            </label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                              {/* Option 1: Make subtask and share further */}
+                              <div
+                                onClick={() => updateModalWork(uid, { share_previous: false })}
+                                className={`p-3 rounded-xl border transition cursor-pointer flex items-start gap-2.5 ${
+                                  !work.share_previous
+                                    ? 'bg-blue-50/80 border-blue-500 shadow-xs'
+                                    : 'bg-white border-slate-200 hover:bg-slate-50'
+                                }`}
+                              >
+                                <div
+                                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition ${
+                                    !work.share_previous ? 'border-blue-600 bg-blue-600' : 'border-slate-300'
+                                  }`}
+                                >
+                                  {!work.share_previous && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                                 </div>
-                                <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
-                                  {work.share_previous
-                                    ? '✓ PASS: My task details and documents will be passed to this assignee along with their new subtask note and attachments.'
-                                    : '✕ RESTRICT: Restricted! My task details and documents are NOT passed. This assignee will ONLY receive their new subtask note and attachments.'}
-                                </p>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-bold text-slate-900 flex items-center justify-between">
+                                    <span>Make Subtask & Share Further</span>
+                                    {!work.share_previous && (
+                                      <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">Selected</span>
+                                    )}
+                                  </p>
+                                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                                    Assignee receives strictly this new subtask note and individual attachment. Your task/documents remain private.
+                                  </p>
+                                </div>
                               </div>
 
-                              {/* Toggle Button Group (RESTRICT / PASS) */}
-                              <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-2xs shrink-0">
-                                <button
-                                  type="button"
-                                  onClick={() => updateModalWork(uid, { share_previous: false })}
-                                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                                    !work.share_previous
-                                      ? 'bg-rose-600 text-white shadow-xs'
-                                      : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                              {/* Option 2: Share what created / what have */}
+                              <div
+                                onClick={() => updateModalWork(uid, { share_previous: true })}
+                                className={`p-3 rounded-xl border transition cursor-pointer flex items-start gap-2.5 ${
+                                  work.share_previous
+                                    ? 'bg-emerald-50/80 border-emerald-500 shadow-xs'
+                                    : 'bg-white border-slate-200 hover:bg-slate-50'
+                                }`}
+                              >
+                                <div
+                                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition ${
+                                    work.share_previous ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'
                                   }`}
-                                  title="RESTRICT: Do not pass my task or documents to this assignee"
                                 >
-                                  <span>✕ RESTRICT / STOP</span>
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => updateModalWork(uid, { share_previous: true })}
-                                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                                    work.share_previous
-                                      ? 'bg-emerald-600 text-white shadow-xs'
-                                      : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
-                                  }`}
-                                  title="PASS: Pass my task and documents to this assignee"
-                                >
-                                  <span>✓ PASS / YES</span>
-                                </button>
+                                  {work.share_previous && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-bold text-slate-900 flex items-center justify-between">
+                                    <span>Share What I Have / Created</span>
+                                    {work.share_previous && (
+                                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Selected</span>
+                                    )}
+                                  </p>
+                                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                                    Pass your full task details and documents received from above, along with this new subtask.
+                                  </p>
+                                </div>
                               </div>
                             </div>
                           </div>
