@@ -403,4 +403,71 @@ class MainTaskMultiEmployeeAssignmentTest extends TestCase
         // Aman tries to download Company_Secret.pdf directly -> 403 Forbidden!
         $this->actingAs($this->aman, 'sanctum')->get("/api/attachments/{$sharedAtt['id']}/download")->assertStatus(403);
     }
+
+    public function test_manager_can_create_task_with_direct_delegation_mode(): void
+    {
+        $sharedDoc = UploadedFile::fake()->create('DirectBrief.pdf', 200, 'application/pdf');
+
+        $response = $this->actingAs($this->manager, 'sanctum')->post('/api/tasks', [
+            'title' => 'Direct Delegation Operational Task',
+            'description' => 'Direct task pass-through to employees without subtasks.',
+            'handling_method' => 'assign',
+            'priority' => 'high',
+            'department_id' => $this->department->id,
+            'due_date' => '2026-11-25',
+            'delegation_mode' => 'direct',
+            'shared_files' => [$sharedDoc],
+            'assignees' => [$this->rohit->id, $this->aman->id],
+        ]);
+
+        $response->assertStatus(201);
+        $taskId = $response->json('data.id');
+
+        // Check both Rohit and Aman have branches copying the main task details
+        $rohitBranch = \App\Models\TaskBranch::where('task_id', $taskId)->where('owner_id', $this->rohit->id)->first();
+        $this->assertNotNull($rohitBranch);
+        $this->assertEquals('Direct Delegation Operational Task', $rohitBranch->title);
+        $this->assertEquals('Direct task pass-through to employees without subtasks.', $rohitBranch->description);
+
+        $amanBranch = \App\Models\TaskBranch::where('task_id', $taskId)->where('owner_id', $this->aman->id)->first();
+        $this->assertNotNull($amanBranch);
+        $this->assertEquals('Direct Delegation Operational Task', $amanBranch->title);
+    }
+
+    public function test_assignee_can_delegate_task_directly_further(): void
+    {
+        $sharedDoc = UploadedFile::fake()->create('OriginalDoc.pdf', 150, 'application/pdf');
+
+        // 1. Manager assigns directly to Rohit
+        $createRes = $this->actingAs($this->manager, 'sanctum')->post('/api/tasks', [
+            'title' => 'Client Migration Project',
+            'description' => 'Complete the client database migration.',
+            'handling_method' => 'assign',
+            'priority' => 'medium',
+            'department_id' => $this->department->id,
+            'due_date' => '2026-11-30',
+            'delegation_mode' => 'direct',
+            'shared_files' => [$sharedDoc],
+            'assignees' => [$this->rohit->id],
+        ]);
+        $taskId = $createRes->json('data.id');
+
+        // 2. Rohit delegates directly further to Aman (without creating custom subtasks)
+        $delegateRes = $this->actingAs($this->rohit, 'sanctum')->post("/api/tasks/{$taskId}/assignees", [
+            'delegation_mode' => 'direct',
+            'user_ids' => [$this->aman->id],
+        ]);
+        $delegateRes->assertStatus(200);
+
+        // 3. Verify Aman's branch
+        $amanBranch = \App\Models\TaskBranch::where('task_id', $taskId)->where('owner_id', $this->aman->id)->first();
+        $this->assertNotNull($amanBranch);
+        $this->assertEquals('Client Migration Project', $amanBranch->title);
+        $this->assertEquals('Complete the client database migration.', $amanBranch->description);
+
+        // Verify attachments were passed to Aman
+        $amanAttachments = \App\Models\TaskAttachment::where('task_branch_id', $amanBranch->id)->get();
+        $this->assertNotEmpty($amanAttachments);
+        $this->assertContains('OriginalDoc.pdf', $amanAttachments->pluck('file_name')->all());
+    }
 }

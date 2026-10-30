@@ -148,6 +148,7 @@ export const TaskDetailPage: React.FC = () => {
   }
 
   const [assignModalStep, setAssignModalStep] = useState<1 | 2>(1);
+  const [modalDelegationOption, setModalDelegationOption] = useState<'subtasks' | 'direct'>('subtasks');
   const [modalAssigneeWork, setModalAssigneeWork] = useState<Record<number, ModalWorkData>>({});
 
   const initModalWork = (u: any): ModalWorkData => ({
@@ -202,6 +203,7 @@ export const TaskDetailPage: React.FC = () => {
     setModalSearch('');
     setSelectedModalUserIds([]);
     setModalAssigneeWork({});
+    setModalDelegationOption('subtasks');
     setModalError('');
     setIsAssignModalOpen(true);
     if (allUsersList.length === 0) {
@@ -255,53 +257,57 @@ export const TaskDetailPage: React.FC = () => {
       if (assignModalType === 'collaborate') {
         await tasksApi.addCollaborators(task.id, selectedModalUserIds);
       } else {
-        // Validate Step 2 inputs
-        for (const uid of selectedModalUserIds) {
-          const work = modalAssigneeWork[uid];
-          const u = allUsersList.find((usr) => usr.id === uid);
-          if (!work?.title?.trim()) {
-            setModalError(`Subtask Title is required for ${u?.name || 'employee'}.`);
-            setSubmittingModal(false);
-            return;
-          }
-          if (!work?.description?.trim()) {
-            setModalError(`Please provide a note or description for ${u?.name || 'employee'}.`);
-            setSubmittingModal(false);
-            return;
-          }
-        }
-
         const formData = new FormData();
         selectedModalUserIds.forEach((uid) => {
           formData.append('user_ids[]', String(uid));
         });
 
-        selectedModalUserIds.forEach((uid, idx) => {
-          const work = modalAssigneeWork[uid] || initModalWork(allUsersList.find((u) => u.id === uid) || { name: 'Teammate' });
-          formData.append(`branches[${idx}][owner_id]`, String(uid));
-          formData.append(`branches[${idx}][mode]`, work.mode);
-          formData.append(`branches[${idx}][title]`, work.title.trim());
-          formData.append(`branches[${idx}][description]`, work.description.trim());
-          if (work.expected_result?.trim()) {
-            formData.append(`branches[${idx}][expected_result]`, work.expected_result.trim());
+        if (modalDelegationOption === 'direct') {
+          formData.append('delegation_mode', 'direct');
+        } else {
+          // Validate Step 2 inputs for subtasks
+          for (const uid of selectedModalUserIds) {
+            const work = modalAssigneeWork[uid];
+            const u = allUsersList.find((usr) => usr.id === uid);
+            if (!work?.title?.trim()) {
+              setModalError(`Subtask Title is required for ${u?.name || 'employee'}.`);
+              setSubmittingModal(false);
+              return;
+            }
+            if (!work?.description?.trim()) {
+              setModalError(`Please provide a note or description for ${u?.name || 'employee'}.`);
+              setSubmittingModal(false);
+              return;
+            }
           }
-          if (work.acceptance_criteria?.trim()) {
-            formData.append(`branches[${idx}][acceptance_criteria]`, work.acceptance_criteria.trim());
-          }
-          if (work.due_date) {
-            formData.append(`branches[${idx}][due_date]`, work.due_date);
-          }
-          formData.append(`branches[${idx}][share_previous_branch_details]`, work.share_previous ? '1' : '0');
-          formData.append(`branches[${idx}][share_main_task_details]`, work.share_previous ? '1' : '0');
-          formData.append(`branches[${idx}][can_assign_further]`, work.can_assign_further !== false ? '1' : '0');
 
-          if (work.files && work.files.length > 0) {
-            work.files.forEach((file) => {
-              formData.append(`branches[${idx}][files][]`, file);
-              formData.append(`branch_files[${uid}][]`, file);
-            });
-          }
-        });
+          selectedModalUserIds.forEach((uid, idx) => {
+            const work = modalAssigneeWork[uid] || initModalWork(allUsersList.find((u) => u.id === uid) || { name: 'Teammate' });
+            formData.append(`branches[${idx}][owner_id]`, String(uid));
+            formData.append(`branches[${idx}][mode]`, work.mode);
+            formData.append(`branches[${idx}][title]`, work.title.trim());
+            formData.append(`branches[${idx}][description]`, work.description.trim());
+            if (work.expected_result?.trim()) {
+              formData.append(`branches[${idx}][expected_result]`, work.expected_result.trim());
+            }
+            if (work.acceptance_criteria?.trim()) {
+              formData.append(`branches[${idx}][acceptance_criteria]`, work.acceptance_criteria.trim());
+            }
+            if (work.due_date) {
+              formData.append(`branches[${idx}][due_date]`, work.due_date);
+            }
+            formData.append(`branches[${idx}][share_previous_branch_details]`, work.share_previous ? '1' : '0');
+            formData.append(`branches[${idx}][share_main_task_details]`, work.share_previous ? '1' : '0');
+            formData.append(`branches[${idx}][can_assign_further]`, work.can_assign_further !== false ? '1' : '0');
+
+            if (work.files && work.files.length > 0) {
+              work.files.forEach((file) => {
+                formData.append(`branches[${idx}][files][]`, file);
+                formData.append(`branch_files[${uid}][]`, file);
+              });
+            }
+          });
+        }
 
         await tasksApi.addAssignees(task.id, formData);
       }
@@ -312,7 +318,9 @@ export const TaskDetailPage: React.FC = () => {
       setAssignModalStep(1);
       showToast(
         assignModalType === 'assign'
-          ? `Successfully assigned task to ${selectedModalUserIds.length} employee(s).`
+          ? modalDelegationOption === 'direct'
+            ? `Successfully delegated task directly to ${selectedModalUserIds.length} employee(s).`
+            : `Successfully assigned subtasks to ${selectedModalUserIds.length} employee(s).`
           : `Successfully invited ${selectedModalUserIds.length} collaborator(s).`,
         'success'
       );
@@ -2844,158 +2852,186 @@ export const TaskDetailPage: React.FC = () => {
                   </div>
                 )}
 
-                <div className="p-3.5 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 border border-blue-100 rounded-xl text-xs text-blue-900 flex items-start gap-2.5">
-                  <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold block">Independent Allocation & Peer Privacy</span>
-                    <p className="text-[11px] text-slate-600 mt-0.5">
-                      Each employee gets their own assignment card, note, and attachments. Check or uncheck
-                      <span className="font-semibold text-slate-800"> "Share previous document & description" </span>
-                      on each card to determine whether prior branch context and attachments are shared or kept strictly confidential.
-                    </p>
+                {/* Assignment Option Selector: Subtasks vs Direct Delegation */}
+                <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80 space-y-2.5">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                      Delegation Option for Selected Teammate{selectedModalUserIds.length !== 1 ? 's' : ''}:
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {/* Option 1: Create Subtasks */}
+                    <div
+                      onClick={() => setModalDelegationOption('subtasks')}
+                      className={`p-3.5 rounded-xl border-2 transition cursor-pointer flex items-start gap-3 ${
+                        modalDelegationOption === 'subtasks'
+                          ? 'bg-blue-50/80 border-blue-600 shadow-xs'
+                          : 'bg-white border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <div
+                        className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition ${
+                          modalDelegationOption === 'subtasks' ? 'border-blue-600 bg-blue-600' : 'border-slate-300'
+                        }`}
+                      >
+                        {modalDelegationOption === 'subtasks' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 flex items-center justify-between">
+                          <span>Create Subtasks for Each Teammate</span>
+                          {modalDelegationOption === 'subtasks' && (
+                            <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">Active</span>
+                          )}
+                        </p>
+                        <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                          Break down into distinct subtasks: specify custom subtask titles, instructions, due dates, and individual files.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Option 2: Delegate Task Directly */}
+                    <div
+                      onClick={() => setModalDelegationOption('direct')}
+                      className={`p-3.5 rounded-xl border-2 transition cursor-pointer flex items-start gap-3 ${
+                        modalDelegationOption === 'direct'
+                          ? 'bg-emerald-50/80 border-emerald-600 shadow-xs'
+                          : 'bg-white border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <div
+                        className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition ${
+                          modalDelegationOption === 'direct' ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'
+                        }`}
+                      >
+                        {modalDelegationOption === 'direct' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 flex items-center justify-between">
+                          <span>Delegate Task Directly (What We Have)</span>
+                          {modalDelegationOption === 'direct' && (
+                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Active</span>
+                          )}
+                        </p>
+                        <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                          Do not create subtasks. Directly pass the task and all attached documents as-is to the selected employee{selectedModalUserIds.length !== 1 ? 's' : ''}.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  {selectedModalUserIds.map((uid) => {
-                    const u = allUsersList.find((usr) => usr.id === uid) || { id: uid, name: 'Employee', email: '' };
-                    const work = modalAssigneeWork[uid] || initModalWork(u);
-
-                    return (
-                      <div
-                        key={uid}
-                        className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden transition hover:border-slate-300"
-                      >
-                        {/* Card Header */}
-                        <div className="p-3.5 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
-                              {u.name.charAt(0)}
-                            </div>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-bold text-xs text-slate-900 truncate">{u.name}</span>
-                                {u.department && (
-                                  <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-200/70 text-slate-700 font-medium">
-                                    {u.department.name}
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-[10px] text-slate-400 truncate block">{u.email}</span>
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              toggleModalUser(uid);
-                              if (selectedModalUserIds.length <= 1) {
-                                setAssignModalStep(1);
-                              }
-                            }}
-                            className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer flex items-center gap-1 text-[11px]"
-                            title="Remove assignment"
+                {/* If Direct Delegation: Confirmation Card (No subtask forms) */}
+                {modalDelegationOption === 'direct' && (
+                  <div className="bg-emerald-50/60 p-5 rounded-2xl border border-emerald-200 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Check className="w-5 h-5 text-emerald-600" />
+                      <h4 className="text-xs font-bold text-slate-900">
+                        Direct Task Delegation (No Subtasks)
+                      </h4>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      The task <strong>"{task.my_branch?.title || task.title}"</strong> and all attached documents will be passed directly as-is to the selected teammate{selectedModalUserIds.length !== 1 ? 's' : ''}:
+                    </p>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {selectedModalUserIds.map((uid) => {
+                        const u = allUsersList.find((usr) => usr.id === uid) || { id: uid, name: 'Employee', role: '' };
+                        return (
+                          <span
+                            key={uid}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-emerald-200 rounded-xl text-xs font-semibold text-slate-800 shadow-2xs"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">Remove</span>
-                          </button>
-                        </div>
+                            <span className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center font-bold">
+                              {u.name?.charAt(0) || 'E'}
+                            </span>
+                            <span>{u.name}</span>
+                            {u.department && <span className="text-[10px] text-slate-400 font-normal">({u.department.name})</span>}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[11px] text-slate-500 italic pt-1">
+                      ✓ No subtask forms required. Click "Delegate Task Directly" below to confirm and pass the task immediately.
+                    </p>
+                  </div>
+                )}
 
-                        {/* Card Form */}
-                        <div className="p-4 space-y-3.5">
-                          {/* Subtask Title & Due Date */}
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div className="sm:col-span-2 space-y-1">
-                              <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
-                                <span>Subtask / Allocation Title</span>
-                                <span className="text-rose-500">*</span>
-                              </label>
-                              <input
-                                type="text"
-                                value={work.title}
-                                onChange={(e) => updateModalWork(uid, { title: e.target.value })}
-                                placeholder="e.g. Develop APIs / UI Module"
-                                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
-                                <span>Due Date</span>
-                              </label>
-                              <input
-                                type="date"
-                                value={work.due_date}
-                                onChange={(e) => updateModalWork(uid, { due_date: e.target.value })}
-                                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
-                              />
-                            </div>
-                          </div>
+                {/* If Subtasks: Individual Work Allocation Form Cards */}
+                {modalDelegationOption === 'subtasks' && (
+                  <div className="space-y-4">
+                    {selectedModalUserIds.map((uid) => {
+                      const u = allUsersList.find((usr) => usr.id === uid) || { id: uid, name: 'Employee', email: '' };
+                      const work = modalAssigneeWork[uid] || initModalWork(u);
 
-                          {/* DELEGATION OPTION FOR FURTHER ASSIGNMENT */}
-                          <div className="space-y-1.5">
-                            <label className="text-[11px] font-bold text-slate-700 block">
-                              Delegation Option:
-                            </label>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                              {/* Option 1: Make subtask and share further */}
-                              <div
-                                onClick={() => updateModalWork(uid, { share_previous: false })}
-                                className={`p-3 rounded-xl border transition cursor-pointer flex items-start gap-2.5 ${
-                                  !work.share_previous
-                                    ? 'bg-blue-50/80 border-blue-500 shadow-xs'
-                                    : 'bg-white border-slate-200 hover:bg-slate-50'
-                                }`}
-                              >
-                                <div
-                                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition ${
-                                    !work.share_previous ? 'border-blue-600 bg-blue-600' : 'border-slate-300'
-                                  }`}
-                                >
-                                  {!work.share_previous && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-xs font-bold text-slate-900 flex items-center justify-between">
-                                    <span>Make Subtask & Share Further</span>
-                                    {!work.share_previous && (
-                                      <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">Selected</span>
-                                    )}
-                                  </p>
-                                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
-                                    Assignee receives strictly this new subtask note and individual attachment. Your task/documents remain private.
-                                  </p>
-                                </div>
+                      return (
+                        <div
+                          key={uid}
+                          className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden transition hover:border-slate-300"
+                        >
+                          {/* Card Header */}
+                          <div className="p-3.5 bg-slate-50/70 border-b border-slate-100 flex items-center justify-between">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">
+                                {u.name.charAt(0)}
                               </div>
-
-                              {/* Option 2: Share what created / what have */}
-                              <div
-                                onClick={() => updateModalWork(uid, { share_previous: true })}
-                                className={`p-3 rounded-xl border transition cursor-pointer flex items-start gap-2.5 ${
-                                  work.share_previous
-                                    ? 'bg-emerald-50/80 border-emerald-500 shadow-xs'
-                                    : 'bg-white border-slate-200 hover:bg-slate-50'
-                                }`}
-                              >
-                                <div
-                                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition ${
-                                    work.share_previous ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'
-                                  }`}
-                                >
-                                  {work.share_previous && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-bold text-xs text-slate-900 truncate">{u.name}</span>
+                                  {u.department && (
+                                    <span className="px-2 py-0.5 rounded-full text-[10px] bg-slate-200/70 text-slate-700 font-medium">
+                                      {u.department.name}
+                                    </span>
+                                  )}
                                 </div>
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-xs font-bold text-slate-900 flex items-center justify-between">
-                                    <span>Share What I Have / Created</span>
-                                    {work.share_previous && (
-                                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Selected</span>
-                                    )}
-                                  </p>
-                                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
-                                    Pass your full task details and documents received from above, along with this new subtask.
-                                  </p>
-                                </div>
+                                <span className="text-[10px] text-slate-400 truncate block">{u.email}</span>
                               </div>
                             </div>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                toggleModalUser(uid);
+                                if (selectedModalUserIds.length <= 1) {
+                                  setAssignModalStep(1);
+                                }
+                              }}
+                              className="text-slate-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer flex items-center gap-1 text-[11px]"
+                              title="Remove assignment"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span className="hidden sm:inline">Remove</span>
+                            </button>
                           </div>
+
+                          {/* Card Form */}
+                          <div className="p-4 space-y-3.5">
+                            {/* Subtask Title & Due Date */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                              <div className="sm:col-span-2 space-y-1">
+                                <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                                  <span>Subtask / Allocation Title</span>
+                                  <span className="text-rose-500">*</span>
+                                </label>
+                                <input
+                                  type="text"
+                                  value={work.title}
+                                  onChange={(e) => updateModalWork(uid, { title: e.target.value })}
+                                  placeholder="e.g. Develop APIs / UI Module"
+                                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                                  <span>Due Date</span>
+                                </label>
+                                <input
+                                  type="date"
+                                  value={work.due_date}
+                                  onChange={(e) => updateModalWork(uid, { due_date: e.target.value })}
+                                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                                />
+                              </div>
+                            </div>
 
                           {/* Individual Note & Description */}
                           <div className="space-y-1">
@@ -3117,8 +3153,9 @@ export const TaskDetailPage: React.FC = () => {
                     );
                   })}
                 </div>
-              </div>
-            ) : (
+              )}
+            </div>
+          ) : (
               /* Step 1 User Selection (or Collaborate Selection) */
               <div className="p-5 space-y-4 overflow-y-auto flex-1">
                 {modalError && (
@@ -3280,22 +3317,32 @@ export const TaskDetailPage: React.FC = () => {
                   disabled={submittingModal || selectedModalUserIds.length === 0}
                   onClick={handleAssignModalSubmit}
                   className={`px-5 py-2 rounded-xl text-xs font-bold text-white shadow-xs transition flex items-center gap-1.5 cursor-pointer ${
-                    assignModalType === 'assign'
-                      ? 'bg-sky-600 hover:bg-sky-700 disabled:bg-sky-300'
-                      : 'bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300'
+                    assignModalType === 'collaborate'
+                      ? 'bg-purple-600 hover:bg-purple-700 disabled:bg-purple-300'
+                      : modalDelegationOption === 'direct' && assignModalStep === 2
+                      ? 'bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300'
+                      : 'bg-sky-600 hover:bg-sky-700 disabled:bg-sky-300'
                   }`}
                 >
                   {submittingModal ? (
                     'Saving...'
                   ) : assignModalType === 'assign' && assignModalStep === 1 ? (
                     <>
-                      <span>Next: Configure Work & Attachments ({selectedModalUserIds.length})</span>
+                      <span>Next: Choose Option & Work ({selectedModalUserIds.length})</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </>
+                  ) : assignModalType === 'assign' && modalDelegationOption === 'direct' ? (
+                    <>
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Delegate Task Directly ({selectedModalUserIds.length})</span>
+                    </>
+                  ) : assignModalType === 'assign' ? (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Create Subtasks & Assign ({selectedModalUserIds.length})</span>
+                    </>
                   ) : (
-                    <span>
-                      Confirm {assignModalType === 'assign' ? 'Assignment' : 'Invitation'} ({selectedModalUserIds.length})
-                    </span>
+                    <span>Confirm Invitation ({selectedModalUserIds.length})</span>
                   )}
                 </button>
               </div>

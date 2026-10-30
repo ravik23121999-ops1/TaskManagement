@@ -347,9 +347,10 @@ class TaskController extends Controller
             } elseif ($task->handling_method === 'assign') {
                 $branchesData = (array) $request->input('branches', []);
                 $assignees = (array) $request->input('assignees', []);
+                $isDirectDelegation = $request->input('delegation_mode') === 'direct';
 
-                // If structured branch specifications were provided per assignee
-                if (!empty($branchesData)) {
+                // If structured subtask specifications were provided per assignee
+                if (!empty($branchesData) && !$isDirectDelegation) {
                     // Filter out creator - assign is strictly for delegating to other employees
                     $validBranches = array_values(array_filter($branchesData, function ($b) use ($user) {
                         return !empty($b['owner_id']) && (int)$b['owner_id'] !== (int)$user->id;
@@ -462,13 +463,25 @@ class TaskController extends Controller
                     }
 
                     foreach ($assignees as $assigneeId) {
-                        $branch = $task->branches()->create([
+                        $branchAttributes = [
                             'title' => $task->title,
                             'description' => $task->description,
+                            'expected_result' => $task->expected_result,
+                            'acceptance_criteria' => $task->acceptance_criteria,
                             'owner_id' => $assigneeId,
+                            'start_date' => $task->start_date,
                             'status' => 'pending',
                             'due_date' => $task->due_date,
-                        ]);
+                        ];
+
+                        if (Schema::hasColumn('task_branches', 'share_parent_details')) {
+                            $branchAttributes['share_parent_details'] = true;
+                        }
+                        if (Schema::hasColumn('task_branches', 'can_assign_further')) {
+                            $branchAttributes['can_assign_further'] = true;
+                        }
+
+                        $branch = $task->branches()->create($branchAttributes);
 
                         $branch->assignments()->create([
                             'assigned_to_id' => $assigneeId,
@@ -581,13 +594,25 @@ class TaskController extends Controller
                     }
                 } elseif (!empty($assignees)) {
                     foreach ($assignees as $assigneeId) {
-                        $branch = $task->branches()->create([
+                        $branchAttributes = [
                             'title' => $task->title,
                             'description' => $task->description,
+                            'expected_result' => $task->expected_result,
+                            'acceptance_criteria' => $task->acceptance_criteria,
                             'owner_id' => $assigneeId,
+                            'start_date' => $task->start_date,
                             'status' => 'pending',
                             'due_date' => $task->due_date,
-                        ]);
+                        ];
+
+                        if (Schema::hasColumn('task_branches', 'share_parent_details')) {
+                            $branchAttributes['share_parent_details'] = true;
+                        }
+                        if (Schema::hasColumn('task_branches', 'can_assign_further')) {
+                            $branchAttributes['can_assign_further'] = true;
+                        }
+
+                        $branch = $task->branches()->create($branchAttributes);
 
                         $branch->assignments()->create([
                             'assigned_to_id' => $assigneeId,
@@ -1007,11 +1032,12 @@ class TaskController extends Controller
         $addedCount = 0;
         $branchesData = (array) $request->input('branches', []);
         $userBranch = $task->branches()->where('owner_id', $user->id)->first();
+        $isDirectDelegation = $request->input('delegation_mode') === 'direct';
 
         foreach ($targetUserIds as $idx => $assigneeId) {
             $bData = collect($branchesData)->firstWhere('owner_id', $assigneeId) ?: ($branchesData[$idx] ?? []);
             $mode = $bData['mode'] ?? $request->input('mode', 'new_subtask');
-            $sharePrevious = filter_var($bData['share_previous_branch_details'] ?? $request->input('share_previous_branch_details', true), FILTER_VALIDATE_BOOLEAN);
+            $sharePrevious = $isDirectDelegation || filter_var($bData['share_previous_branch_details'] ?? $request->input('share_previous_branch_details', true), FILTER_VALIDATE_BOOLEAN);
             $canAssignFurther = filter_var($bData['can_assign_further'] ?? true, FILTER_VALIDATE_BOOLEAN);
 
             // Avoid duplicate active branch with identical title for the same user
@@ -1086,26 +1112,35 @@ class TaskController extends Controller
                 continue;
             }
 
-            // MODE B: Create New Subtask Branch (Standard for Creator, Admin, and Subtask Split)
-            $newNote = !empty($bData['description']) ? trim($bData['description']) : '';
-            if ($sharePrevious) {
-                $baseDesc = $userBranch ? $userBranch->description : $task->description;
-                $branchDesc = $newNote
-                    ? ($baseDesc ? ($baseDesc . "\n\n--- Subtask Note from {$user->name} ---\n" . $newNote) : $newNote)
-                    : ($baseDesc ?: $task->title);
-                $branchExpected = !empty($bData['expected_result']) ? trim($bData['expected_result']) : ($userBranch?->expected_result ?? $task->expected_result);
-                $branchCriteria = !empty($bData['acceptance_criteria']) ? trim($bData['acceptance_criteria']) : ($userBranch?->acceptance_criteria ?? $task->acceptance_criteria);
+            // MODE B: Direct Delegation OR Create New Subtask Branch
+            if ($isDirectDelegation) {
+                $branchTitle = $userBranch ? $userBranch->title : $task->title;
+                $branchDesc = $userBranch ? $userBranch->description : $task->description;
+                $branchExpected = $userBranch ? $userBranch->expected_result : $task->expected_result;
+                $branchCriteria = $userBranch ? $userBranch->acceptance_criteria : $task->acceptance_criteria;
+                $branchStart = $userBranch ? $userBranch->start_date : $task->start_date;
+                $branchDue = $userBranch ? $userBranch->due_date : $task->due_date;
             } else {
-                $branchDesc = $newNote ?: (!empty($bData['title']) ? trim($bData['title']) : "Subtask assigned by {$user->name}");
-                $branchExpected = !empty($bData['expected_result']) ? trim($bData['expected_result']) : null;
-                $branchCriteria = !empty($bData['acceptance_criteria']) ? trim($bData['acceptance_criteria']) : null;
-            }
+                $newNote = !empty($bData['description']) ? trim($bData['description']) : '';
+                if ($sharePrevious) {
+                    $baseDesc = $userBranch ? $userBranch->description : $task->description;
+                    $branchDesc = $newNote
+                        ? ($baseDesc ? ($baseDesc . "\n\n--- Subtask Note from {$user->name} ---\n" . $newNote) : $newNote)
+                        : ($baseDesc ?: $task->title);
+                    $branchExpected = !empty($bData['expected_result']) ? trim($bData['expected_result']) : ($userBranch?->expected_result ?? $task->expected_result);
+                    $branchCriteria = !empty($bData['acceptance_criteria']) ? trim($bData['acceptance_criteria']) : ($userBranch?->acceptance_criteria ?? $task->acceptance_criteria);
+                } else {
+                    $branchDesc = $newNote ?: (!empty($bData['title']) ? trim($bData['title']) : "Subtask assigned by {$user->name}");
+                    $branchExpected = !empty($bData['expected_result']) ? trim($bData['expected_result']) : null;
+                    $branchCriteria = !empty($bData['acceptance_criteria']) ? trim($bData['acceptance_criteria']) : null;
+                }
 
-            $branchTitle = !empty($bData['title'])
-                ? trim($bData['title'])
-                : ($userBranch ? "{$userBranch->title} - Subtask" : "{$task->title} - Subtask");
-            $branchStart = !empty($bData['start_date']) ? now()->parse($bData['start_date']) : now();
-            $branchDue = !empty($bData['due_date']) ? now()->parse($bData['due_date']) : ($userBranch?->due_date ?? $task->due_date);
+                $branchTitle = !empty($bData['title'])
+                    ? trim($bData['title'])
+                    : ($userBranch ? "{$userBranch->title} - Subtask" : "{$task->title} - Subtask");
+                $branchStart = !empty($bData['start_date']) ? now()->parse($bData['start_date']) : now();
+                $branchDue = !empty($bData['due_date']) ? now()->parse($bData['due_date']) : ($userBranch?->due_date ?? $task->due_date);
+            }
 
             $parentAssignment = $userBranch?->assignments()->where('is_current', true)->first();
 

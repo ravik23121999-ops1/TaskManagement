@@ -21,6 +21,7 @@ import {
   Copy,
   Trash2,
   Edit3,
+  Send,
 } from 'lucide-react';
 
 interface IndividualAssignment {
@@ -64,6 +65,9 @@ export const CreateTaskPage: React.FC = () => {
 
   // Assign mode: 'single' for 1 employee, 'multiple' for 2+ employees
   const [assignMode, setAssignMode] = useState<'single' | 'multiple'>('single');
+
+  // Delegation option: 'subtasks' (create subtasks) or 'direct' (delegate directly without subtasks)
+  const [delegationOption, setDelegationOption] = useState<'subtasks' | 'direct'>('subtasks');
 
   // Selected Users
   const [selectedUsers, setSelectedUsers] = useState<any[]>([]);
@@ -329,20 +333,22 @@ export const CreateTaskPage: React.FC = () => {
           setError('Multiple Assignees mode requires selecting 2 or more employees.');
           return;
         }
-        // Validate individual assignment fields
-        for (const u of selectedUsers) {
-          const work = assigneeWork[u.id];
-          if (!work || !work.title.trim()) {
-            setError(`Subtask Title is required for ${u.name}.`);
-            return;
-          }
-          if (!work.description.trim()) {
-            setError(`Individual Description is required for ${u.name}.`);
-            return;
-          }
-          if (!work.due_date && !dueDate) {
-            setError(`Due Date is required for ${u.name}.`);
-            return;
+        // Validate individual assignment fields if creating subtasks
+        if (delegationOption === 'subtasks') {
+          for (const u of selectedUsers) {
+            const work = assigneeWork[u.id];
+            if (!work || !work.title.trim()) {
+              setError(`Subtask Title is required for ${u.name}.`);
+              return;
+            }
+            if (!work.description.trim()) {
+              setError(`Individual Description is required for ${u.name}.`);
+              return;
+            }
+            if (!work.due_date && !dueDate) {
+              setError(`Due Date is required for ${u.name}.`);
+              return;
+            }
           }
         }
       } else if (handlingMethod === 'collaborate') {
@@ -350,11 +356,13 @@ export const CreateTaskPage: React.FC = () => {
           setError('Please select at least one collaborator to invite.');
           return;
         }
-        for (const u of selectedUsers) {
-          const work = assigneeWork[u.id];
-          if (!work || !work.title.trim()) {
-            setError(`Subtask Title is required for ${u.name}.`);
-            return;
+        if (delegationOption === 'subtasks') {
+          for (const u of selectedUsers) {
+            const work = assigneeWork[u.id];
+            if (!work || !work.title.trim()) {
+              setError(`Subtask Title is required for ${u.name}.`);
+              return;
+            }
           }
         }
       }
@@ -393,38 +401,39 @@ export const CreateTaskPage: React.FC = () => {
           }
         });
 
-        selectedUsers.forEach((u, idx) => {
-          const work = assigneeWork[u.id] || initAssignmentForUser(u);
-          formData.append(`branches[${idx}][owner_id]`, String(u.id));
-          formData.append(`branches[${idx}][title]`, work.title.trim() || `${u.name}'s Scope`);
-          formData.append(`branches[${idx}][description]`, work.description.trim() || description.trim());
-          if (work.expected_result.trim()) {
-            formData.append(`branches[${idx}][expected_result]`, work.expected_result.trim());
-          }
-          if (work.acceptance_criteria.trim()) {
-            formData.append(`branches[${idx}][acceptance_criteria]`, work.acceptance_criteria.trim());
-          }
-          if (work.start_date) {
-            formData.append(`branches[${idx}][start_date]`, work.start_date);
-          }
-          if (work.due_date || dueDate) {
-            formData.append(`branches[${idx}][due_date]`, work.due_date || dueDate);
-          }
-          formData.append(`branches[${idx}][share_main_task_details]`, work.share_main_task_details ? '1' : '0');
-          formData.append(`branches[${idx}][share_previous_branch_details]`, work.share_main_task_details ? '1' : '0');
-          formData.append(`branches[${idx}][can_assign_further]`, work.can_assign_further !== false ? '1' : '0');
-          if (work.copy_shared_attachments) {
-            formData.append(`branches[${idx}][copy_shared_attachments]`, '1');
-          }
+        if (delegationOption === 'direct') {
+          formData.append('delegation_mode', 'direct');
+        } else {
+          selectedUsers.forEach((u, idx) => {
+            const work = assigneeWork[u.id] || initAssignmentForUser(u);
+            formData.append(`branches[${idx}][owner_id]`, String(u.id));
+            formData.append(`branches[${idx}][title]`, work.title.trim() || `${u.name}'s Scope`);
+            formData.append(`branches[${idx}][description]`, work.description.trim() || description.trim());
+            if (work.expected_result.trim()) {
+              formData.append(`branches[${idx}][expected_result]`, work.expected_result.trim());
+            }
+            if (work.acceptance_criteria.trim()) {
+              formData.append(`branches[${idx}][acceptance_criteria]`, work.acceptance_criteria.trim());
+            }
+            if (work.start_date) {
+              formData.append(`branches[${idx}][start_date]`, work.start_date);
+            }
+            if (work.due_date || dueDate) {
+              formData.append(`branches[${idx}][due_date]`, work.due_date || dueDate);
+            }
+            if (work.copy_shared_attachments) {
+              formData.append(`branches[${idx}][copy_shared_attachments]`, '1');
+            }
 
-          // Individual branch files
-          if (work.files && work.files.length > 0) {
-            work.files.forEach((bf) => {
-              formData.append(`branches[${idx}][files][]`, bf);
-              formData.append(`branch_files[${u.id}][]`, bf);
-            });
-          }
-        });
+            // Individual branch files
+            if (work.files && work.files.length > 0) {
+              work.files.forEach((bf) => {
+                formData.append(`branches[${idx}][files][]`, bf);
+                formData.append(`branch_files[${u.id}][]`, bf);
+              });
+            }
+          });
+        }
       }
 
       const result = await tasksApi.create(formData);
@@ -985,43 +994,146 @@ export const CreateTaskPage: React.FC = () => {
               )}
 
               {/* ======================================================== */}
-              {/* INDIVIDUAL WORK ALLOCATION (SUBTASKS)                   */}
+              {/* ASSIGNMENT MODE: SUBTASKS VS DIRECT DELEGATION           */}
               {/* ======================================================== */}
               {selectedUsers.length > 0 && (
-                <div className="pt-6 border-t border-slate-100 space-y-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                          <Sparkles className="w-4 h-4 text-blue-600" />
-                          <span>Individual Work Allocation (Subtasks)</span>
-                        </h3>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                          <Lock className="w-3 h-3" />
-                          <span>Strict Peer Isolation</span>
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 mt-1">
-                        Each employee receives separate work instructions, private attachments, and deliverables. They will never see each other's work or files.
-                      </p>
+                <div className="pt-6 border-t border-slate-100 space-y-5">
+                  <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80 space-y-2.5">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <span className="text-xs font-bold text-slate-800 uppercase tracking-wider block">
+                        Assignment Option for Selected Employee{selectedUsers.length !== 1 ? 's' : ''}:
+                      </span>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          selectedUsers.forEach((u) => handleCopySharedInstructions(u.id));
-                        }}
-                        className="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer"
-                        title="Copy main task description & criteria to all"
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {/* Option 1: Create Subtasks */}
+                      <div
+                        onClick={() => setDelegationOption('subtasks')}
+                        className={`p-3.5 rounded-xl border-2 transition cursor-pointer flex items-start gap-3 ${
+                          delegationOption === 'subtasks'
+                            ? 'bg-blue-50/80 border-blue-600 shadow-xs'
+                            : 'bg-white border-slate-200 hover:border-slate-300'
+                        }`}
                       >
-                        Copy Shared to All
-                      </button>
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition ${
+                            delegationOption === 'subtasks' ? 'border-blue-600 bg-blue-600' : 'border-slate-300'
+                          }`}
+                        >
+                          {delegationOption === 'subtasks' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-900 flex items-center justify-between">
+                            <span>Create Subtasks for Each Employee</span>
+                            {delegationOption === 'subtasks' && (
+                              <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">Active</span>
+                            )}
+                          </p>
+                          <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                            Allocate separate work: provide distinct subtask titles, individual descriptions, due dates, and attachments for each employee.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Option 2: Delegate Directly (What Was Created) */}
+                      <div
+                        onClick={() => setDelegationOption('direct')}
+                        className={`p-3.5 rounded-xl border-2 transition cursor-pointer flex items-start gap-3 ${
+                          delegationOption === 'direct'
+                            ? 'bg-emerald-50/80 border-emerald-600 shadow-xs'
+                            : 'bg-white border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <div
+                          className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition ${
+                            delegationOption === 'direct' ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'
+                          }`}
+                        >
+                          {delegationOption === 'direct' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-900 flex items-center justify-between">
+                            <span>Delegate Task Directly (What Created)</span>
+                            {delegationOption === 'direct' && (
+                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Active</span>
+                            )}
+                          </p>
+                          <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                            Do not create subtasks. Directly pass the main task and all shared documents as-is to the selected employee{selectedUsers.length !== 1 ? 's' : ''}.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Dynamic Assignment Cards for each employee */}
-                  <div className="space-y-5">
+                  {/* If Direct Delegation: Confirmation Card (No subtask form needed) */}
+                  {delegationOption === 'direct' && (
+                    <div className="bg-emerald-50/60 p-5 rounded-2xl border border-emerald-200 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Check className="w-5 h-5 text-emerald-600" />
+                        <h4 className="text-xs font-bold text-slate-900">
+                          Direct Task Delegation (No Subtasks)
+                        </h4>
+                      </div>
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        The main task <strong>"{title || 'Untitled Task'}"</strong> and all shared documents will be delegated directly to the selected employee{selectedUsers.length !== 1 ? 's' : ''}:
+                      </p>
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {selectedUsers.map((u) => (
+                          <span
+                            key={u.id}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-emerald-200 rounded-xl text-xs font-semibold text-slate-800 shadow-2xs"
+                          >
+                            <span className="w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] flex items-center justify-center font-bold">
+                              {u.name.charAt(0)}
+                            </span>
+                            <span>{u.name}</span>
+                            <span className="text-[10px] text-slate-400 font-normal">({u.role?.replace('_', ' ')})</span>
+                          </span>
+                        ))}
+                      </div>
+                      <p className="text-[11px] text-slate-500 italic pt-1">
+                        ✓ No subtask forms required. Click "Next: Review & Submit" to verify and create the task.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* If Subtasks Option: Render Individual Work Allocation */}
+                  {delegationOption === 'subtasks' && (
+                    <div className="space-y-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
+                              <Sparkles className="w-4 h-4 text-blue-600" />
+                              <span>Individual Work Allocation (Subtasks)</span>
+                            </h3>
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                              <Lock className="w-3 h-3" />
+                              <span>Strict Peer Isolation</span>
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 mt-1">
+                            Each employee receives separate work instructions, private attachments, and deliverables. They will never see each other's work or files.
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              selectedUsers.forEach((u) => handleCopySharedInstructions(u.id));
+                            }}
+                            className="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer"
+                            title="Copy main task description & criteria to all"
+                          >
+                            Copy Shared to All
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Dynamic Assignment Cards for each employee */}
+                      <div className="space-y-5">
                     {selectedUsers.map((u, idx) => {
                       const work = assigneeWork[u.id] || initAssignmentForUser(u);
 
@@ -1279,6 +1391,8 @@ export const CreateTaskPage: React.FC = () => {
               )}
             </div>
           )}
+            </div>
+          )}
 
           {/* Footer Actions */}
           <div className="flex justify-between pt-4 border-t border-slate-100">
@@ -1418,8 +1532,59 @@ export const CreateTaskPage: React.FC = () => {
             )}
           </div>
 
-          {/* Individual Employee Assignments Summary */}
+          {/* Employee Assignments / Delegation Summary */}
           {handlingMethod !== 'work_alone' && selectedUsers.length > 0 && (
+            delegationOption === 'direct' ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <Send className="w-4 h-4 text-emerald-600" />
+                      <span>Direct Task Delegation ({selectedUsers.length} Assignee{selectedUsers.length !== 1 ? 's' : ''})</span>
+                    </h3>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      The main task scope and all shared documents will be delegated directly to the selected employee{selectedUsers.length !== 1 ? 's' : ''} without creating subtasks.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(2)}
+                    className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Change</span>
+                  </button>
+                </div>
+
+                <div className="p-4 bg-emerald-50/50 border border-emerald-200 rounded-2xl space-y-3">
+                  <div className="text-xs font-bold text-slate-800">
+                    Selected Teammates:
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedUsers.map((u) => (
+                      <div
+                        key={u.id}
+                        className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-emerald-200 rounded-xl text-xs font-medium text-slate-800 shadow-2xs"
+                      >
+                        <span className="w-6 h-6 rounded-full bg-emerald-600 text-white text-xs flex items-center justify-center font-bold">
+                          {u.name.charAt(0)}
+                        </span>
+                        <div>
+                          <div className="font-bold text-slate-900">{u.name}</div>
+                          <div className="text-[10px] text-slate-400">
+                            {u.role?.replace('_', ' ')} {u.department ? `• ${u.department.name}` : ''}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-[11px] text-emerald-800 pt-2 border-t border-emerald-200/60 flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Each assignee will directly receive the full task scope, due date, deliverables, and shared attachments.</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -1535,6 +1700,7 @@ export const CreateTaskPage: React.FC = () => {
                 })}
               </div>
             </div>
+            )
           )}
 
           {/* Footer Actions */}
