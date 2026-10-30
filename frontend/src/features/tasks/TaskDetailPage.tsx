@@ -2903,44 +2903,6 @@ export const TaskDetailPage: React.FC = () => {
 
                         {/* Card Form */}
                         <div className="p-4 space-y-3.5">
-                          {/* Assignment Method / Mode Selection (if user owns a branch) */}
-                          {task.my_branch && (
-                            <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 flex items-center justify-between flex-wrap gap-2 text-xs">
-                              <div>
-                                <span className="font-semibold text-slate-700 block">Assignment Action:</span>
-                                <span className="text-[10px] text-slate-400">
-                                  {work.mode === 'reassign'
-                                    ? 'Delegate/Forward your entire branch to this employee'
-                                    : 'Create an independent subtask branch under your supervision'}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-1.5 bg-white p-1 rounded-lg border border-slate-200">
-                                <button
-                                  type="button"
-                                  onClick={() => updateModalWork(uid, { mode: 'new_subtask' })}
-                                  className={`px-2.5 py-1 text-xs rounded-md font-semibold transition cursor-pointer ${
-                                    work.mode === 'new_subtask'
-                                      ? 'bg-blue-600 text-white shadow-xs'
-                                      : 'text-slate-600 hover:bg-slate-50'
-                                  }`}
-                                >
-                                  + Subtask Branch
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => updateModalWork(uid, { mode: 'reassign' })}
-                                  className={`px-2.5 py-1 text-xs rounded-md font-semibold transition cursor-pointer ${
-                                    work.mode === 'reassign'
-                                      ? 'bg-amber-600 text-white shadow-xs'
-                                      : 'text-slate-600 hover:bg-slate-50'
-                                  }`}
-                                >
-                                  Forward My Branch
-                                </button>
-                              </div>
-                            </div>
-                          )}
-
                           {/* Subtask Title & Due Date */}
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div className="sm:col-span-2 space-y-1">
@@ -2969,7 +2931,7 @@ export const TaskDetailPage: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* TOGGLE: PERMISSION TO SHARE WORK & DOCUMENTS FROM ABOVE BRANCH */}
+                          {/* TOGGLE: PASS MY TASK WITH SUBTASK OR RESTRICT */}
                           <div
                             className={`p-3.5 rounded-2xl border transition-all duration-150 ${
                               work.share_previous
@@ -2981,7 +2943,7 @@ export const TaskDetailPage: React.FC = () => {
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <span className="font-bold text-xs text-slate-900">
-                                    Permission: Share Work & Documents Got from Above Branch:
+                                    Pass My Task With Subtask:
                                   </span>
                                   <span
                                     className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
@@ -2990,17 +2952,17 @@ export const TaskDetailPage: React.FC = () => {
                                         : 'bg-rose-600 text-white'
                                     }`}
                                   >
-                                    {work.share_previous ? '✓ PASS / YES (Shared)' : '✕ STOP / NO (Private)'}
+                                    {work.share_previous ? '✓ PASS / YES' : '✕ RESTRICT / STOP'}
                                   </span>
                                 </div>
                                 <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
                                   {work.share_previous
-                                    ? '✓ PASS (YES): Downstream assignee will receive what you got from your above branch/assigner, alongside this new subtask note and attachment.'
-                                    : '✕ STOP (NO): Stopped! What you got from your above branch is confidential. Downstream assignee will ONLY receive this new subtask note and attachment.'}
+                                    ? '✓ PASS: My task details and documents will be passed to this assignee along with their new subtask note and attachments.'
+                                    : '✕ RESTRICT: Restricted! My task details and documents are NOT passed. This assignee will ONLY receive their new subtask note and attachments.'}
                                 </p>
                               </div>
 
-                              {/* Toggle Button Group (STOP / PASS) */}
+                              {/* Toggle Button Group (RESTRICT / PASS) */}
                               <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-2xs shrink-0">
                                 <button
                                   type="button"
@@ -3010,9 +2972,9 @@ export const TaskDetailPage: React.FC = () => {
                                       ? 'bg-rose-600 text-white shadow-xs'
                                       : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
                                   }`}
-                                  title="STOP: Do not provide above branch work or documents to this assignee"
+                                  title="RESTRICT: Do not pass my task or documents to this assignee"
                                 >
-                                  <span>✕ STOP / NO</span>
+                                  <span>✕ RESTRICT / STOP</span>
                                 </button>
                                 <button
                                   type="button"
@@ -3022,7 +2984,7 @@ export const TaskDetailPage: React.FC = () => {
                                       ? 'bg-emerald-600 text-white shadow-xs'
                                       : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
                                   }`}
-                                  title="PASS: Provide above branch work and documents to this assignee"
+                                  title="PASS: Pass my task and documents to this assignee"
                                 >
                                   <span>✓ PASS / YES</span>
                                 </button>

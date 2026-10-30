@@ -1119,7 +1119,7 @@ export const CreateTaskPage: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* TOGGLE: PERMISSION TO SHARE ASSIGNER / MAIN TASK WORK & DOCUMENTS */}
+                          {/* TOGGLE: PASS MAIN TASK WITH SUBTASK OR RESTRICT */}
                           <div
                             className={`p-3.5 rounded-2xl border transition-all duration-150 ${
                               work.share_main_task_details
@@ -1131,7 +1131,7 @@ export const CreateTaskPage: React.FC = () => {
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <span className="font-bold text-xs text-slate-900">
-                                    Permission: Share Task & Documents from Assigner:
+                                    Pass Main Task With Subtask:
                                   </span>
                                   <span
                                     className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
@@ -1140,17 +1140,17 @@ export const CreateTaskPage: React.FC = () => {
                                         : 'bg-rose-600 text-white'
                                     }`}
                                   >
-                                    {work.share_main_task_details ? '✓ PASS / YES (Shared)' : '✕ STOP / NO (Private)'}
+                                    {work.share_main_task_details ? '✓ PASS / YES' : '✕ RESTRICT / STOP'}
                                   </span>
                                 </div>
                                 <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
                                   {work.share_main_task_details
-                                    ? '✓ PASS (YES): Assignee will receive the main task details and shared documents from the assigner, alongside their new subtask note and attachments.'
-                                    : '✕ STOP (NO): Stopped! Previous documents and assigner instructions remain confidential. Assignee ONLY sees their new subtask note and attachments.'}
+                                    ? '✓ PASS: Main task details and shared documents will be passed to this assignee along with their subtask note and attachments.'
+                                    : '✕ RESTRICT: Restricted! Main task details and shared documents are NOT passed. This assignee will ONLY receive their new subtask note and attachments.'}
                                 </p>
                               </div>
 
-                              {/* Toggle Button Group (STOP / PASS) */}
+                              {/* Toggle Button Group (RESTRICT / PASS) */}
                               <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-2xs shrink-0">
                                 <button
                                   type="button"
@@ -1165,9 +1165,9 @@ export const CreateTaskPage: React.FC = () => {
                                       ? 'bg-rose-600 text-white shadow-xs'
                                       : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
                                   }`}
-                                  title="STOP: Do not provide above task or documents to this assignee"
+                                  title="RESTRICT: Do not pass main task or documents to this assignee"
                                 >
-                                  <span>✕ STOP / NO</span>
+                                  <span>✕ RESTRICT / STOP</span>
                                 </button>
                                 <button
                                   type="button"
@@ -1182,7 +1182,7 @@ export const CreateTaskPage: React.FC = () => {
                                       ? 'bg-emerald-600 text-white shadow-xs'
                                       : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
                                   }`}
-                                  title="PASS: Provide above task and documents to this assignee"
+                                  title="PASS: Pass main task and documents to this assignee"
                                 >
                                   <span>✓ PASS / YES</span>
                                 </button>
@@ -1562,7 +1562,7 @@ export const CreateTaskPage: React.FC = () => {
                         </p>
                       </div>
 
-                      {/* TOGGLE ON REVIEW & SUBMIT: PERMISSION TO SHARE ASSIGNER WORK & DOCUMENTS */}
+                      {/* TOGGLE ON REVIEW & SUBMIT: PASS MAIN TASK WITH SUBTASK OR RESTRICT */}
                       <div
                         className={`p-3.5 rounded-2xl border transition-all duration-150 mt-3 ${
                           work.share_main_task_details
@@ -1574,7 +1574,7 @@ export const CreateTaskPage: React.FC = () => {
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="font-bold text-xs text-slate-900">
-                                Permission: Share Task & Documents from Assigner:
+                                Pass Main Task With Subtask:
                               </span>
                               <span
                                 className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
@@ -1583,17 +1583,17 @@ export const CreateTaskPage: React.FC = () => {
                                     : 'bg-rose-600 text-white'
                                 }`}
                               >
-                                {work.share_main_task_details ? '✓ PASS / YES (Shared)' : '✕ STOP / NO (Private)'}
+                                {work.share_main_task_details ? '✓ PASS / YES' : '✕ RESTRICT / STOP'}
                               </span>
                             </div>
                             <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
                               {work.share_main_task_details
-                                ? '✓ PASS (YES): Assignee will receive the main task details and shared documents from the assigner, alongside their new subtask note and attachments.'
-                                : '✕ STOP (NO): Stopped! Previous documents and assigner instructions remain confidential. Assignee ONLY sees their new subtask note and attachments.'}
+                                ? '✓ PASS: Main task details and shared documents will be passed to this assignee along with their subtask note and attachments.'
+                                : '✕ RESTRICT: Restricted! Main task details and shared documents are NOT passed. This assignee will ONLY receive their new subtask note and attachments.'}
                             </p>
                           </div>
 
-                          {/* Interactive Toggle Switch Button (STOP / PASS) */}
+                          {/* Interactive Toggle Switch Button (RESTRICT / PASS) */}
                           <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-2xs shrink-0">
                             <button
                               type="button"
@@ -1608,9 +1608,9 @@ export const CreateTaskPage: React.FC = () => {
                                   ? 'bg-rose-600 text-white shadow-xs'
                                   : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
                               }`}
-                              title="STOP: Do not provide above task or documents to this assignee"
+                              title="RESTRICT: Do not pass main task or documents to this assignee"
                             >
-                              <span>✕ STOP / NO</span>
+                              <span>✕ RESTRICT / STOP</span>
                             </button>
                             <button
                               type="button"
@@ -1625,7 +1625,7 @@ export const CreateTaskPage: React.FC = () => {
                                   ? 'bg-emerald-600 text-white shadow-xs'
                                   : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
                               }`}
-                              title="PASS: Provide above task and documents to this assignee"
+                              title="PASS: Pass main task and documents to this assignee"
                             >
                               <span>✓ PASS / YES</span>
                             </button>
