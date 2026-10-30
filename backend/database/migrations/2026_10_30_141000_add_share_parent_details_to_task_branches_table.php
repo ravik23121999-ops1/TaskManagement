@@ -13,12 +13,7 @@ return new class extends Migration
     {
         if (!Schema::hasColumn('task_branches', 'share_parent_details')) {
             Schema::table('task_branches', function (Blueprint $table) {
-                $table->boolean('share_parent_details')->default(true)->after('due_date');
-            });
-        }
-        if (!Schema::hasColumn('task_branches', 'can_assign_further')) {
-            Schema::table('task_branches', function (Blueprint $table) {
-                $table->boolean('can_assign_further')->default(true)->after('due_date');
+                $table->boolean('share_parent_details')->default(true);
             });
         }
     }

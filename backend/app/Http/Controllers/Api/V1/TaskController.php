@@ -19,6 +19,7 @@ use App\Jobs\SendTaskNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class TaskController extends Controller
 {
@@ -371,7 +372,7 @@ class TaskController extends Controller
                         $branchStart = !empty($bData['start_date']) ? now()->parse($bData['start_date']) : $task->start_date;
                         $branchDue = !empty($bData['due_date']) ? now()->parse($bData['due_date']) : $task->due_date;
 
-                        $branch = $task->branches()->create([
+                        $branchDataToCreate = [
                             'title' => $branchTitle,
                             'description' => $branchDesc,
                             'expected_result' => $branchExpected,
@@ -380,9 +381,16 @@ class TaskController extends Controller
                             'start_date' => $branchStart,
                             'status' => 'pending',
                             'due_date' => $branchDue,
-                            'share_parent_details' => $shareMain,
-                            'can_assign_further' => $canAssignFurther,
-                        ]);
+                        ];
+
+                        if (Schema::hasColumn('task_branches', 'share_parent_details')) {
+                            $branchDataToCreate['share_parent_details'] = $shareMain;
+                        }
+                        if (Schema::hasColumn('task_branches', 'can_assign_further')) {
+                            $branchDataToCreate['can_assign_further'] = $canAssignFurther;
+                        }
+
+                        $branch = $task->branches()->create($branchDataToCreate);
 
                         $branch->assignments()->create([
                             'assigned_to_id' => $assigneeId,
@@ -429,14 +437,18 @@ class TaskController extends Controller
                         }
 
                         if ($assigneeId !== $user->id) {
-                            SendTaskNotification::dispatch(
-                                $assigneeId,
-                                'task_assigned',
-                                "Task assigned to you — {$branchTitle}",
-                                $task->id,
-                                'Task Assigned',
-                                $branch->id
-                            );
+                            try {
+                                SendTaskNotification::dispatch(
+                                    $assigneeId,
+                                    'task_assigned',
+                                    "Task assigned to you — {$branchTitle}",
+                                    $task->id,
+                                    'Task Assigned',
+                                    $branch->id
+                                );
+                            } catch (\Throwable $e) {
+                                \Illuminate\Support\Facades\Log::error('SendTaskNotification failed: ' . $e->getMessage());
+                            }
                         }
                     }
                 } else {
@@ -1105,7 +1117,7 @@ class TaskController extends Controller
 
             $parentAssignment = $userBranch?->assignments()->where('is_current', true)->first();
 
-            $branch = $task->branches()->create([
+            $branchDataToCreate = [
                 'title' => $branchTitle,
                 'description' => $branchDesc,
                 'expected_result' => $branchExpected,
@@ -1115,9 +1127,16 @@ class TaskController extends Controller
                 'start_date' => $branchStart,
                 'status' => 'pending',
                 'due_date' => $branchDue,
-                'share_parent_details' => $sharePrevious,
-                'can_assign_further' => $canAssignFurther,
-            ]);
+            ];
+
+            if (Schema::hasColumn('task_branches', 'share_parent_details')) {
+                $branchDataToCreate['share_parent_details'] = $sharePrevious;
+            }
+            if (Schema::hasColumn('task_branches', 'can_assign_further')) {
+                $branchDataToCreate['can_assign_further'] = $canAssignFurther;
+            }
+
+            $branch = $task->branches()->create($branchDataToCreate);
 
             $branch->assignments()->create([
                 'assigned_to_id' => $assigneeId,

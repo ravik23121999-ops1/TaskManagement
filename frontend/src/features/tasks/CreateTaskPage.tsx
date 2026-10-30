@@ -430,7 +430,10 @@ export const CreateTaskPage: React.FC = () => {
       const result = await tasksApi.create(formData);
       navigate(`/tasks/${result.id}`);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create task. Please check all fields.');
+      const serverMsg = err.response?.data?.errors
+        ? Object.values(err.response.data.errors).flat().join(' ')
+        : err.response?.data?.message || 'Failed to create task. Please check all fields.';
+      setError(serverMsg);
       setLoading(false);
     }
   };
