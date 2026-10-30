@@ -314,7 +314,12 @@ export const TaskDetailPage: React.FC = () => {
       );
       loadTask(task.id);
     } catch (err: any) {
-      setModalError(err.response?.data?.message || 'Failed to update task');
+      const msg = err.response?.data?.message || 'Failed to update task';
+      if (err.response?.status === 404 || msg.includes('No query results')) {
+        setModalError('This task was not found or was reset during a server update. Please refresh the page or return to the task list.');
+      } else {
+        setModalError(msg);
+      }
     } finally {
       setSubmittingModal(false);
     }

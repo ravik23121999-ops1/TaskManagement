@@ -993,14 +993,17 @@ class TaskController extends Controller
         $userBranch = $task->branches()->where('owner_id', $user->id)->first();
 
         foreach ($targetUserIds as $idx => $assigneeId) {
-            $exists = $task->branches()->where('owner_id', $assigneeId)->whereNotIn('status', ['cancelled'])->exists();
-            if ($exists) {
-                continue;
-            }
-
             $bData = collect($branchesData)->firstWhere('owner_id', $assigneeId) ?: ($branchesData[$idx] ?? []);
             $mode = $bData['mode'] ?? $request->input('mode', 'new_subtask');
             $sharePrevious = filter_var($bData['share_previous_branch_details'] ?? $request->input('share_previous_branch_details', true), FILTER_VALIDATE_BOOLEAN);
+
+            // Avoid duplicate active branch with identical title for the same user
+            if ($mode === 'new_subtask' && !empty($bData['title'])) {
+                $duplicate = $task->branches()->where('owner_id', $assigneeId)->where('title', trim($bData['title']))->whereNotIn('status', ['cancelled'])->exists();
+                if ($duplicate) {
+                    continue;
+                }
+            }
 
             // MODE A: Forward / Reassign existing branch to the new assignee
             if ($mode === 'reassign' && $userBranch) {
