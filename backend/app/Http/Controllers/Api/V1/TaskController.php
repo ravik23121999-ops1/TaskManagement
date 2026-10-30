@@ -34,7 +34,10 @@ class TaskController extends Controller
             $query->where(function ($q) use ($user) {
                 $q->where('creator_id', $user->id)
                   ->orWhereHas('branches', function ($b) use ($user) {
-                      $b->where('owner_id', $user->id);
+                      $b->where('owner_id', $user->id)
+                        ->orWhereHas('assignments', function ($a) use ($user) {
+                            $a->where('assigned_to_id', $user->id);
+                        });
                   })
                   ->orWhereHas('branches.collaborators', function ($c) use ($user) {
                       $c->where('user_id', $user->id);
@@ -66,17 +69,22 @@ class TaskController extends Controller
                                $b->whereIn('status', ['pending', 'in_progress', 'review', 'post_comment']);
                            });
                     })
-                    // 3. User owns a branch that needs action (in_progress, pending, or returned for correction)
+                    // 3. User owns or is actively assigned a branch that needs action (in_progress, pending, or returned for correction)
                     ->orWhereHas('branches', function ($b) use ($user) {
-                        $b->where('owner_id', $user->id)
-                          ->where(function ($bs) use ($user) {
-                              $bs->whereIn('status', ['pending', 'in_progress'])
-                                 ->orWhere(function ($pc) use ($user) {
-                                     // For post_comment, include if NOT waiting on clarification requested by user themselves
-                                     $pc->where('status', 'post_comment')
-                                        ->whereRaw('(SELECT changed_by_id FROM task_status_history WHERE task_id = tasks.id AND to_status = "post_comment" ORDER BY id DESC LIMIT 1) != ?', [$user->id]);
-                                 });
-                          });
+                        $b->where(function ($bo) use ($user) {
+                            $bo->where('owner_id', $user->id)
+                               ->orWhereHas('assignments', function ($a) use ($user) {
+                                   $a->where('assigned_to_id', $user->id)->where('is_current', true);
+                               });
+                        })
+                        ->where(function ($bs) use ($user) {
+                            $bs->whereIn('status', ['pending', 'in_progress'])
+                               ->orWhere(function ($pc) use ($user) {
+                                   // For post_comment, include if NOT waiting on clarification requested by user themselves
+                                   $pc->where('status', 'post_comment')
+                                      ->whereRaw('(SELECT changed_by_id FROM task_status_history WHERE task_id = tasks.id AND to_status = ? ORDER BY id DESC LIMIT 1) != ?', ['post_comment', $user->id]);
+                               });
+                        });
                     })
                     // 4. Assigner / Creator who received a clarification request (missing details requested by assignee)
                     ->orWhere(function ($cr) use ($user) {
@@ -89,7 +97,7 @@ class TaskController extends Controller
                                          ->where('assigned_to_id', '!=', $user->id);
                                    });
                            })
-                           ->whereRaw('(SELECT changed_by_id FROM task_status_history WHERE task_id = tasks.id AND to_status = "post_comment" ORDER BY id DESC LIMIT 1) != ?', [$user->id]);
+                           ->whereRaw('(SELECT changed_by_id FROM task_status_history WHERE task_id = tasks.id AND to_status = ? ORDER BY id DESC LIMIT 1) != ?', ['post_comment', $user->id]);
                     })
                     // 5. User is reviewer of a pending submission awaiting review
                     ->orWhere(function ($r) use ($user) {
@@ -234,7 +242,20 @@ class TaskController extends Controller
 
         // Status filter
         if ($request->has('status') && $request->status && $request->status !== 'all') {
-            $query->where('status', $request->status);
+            $reqStatus = $request->status;
+            if ($request->has('view') && $request->view === 'my_action') {
+                $query->where(function ($sq) use ($reqStatus, $user) {
+                    $sq->where('status', $reqStatus)
+                       ->orWhereHas('branches', function ($b) use ($reqStatus, $user) {
+                           $b->where(function ($bo) use ($user) {
+                               $bo->where('owner_id', $user->id)
+                                  ->orWhereHas('assignments', fn($a) => $a->where('assigned_to_id', $user->id)->where('is_current', true));
+                           })->where('status', $reqStatus);
+                       });
+                });
+            } else {
+                $query->where('status', $reqStatus);
+            }
         } elseif (!$request->has('view') || in_array($request->view, ['all', 'all_open', 'open'])) {
             // In All Tasks, only show active/open tasks; completed and cancelled tasks move to Completed phase
             $query->whereNotIn('status', ['completed', 'cancelled']);

@@ -339,6 +339,15 @@ class MainTaskMultiEmployeeAssignmentTest extends TestCase
 
         // Vikas attempts to access Neha's file -> 403 Forbidden!
         $this->actingAs($vikas, 'sanctum')->get("/api/attachments/{$nehaJwtAtt['id']}/download")->assertStatus(403);
+
+        // 3. Test My Action / Pending page for Neha and Vikas
+        $nehaPending = $this->actingAs($neha, 'sanctum')->getJson('/api/tasks?view=my_action');
+        $nehaPending->assertStatus(200);
+        $this->assertEquals(1, count($nehaPending->json('data')), 'Neha must see the task in My Action Required');
+
+        $vikasPending = $this->actingAs($vikas, 'sanctum')->getJson('/api/tasks?view=my_action');
+        $vikasPending->assertStatus(200);
+        $this->assertEquals(1, count($vikasPending->json('data')), 'Vikas must see the task in My Action Required');
     }
 
     public function test_manager_can_create_task_with_unticked_share_main_task_details_keeping_shared_attachments_confidential()
@@ -468,5 +477,61 @@ class MainTaskMultiEmployeeAssignmentTest extends TestCase
         $amanAttachments = \App\Models\TaskAttachment::where('task_branch_id', $amanBranch->id)->get();
         $this->assertNotEmpty($amanAttachments);
         $this->assertContains('OriginalDoc.pdf', $amanAttachments->pluck('file_name')->all());
+
+        // 4. Verify Aman sees the delegated task in "My Pending Action" (view=my_action)
+        $amanActionRes = $this->actingAs($this->aman, 'sanctum')->getJson('/api/tasks?view=my_action');
+        $amanActionRes->assertStatus(200);
+        $amanTaskIds = collect($amanActionRes->json('data'))->pluck('id')->all();
+        $this->assertContains($taskId, $amanTaskIds, 'Aman should see the delegated task in My Pending Action');
+
+        // 5. Verify Aman's dashboard metric has my_action count >= 1
+        $amanDashRes = $this->actingAs($this->aman, 'sanctum')->getJson('/api/dashboard/employee');
+        $amanDashRes->assertStatus(200);
+        $this->assertGreaterThanOrEqual(1, $amanDashRes->json('data.my_action'), 'Employee dashboard should reflect pending action count');
+    }
+
+    public function test_assignee_assigned_further_as_subtask_sees_task_in_my_action_and_dashboard(): void
+    {
+        // 1. Manager Priya creates a task assigned to Aman
+        $createRes = $this->actingAs($this->manager, 'sanctum')->post('/api/tasks', [
+            'title' => 'Core Architecture Refactor',
+            'description' => 'Upgrade core architecture modules.',
+            'handling_method' => 'assign',
+            'priority' => 'urgent',
+            'department_id' => $this->department->id,
+            'due_date' => '2026-11-20',
+            'assignees' => [$this->aman->id],
+        ]);
+        $createRes->assertStatus(201);
+        $taskId = $createRes->json('data.id');
+
+        // 2. Priya assigns further to Rohit with a subtask
+        $assignFurtherRes = $this->actingAs($this->manager, 'sanctum')->postJson("/api/tasks/{$taskId}/assignees", [
+            'user_ids' => [$this->rohit->id],
+            'mode' => 'new_subtask',
+            'branches' => [
+                [
+                    'owner_id' => $this->rohit->id,
+                    'title' => 'Database Index Optimization',
+                    'description' => 'Optimize queries and add indices.',
+                    'expected_result' => 'Queries running sub-50ms.',
+                    'acceptance_criteria' => 'PostgreSQL explain analyze verification.',
+                    'due_date' => '2026-11-15',
+                ],
+            ],
+        ]);
+        $assignFurtherRes->assertStatus(200);
+
+        // 3. Rohit visits "My Pending Action" page (/tasks/pending -> GET /api/tasks?view=my_action)
+        $rohitActionRes = $this->actingAs($this->rohit, 'sanctum')->getJson('/api/tasks?view=my_action');
+        $rohitActionRes->assertStatus(200);
+        $rohitTaskIds = collect($rohitActionRes->json('data'))->pluck('id')->all();
+        $this->assertContains($taskId, $rohitTaskIds, 'Rohit must see the subtask in My Pending Action page');
+
+        // 4. Rohit visits Employee Dashboard (/api/dashboard/employee)
+        $rohitDashRes = $this->actingAs($this->rohit, 'sanctum')->getJson('/api/dashboard/employee');
+        $rohitDashRes->assertStatus(200);
+        $this->assertGreaterThanOrEqual(1, $rohitDashRes->json('data.my_action'), 'Rohit dashboard my_action count must be >= 1');
+        $this->assertGreaterThanOrEqual(1, $rohitDashRes->json('data.assigned_to_me'), 'Rohit dashboard assigned_to_me count must be >= 1');
     }
 }

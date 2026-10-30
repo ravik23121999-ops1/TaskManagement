@@ -122,54 +122,87 @@ class ReportsController extends Controller
     {
         $user = $request->user();
 
-        $data = Cache::remember("employee_dashboard_{$user->id}", 30, function () use ($user) {
-            // 1. My Action count
-            $myActionCount = Task::where(function ($q) use ($user) {
-                $q->where(function ($w) use ($user) {
-                    $w->where('handling_method', 'work_alone')
-                      ->where('creator_id', $user->id)
-                      ->whereIn('status', ['pending', 'in_progress', 'post_comment']);
-                })
-                ->orWhereHas('branches', function ($b) use ($user) {
-                    $b->where('owner_id', $user->id)
-                      ->whereIn('status', ['pending', 'in_progress', 'post_comment']);
-                })
-                ->orWhere(function ($r) use ($user) {
-                    $r->where('status', 'review')->where('creator_id', $user->id);
-                });
-            })->count();
+        $data = Cache::remember("employee_dashboard_{$user->id}", 15, function () use ($user) {
+            // 1. My Action count (Active deliverables requiring user's input)
+            $myActionCount = Task::whereNotIn('status', ['completed', 'cancelled'])
+                ->where(function ($q) use ($user) {
+                    $q->where(function ($w) use ($user) {
+                        $w->where('handling_method', 'work_alone')
+                          ->where('creator_id', $user->id)
+                          ->whereIn('status', ['pending', 'in_progress', 'post_comment']);
+                    })
+                    ->orWhere(function ($cf) use ($user) {
+                        $cf->where('creator_id', $user->id)
+                           ->whereIn('status', ['pending', 'in_progress', 'review'])
+                           ->whereDoesntHave('branches', function ($b) {
+                               $b->whereIn('status', ['pending', 'in_progress', 'review', 'post_comment']);
+                           });
+                    })
+                    ->orWhereHas('branches', function ($b) use ($user) {
+                        $b->where(function ($bo) use ($user) {
+                            $bo->where('owner_id', $user->id)
+                               ->orWhereHas('assignments', fn($a) => $a->where('assigned_to_id', $user->id)->where('is_current', true));
+                        })
+                        ->whereIn('status', ['pending', 'in_progress', 'post_comment']);
+                    })
+                    ->orWhere(function ($r) use ($user) {
+                        $r->where('status', 'review')
+                          ->where(function ($revQ) use ($user) {
+                              $revQ->where('creator_id', $user->id)
+                                   ->orWhereHas('branches.assignments', fn($a) => $a->where('assigned_by_id', $user->id)->where('assigned_to_id', '!=', $user->id)->where('is_current', true));
+                          });
+                    });
+                })->count();
 
             // 2. Assigned to Me count
-            $assignedToMeCount = TaskBranch::where('owner_id', $user->id)
-                ->whereNotIn('status', ['completed', 'cancelled'])
-                ->count();
+            $assignedToMeCount = TaskBranch::where(function ($b) use ($user) {
+                $b->where('owner_id', $user->id)
+                  ->orWhereHas('assignments', fn($a) => $a->where('assigned_to_id', $user->id)->where('is_current', true));
+            })
+            ->whereNotIn('status', ['completed', 'cancelled'])
+            ->count();
 
-            // 3. My Created count
+            // 3. My In Progress count
+            $myInProgressCount = TaskBranch::where(function ($b) use ($user) {
+                $b->where('owner_id', $user->id)
+                  ->orWhereHas('assignments', fn($a) => $a->where('assigned_to_id', $user->id)->where('is_current', true));
+            })
+            ->whereIn('status', ['pending', 'in_progress'])
+            ->count();
+
+            // 4. My Created count
             $myCreatedCount = Task::where('creator_id', $user->id)->count();
 
-            // 4. My Collaborations count
+            // 5. My Collaborations count
             $myCollaborationsCount = Task::where('handling_method', 'collaborate')
                 ->where(function ($c) use ($user) {
                     $c->whereHas('branches.collaborators', fn($col) => $col->where('user_id', $user->id))
                       ->orWhereHas('branches', fn($b) => $b->where('owner_id', $user->id));
                 })->count();
 
-            // 5. Awaiting Review count
+            // 6. Awaiting Review count
             $awaitingReviewCount = Task::where(function ($q) use ($user) {
                 $q->where('creator_id', $user->id)
                   ->orWhereHas('branches', fn($b) => $b->where('owner_id', $user->id));
             })->where('status', 'review')->count();
 
-            // 6. Returned Tasks count
+            // 7. Returned Tasks count
             $returnedCount = Task::where(function ($q) use ($user) {
                 $q->where('creator_id', $user->id)
                   ->orWhereHas('branches', fn($b) => $b->where('owner_id', $user->id));
             })->where('status', 'post_comment')->count();
 
+            // 8. Completed count
+            $myCompletedCount = TaskBranch::where(function ($b) use ($user) {
+                $b->where('owner_id', $user->id)
+                  ->orWhereHas('assignments', fn($a) => $a->where('assigned_to_id', $user->id)->where('is_current', true));
+            })->where('status', 'completed')->count();
+
             // My Upcoming Tasks
             $upcomingTasks = Task::where(function ($q) use ($user) {
                 $q->where('creator_id', $user->id)
-                  ->orWhereHas('branches', fn($b) => $b->where('owner_id', $user->id));
+                  ->orWhereHas('branches', fn($b) => $b->where('owner_id', $user->id))
+                  ->orWhereHas('branches.assignments', fn($a) => $a->where('assigned_to_id', $user->id)->where('is_current', true));
             })
             ->whereNotIn('status', ['cancelled'])
             ->orderBy('due_date', 'asc')
@@ -188,7 +221,8 @@ class ReportsController extends Controller
             // Status Breakdown for Employee
             $userTasks = Task::where(function ($q) use ($user) {
                 $q->where('creator_id', $user->id)
-                  ->orWhereHas('branches', fn($b) => $b->where('owner_id', $user->id));
+                  ->orWhereHas('branches', fn($b) => $b->where('owner_id', $user->id))
+                  ->orWhereHas('branches.assignments', fn($a) => $a->where('assigned_to_id', $user->id)->where('is_current', true));
             })->get();
 
             $tasksByStatus = [
@@ -218,6 +252,9 @@ class ReportsController extends Controller
             return [
                 'my_action' => $myActionCount,
                 'assigned_to_me' => $assignedToMeCount,
+                'my_in_progress' => $myInProgressCount,
+                'my_pending_review' => $awaitingReviewCount,
+                'completed' => $myCompletedCount,
                 'my_created' => $myCreatedCount,
                 'my_collaborations' => $myCollaborationsCount,
                 'awaiting_review' => $awaitingReviewCount,

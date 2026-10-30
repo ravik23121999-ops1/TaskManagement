@@ -11,6 +11,7 @@ export const MyActionPage: React.FC = () => {
   const navigate = useNavigate();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Filters
   const [search, setSearch] = useState('');
@@ -28,6 +29,7 @@ export const MyActionPage: React.FC = () => {
 
   const loadTasks = async () => {
     setLoading(true);
+    setErrorMessage(null);
     try {
       const response = await tasksApi.list({
         view: 'my_action',
@@ -41,8 +43,9 @@ export const MyActionPage: React.FC = () => {
       setPage(response.meta?.current_page || 1);
       setLastPage(response.meta?.last_page || 1);
       setTotal(response.meta?.total || 0);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load pending tasks', err);
+      setErrorMessage(err.response?.data?.message || 'Failed to load pending action tasks. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -61,10 +64,10 @@ export const MyActionPage: React.FC = () => {
     setPage(1);
   };
 
-  // Quick summary numbers from the current list
-  const inProgressCount = tasks.filter((t) => t.status === 'in_progress').length;
-  const reviewCount = tasks.filter((t) => t.status === 'review').length;
-  const returnedCount = tasks.filter((t) => t.status === 'post_comment').length;
+  // Quick summary numbers from the current list (supports main task or branch status)
+  const inProgressCount = tasks.filter((t) => t.status === 'in_progress' || t.branches?.some((b) => b.status === 'in_progress' || b.status === 'pending')).length;
+  const reviewCount = tasks.filter((t) => t.status === 'review' || t.branches?.some((b) => b.status === 'review')).length;
+  const returnedCount = tasks.filter((t) => t.status === 'post_comment' || t.branches?.some((b) => b.status === 'post_comment')).length;
 
   return (
     <div className="space-y-6">
@@ -222,6 +225,22 @@ export const MyActionPage: React.FC = () => {
           )}
         </form>
       </div>
+
+      {/* Error Alert */}
+      {errorMessage && (
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl flex items-center justify-between text-xs text-rose-700">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+          <button
+            onClick={() => loadTasks()}
+            className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold cursor-pointer"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* Tasks Table */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
