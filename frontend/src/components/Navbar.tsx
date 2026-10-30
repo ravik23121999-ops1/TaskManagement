@@ -2,7 +2,19 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
 import { notificationsApi } from '../api/tasks';
-import { Search, Bell, Plus, ChevronDown, User, LogOut, Check, MessageSquare, Menu } from 'lucide-react';
+import {
+  Search,
+  Bell,
+  Plus,
+  ChevronDown,
+  User,
+  LogOut,
+  Check,
+  MessageSquare,
+  Menu,
+  Maximize2,
+  Minimize2,
+} from 'lucide-react';
 import { messagesApi } from '../api/messages';
 
 interface NotificationItem {
@@ -16,10 +28,16 @@ interface NotificationItem {
 }
 
 interface NavbarProps {
+  onToggleSidebar?: () => void;
   onToggleMobileSidebar?: () => void;
+  isSidebarCollapsed?: boolean;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onToggleMobileSidebar }) => {
+const Navbar: React.FC<NavbarProps> = ({
+  onToggleSidebar,
+  onToggleMobileSidebar,
+  isSidebarCollapsed,
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
@@ -28,9 +46,72 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleMobileSidebar }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const notificationRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Cross-browser HTML5 Fullscreen change listener
+    const handleFullscreenChange = () => {
+      const isFs = Boolean(
+        document.fullscreenElement ||
+          (document as any).webkitFullscreenElement ||
+          (document as any).mozFullScreenElement ||
+          (document as any).msFullscreenElement
+      );
+      setIsFullscreen(isFs);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = () => {
+    try {
+      const isFs = Boolean(
+        document.fullscreenElement ||
+          (document as any).webkitFullscreenElement ||
+          (document as any).mozFullScreenElement ||
+          (document as any).msFullscreenElement
+      );
+
+      if (!isFs) {
+        const docEl = document.documentElement as any;
+        if (docEl.requestFullscreen) {
+          docEl.requestFullscreen();
+        } else if (docEl.webkitRequestFullscreen) {
+          docEl.webkitRequestFullscreen();
+        } else if (docEl.mozRequestFullScreen) {
+          docEl.mozRequestFullScreen();
+        } else if (docEl.msRequestFullscreen) {
+          docEl.msRequestFullscreen();
+        }
+      } else {
+        const doc = document as any;
+        if (doc.exitFullscreen) {
+          doc.exitFullscreen();
+        } else if (doc.webkitExitFullscreen) {
+          doc.webkitExitFullscreen();
+        } else if (doc.mozCancelFullScreen) {
+          doc.mozCancelFullScreen();
+        } else if (doc.msExitFullscreen) {
+          doc.msExitFullscreen();
+        }
+      }
+    } catch (err) {
+      console.warn('Fullscreen toggle failed:', err);
+    }
+  };
 
   useEffect(() => {
     loadNotifications();
@@ -118,14 +199,15 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleMobileSidebar }) => {
   };
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200/80 sticky top-0 z-20 px-3 sm:px-6 flex items-center justify-between gap-2">
+    <header className="h-16 bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-20 px-3 sm:px-6 flex items-center justify-between gap-2 select-none">
       <div className="flex items-center gap-2 flex-1 max-w-md">
-        {/* Mobile Hamburger Menu Button */}
+        {/* Unified Sidebar Toggle Hamburger Button (Works for Mobile Drawer & Desktop Collapse) */}
         <button
           type="button"
-          onClick={onToggleMobileSidebar}
-          className="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer shrink-0"
-          title="Open Navigation Menu"
+          onClick={onToggleSidebar || onToggleMobileSidebar}
+          className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:scale-95 transition cursor-pointer shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          title={isSidebarCollapsed ? 'Expand navigation sidebar' : 'Collapse navigation sidebar'}
+          aria-label="Toggle navigation sidebar"
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -237,13 +319,32 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleMobileSidebar }) => {
           )}
         </div>
 
-        {/* User Profile Dropdown */}
+        {/* Fullscreen Expand / Compress Website Feature (Positioned right beside Admin User Profile) */}
+        <button
+          type="button"
+          onClick={toggleFullscreen}
+          className={`w-9 h-9 rounded-lg border transition relative cursor-pointer flex items-center justify-center group ${
+            isFullscreen
+              ? 'bg-blue-50 border-blue-300 text-blue-600 shadow-xs'
+              : 'border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+          }`}
+          title={isFullscreen ? 'Exit Full Screen (Esc)' : 'Expand Website Full Screen'}
+          aria-label={isFullscreen ? 'Exit Full Screen' : 'Expand Website Full Screen'}
+        >
+          {isFullscreen ? (
+            <Minimize2 className="w-4 h-4 text-slate-700 group-hover:scale-110 transition-transform" />
+          ) : (
+            <Maximize2 className="w-4 h-4 text-slate-700 group-hover:scale-110 transition-transform" />
+          )}
+        </button>
+
+        {/* User Profile Dropdown (With 2-line Name + Role Subtitle matching reference design) */}
         <div className="relative" ref={userMenuRef}>
           <button
             onClick={() => setShowUserMenu(!showUserMenu)}
-            className="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition cursor-pointer"
+            className="flex items-center gap-2.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition cursor-pointer"
           >
-            <div className="w-7 h-7 rounded-full overflow-hidden bg-slate-900 border border-slate-300 shadow-xs flex items-center justify-center relative">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-slate-900 border border-slate-300 shadow-xs flex items-center justify-center relative shrink-0">
               <img
                 src={user?.avatar_url || `/assets/roles/${user?.role || 'employee'}_${user?.gender || 'female'}.png`}
                 alt={user?.name || 'User'}
@@ -256,10 +357,19 @@ const Navbar: React.FC<NavbarProps> = ({ onToggleMobileSidebar }) => {
                 {user?.name?.charAt(0) || 'U'}
               </span>
             </div>
-            <span className="text-xs font-semibold text-slate-700 hidden sm:inline-block max-w-[120px] truncate">
-              {user?.name || 'User'}
-            </span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            <div className="hidden sm:flex flex-col text-left leading-tight">
+              <span className="text-xs font-bold text-slate-800 max-w-[130px] truncate">
+                {user?.name || 'Admin User'}
+              </span>
+              <span className="text-[10px] text-slate-500 font-medium capitalize mt-0.5">
+                {user?.role === 'admin'
+                  ? 'Admin'
+                  : user?.role === 'sub_admin'
+                  ? 'Operations Lead'
+                  : 'Employee'}
+              </span>
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-0.5" />
           </button>
 
           {showUserMenu && (

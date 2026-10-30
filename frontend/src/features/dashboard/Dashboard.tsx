@@ -113,8 +113,8 @@ export const Dashboard: React.FC = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-sky-500" />
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Tasks</span>
-              <span className="p-2 bg-blue-50 text-blue-600 rounded-xl group-hover:scale-110 transition-transform">
-                <Sparkles className="w-4 h-4" />
+              <span className="p-2.5 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl shadow-md shadow-blue-500/25 group-hover:scale-110 transition-transform">
+                <Sparkles className="w-4 h-4 text-white" />
               </span>
             </div>
             <div className="text-3xl font-bold text-slate-900 mt-2 tracking-tight group-hover:text-blue-600 transition-colors">
@@ -134,8 +134,8 @@ export const Dashboard: React.FC = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 to-cyan-400" />
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">In Progress</span>
-              <span className="p-2 bg-sky-50 text-sky-600 rounded-xl group-hover:scale-110 transition-transform">
-                <Activity className="w-4 h-4" />
+              <span className="p-2.5 bg-gradient-to-tr from-sky-500 to-cyan-500 text-white rounded-xl shadow-md shadow-sky-500/25 group-hover:scale-110 transition-transform">
+                <Activity className="w-4 h-4 text-white" />
               </span>
             </div>
             <div className="text-3xl font-bold text-sky-600 mt-2 tracking-tight flex items-center gap-2">
@@ -159,8 +159,8 @@ export const Dashboard: React.FC = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-600 to-violet-400" />
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Pending Review</span>
-              <span className="p-2 bg-purple-50 text-purple-600 rounded-xl group-hover:scale-110 transition-transform">
-                <Clock className="w-4 h-4" />
+              <span className="p-2.5 bg-gradient-to-tr from-violet-600 to-purple-600 text-white rounded-xl shadow-md shadow-purple-500/25 group-hover:scale-110 transition-transform">
+                <Clock className="w-4 h-4 text-white" />
               </span>
             </div>
             <div className="text-3xl font-bold text-purple-600 mt-2 tracking-tight">
@@ -180,8 +180,8 @@ export const Dashboard: React.FC = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-400" />
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Completed</span>
-              <span className="p-2 bg-emerald-50 text-emerald-600 rounded-xl group-hover:scale-110 transition-transform">
-                <Sparkles className="w-4 h-4 text-emerald-600" />
+              <span className="p-2.5 bg-gradient-to-tr from-emerald-500 to-teal-500 text-white rounded-xl shadow-md shadow-emerald-500/25 group-hover:scale-110 transition-transform">
+                <Sparkles className="w-4 h-4 text-white" />
               </span>
             </div>
             <div className="text-3xl font-bold text-emerald-600 mt-2 tracking-tight">
@@ -482,8 +482,8 @@ export const Dashboard: React.FC = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-sky-500" />
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">My Action Tasks</span>
-              <span className="p-2 bg-blue-50 text-blue-600 rounded-xl group-hover:scale-110 transition-transform">
-                <Zap className="w-4 h-4" />
+              <span className="p-2.5 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl shadow-md shadow-blue-500/25 group-hover:scale-110 transition-transform">
+                <Zap className="w-4 h-4 text-white" />
               </span>
             </div>
             <div className="flex items-baseline gap-2 mt-2">
@@ -511,8 +511,8 @@ export const Dashboard: React.FC = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 to-teal-400" />
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Assigned to Me</span>
-              <span className="p-2 bg-cyan-50 text-cyan-600 rounded-xl group-hover:scale-110 transition-transform">
-                <UserCheck className="w-4 h-4" />
+              <span className="p-2.5 bg-gradient-to-tr from-cyan-500 to-teal-500 text-white rounded-xl shadow-md shadow-cyan-500/25 group-hover:scale-110 transition-transform">
+                <UserCheck className="w-4 h-4 text-white" />
               </span>
             </div>
             <div className="text-3xl font-bold text-slate-900 mt-2 tracking-tight group-hover:text-cyan-600 transition-colors">
@@ -534,8 +534,8 @@ export const Dashboard: React.FC = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-yellow-400" />
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Submitted for Review</span>
-              <span className="p-2 bg-amber-50 text-amber-600 rounded-xl group-hover:scale-110 transition-transform">
-                <FileCheck2 className="w-4 h-4" />
+              <span className="p-2.5 bg-gradient-to-tr from-amber-500 to-yellow-500 text-white rounded-xl shadow-md shadow-amber-500/25 group-hover:scale-110 transition-transform">
+                <FileCheck2 className="w-4 h-4 text-white" />
               </span>
             </div>
             <div className="text-3xl font-bold text-slate-900 mt-2 tracking-tight group-hover:text-amber-600 transition-colors">
@@ -557,8 +557,8 @@ export const Dashboard: React.FC = () => {
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-600 to-pink-500" />
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Team Collaborations</span>
-              <span className="p-2 bg-purple-50 text-purple-600 rounded-xl group-hover:scale-110 transition-transform">
-                <Users className="w-4 h-4" />
+              <span className="p-2.5 bg-gradient-to-tr from-purple-600 to-pink-500 text-white rounded-xl shadow-md shadow-purple-500/25 group-hover:scale-110 transition-transform">
+                <Users className="w-4 h-4 text-white" />
               </span>
             </div>
             <div className="text-3xl font-bold text-slate-900 mt-2 tracking-tight group-hover:text-purple-600 transition-colors">
