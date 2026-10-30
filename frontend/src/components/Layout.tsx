@@ -46,7 +46,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col lg:flex-row font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-[#f8fafc] via-[#f9fafc] to-[#f1f5f9] text-slate-800 flex flex-col lg:flex-row font-sans selection:bg-blue-600 selection:text-white">
       <Sidebar
         mobileOpen={mobileSidebarOpen}
         onMobileClose={() => setMobileSidebarOpen(false)}

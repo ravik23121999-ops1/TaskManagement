@@ -50,6 +50,20 @@ const Navbar: React.FC<NavbarProps> = ({
 
   const notificationRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Global Ctrl + K / Cmd + K keyboard listener for instant command search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        searchInputRef.current?.select();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     // Cross-browser HTML5 Fullscreen change listener
@@ -199,38 +213,49 @@ const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="h-16 bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-20 px-3 sm:px-6 flex items-center justify-between gap-2 select-none">
+    <header className="h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200/70 shadow-[0_1px_3px_rgba(15,23,42,0.02)] sticky top-0 z-20 px-3 sm:px-6 flex items-center justify-between gap-3 select-none transition-all">
       <div className="flex items-center gap-2 flex-1 max-w-md">
         {/* Unified Sidebar Toggle Hamburger Button (Works for Mobile Drawer & Desktop Collapse) */}
         <button
           type="button"
           onClick={onToggleSidebar || onToggleMobileSidebar}
-          className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:scale-95 transition cursor-pointer shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 active:scale-95 transition cursor-pointer shrink-0 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
           title={isSidebarCollapsed ? 'Expand navigation sidebar' : 'Collapse navigation sidebar'}
           aria-label="Toggle navigation sidebar"
         >
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* Search Input */}
+        {/* Search Input with Ctrl + K discoverability badge */}
         <form onSubmit={handleSearchSubmit} className="relative flex-1">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
+            ref={searchInputRef}
             type="text"
             placeholder="Search tasks, IDs..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            className="w-full pl-9 pr-14 py-2 bg-slate-50/80 border border-slate-200/80 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
           />
+          <div className="hidden sm:flex items-center gap-0.5 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+            <kbd className="px-1.5 py-0.5 text-[9px] font-bold text-slate-400 bg-white border border-slate-200 rounded shadow-2xs">Ctrl</kbd>
+            <kbd className="px-1.5 py-0.5 text-[9px] font-bold text-slate-400 bg-white border border-slate-200 rounded shadow-2xs">K</kbd>
+          </div>
         </form>
       </div>
 
+      {/* Center Operational Status Pill */}
+      <div className="hidden xl:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50/90 border border-slate-200/60 text-[11px] text-slate-600 font-medium shadow-2xs">
+        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_#10b981]" />
+        <span>Enterprise Engine Live</span>
+      </div>
+
       {/* Right Actions */}
-      <div className="flex items-center gap-3">
-        {/* Create Task Button */}
+      <div className="flex items-center gap-2.5">
+        {/* Create Task Button with Luxe Gradient */}
         <button
           onClick={() => navigate('/tasks/create')}
-          className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition cursor-pointer"
+          className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-500 hover:to-indigo-600 text-white rounded-lg text-xs font-bold shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-200 cursor-pointer active:scale-95"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>New Task</span>

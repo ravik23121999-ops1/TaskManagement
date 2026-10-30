@@ -21,6 +21,22 @@ button, input, select, textarea, optgroup, kbd {
   font-family: inherit;
 }
 
+/* Luxe Studio Design Tokens & Utilities */
+.shadow-luxe {
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03), 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.shadow-luxe-hover {
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.04), 0 16px 32px -4px rgba(15, 23, 42, 0.08);
+}
+
+/* Glassmorphic backdrop utilities */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
 @keyframes float {
   0%, 100% {
     transform: translateY(0px);

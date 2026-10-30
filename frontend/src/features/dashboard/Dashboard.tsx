@@ -16,7 +16,9 @@ import {
   RotateCcw,
   GitBranch,
   FileCheck2,
-  UserCheck
+  UserCheck,
+  TrendingUp,
+  CheckCircle2,
 } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
@@ -79,6 +81,15 @@ export const Dashboard: React.FC = () => {
     const upcomingDeadlines: any[] = Array.isArray(adminData.upcoming_deadlines) ? adminData.upcoming_deadlines : [];
     const totalStatusCount = tasksByStatus.reduce((acc: number, item: any) => acc + (item?.value || 0), 0) || 1;
 
+    const totalTasks = adminData.total_tasks || 0;
+    const inProgressTasks = adminData.in_progress || 0;
+    const pendingReviewTasks = adminData.pending_review || 0;
+    const completedTasks = adminData.completed || 0;
+
+    const inProgressPct = totalTasks > 0 ? Math.min(100, Math.round((inProgressTasks / totalTasks) * 100)) : 0;
+    const reviewPct = totalTasks > 0 ? Math.min(100, Math.round((pendingReviewTasks / totalTasks) * 100)) : 0;
+    const completedPct = totalTasks > 0 ? Math.min(100, Math.round((completedTasks / totalTasks) * 100)) : 0;
+
     return (
       <div className="space-y-8">
         {/* Executive Welcome Hero Banner */}
@@ -103,93 +114,184 @@ export const Dashboard: React.FC = () => {
           }}
         />
 
-        {/* Top 4 Primary Interactive Metric KPI Cards (Matching High-Fidelity Mockup) */}
+        {/* Top 4 Primary Interactive Metric KPI Cards (Luxe Studio Edition) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: Total Tasks */}
           <div
             onClick={() => navigate('/tasks')}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.03),0_6px_12px_rgba(15,23,42,0.02)] hover:-translate-y-0.5 hover:shadow-md hover:border-blue-300 transition-all duration-200 cursor-pointer relative overflow-hidden group"
+            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-luxe hover:shadow-luxe-hover hover:-translate-y-1 hover:border-blue-400/60 transition-all duration-300 cursor-pointer relative overflow-hidden group"
           >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-sky-500" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500" />
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Tasks</span>
               <span className="p-2.5 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl shadow-md shadow-blue-500/25 group-hover:scale-110 transition-transform">
                 <Sparkles className="w-4 h-4 text-white" />
               </span>
             </div>
-            <div className="text-3xl font-bold text-slate-900 mt-2 tracking-tight group-hover:text-blue-600 transition-colors">
-              {adminData.total_tasks}
+
+            <div className="flex items-baseline justify-between mt-2.5">
+              <div className="text-3xl font-extrabold text-slate-900 tracking-tight group-hover:text-blue-600 transition-colors">
+                {totalTasks}
+              </div>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200/60">
+                <TrendingUp className="w-3 h-3 text-blue-600" />
+                Live Pipeline
+              </span>
             </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
-              <span>All tasks across company</span>
-              <span className="text-blue-600 font-semibold group-hover:underline">View all →</span>
+
+            {/* Micro Progress Bar */}
+            <div className="mt-4 space-y-1.5">
+              <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
+                <span>System Throughput</span>
+                <span className="font-bold text-slate-700">100% Active</span>
+              </div>
+              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full w-full" />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-2.5 border-t border-slate-100/80">
+              <span>All company tasks</span>
+              <span className="text-blue-600 font-semibold group-hover:underline flex items-center gap-1">
+                View all <ArrowRight className="w-3 h-3" />
+              </span>
             </div>
           </div>
 
           {/* Card 2: In Progress */}
           <div
             onClick={() => navigate('/tasks?status=in_progress')}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.03),0_6px_12px_rgba(15,23,42,0.02)] hover:-translate-y-0.5 hover:shadow-md hover:border-sky-300 transition-all duration-200 cursor-pointer relative overflow-hidden group"
+            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-luxe hover:shadow-luxe-hover hover:-translate-y-1 hover:border-sky-400/60 transition-all duration-300 cursor-pointer relative overflow-hidden group"
           >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 to-cyan-400" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 via-cyan-500 to-teal-400" />
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">In Progress</span>
               <span className="p-2.5 bg-gradient-to-tr from-sky-500 to-cyan-500 text-white rounded-xl shadow-md shadow-sky-500/25 group-hover:scale-110 transition-transform">
                 <Activity className="w-4 h-4 text-white" />
               </span>
             </div>
-            <div className="text-3xl font-bold text-sky-600 mt-2 tracking-tight flex items-center gap-2">
-              <span>{adminData.in_progress}</span>
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500" />
+
+            <div className="flex items-baseline justify-between mt-2.5">
+              <div className="text-3xl font-extrabold text-sky-600 tracking-tight flex items-center gap-2">
+                <span>{inProgressTasks}</span>
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500" />
+                </span>
+              </div>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200/60">
+                In Execution
               </span>
             </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
-              <span>Currently being worked on</span>
-              <span className="text-sky-600 font-semibold group-hover:underline">See active →</span>
+
+            {/* Micro Progress Bar */}
+            <div className="mt-4 space-y-1.5">
+              <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
+                <span>Workload Share</span>
+                <span className="font-bold text-sky-600">{inProgressPct}% of total</span>
+              </div>
+              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-sky-500 to-cyan-500 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.max(inProgressTasks > 0 ? 12 : 0, inProgressPct)}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-2.5 border-t border-slate-100/80">
+              <span>Under active development</span>
+              <span className="text-sky-600 font-semibold group-hover:underline flex items-center gap-1">
+                See active <ArrowRight className="w-3 h-3" />
+              </span>
             </div>
           </div>
 
           {/* Card 3: Pending Review */}
           <div
             onClick={() => navigate('/tasks/review')}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.03),0_6px_12px_rgba(15,23,42,0.02)] hover:-translate-y-0.5 hover:shadow-md hover:border-purple-300 transition-all duration-200 cursor-pointer relative overflow-hidden group"
+            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-luxe hover:shadow-luxe-hover hover:-translate-y-1 hover:border-purple-400/60 transition-all duration-300 cursor-pointer relative overflow-hidden group"
           >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-600 to-violet-400" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-600 via-violet-500 to-pink-500" />
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Pending Review</span>
               <span className="p-2.5 bg-gradient-to-tr from-violet-600 to-purple-600 text-white rounded-xl shadow-md shadow-purple-500/25 group-hover:scale-110 transition-transform">
                 <Clock className="w-4 h-4 text-white" />
               </span>
             </div>
-            <div className="text-3xl font-bold text-purple-600 mt-2 tracking-tight">
-              {adminData.pending_review}
+
+            <div className="flex items-baseline justify-between mt-2.5">
+              <div className="text-3xl font-extrabold text-purple-600 tracking-tight">
+                {pendingReviewTasks}
+              </div>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200/60">
+                Action Needed
+              </span>
             </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
-              <span>Waiting for review & approval</span>
-              <span className="text-purple-600 font-semibold group-hover:underline">Review now →</span>
+
+            {/* Micro Progress Bar */}
+            <div className="mt-4 space-y-1.5">
+              <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
+                <span>Verification Queue</span>
+                <span className="font-bold text-purple-600">{pendingReviewTasks} to approve</span>
+              </div>
+              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-violet-600 to-purple-600 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.max(pendingReviewTasks > 0 ? 12 : 0, reviewPct)}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-2.5 border-t border-slate-100/80">
+              <span>Awaiting sign-off</span>
+              <span className="text-purple-600 font-semibold group-hover:underline flex items-center gap-1">
+                Review now <ArrowRight className="w-3 h-3" />
+              </span>
             </div>
           </div>
 
           {/* Card 4: Completed */}
           <div
             onClick={() => navigate('/tasks/completed')}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.03),0_6px_12px_rgba(15,23,42,0.02)] hover:-translate-y-0.5 hover:shadow-md hover:border-emerald-300 transition-all duration-200 cursor-pointer relative overflow-hidden group"
+            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-luxe hover:shadow-luxe-hover hover:-translate-y-1 hover:border-emerald-400/60 transition-all duration-300 cursor-pointer relative overflow-hidden group"
           >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-400" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400" />
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Completed</span>
               <span className="p-2.5 bg-gradient-to-tr from-emerald-500 to-teal-500 text-white rounded-xl shadow-md shadow-emerald-500/25 group-hover:scale-110 transition-transform">
                 <Sparkles className="w-4 h-4 text-white" />
               </span>
             </div>
-            <div className="text-3xl font-bold text-emerald-600 mt-2 tracking-tight">
-              {adminData.completed}
+
+            <div className="flex items-baseline justify-between mt-2.5">
+              <div className="text-3xl font-extrabold text-emerald-600 tracking-tight">
+                {completedTasks}
+              </div>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                Delivered
+              </span>
             </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
-              <span>Finished & approved tasks</span>
-              <span className="text-emerald-600 font-semibold group-hover:underline">View completed →</span>
+
+            {/* Micro Progress Bar */}
+            <div className="mt-4 space-y-1.5">
+              <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
+                <span>Completion Velocity</span>
+                <span className="font-bold text-emerald-600">{completedPct}% success</span>
+              </div>
+              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.max(completedTasks > 0 ? 12 : 0, completedPct)}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-2.5 border-t border-slate-100/80">
+              <span>Finished & verified</span>
+              <span className="text-emerald-600 font-semibold group-hover:underline flex items-center gap-1">
+                View completed <ArrowRight className="w-3 h-3" />
+              </span>
             </div>
           </div>
         </div>
@@ -449,6 +551,17 @@ export const Dashboard: React.FC = () => {
     const recentNotifications: any[] = Array.isArray(employeeData.recent_notifications) ? employeeData.recent_notifications : [];
     const totalEmpStatus = tasksByStatus.reduce((acc: number, item: any) => acc + (item?.value || 0), 0) || 1;
 
+    const myActionCount = employeeData.my_action || 0;
+    const assignedToMeCount = employeeData.assigned_to_me || 0;
+    const awaitingReviewCount = employeeData.awaiting_review || 0;
+    const collaborationsCount = employeeData.my_collaborations || 0;
+
+    const empTotal = Math.max(1, myActionCount + assignedToMeCount + awaitingReviewCount + collaborationsCount);
+    const myActionPct = Math.min(100, Math.round((myActionCount / empTotal) * 100));
+    const assignedPct = Math.min(100, Math.round((assignedToMeCount / empTotal) * 100));
+    const awaitingPct = Math.min(100, Math.round((awaitingReviewCount / empTotal) * 100));
+    const collabPct = Math.min(100, Math.round((collaborationsCount / empTotal) * 100));
+
     return (
       <div className="space-y-8">
         {/* Contributor Welcome Hero Banner */}
@@ -472,32 +585,48 @@ export const Dashboard: React.FC = () => {
           isEmployeeView={true}
         />
 
-        {/* Top 4 Primary Interactive Metric KPI Cards */}
+        {/* Top 4 Primary Interactive Metric KPI Cards (Luxe Studio Edition) */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Card 1: My Action */}
           <div
             onClick={() => navigate('/tasks/pending')}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.03),0_6px_12px_rgba(15,23,42,0.02)] hover:-translate-y-0.5 hover:shadow-md hover:border-blue-300 transition-all duration-200 cursor-pointer relative overflow-hidden group"
+            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-luxe hover:shadow-luxe-hover hover:-translate-y-1 hover:border-blue-400/60 transition-all duration-300 cursor-pointer relative overflow-hidden group"
           >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 to-sky-500" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500" />
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">My Action Tasks</span>
               <span className="p-2.5 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl shadow-md shadow-blue-500/25 group-hover:scale-110 transition-transform">
                 <Zap className="w-4 h-4 text-white" />
               </span>
             </div>
-            <div className="flex items-baseline gap-2 mt-2">
-              <span className="text-3xl font-bold text-slate-900 tracking-tight group-hover:text-blue-600 transition-colors">
-                {employeeData.my_action}
-              </span>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">
+
+            <div className="flex items-baseline justify-between mt-2.5">
+              <div className="text-3xl font-extrabold text-slate-900 tracking-tight group-hover:text-blue-600 transition-colors">
+                {myActionCount}
+              </div>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200/60">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-ping" />
                 Active Now
               </span>
             </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
+
+            {/* Micro Progress Bar */}
+            <div className="mt-4 space-y-1.5">
+              <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
+                <span>Priority Share</span>
+                <span className="font-bold text-blue-600">{myActionPct}% of queue</span>
+              </div>
+              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.max(myActionCount > 0 ? 12 : 0, myActionPct)}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-2.5 border-t border-slate-100/80">
               <span>Items waiting for your step</span>
-              <span className="text-blue-600 font-semibold flex items-center gap-1 group-hover:underline">
+              <span className="text-blue-600 font-semibold group-hover:underline flex items-center gap-1">
                 View tasks <ArrowRight className="w-3 h-3" />
               </span>
             </div>
@@ -506,21 +635,42 @@ export const Dashboard: React.FC = () => {
           {/* Card 2: Assigned to Me */}
           <div
             onClick={() => navigate('/tasks')}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.03),0_6px_12px_rgba(15,23,42,0.02)] hover:-translate-y-0.5 hover:shadow-md hover:border-cyan-300 transition-all duration-200 cursor-pointer relative overflow-hidden group"
+            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-luxe hover:shadow-luxe-hover hover:-translate-y-1 hover:border-cyan-400/60 transition-all duration-300 cursor-pointer relative overflow-hidden group"
           >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 to-teal-400" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-400" />
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Assigned to Me</span>
               <span className="p-2.5 bg-gradient-to-tr from-cyan-500 to-teal-500 text-white rounded-xl shadow-md shadow-cyan-500/25 group-hover:scale-110 transition-transform">
                 <UserCheck className="w-4 h-4 text-white" />
               </span>
             </div>
-            <div className="text-3xl font-bold text-slate-900 mt-2 tracking-tight group-hover:text-cyan-600 transition-colors">
-              {employeeData.assigned_to_me}
+
+            <div className="flex items-baseline justify-between mt-2.5">
+              <div className="text-3xl font-extrabold text-slate-900 tracking-tight group-hover:text-cyan-600 transition-colors">
+                {assignedToMeCount}
+              </div>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200/60">
+                Direct Work
+              </span>
             </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
+
+            {/* Micro Progress Bar */}
+            <div className="mt-4 space-y-1.5">
+              <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
+                <span>Personal Allocation</span>
+                <span className="font-bold text-cyan-600">{assignedPct}% load</span>
+              </div>
+              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-cyan-500 to-teal-500 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.max(assignedToMeCount > 0 ? 12 : 0, assignedPct)}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-2.5 border-t border-slate-100/80">
               <span>Tasks assigned to you</span>
-              <span className="text-cyan-600 font-semibold flex items-center gap-1 group-hover:underline">
+              <span className="text-cyan-600 font-semibold group-hover:underline flex items-center gap-1">
                 See all <ArrowRight className="w-3 h-3" />
               </span>
             </div>
@@ -529,21 +679,42 @@ export const Dashboard: React.FC = () => {
           {/* Card 3: Awaiting Review */}
           <div
             onClick={() => navigate('/tasks/review')}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.03),0_6px_12px_rgba(15,23,42,0.02)] hover:-translate-y-0.5 hover:shadow-md hover:border-amber-300 transition-all duration-200 cursor-pointer relative overflow-hidden group"
+            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-luxe hover:shadow-luxe-hover hover:-translate-y-1 hover:border-amber-400/60 transition-all duration-300 cursor-pointer relative overflow-hidden group"
           >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-yellow-400" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-400" />
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Submitted for Review</span>
               <span className="p-2.5 bg-gradient-to-tr from-amber-500 to-yellow-500 text-white rounded-xl shadow-md shadow-amber-500/25 group-hover:scale-110 transition-transform">
                 <FileCheck2 className="w-4 h-4 text-white" />
               </span>
             </div>
-            <div className="text-3xl font-bold text-slate-900 mt-2 tracking-tight group-hover:text-amber-600 transition-colors">
-              {employeeData.awaiting_review ?? 0}
+
+            <div className="flex items-baseline justify-between mt-2.5">
+              <div className="text-3xl font-extrabold text-slate-900 tracking-tight group-hover:text-amber-600 transition-colors">
+                {awaitingReviewCount}
+              </div>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
+                In Evaluation
+              </span>
             </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
-              <span>Waiting for reviewer approval</span>
-              <span className="text-amber-600 font-semibold flex items-center gap-1 group-hover:underline">
+
+            {/* Micro Progress Bar */}
+            <div className="mt-4 space-y-1.5">
+              <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
+                <span>Approval Pipeline</span>
+                <span className="font-bold text-amber-600">{awaitingReviewCount} submitted</span>
+              </div>
+              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.max(awaitingReviewCount > 0 ? 12 : 0, awaitingPct)}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-2.5 border-t border-slate-100/80">
+              <span>Waiting for approval</span>
+              <span className="text-amber-600 font-semibold group-hover:underline flex items-center gap-1">
                 View list <ArrowRight className="w-3 h-3" />
               </span>
             </div>
@@ -552,21 +723,42 @@ export const Dashboard: React.FC = () => {
           {/* Card 4: Collaborations */}
           <div
             onClick={() => navigate('/tasks/collaborations')}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.03),0_6px_12px_rgba(15,23,42,0.02)] hover:-translate-y-0.5 hover:shadow-md hover:border-purple-300 transition-all duration-200 cursor-pointer relative overflow-hidden group"
+            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-luxe hover:shadow-luxe-hover hover:-translate-y-1 hover:border-purple-400/60 transition-all duration-300 cursor-pointer relative overflow-hidden group"
           >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-600 to-pink-500" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-600 via-pink-500 to-rose-400" />
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Team Collaborations</span>
               <span className="p-2.5 bg-gradient-to-tr from-purple-600 to-pink-500 text-white rounded-xl shadow-md shadow-purple-500/25 group-hover:scale-110 transition-transform">
                 <Users className="w-4 h-4 text-white" />
               </span>
             </div>
-            <div className="text-3xl font-bold text-slate-900 mt-2 tracking-tight group-hover:text-purple-600 transition-colors">
-              {employeeData.my_collaborations}
+
+            <div className="flex items-baseline justify-between mt-2.5">
+              <div className="text-3xl font-extrabold text-slate-900 tracking-tight group-hover:text-purple-600 transition-colors">
+                {collaborationsCount}
+              </div>
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200/60">
+                Cross-Branch
+              </span>
             </div>
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100">
+
+            {/* Micro Progress Bar */}
+            <div className="mt-4 space-y-1.5">
+              <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
+                <span>Synergy Velocity</span>
+                <span className="font-bold text-purple-600">{collabPct}% joint work</span>
+              </div>
+              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-purple-600 to-pink-500 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.max(collaborationsCount > 0 ? 12 : 0, collabPct)}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-2.5 border-t border-slate-100/80">
               <span>Tasks you are helping with</span>
-              <span className="text-purple-600 font-semibold flex items-center gap-1 group-hover:underline">
+              <span className="text-purple-600 font-semibold group-hover:underline flex items-center gap-1">
                 See team tasks <ArrowRight className="w-3 h-3" />
               </span>
             </div>
