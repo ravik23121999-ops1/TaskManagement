@@ -304,6 +304,7 @@ class TaskResource extends JsonResource
                     'role' => $userActiveBranch->assignments->firstWhere('is_current', true)->assignedBy->role,
                 ] : null,
                 'share_parent_details' => $userActiveBranch->share_parent_details ?? true,
+                'can_assign_further' => $userActiveBranch->can_assign_further ?? true,
                 'attachments' => $this->attachments->where('task_branch_id', $userActiveBranch->id)->values()->map(fn($att) => $this->formatAttachment($att)),
                 'submissions' => $this->submissions->where('task_branch_id', $userActiveBranch->id)->sortByDesc('submitted_at')->values()->map(fn($sub) => [
                     'id' => $sub->id,
@@ -376,6 +377,7 @@ class TaskResource extends JsonResource
                     'attachments' => $branchAttachments,
                     'submissions' => $branchSubmissions,
                     'share_parent_details' => $branch->share_parent_details ?? true,
+                    'can_assign_further' => $branch->can_assign_further ?? true,
                 ];
             }),
             'collaborators' => $visibleBranches->flatMap->collaborators->map(fn($c) => [
@@ -483,7 +485,8 @@ class TaskResource extends JsonResource
                 'can_resume' => $canResume,
                 'can_cancel' => $canCancel,
                 'can_delete' => $canDelete,
-                'can_assign' => ($isCreator || $isAdmin || $isBranchOwner) && !in_array($this->status, ['completed', 'cancelled']),
+                'can_assign' => ($isCreator || $isAdmin || ($isBranchOwner && ($userActiveBranch?->can_assign_further ?? true))) && !in_array($this->status, ['completed', 'cancelled']),
+                'can_assign_further' => $isAdmin || $isCreator || ($userActiveBranch && ($userActiveBranch->can_assign_further ?? true)),
                 'can_collaborate' => ($isCreator || $isAdmin || $isBranchOwner) && !in_array($this->status, ['completed', 'cancelled']),
             ],
             'created_at' => $this->created_at?->toISOString(),

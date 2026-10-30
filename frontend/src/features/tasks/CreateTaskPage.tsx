@@ -33,6 +33,7 @@ interface IndividualAssignment {
   files: File[];
   copy_shared_attachments: boolean;
   share_main_task_details: boolean;
+  can_assign_further: boolean;
 }
 
 const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg'];
@@ -161,6 +162,7 @@ export const CreateTaskPage: React.FC = () => {
     files: [],
     copy_shared_attachments: false,
     share_main_task_details: true,
+    can_assign_further: true,
   });
 
   // Select a single user
@@ -262,6 +264,7 @@ export const CreateTaskPage: React.FC = () => {
         files: [],
         copy_shared_attachments: false,
         share_main_task_details: true,
+        can_assign_further: true,
       },
     }));
   };
@@ -409,6 +412,7 @@ export const CreateTaskPage: React.FC = () => {
           }
           formData.append(`branches[${idx}][share_main_task_details]`, work.share_main_task_details ? '1' : '0');
           formData.append(`branches[${idx}][share_previous_branch_details]`, work.share_main_task_details ? '1' : '0');
+          formData.append(`branches[${idx}][can_assign_further]`, work.can_assign_further !== false ? '1' : '0');
           if (work.copy_shared_attachments) {
             formData.append(`branches[${idx}][copy_shared_attachments]`, '1');
           }
@@ -1112,46 +1116,132 @@ export const CreateTaskPage: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* THE TICK / UNTICK OPTION FOR MAIN TASK DOCS & INSTRUCTIONS */}
+                          {/* TOGGLE 1: STOP / PASS ASSIGNER WORK & DOCUMENTS */}
                           <div
-                            className={`p-3 rounded-xl border transition ${
+                            className={`p-3.5 rounded-2xl border transition-all duration-150 ${
                               work.share_main_task_details
-                                ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
-                                : 'bg-slate-50 border-slate-200 text-slate-800'
+                                ? 'bg-emerald-50/80 border-emerald-300'
+                                : 'bg-rose-50/70 border-rose-200'
                             }`}
                           >
-                            <label className="flex items-start gap-2.5 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={work.share_main_task_details}
-                                onChange={(e) =>
-                                  setAssigneeWork((prev) => ({
-                                    ...prev,
-                                    [u.id]: { ...work, share_main_task_details: e.target.checked },
-                                  }))
-                                }
-                                className="mt-0.5 w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer"
-                              />
-                              <div className="text-xs">
-                                <span className="font-bold flex items-center gap-1.5">
-                                  <span>Share main task document & description with this assignment</span>
-                                  {work.share_main_task_details ? (
-                                    <span className="px-1.5 py-0.2 bg-emerald-200 text-emerald-800 rounded font-semibold text-[10px]">
-                                      Shared
-                                    </span>
-                                  ) : (
-                                    <span className="px-1.5 py-0.2 bg-slate-200 text-slate-700 rounded font-semibold text-[10px]">
-                                      Confidential (Subtask Only)
-                                    </span>
-                                  )}
-                                </span>
+                            <div className="flex items-center justify-between flex-wrap gap-2.5">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-bold text-xs text-slate-900">
+                                    Share Assigner Work & Documents:
+                                  </span>
+                                  <span
+                                    className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
+                                      work.share_main_task_details
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'bg-rose-600 text-white'
+                                    }`}
+                                  >
+                                    {work.share_main_task_details ? '✓ PASS / YES (Shared)' : '✕ STOP / NO (Private)'}
+                                  </span>
+                                </div>
                                 <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
                                   {work.share_main_task_details
-                                    ? '✓ Ticked: This assignee will receive the main task description, shared instructions, and all shared attachments in addition to their individual subtask note & individual files.'
-                                    : '✗ Unticked (Strictly Confidential): This assignee will only receive their individual subtask description and individual files. Main task description and shared files remain completely hidden from this assignee.'}
+                                    ? '✓ PASS (Permission YES): Assignee will receive prior work instructions and shared documents from the assigner, alongside their new subtask note and attachments.'
+                                    : '✕ STOP (Permission NO): Stopped! Previous documents and assigner instructions remain confidential. Assignee ONLY sees their new subtask note and attachments.'}
                                 </p>
                               </div>
-                            </label>
+
+                              {/* Toggle Button Group (STOP / PASS) */}
+                              <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-2xs shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setAssigneeWork((prev) => ({
+                                      ...prev,
+                                      [u.id]: { ...work, share_main_task_details: false },
+                                    }))
+                                  }
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                                    !work.share_main_task_details
+                                      ? 'bg-rose-600 text-white shadow-xs'
+                                      : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                                  }`}
+                                  title="STOP: Do not share previous work or documents with this assignee"
+                                >
+                                  <span>✕ STOP / NO</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setAssigneeWork((prev) => ({
+                                      ...prev,
+                                      [u.id]: { ...work, share_main_task_details: true },
+                                    }))
+                                  }
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                                    work.share_main_task_details
+                                      ? 'bg-emerald-600 text-white shadow-xs'
+                                      : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                                  }`}
+                                  title="PASS: Share previous work and documents with this assignee"
+                                >
+                                  <span>✓ PASS / YES</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* TOGGLE 2: PERMISSION TO ASSIGN FURTHER (YES / NO) */}
+                          <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 text-xs flex-wrap gap-2">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-slate-800">Permission to Assign / Delegate Further:</span>
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                    work.can_assign_further !== false
+                                      ? 'bg-emerald-100 text-emerald-800'
+                                      : 'bg-rose-100 text-rose-800'
+                                  }`}
+                                >
+                                  {work.can_assign_further !== false ? '✓ Permitted (YES)' : '✕ Blocked (NO)'}
+                                </span>
+                              </div>
+                              <span className="text-[11px] text-slate-500 block mt-0.5">
+                                {work.can_assign_further !== false
+                                  ? '✓ Permitted: This assignee can assign and delegate subtasks further to other teammates.'
+                                  : '✕ Blocked: This assignee is restricted and cannot assign work further to anyone.'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setAssigneeWork((prev) => ({
+                                    ...prev,
+                                    [u.id]: { ...work, can_assign_further: false },
+                                  }))
+                                }
+                                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                                  work.can_assign_further === false
+                                    ? 'bg-rose-600 text-white shadow-xs'
+                                    : 'text-slate-600 hover:text-slate-900'
+                                }`}
+                              >
+                                ✕ NO
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setAssigneeWork((prev) => ({
+                                    ...prev,
+                                    [u.id]: { ...work, can_assign_further: true },
+                                  }))
+                                }
+                                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                                  work.can_assign_further !== false
+                                    ? 'bg-emerald-600 text-white shadow-xs'
+                                    : 'text-slate-600 hover:text-slate-900'
+                                }`}
+                              >
+                                ✓ YES
+                              </button>
+                            </div>
                           </div>
 
                           {/* Individual Description */}
@@ -1526,46 +1616,132 @@ export const CreateTaskPage: React.FC = () => {
                         </p>
                       </div>
 
-                      {/* Interactive Tick / Untick Toggle directly in Review & Submit */}
+                      {/* TOGGLE 1 ON REVIEW & SUBMIT: STOP / PASS ASSIGNER WORK & DOCUMENTS */}
                       <div
-                        className={`p-3 rounded-xl border transition ${
+                        className={`p-3.5 rounded-2xl border transition-all duration-150 mt-3 ${
                           work.share_main_task_details
-                            ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
-                            : 'bg-slate-50 border-slate-200 text-slate-800'
+                            ? 'bg-emerald-50/80 border-emerald-300'
+                            : 'bg-rose-50/70 border-rose-200'
                         }`}
                       >
-                        <label className="flex items-start gap-2.5 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={work.share_main_task_details}
-                            onChange={(e) =>
-                              setAssigneeWork((prev) => ({
-                                ...prev,
-                                [u.id]: { ...work, share_main_task_details: e.target.checked },
-                              }))
-                            }
-                            className="mt-0.5 w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer"
-                          />
-                          <div className="text-xs">
-                            <span className="font-bold flex items-center gap-1.5">
-                              <span>Share main task document & description with this assignment</span>
-                              {work.share_main_task_details ? (
-                                <span className="px-1.5 py-0.2 bg-emerald-200 text-emerald-800 rounded font-semibold text-[10px]">
-                                  Shared
-                                </span>
-                              ) : (
-                                <span className="px-1.5 py-0.2 bg-slate-200 text-slate-700 rounded font-semibold text-[10px]">
-                                  Confidential (Subtask Only)
-                                </span>
-                              )}
-                            </span>
+                        <div className="flex items-center justify-between flex-wrap gap-2.5">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-bold text-xs text-slate-900">
+                                Share Assigner Work & Documents:
+                              </span>
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
+                                  work.share_main_task_details
+                                    ? 'bg-emerald-600 text-white'
+                                    : 'bg-rose-600 text-white'
+                                }`}
+                              >
+                                {work.share_main_task_details ? '✓ PASS / YES (Shared)' : '✕ STOP / NO (Private)'}
+                              </span>
+                            </div>
                             <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
                               {work.share_main_task_details
-                                ? '✓ Ticked: This assignee will receive the main task description, shared instructions, and all shared attachments in addition to their individual subtask note & individual files.'
-                                : '✗ Unticked (Strictly Confidential): This assignee will only receive their individual subtask description and individual files. Main task description and shared files remain completely hidden from this assignee.'}
+                                ? '✓ PASS (Permission YES): Assignee will receive prior work instructions and shared documents from the assigner, alongside their new subtask note and attachments.'
+                                : '✕ STOP (Permission NO): Stopped! Previous documents and assigner instructions remain confidential. Assignee ONLY sees their new subtask note and attachments.'}
                             </p>
                           </div>
-                        </label>
+
+                          {/* Interactive Toggle Switch Button (STOP / PASS) */}
+                          <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-2xs shrink-0">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setAssigneeWork((prev) => ({
+                                  ...prev,
+                                  [u.id]: { ...work, share_main_task_details: false },
+                                }))
+                              }
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                                !work.share_main_task_details
+                                  ? 'bg-rose-600 text-white shadow-xs'
+                                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                              }`}
+                              title="STOP: Do not share previous work or documents with this assignee"
+                            >
+                              <span>✕ STOP / NO</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setAssigneeWork((prev) => ({
+                                  ...prev,
+                                  [u.id]: { ...work, share_main_task_details: true },
+                                }))
+                              }
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                                work.share_main_task_details
+                                  ? 'bg-emerald-600 text-white shadow-xs'
+                                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                              }`}
+                              title="PASS: Share previous work and documents with this assignee"
+                            >
+                              <span>✓ PASS / YES</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* TOGGLE 2 ON REVIEW & SUBMIT: PERMISSION TO ASSIGN FURTHER (YES / NO) */}
+                      <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 text-xs flex-wrap gap-2 mt-2">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-800">Permission to Assign / Delegate Further:</span>
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                work.can_assign_further !== false
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : 'bg-rose-100 text-rose-800'
+                              }`}
+                            >
+                              {work.can_assign_further !== false ? '✓ Permitted (YES)' : '✕ Blocked (NO)'}
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-slate-500 block mt-0.5">
+                            {work.can_assign_further !== false
+                              ? '✓ Permitted: This assignee can assign and delegate subtasks further to other teammates.'
+                              : '✕ Blocked: This assignee is restricted and cannot assign work further to anyone.'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setAssigneeWork((prev) => ({
+                                ...prev,
+                                [u.id]: { ...work, can_assign_further: false },
+                              }))
+                            }
+                            className={`px-3 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                              work.can_assign_further === false
+                                ? 'bg-rose-600 text-white shadow-xs'
+                                : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            ✕ NO
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setAssigneeWork((prev) => ({
+                                ...prev,
+                                [u.id]: { ...work, can_assign_further: true },
+                              }))
+                            }
+                            className={`px-3 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                              work.can_assign_further !== false
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                          >
+                            ✓ YES
+                          </button>
+                        </div>
                       </div>
 
                       {work.expected_result && (

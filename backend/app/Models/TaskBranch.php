@@ -20,6 +20,7 @@ class TaskBranch extends Model
         'parent_assignment_id',
         'due_date',
         'share_parent_details',
+        'can_assign_further',
         'completed_at',
     ];
 
@@ -28,6 +29,7 @@ class TaskBranch extends Model
         'due_date' => 'datetime',
         'completed_at' => 'datetime',
         'share_parent_details' => 'boolean',
+        'can_assign_further' => 'boolean',
     ];
 
     public function task(): BelongsTo

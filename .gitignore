@@ -19,6 +19,9 @@ frontend/.env.local
 frontend/.env.*.local
 
 # Storage & Caches
+task_management
+*.sqlite
+*.sqlite-journal
 backend/storage/*.key
 backend/storage/logs/*.log
 backend/storage/framework/cache/data/*

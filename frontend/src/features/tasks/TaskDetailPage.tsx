@@ -143,6 +143,7 @@ export const TaskDetailPage: React.FC = () => {
     acceptance_criteria: string;
     due_date: string;
     share_previous: boolean;
+    can_assign_further: boolean;
     files: File[];
   }
 
@@ -157,6 +158,7 @@ export const TaskDetailPage: React.FC = () => {
     acceptance_criteria: '',
     due_date: task?.due_date ? task.due_date.split('T')[0] : '',
     share_previous: true,
+    can_assign_further: true,
     files: [],
   });
 
@@ -290,6 +292,8 @@ export const TaskDetailPage: React.FC = () => {
             formData.append(`branches[${idx}][due_date]`, work.due_date);
           }
           formData.append(`branches[${idx}][share_previous_branch_details]`, work.share_previous ? '1' : '0');
+          formData.append(`branches[${idx}][share_main_task_details]`, work.share_previous ? '1' : '0');
+          formData.append(`branches[${idx}][can_assign_further]`, work.can_assign_further !== false ? '1' : '0');
 
           if (work.files && work.files.length > 0) {
             work.files.forEach((file) => {
@@ -1408,15 +1412,24 @@ export const TaskDetailPage: React.FC = () => {
 
                     <div className="flex items-center gap-2">
                       {task.status !== 'completed' && task.status !== 'cancelled' && (
-                        <button
-                          type="button"
-                          onClick={() => openAssignModal('assign')}
-                          className="px-3.5 py-2 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
-                          title="Assign further / delegate with independent subtasks and attachments"
-                        >
-                          <UserPlus className="w-3.5 h-3.5" />
-                          <span>+ Assign Further</span>
-                        </button>
+                        task.permissions?.can_assign ? (
+                          <button
+                            type="button"
+                            onClick={() => openAssignModal('assign')}
+                            className="px-3.5 py-2 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                            title="Assign further / delegate with independent subtasks and attachments"
+                          >
+                            <UserPlus className="w-3.5 h-3.5" />
+                            <span>+ Assign Further</span>
+                          </button>
+                        ) : (
+                          <span
+                            className="px-3 py-1.5 bg-slate-100 text-slate-500 border border-slate-200 rounded-xl text-[11px] font-medium inline-flex items-center gap-1"
+                            title="Your assigner has restricted further delegation for this task."
+                          >
+                            🔒 Delegation Restricted
+                          </span>
+                        )
                       )}
                       {task.permissions.can_submit && (
                         <button
@@ -2965,41 +2978,112 @@ export const TaskDetailPage: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* THE TICK / UNTICK OPTION FOR PREVIOUS BRANCH DOCS & NOTE */}
+                          {/* TOGGLE 1 IN MODAL: STOP / PASS ASSIGNER WORK & DOCUMENTS */}
                           <div
-                            className={`p-3 rounded-xl border transition ${
+                            className={`p-3.5 rounded-2xl border transition-all duration-150 ${
                               work.share_previous
-                                ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
-                                : 'bg-slate-50 border-slate-200 text-slate-800'
+                                ? 'bg-emerald-50/80 border-emerald-300'
+                                : 'bg-rose-50/70 border-rose-200'
                             }`}
                           >
-                            <label className="flex items-start gap-2.5 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={work.share_previous}
-                                onChange={(e) => updateModalWork(uid, { share_previous: e.target.checked })}
-                                className="mt-0.5 w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer"
-                              />
-                              <div className="text-xs">
-                                <span className="font-bold flex items-center gap-1.5">
-                                  <span>Share previous document & description with this assignment</span>
-                                  {work.share_previous ? (
-                                    <span className="px-1.5 py-0.2 bg-emerald-200 text-emerald-800 rounded font-semibold text-[10px]">
-                                      Shared
-                                    </span>
-                                  ) : (
-                                    <span className="px-1.5 py-0.2 bg-slate-200 text-slate-700 rounded font-semibold text-[10px]">
-                                      Private Note Only
-                                    </span>
-                                  )}
-                                </span>
+                            <div className="flex items-center justify-between flex-wrap gap-2.5">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-bold text-xs text-slate-900">
+                                    Share Assigner Work & Documents:
+                                  </span>
+                                  <span
+                                    className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
+                                      work.share_previous
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'bg-rose-600 text-white'
+                                    }`}
+                                  >
+                                    {work.share_previous ? '✓ PASS / YES (Shared)' : '✕ STOP / NO (Private)'}
+                                  </span>
+                                </div>
                                 <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
                                   {work.share_previous
-                                    ? '✓ Ticked: This assignee will have access to previous branch / main task documents and previous instructions, in addition to the new note and files below.'
-                                    : '✗ Unticked (Strictly Confidential): This assignee will only receive the specific note and attachments uploaded below. Previous branch documents and instructions remain hidden.'}
+                                    ? '✓ PASS (Permission YES): Assignee will receive prior work instructions and shared documents from the assigner, alongside their new subtask note and attachments.'
+                                    : '✕ STOP (Permission NO): Stopped! Previous documents and assigner instructions remain confidential. Assignee ONLY sees their new subtask note and attachments.'}
                                 </p>
                               </div>
-                            </label>
+
+                              {/* Toggle Button Group (STOP / PASS) */}
+                              <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-2xs shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => updateModalWork(uid, { share_previous: false })}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                                    !work.share_previous
+                                      ? 'bg-rose-600 text-white shadow-xs'
+                                      : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                                  }`}
+                                  title="STOP: Do not share previous work or documents with this assignee"
+                                >
+                                  <span>✕ STOP / NO</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => updateModalWork(uid, { share_previous: true })}
+                                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                                    work.share_previous
+                                      ? 'bg-emerald-600 text-white shadow-xs'
+                                      : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
+                                  }`}
+                                  title="PASS: Share previous work and documents with this assignee"
+                                >
+                                  <span>✓ PASS / YES</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* TOGGLE 2 IN MODAL: PERMISSION TO ASSIGN FURTHER (YES / NO) */}
+                          <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 text-xs flex-wrap gap-2">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-slate-800">Permission to Assign / Delegate Further:</span>
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                    work.can_assign_further !== false
+                                      ? 'bg-emerald-100 text-emerald-800'
+                                      : 'bg-rose-100 text-rose-800'
+                                  }`}
+                                >
+                                  {work.can_assign_further !== false ? '✓ Permitted (YES)' : '✕ Blocked (NO)'}
+                                </span>
+                              </div>
+                              <span className="text-[11px] text-slate-500 block mt-0.5">
+                                {work.can_assign_further !== false
+                                  ? '✓ Permitted: This assignee can assign and delegate subtasks further to other teammates.'
+                                  : '✕ Blocked: This assignee is restricted and cannot assign work further to anyone.'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => updateModalWork(uid, { can_assign_further: false })}
+                                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                                  work.can_assign_further === false
+                                    ? 'bg-rose-600 text-white shadow-xs'
+                                    : 'text-slate-600 hover:text-slate-900'
+                                }`}
+                              >
+                                ✕ NO
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => updateModalWork(uid, { can_assign_further: true })}
+                                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                                  work.can_assign_further !== false
+                                    ? 'bg-emerald-600 text-white shadow-xs'
+                                    : 'text-slate-600 hover:text-slate-900'
+                                }`}
+                              >
+                                ✓ YES
+                              </button>
+                            </div>
                           </div>
 
                           {/* Individual Note & Description */}

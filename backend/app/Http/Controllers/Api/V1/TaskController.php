@@ -363,6 +363,7 @@ class TaskController extends Controller
                     foreach ($validBranches as $bIndex => $bData) {
                         $assigneeId = (int)$bData['owner_id'];
                         $shareMain = filter_var($bData['share_main_task_details'] ?? $bData['share_previous_branch_details'] ?? true, FILTER_VALIDATE_BOOLEAN);
+                        $canAssignFurther = filter_var($bData['can_assign_further'] ?? true, FILTER_VALIDATE_BOOLEAN);
                         $branchTitle = !empty($bData['title']) ? trim($bData['title']) : $task->title;
                         $branchDesc = !empty($bData['description']) ? trim($bData['description']) : $task->description;
                         $branchExpected = !empty($bData['expected_result']) ? trim($bData['expected_result']) : ($shareMain ? $task->expected_result : null);
@@ -380,6 +381,7 @@ class TaskController extends Controller
                             'status' => 'pending',
                             'due_date' => $branchDue,
                             'share_parent_details' => $shareMain,
+                            'can_assign_further' => $canAssignFurther,
                         ]);
 
                         $branch->assignments()->create([
@@ -972,6 +974,14 @@ class TaskController extends Controller
             return response()->json(['message' => 'Unauthorized to assign this task'], 403);
         }
 
+        // Check if assigner has permission to assign further
+        if ($isBranchOwner && !$isAdmin && !$isCreator) {
+            $userBranches = $task->branches()->where('owner_id', $user->id)->get();
+            if ($userBranches->isNotEmpty() && $userBranches->every(fn($b) => $b->can_assign_further === false)) {
+                return response()->json(['message' => 'Permission denied: Your assigner has stopped further delegation for this task.'], 403);
+            }
+        }
+
         if (in_array($task->status, ['completed', 'cancelled'])) {
             return response()->json(['message' => 'Cannot add assignees to a completed or cancelled task'], 422);
         }
@@ -998,6 +1008,7 @@ class TaskController extends Controller
             $bData = collect($branchesData)->firstWhere('owner_id', $assigneeId) ?: ($branchesData[$idx] ?? []);
             $mode = $bData['mode'] ?? $request->input('mode', 'new_subtask');
             $sharePrevious = filter_var($bData['share_previous_branch_details'] ?? $request->input('share_previous_branch_details', true), FILTER_VALIDATE_BOOLEAN);
+            $canAssignFurther = filter_var($bData['can_assign_further'] ?? true, FILTER_VALIDATE_BOOLEAN);
 
             // Avoid duplicate active branch with identical title for the same user
             if ($mode === 'new_subtask' && !empty($bData['title'])) {
@@ -1105,6 +1116,7 @@ class TaskController extends Controller
                 'status' => 'pending',
                 'due_date' => $branchDue,
                 'share_parent_details' => $sharePrevious,
+                'can_assign_further' => $canAssignFurther,
             ]);
 
             $branch->assignments()->create([
