@@ -306,6 +306,26 @@ class TaskController extends Controller
                 'creator_id' => $user->id,
             ]);
 
+            // 1. Process Shared File Attachments (uploaded in Step 1)
+            $createdSharedAttachments = [];
+            $sharedFiles = $request->file('shared_files') ?? $request->file('files') ?? [];
+            if (!empty($sharedFiles)) {
+                foreach ((array)$sharedFiles as $sFile) {
+                    if ($sFile instanceof \Illuminate\Http\UploadedFile && $sFile->isValid()) {
+                        $sPath = $sFile->store('attachments', 'public');
+                        $createdSharedAttachments[] = TaskAttachment::create([
+                            'task_id' => $task->id,
+                            'task_branch_id' => null, // null marks SHARED attachment accessible to all task assignees
+                            'uploaded_by_id' => $user->id,
+                            'file_name' => $sFile->getClientOriginalName(),
+                            'file_path' => $sPath,
+                            'file_size' => $sFile->getSize(),
+                            'file_type' => $sFile->getMimeType(),
+                        ]);
+                    }
+                }
+            }
+
             // Handle assignees / branches
             if ($task->handling_method === 'work_alone') {
                 // Default branch for creator
@@ -340,16 +360,22 @@ class TaskController extends Controller
                         ]);
                     }
 
-                    foreach ($validBranches as $bData) {
+                    foreach ($validBranches as $bIndex => $bData) {
                         $assigneeId = (int)$bData['owner_id'];
                         $branchTitle = !empty($bData['title']) ? trim($bData['title']) : $task->title;
                         $branchDesc = !empty($bData['description']) ? trim($bData['description']) : $task->description;
+                        $branchExpected = !empty($bData['expected_result']) ? trim($bData['expected_result']) : $task->expected_result;
+                        $branchCriteria = !empty($bData['acceptance_criteria']) ? trim($bData['acceptance_criteria']) : $task->acceptance_criteria;
+                        $branchStart = !empty($bData['start_date']) ? now()->parse($bData['start_date']) : $task->start_date;
                         $branchDue = !empty($bData['due_date']) ? now()->parse($bData['due_date']) : $task->due_date;
 
                         $branch = $task->branches()->create([
                             'title' => $branchTitle,
                             'description' => $branchDesc,
+                            'expected_result' => $branchExpected,
+                            'acceptance_criteria' => $branchCriteria,
                             'owner_id' => $assigneeId,
+                            'start_date' => $branchStart,
                             'status' => 'pending',
                             'due_date' => $branchDue,
                         ]);
@@ -360,6 +386,43 @@ class TaskController extends Controller
                             'is_current' => true,
                             'assigned_at' => now(),
                         ]);
+
+                        // Handle individual files attached to this specific branch/subtask
+                        $branchFiles = $request->file("branches.{$bIndex}.files")
+                            ?? $request->file("branch_files.{$assigneeId}")
+                            ?? [];
+
+                        if (!empty($branchFiles)) {
+                            foreach ((array)$branchFiles as $bFile) {
+                                if ($bFile instanceof \Illuminate\Http\UploadedFile && $bFile->isValid()) {
+                                    $bPath = $bFile->store('attachments', 'public');
+                                    TaskAttachment::create([
+                                        'task_id' => $task->id,
+                                        'task_branch_id' => $branch->id,
+                                        'uploaded_by_id' => $user->id,
+                                        'file_name' => $bFile->getClientOriginalName(),
+                                        'file_path' => $bPath,
+                                        'file_size' => $bFile->getSize(),
+                                        'file_type' => $bFile->getMimeType(),
+                                    ]);
+                                }
+                            }
+                        }
+
+                        // Explicitly copy shared attachment references into this employee's branch if requested
+                        if (!empty($bData['copy_shared_attachments']) && !empty($createdSharedAttachments)) {
+                            foreach ($createdSharedAttachments as $sAtt) {
+                                TaskAttachment::create([
+                                    'task_id' => $task->id,
+                                    'task_branch_id' => $branch->id,
+                                    'uploaded_by_id' => $user->id,
+                                    'file_name' => $sAtt->file_name,
+                                    'file_path' => $sAtt->file_path,
+                                    'file_size' => $sAtt->file_size,
+                                    'file_type' => $sAtt->file_type,
+                                ]);
+                            }
+                        }
 
                         if ($assigneeId !== $user->id) {
                             SendTaskNotification::dispatch(
@@ -416,16 +479,22 @@ class TaskController extends Controller
                 $assignees = (array) $request->input('assignees', []);
 
                 if (!empty($branchesData)) {
-                    foreach ($branchesData as $bData) {
+                    foreach ($branchesData as $bIndex => $bData) {
                         $collabOwnerId = (int)$bData['owner_id'];
                         $branchTitle = !empty($bData['title']) ? trim($bData['title']) : $task->title;
                         $branchDesc = !empty($bData['description']) ? trim($bData['description']) : $task->description;
+                        $branchExpected = !empty($bData['expected_result']) ? trim($bData['expected_result']) : $task->expected_result;
+                        $branchCriteria = !empty($bData['acceptance_criteria']) ? trim($bData['acceptance_criteria']) : $task->acceptance_criteria;
+                        $branchStart = !empty($bData['start_date']) ? now()->parse($bData['start_date']) : $task->start_date;
                         $branchDue = !empty($bData['due_date']) ? now()->parse($bData['due_date']) : $task->due_date;
 
                         $branch = $task->branches()->create([
                             'title' => $branchTitle,
                             'description' => $branchDesc,
+                            'expected_result' => $branchExpected,
+                            'acceptance_criteria' => $branchCriteria,
                             'owner_id' => $collabOwnerId,
+                            'start_date' => $branchStart,
                             'status' => 'pending',
                             'due_date' => $branchDue,
                         ]);
@@ -445,6 +514,43 @@ class TaskController extends Controller
                             'can_collaborate' => true,
                             'invited_at' => now(),
                         ]);
+
+                        // Handle individual files attached to this specific collaboration branch
+                        $branchFiles = $request->file("branches.{$bIndex}.files")
+                            ?? $request->file("branch_files.{$collabOwnerId}")
+                            ?? [];
+
+                        if (!empty($branchFiles)) {
+                            foreach ((array)$branchFiles as $bFile) {
+                                if ($bFile instanceof \Illuminate\Http\UploadedFile && $bFile->isValid()) {
+                                    $bPath = $bFile->store('attachments', 'public');
+                                    TaskAttachment::create([
+                                        'task_id' => $task->id,
+                                        'task_branch_id' => $branch->id,
+                                        'uploaded_by_id' => $user->id,
+                                        'file_name' => $bFile->getClientOriginalName(),
+                                        'file_path' => $bPath,
+                                        'file_size' => $bFile->getSize(),
+                                        'file_type' => $bFile->getMimeType(),
+                                    ]);
+                                }
+                            }
+                        }
+
+                        // Copy shared attachment references into this collaborator's branch if requested
+                        if (!empty($bData['copy_shared_attachments']) && !empty($createdSharedAttachments)) {
+                            foreach ($createdSharedAttachments as $sAtt) {
+                                TaskAttachment::create([
+                                    'task_id' => $task->id,
+                                    'task_branch_id' => $branch->id,
+                                    'uploaded_by_id' => $user->id,
+                                    'file_name' => $sAtt->file_name,
+                                    'file_path' => $sAtt->file_path,
+                                    'file_size' => $sAtt->file_size,
+                                    'file_type' => $sAtt->file_type,
+                                ]);
+                            }
+                        }
 
                         if ($collabOwnerId !== $user->id) {
                             SendTaskNotification::dispatch(
@@ -559,20 +665,6 @@ class TaskController extends Controller
                             ]);
                         }
                     }
-                }
-            }
-
-            // Handle file attachments if uploaded
-            if ($request->hasFile('files')) {
-                foreach ($request->file('files') as $file) {
-                    $path = $file->store('attachments', 'public');
-                    $task->attachments()->create([
-                        'uploaded_by_id' => $user->id,
-                        'file_name' => $file->getClientOriginalName(),
-                        'file_path' => $path,
-                        'file_size' => $file->getSize(),
-                        'file_type' => $file->getMimeType(),
-                    ]);
                 }
             }
 
@@ -905,12 +997,18 @@ class TaskController extends Controller
                 $bData = collect($branchesData)->firstWhere('owner_id', $assigneeId);
                 $branchTitle = !empty($bData['title']) ? trim($bData['title']) : $task->title;
                 $branchDesc = !empty($bData['description']) ? trim($bData['description']) : $task->description;
+                $branchExpected = !empty($bData['expected_result']) ? trim($bData['expected_result']) : $task->expected_result;
+                $branchCriteria = !empty($bData['acceptance_criteria']) ? trim($bData['acceptance_criteria']) : $task->acceptance_criteria;
+                $branchStart = !empty($bData['start_date']) ? now()->parse($bData['start_date']) : $task->start_date;
                 $branchDue = !empty($bData['due_date']) ? now()->parse($bData['due_date']) : $task->due_date;
 
                 $branch = $task->branches()->create([
                     'title' => $branchTitle,
                     'description' => $branchDesc,
+                    'expected_result' => $branchExpected,
+                    'acceptance_criteria' => $branchCriteria,
                     'owner_id' => $assigneeId,
+                    'start_date' => $branchStart,
                     'status' => 'pending',
                     'due_date' => $branchDue,
                 ]);

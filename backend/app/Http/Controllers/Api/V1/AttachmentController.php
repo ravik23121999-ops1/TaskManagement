@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\TaskAttachment;
 use App\Models\Task;
+use App\Models\TaskBranch;
 use App\Services\ActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -65,15 +66,31 @@ class AttachmentController extends Controller
 
         // Role check: Admin and Sub-Admin have unrestricted access
         if ($user->role !== 'admin' && $user->role !== 'sub_admin') {
-            $isAuthorized = $task->creator_id === $user->id
-                || $attachment->uploaded_by_id === $user->id
-                || $task->branches()->where('owner_id', $user->id)->exists()
-                || $task->branches()->whereHas('assignments', fn($a) => $a->where('assigned_by_id', $user->id))->exists()
-                || $task->branches()->whereHas('collaborators', fn($c) => $c->where('user_id', $user->id)->orWhere('invited_by_id', $user->id))->exists()
-                || $task->submissions()->whereHas('reviews', fn($r) => $r->where('reviewer_id', $user->id))->exists();
+            $isCreator = $task->creator_id === $user->id;
+            $isUploader = $attachment->uploaded_by_id === $user->id;
 
-            if (!$isAuthorized) {
-                return response()->json(['message' => 'You do not have permission to download this attachment.'], 403);
+            if ($attachment->task_branch_id) {
+                // Strict branch isolation: Individual attachment belongs to a specific branch/employee
+                $branch = $attachment->branch ?? TaskBranch::find($attachment->task_branch_id);
+                $isBranchOwner = $branch && (int)$branch->owner_id === (int)$user->id;
+                $isBranchAssigner = $branch && $branch->assignments()->where('assigned_by_id', $user->id)->exists();
+                $isBranchCollaborator = $branch && $branch->collaborators()->where('user_id', $user->id)->exists();
+
+                if (!$isCreator && !$isUploader && !$isBranchOwner && !$isBranchAssigner && !$isBranchCollaborator) {
+                    return response()->json(['message' => 'Unauthorized: You do not have permission to access this individual assignment attachment.'], 403);
+                }
+            } else {
+                // Shared task attachment: Any authorized participant of the task can access
+                $isParticipant = $isCreator
+                    || $isUploader
+                    || $task->branches()->where('owner_id', $user->id)->exists()
+                    || $task->branches()->whereHas('assignments', fn($a) => $a->where('assigned_by_id', $user->id)->orWhere('assigned_to_id', $user->id))->exists()
+                    || $task->branches()->whereHas('collaborators', fn($c) => $c->where('user_id', $user->id)->orWhere('invited_by_id', $user->id))->exists()
+                    || $task->submissions()->whereHas('reviews', fn($r) => $r->where('reviewer_id', $user->id))->exists();
+
+                if (!$isParticipant) {
+                    return response()->json(['message' => 'You do not have permission to download this shared attachment.'], 403);
+                }
             }
         }
 

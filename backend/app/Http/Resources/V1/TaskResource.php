@@ -101,6 +101,17 @@ class TaskResource extends JsonResource
                 $progress = 20;
             }
         }
+
+        // Aggregated progress summary
+        $allBranches = $this->branches;
+        $totalBranchCount = $allBranches->count();
+        $progressSummary = [
+            'total' => $totalBranchCount,
+            'completed' => $allBranches->where('status', 'completed')->count(),
+            'in_progress' => $allBranches->where('status', 'in_progress')->count(),
+            'pending_review' => $allBranches->where('status', 'review')->count(),
+            'pending' => $allBranches->where('status', 'pending')->count(),
+        ];
         
         $canSubmit = false;
         if ($this->status !== 'completed' && $this->status !== 'cancelled' && $this->status !== 'on_hold') {
@@ -264,6 +275,7 @@ class TaskResource extends JsonResource
                 'role' => $this->cancelledBy->role,
             ] : null,
             'progress' => $progress,
+            'progress_summary' => $progressSummary,
             'creator' => $this->creator ? [
                 'id' => $this->creator->id,
                 'name' => $this->creator->name,
@@ -280,7 +292,10 @@ class TaskResource extends JsonResource
                 'id' => $userActiveBranch->id,
                 'title' => $userActiveBranch->title,
                 'description' => $userActiveBranch->description,
+                'expected_result' => $userActiveBranch->expected_result,
+                'acceptance_criteria' => $userActiveBranch->acceptance_criteria,
                 'status' => $userActiveBranch->status,
+                'start_date' => $userActiveBranch->start_date?->toISOString(),
                 'due_date' => $userActiveBranch->due_date?->toISOString(),
                 'completed_at' => $userActiveBranch->completed_at?->toISOString(),
                 'assigned_by' => $userActiveBranch->assignments->firstWhere('is_current', true)?->assignedBy ? [
@@ -288,15 +303,63 @@ class TaskResource extends JsonResource
                     'name' => $userActiveBranch->assignments->firstWhere('is_current', true)->assignedBy->name,
                     'role' => $userActiveBranch->assignments->firstWhere('is_current', true)->assignedBy->role,
                 ] : null,
+                'attachments' => $this->attachments->where('task_branch_id', $userActiveBranch->id)->values()->map(fn($att) => $this->formatAttachment($att)),
+                'submissions' => $this->submissions->where('task_branch_id', $userActiveBranch->id)->sortByDesc('submitted_at')->values()->map(fn($sub) => [
+                    'id' => $sub->id,
+                    'description' => $sub->description,
+                    'is_final' => (bool)$sub->is_final,
+                    'submitted_at' => $sub->submitted_at?->toISOString(),
+                    'submitted_by' => $sub->submittedBy ? [
+                        'id' => $sub->submittedBy->id,
+                        'name' => $sub->submittedBy->name,
+                    ] : null,
+                    'reviews' => $sub->reviews->map(fn($rev) => [
+                        'id' => $rev->id,
+                        'decision' => $rev->decision,
+                        'comments' => $rev->comments,
+                        'reviewed_at' => $rev->reviewed_at?->toISOString(),
+                        'reviewer' => $rev->reviewer ? [
+                            'id' => $rev->reviewer->id,
+                            'name' => $rev->reviewer->name,
+                        ] : null,
+                    ]),
+                ]),
             ] : null,
             'branches' => $visibleBranches->map(function ($branch) {
                 $currentAssignment = $branch->assignments->firstWhere('is_current', true);
                 $assignedBy = $currentAssignment?->assignedBy;
+                $branchAttachments = $this->attachments->where('task_branch_id', $branch->id)->values()->map(fn($att) => $this->formatAttachment($att));
+                $branchSubmissions = $this->submissions->where('task_branch_id', $branch->id)->sortByDesc('submitted_at')->values()->map(fn($sub) => [
+                    'id' => $sub->id,
+                    'description' => $sub->description,
+                    'is_final' => (bool)$sub->is_final,
+                    'submitted_at' => $sub->submitted_at?->toISOString(),
+                    'submitted_by' => $sub->submittedBy ? [
+                        'id' => $sub->submittedBy->id,
+                        'name' => $sub->submittedBy->name,
+                    ] : null,
+                    'reviews' => $sub->reviews->map(fn($rev) => [
+                        'id' => $rev->id,
+                        'decision' => $rev->decision,
+                        'comments' => $rev->comments,
+                        'reviewed_at' => $rev->reviewed_at?->toISOString(),
+                        'reviewer' => $rev->reviewer ? [
+                            'id' => $rev->reviewer->id,
+                            'name' => $rev->reviewer->name,
+                        ] : null,
+                    ]),
+                ]);
+
                 return [
                     'id' => $branch->id,
                     'title' => $branch->title,
                     'description' => $branch->description,
+                    'expected_result' => $branch->expected_result,
+                    'acceptance_criteria' => $branch->acceptance_criteria,
                     'status' => $branch->status,
+                    'start_date' => $branch->start_date?->toISOString(),
+                    'due_date' => $branch->due_date?->toISOString(),
+                    'completed_at' => $branch->completed_at?->toISOString(),
                     'owner' => $branch->owner ? [
                         'id' => $branch->owner->id,
                         'name' => $branch->owner->name,
@@ -309,8 +372,8 @@ class TaskResource extends JsonResource
                         'email' => $assignedBy->email,
                         'role' => $assignedBy->role,
                     ] : null,
-                    'due_date' => $branch->due_date?->toISOString(),
-                    'completed_at' => $branch->completed_at?->toISOString(),
+                    'attachments' => $branchAttachments,
+                    'submissions' => $branchSubmissions,
                 ];
             }),
             'collaborators' => $visibleBranches->flatMap->collaborators->map(fn($c) => [
@@ -329,20 +392,12 @@ class TaskResource extends JsonResource
                     'role' => $comment->user->role,
                 ] : null,
             ]),
-            'attachments' => $this->attachments->map(fn($att) => [
-                'id' => $att->id,
-                'file_name' => $att->file_name,
-                'file_size' => $att->file_size,
-                'file_type' => $att->file_type,
-                'file_path' => $att->file_path,
-                'url' => url("/api/v1/attachments/{$att->id}/download"),
-                'direct_url' => asset('storage/' . $att->file_path),
-                'created_at' => $att->created_at?->toISOString(),
-                'uploaded_by' => $att->uploadedBy ? [
-                    'id' => $att->uploadedBy->id,
-                    'name' => $att->uploadedBy->name,
-                ] : null,
-            ]),
+            'shared_attachments' => $this->attachments->whereNull('task_branch_id')->values()->map(fn($att) => $this->formatAttachment($att)),
+            'attachments' => $this->attachments->filter(function ($att) use ($canOverseeAll, $visibleBranches) {
+                if ($canOverseeAll) return true;
+                $visibleBranchIds = $visibleBranches->pluck('id')->all();
+                return is_null($att->task_branch_id) || in_array($att->task_branch_id, $visibleBranchIds);
+            })->values()->map(fn($att) => $this->formatAttachment($att)),
             'status_history' => $this->statusHistory->sortBy('changed_at')->values()->map(fn($history) => [
                 'id' => $history->id,
                 'from_status' => $history->from_status,
@@ -423,6 +478,25 @@ class TaskResource extends JsonResource
             ],
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
+        ];
+    }
+
+    protected function formatAttachment($att): array
+    {
+        return [
+            'id' => $att->id,
+            'file_name' => $att->file_name,
+            'file_size' => $att->file_size,
+            'file_type' => $att->file_type,
+            'file_path' => $att->file_path,
+            'task_branch_id' => $att->task_branch_id,
+            'url' => url("/api/v1/attachments/{$att->id}/download"),
+            'direct_url' => asset('storage/' . $att->file_path),
+            'created_at' => $att->created_at?->toISOString(),
+            'uploaded_by' => $att->uploadedBy ? [
+                'id' => $att->uploadedBy->id,
+                'name' => $att->uploadedBy->name,
+            ] : null,
         ];
     }
 }

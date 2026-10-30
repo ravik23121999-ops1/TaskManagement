@@ -1058,7 +1058,68 @@ export const TaskDetailPage: React.FC = () => {
       {/* SCREEN 7: OVERVIEW TAB CONTENT                           */}
       {/* ======================================================== */}
       {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="space-y-6">
+          {/* Aggregated Progress Summary for Task Overseers / Managers */}
+          {!task.is_peer_isolated && task.progress_summary && task.progress_summary.total > 0 && (
+            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+                    <Users className="w-4 h-4" />
+                  </span>
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                      Assignment Progress & Allocation
+                    </h3>
+                    <p className="text-[11px] text-slate-500">
+                      Overall status breakdown across all assigned employees
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <span className="font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
+                    Assignments: {task.progress_summary.total}
+                  </span>
+                  <span className="font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
+                    Completed: {task.progress_summary.completed}
+                  </span>
+                  <span className="font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg">
+                    In Progress: {task.progress_summary.in_progress}
+                  </span>
+                  <span className="font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
+                    Pending Review: {task.progress_summary.pending_review}
+                  </span>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden flex">
+                <div
+                  className="bg-emerald-500 h-full transition-all duration-500"
+                  style={{
+                    width: `${(task.progress_summary.completed / task.progress_summary.total) * 100}%`,
+                  }}
+                  title={`Completed: ${task.progress_summary.completed}`}
+                />
+                <div
+                  className="bg-amber-400 h-full transition-all duration-500"
+                  style={{
+                    width: `${(task.progress_summary.pending_review / task.progress_summary.total) * 100}%`,
+                  }}
+                  title={`Pending Review: ${task.progress_summary.pending_review}`}
+                />
+                <div
+                  className="bg-blue-500 h-full transition-all duration-500"
+                  style={{
+                    width: `${(task.progress_summary.in_progress / task.progress_summary.total) * 100}%`,
+                  }}
+                  title={`In Progress: ${task.progress_summary.in_progress}`}
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: Basic Information */}
           <div className="lg:col-span-2 bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
             {/* STRICT PEER ISOLATION: YOUR ASSIGNED WORK CARD */}
@@ -1103,6 +1164,84 @@ export const TaskDetailPage: React.FC = () => {
                       </p>
                     </div>
                   )}
+
+                  {task.my_branch.expected_result && (
+                    <div className="p-3 bg-white/90 border border-blue-200/80 rounded-xl space-y-1">
+                      <span className="font-bold text-blue-900 text-[10px] uppercase tracking-wider block">
+                        Expected Result
+                      </span>
+                      <p className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
+                        {task.my_branch.expected_result}
+                      </p>
+                    </div>
+                  )}
+
+                  {task.my_branch.acceptance_criteria && (
+                    <div className="p-3 bg-white/90 border border-blue-200/80 rounded-xl space-y-1">
+                      <span className="font-bold text-blue-900 text-[10px] uppercase tracking-wider block">
+                        Acceptance Criteria
+                      </span>
+                      <p className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
+                        {task.my_branch.acceptance_criteria}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Attachments Section for My Assignment */}
+                  {(() => {
+                    const sharedAtts = task.shared_attachments || task.attachments?.filter((a) => !a.task_branch_id) || [];
+                    const branchAtts = task.my_branch?.attachments || task.attachments?.filter((a) => a.task_branch_id === task.my_branch?.id) || [];
+                    const allMyAtts = [
+                      ...sharedAtts.map((a) => ({ ...a, is_shared: true })),
+                      ...branchAtts.map((a) => ({ ...a, is_shared: false })),
+                    ];
+
+                    if (allMyAtts.length === 0) return null;
+
+                    return (
+                      <div className="p-3 bg-white/95 border border-blue-200/80 rounded-xl space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-blue-900 text-[10px] uppercase tracking-wider block">
+                            Scope Attachments ({allMyAtts.length})
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            Shared & Individual files for your scope
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {allMyAtts.map((att) => (
+                            <div
+                              key={att.id}
+                              className="flex items-center justify-between p-2 bg-slate-50 border border-slate-200/80 rounded-lg text-xs"
+                            >
+                              <div className="flex items-center gap-2 truncate">
+                                <Paperclip className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                                <div className="truncate">
+                                  <p className="font-semibold text-slate-800 truncate text-[11px]">{att.file_name}</p>
+                                  <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                                    <span>{Math.round(att.file_size / 1024)} KB</span>
+                                    {att.is_shared && (
+                                      <span className="px-1.5 py-0.2 bg-blue-100 text-blue-800 rounded font-bold text-[9px]">
+                                        Shared
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <button
+                                onClick={() => handleDownloadAttachment(att.id, att.file_name)}
+                                disabled={downloadingId === att.id}
+                                className="px-2 py-1 bg-white hover:bg-blue-50 text-blue-600 border border-slate-200 rounded-md text-[10px] font-bold transition flex items-center gap-1 shrink-0 cursor-pointer"
+                              >
+                                <Download className="w-3 h-3" />
+                                <span>{downloadingId === att.id ? '...' : 'Download'}</span>
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   <div className="flex items-center justify-between flex-wrap gap-2 pt-1 text-xs">
                     <div className="flex items-center gap-3">
@@ -1442,6 +1581,7 @@ export const TaskDetailPage: React.FC = () => {
             )}
           </div>
         </div>
+        </div>
       )}
 
       {/* ======================================================== */}
@@ -1535,56 +1675,137 @@ export const TaskDetailPage: React.FC = () => {
             </div>
 
             {task.branches && task.branches.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                {task.branches.map((b) => (
-                  <div
-                    key={b.id}
-                    className="p-4 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-slate-50 transition flex flex-col justify-between space-y-3"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-full bg-sky-100 text-sky-700 font-bold flex items-center justify-center text-xs shrink-0">
-                          {b.owner?.name?.charAt(0) || 'U'}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {task.branches.map((b) => {
+                  const pendingSub = b.submissions?.find((s) => !s.reviews || s.reviews.length === 0);
+
+                  return (
+                    <div
+                      key={b.id}
+                      className="p-5 rounded-2xl border border-slate-200 bg-white hover:border-blue-300 transition-all shadow-2xs space-y-3 flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-xs">
+                              {b.owner?.name?.charAt(0) || 'U'}
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-slate-900 text-xs">{b.owner?.name || 'Unassigned'}</h4>
+                              <p className="text-[10px] text-slate-400 capitalize">
+                                {b.owner?.role?.replace('_', ' ') || 'Assignee'} • {b.owner?.email || ''}
+                              </p>
+                              {b.assigned_by && (
+                                <p className="text-[10px] text-sky-700 font-medium">
+                                  Delegated by: {b.assigned_by.name} ({b.assigned_by.role?.replace('_', ' ')})
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <StatusBadge
+                            status={b.status}
+                            size="sm"
+                            customLabel={
+                              b.status === 'review'
+                                ? `Under Review: ${b.assigned_by?.name || task.creator?.name || 'Assigner'}`
+                                : b.status === 'post_comment'
+                                ? 'Needs Correction'
+                                : undefined
+                            }
+                          />
                         </div>
-                        <div>
-                          <h4 className="font-bold text-slate-900 text-xs">{b.owner?.name || 'Unassigned'}</h4>
-                          <p className="text-[10px] text-slate-400 capitalize">
-                            {b.owner?.role?.replace('_', ' ') || 'Assignee'} • {b.owner?.email || ''}
-                          </p>
-                          {b.assigned_by && (
-                            <p className="text-[10px] text-sky-700 font-medium">
-                              Delegated by: {b.assigned_by.name} ({b.assigned_by.role?.replace('_', ' ')})
-                            </p>
+
+                        <div className="pt-3 space-y-2.5 text-xs">
+                          <div>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+                              Subtask Scope
+                            </span>
+                            <p className="font-bold text-slate-800 text-sm">{b.title}</p>
+                          </div>
+
+                          {b.description && (
+                            <div>
+                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">
+                                Individual Description
+                              </span>
+                              <p className="text-slate-600 text-xs whitespace-pre-wrap pl-2 border-l-2 border-blue-400">
+                                {b.description}
+                              </p>
+                            </div>
+                          )}
+
+                          {b.expected_result && (
+                            <div className="p-2 bg-slate-50 rounded-lg">
+                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">
+                                Expected Result
+                              </span>
+                              <p className="text-slate-700 text-[11px] whitespace-pre-wrap">{b.expected_result}</p>
+                            </div>
+                          )}
+
+                          {b.acceptance_criteria && (
+                            <div className="p-2 bg-slate-50 rounded-lg">
+                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">
+                                Acceptance Criteria
+                              </span>
+                              <p className="text-slate-700 text-[11px] whitespace-pre-wrap">{b.acceptance_criteria}</p>
+                            </div>
+                          )}
+
+                          {/* Individual Attachments for this Branch */}
+                          {b.attachments && b.attachments.length > 0 && (
+                            <div className="pt-2 border-t border-slate-100">
+                              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">
+                                Individual Attachments ({b.attachments.length})
+                              </span>
+                              <div className="flex flex-wrap gap-1.5">
+                                {b.attachments.map((att) => (
+                                  <button
+                                    key={att.id}
+                                    onClick={() => handleDownloadAttachment(att.id, att.file_name)}
+                                    disabled={downloadingId === att.id}
+                                    className="px-2 py-1 bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-600 rounded-md text-[10px] font-semibold border border-slate-200 transition inline-flex items-center gap-1 cursor-pointer"
+                                  >
+                                    <Paperclip className="w-3 h-3 text-blue-500" />
+                                    <span className="truncate max-w-[140px]">{att.file_name}</span>
+                                    <Download className="w-2.5 h-2.5 ml-0.5 opacity-60" />
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Deliverable & Review Actions */}
+                          {pendingSub && task.permissions.can_review && (
+                            <div className="mt-3 p-3 bg-purple-50 border border-purple-200 rounded-xl flex items-center justify-between">
+                              <div>
+                                <span className="font-bold text-purple-900 text-xs block">Deliverable Submitted</span>
+                                <span className="text-[10px] text-purple-700">Awaiting management review</span>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  setSelectedSubmission(pendingSub);
+                                  setIsReviewModalOpen(true);
+                                }}
+                                className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold shadow-xs transition flex items-center gap-1 cursor-pointer"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5" />
+                                <span>Review Deliverable</span>
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
-                      <StatusBadge
-                        status={b.status}
-                        size="sm"
-                        customLabel={
-                          b.status === 'review'
-                            ? `Under Review: ${b.assigned_by?.name || task.creator?.name || 'Assigner'}`
-                            : b.status === 'post_comment'
-                            ? 'Needs Correction'
-                            : undefined
-                        }
-                      />
-                    </div>
 
-                    <div className="pt-2 border-t border-slate-200/60 text-xs">
-                      <p className="font-semibold text-slate-800">{b.title}</p>
-                      {b.description && (
-                        <p className="text-slate-500 text-[11px] mt-0.5 line-clamp-2">{b.description}</p>
-                      )}
-                      <div className="flex items-center justify-between text-[11px] text-slate-400 mt-2">
+                      <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-100">
                         <span>Due: {b.due_date ? new Date(b.due_date).toLocaleDateString() : 'Task deadline'}</span>
                         {b.completed_at && (
                           <span className="text-emerald-600 font-semibold">Done: {new Date(b.completed_at).toLocaleDateString()}</span>
                         )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl">
@@ -1737,33 +1958,100 @@ export const TaskDetailPage: React.FC = () => {
             </label>
           </div>
 
-          <div className="divide-y divide-slate-100">
-            {task.attachments && task.attachments.length > 0 ? (
-              task.attachments.map((att) => (
-                <div key={att.id} className="py-3.5 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-3 truncate">
-                    <Paperclip className="w-4 h-4 text-blue-600 shrink-0" />
-                    <div>
-                      <p className="font-bold text-slate-800 truncate">{att.file_name}</p>
-                      <p className="text-[10px] text-slate-400">
-                        {Math.round(att.file_size / 1024)} KB • Uploaded by {att.uploaded_by?.name || 'User'}
-                      </p>
+          {(() => {
+            const sharedAtts = task.attachments?.filter((a) => !a.task_branch_id) || [];
+            const branchAtts = task.attachments?.filter((a) => a.task_branch_id) || [];
+
+            return (
+              <div className="space-y-6">
+                {/* Section 1: Shared Task Attachments */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="font-bold text-slate-800 uppercase tracking-wider text-xs">
+                      Shared Task Attachments ({sharedAtts.length})
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      Accessible by all assigned team members
+                    </span>
+                  </div>
+
+                  {sharedAtts.length > 0 ? (
+                    <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden">
+                      {sharedAtts.map((att) => (
+                        <div key={att.id} className="p-3.5 flex items-center justify-between text-xs bg-white hover:bg-slate-50 transition">
+                          <div className="flex items-center gap-3 truncate">
+                            <Paperclip className="w-4 h-4 text-blue-600 shrink-0" />
+                            <div>
+                              <p className="font-bold text-slate-800 truncate">{att.file_name}</p>
+                              <p className="text-[10px] text-slate-400">
+                                {Math.round(att.file_size / 1024)} KB • Uploaded by {att.uploaded_by?.name || 'User'}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleDownloadAttachment(att.id, att.file_name)}
+                            disabled={downloadingId === att.id}
+                            className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5"
+                          >
+                            <Download className="w-3.5 h-3.5" />
+                            <span>{downloadingId === att.id ? 'Downloading...' : 'Download'}</span>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400 italic p-3 bg-slate-50 rounded-xl">
+                      No shared attachments uploaded.
+                    </p>
+                  )}
+                </div>
+
+                {/* Section 2: Individual Assignment Attachments */}
+                {branchAtts.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="font-bold text-slate-800 uppercase tracking-wider text-xs">
+                        Individual Work Attachments ({branchAtts.length})
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        Assigned to specific subtasks
+                      </span>
+                    </div>
+
+                    <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden">
+                      {branchAtts.map((att) => {
+                        const branch = task.branches?.find((b) => b.id === att.task_branch_id);
+                        return (
+                          <div key={att.id} className="p-3.5 flex items-center justify-between text-xs bg-white hover:bg-slate-50 transition">
+                            <div className="flex items-center gap-3 truncate">
+                              <Paperclip className="w-4 h-4 text-sky-600 shrink-0" />
+                              <div>
+                                <p className="font-bold text-slate-800 truncate">{att.file_name}</p>
+                                <p className="text-[10px] text-slate-400">
+                                  {Math.round(att.file_size / 1024)} KB
+                                  {branch && (
+                                    <span className="font-semibold text-slate-600"> • Scope: {branch.title} ({branch.owner?.name})</span>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleDownloadAttachment(att.id, att.file_name)}
+                              disabled={downloadingId === att.id}
+                              className="px-3 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 font-semibold rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                              <span>{downloadingId === att.id ? 'Downloading...' : 'Download'}</span>
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDownloadAttachment(att.id, att.file_name)}
-                    disabled={downloadingId === att.id}
-                    className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>{downloadingId === att.id ? 'Downloading...' : 'Download'}</span>
-                  </button>
-                </div>
-              ))
-            ) : (
-              <p className="text-xs text-slate-400 italic text-center py-6">No attachments uploaded yet.</p>
-            )}
-          </div>
+                )}
+              </div>
+            );
+          })()}
         </div>
       )}
 

@@ -30,10 +30,22 @@ class StoreTaskRequest extends FormRequest
             'branches' => ['nullable', 'array'],
             'branches.*.title' => ['required_with:branches', 'string', 'max:255'],
             'branches.*.description' => ['nullable', 'string'],
+            'branches.*.expected_result' => ['nullable', 'string'],
+            'branches.*.acceptance_criteria' => ['nullable', 'string'],
             'branches.*.owner_id' => ['required_with:branches', 'exists:users,id'],
+            'branches.*.start_date' => ['nullable', 'date'],
             'branches.*.due_date' => ['nullable', 'date'],
+            'branches.*.files' => ['nullable', 'array'],
+            'branches.*.files.*' => ['file', 'max:10240', 'mimes:pdf,doc,docx,xls,xlsx,png,jpg,jpeg'],
+            'branches.*.copied_shared_attachment_ids' => ['nullable', 'array'],
+            'branches.*.copied_shared_attachment_ids.*' => ['integer'],
+            'branch_files' => ['nullable', 'array'],
+            'branch_files.*' => ['nullable', 'array'],
+            'branch_files.*.*' => ['file', 'max:10240', 'mimes:pdf,doc,docx,xls,xlsx,png,jpg,jpeg'],
             'files' => ['nullable', 'array'],
-            'files.*' => ['file', 'max:10240'],
+            'files.*' => ['file', 'max:10240', 'mimes:pdf,doc,docx,xls,xlsx,png,jpg,jpeg'],
+            'shared_files' => ['nullable', 'array'],
+            'shared_files.*' => ['file', 'max:10240', 'mimes:pdf,doc,docx,xls,xlsx,png,jpg,jpeg'],
         ];
     }
 

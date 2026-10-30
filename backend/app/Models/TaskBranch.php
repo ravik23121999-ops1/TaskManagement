@@ -12,14 +12,18 @@ class TaskBranch extends Model
         'task_id',
         'title',
         'description',
+        'expected_result',
+        'acceptance_criteria',
         'status',
         'owner_id',
+        'start_date',
         'parent_assignment_id',
         'due_date',
         'completed_at',
     ];
 
     protected $casts = [
+        'start_date' => 'datetime',
         'due_date' => 'datetime',
         'completed_at' => 'datetime',
     ];

@@ -11,11 +11,16 @@ export interface TaskBranch {
   id: number;
   title: string;
   description: string | null;
+  expected_result?: string | null;
+  acceptance_criteria?: string | null;
   status: 'pending' | 'in_progress' | 'review' | 'on_hold' | 'post_comment' | 'completed' | 'cancelled';
   owner: UserSummary | null;
   assigned_by?: UserSummary | null;
+  start_date?: string | null;
   due_date: string | null;
   completed_at: string | null;
+  attachments?: TaskAttachment[];
+  submissions?: TaskSubmission[];
 }
 
 export interface TaskComment {
@@ -31,7 +36,9 @@ export interface TaskAttachment {
   file_size: number;
   file_type: string;
   file_path: string;
+  task_branch_id?: number | null;
   url: string;
+  direct_url?: string;
   created_at: string;
   uploaded_by: UserSummary | null;
 }
@@ -85,14 +92,27 @@ export interface Task {
   current_owner: UserSummary | null;
   department: { id: number; name: string } | null;
   is_peer_isolated?: boolean;
+  progress_summary?: {
+    total: number;
+    completed: number;
+    in_progress: number;
+    pending_review: number;
+    pending: number;
+  };
+  shared_attachments?: TaskAttachment[];
   my_branch?: {
     id: number;
     title: string;
     description: string | null;
+    expected_result?: string | null;
+    acceptance_criteria?: string | null;
     status: 'pending' | 'in_progress' | 'review' | 'on_hold' | 'post_comment' | 'completed' | 'cancelled';
+    start_date?: string | null;
     due_date: string | null;
     completed_at: string | null;
     assigned_by?: UserSummary | null;
+    attachments?: TaskAttachment[];
+    submissions?: TaskSubmission[];
   } | null;
   branches: TaskBranch[];
   collaborators: UserSummary[];
@@ -147,8 +167,13 @@ export interface CreateTaskData {
   branches?: Array<{
     title: string;
     description?: string;
+    expected_result?: string;
+    acceptance_criteria?: string;
     owner_id: number;
+    start_date?: string;
     due_date?: string;
+    copy_shared_attachments?: boolean;
+    files?: File[];
   }>;
 }
 
