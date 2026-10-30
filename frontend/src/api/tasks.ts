@@ -21,6 +21,8 @@ export interface TaskBranch {
   completed_at: string | null;
   attachments?: TaskAttachment[];
   submissions?: TaskSubmission[];
+  share_parent_details?: boolean;
+  can_assign_further?: boolean;
 }
 
 export interface TaskComment {
@@ -113,6 +115,8 @@ export interface Task {
     assigned_by?: UserSummary | null;
     attachments?: TaskAttachment[];
     submissions?: TaskSubmission[];
+    share_parent_details?: boolean;
+    can_assign_further?: boolean;
   } | null;
   branches: TaskBranch[];
   collaborators: UserSummary[];

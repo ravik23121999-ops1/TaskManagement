@@ -158,7 +158,7 @@ export const TaskDetailPage: React.FC = () => {
     expected_result: '',
     acceptance_criteria: '',
     due_date: task?.due_date ? task.due_date.split('T')[0] : '',
-    share_previous: true,
+    share_previous: false,
     can_assign_further: true,
     files: [],
   });
@@ -296,8 +296,8 @@ export const TaskDetailPage: React.FC = () => {
             if (work.due_date) {
               formData.append(`branches[${idx}][due_date]`, work.due_date);
             }
-            formData.append(`branches[${idx}][share_previous_branch_details]`, work.share_previous ? '1' : '0');
-            formData.append(`branches[${idx}][share_main_task_details]`, work.share_previous ? '1' : '0');
+            formData.append(`branches[${idx}][share_previous_branch_details]`, '0');
+            formData.append(`branches[${idx}][share_main_task_details]`, '0');
             formData.append(`branches[${idx}][can_assign_further]`, work.can_assign_further !== false ? '1' : '0');
 
             if (work.files && work.files.length > 0) {
@@ -1348,7 +1348,10 @@ export const TaskDetailPage: React.FC = () => {
 
                   {/* Attachments Section for My Assignment */}
                   {(() => {
-                    const sharedAtts = task.shared_attachments || task.attachments?.filter((a) => !a.task_branch_id) || [];
+                    const isTaskCreator = task.creator?.id === currentUser?.id;
+                    const isAdminOrSubAdmin = currentUser?.role === 'admin' || currentUser?.role === 'sub_admin';
+                    const isSubtaskAssignee = !isTaskCreator && !isAdminOrSubAdmin && task.my_branch && task.my_branch.share_parent_details === false;
+                    const sharedAtts = isSubtaskAssignee ? [] : (task.shared_attachments || task.attachments?.filter((a) => !a.task_branch_id) || []);
                     const branchAtts = task.my_branch?.attachments || task.attachments?.filter((a) => a.task_branch_id === task.my_branch?.id) || [];
                     const allMyAtts = [
                       ...sharedAtts.map((a) => ({ ...a, is_shared: true })),
@@ -1361,10 +1364,10 @@ export const TaskDetailPage: React.FC = () => {
                       <div className="p-3 bg-white/95 border border-blue-200/80 rounded-xl space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-blue-900 text-[10px] uppercase tracking-wider block">
-                            Scope Attachments ({allMyAtts.length})
+                            {isSubtaskAssignee ? 'Subtask Attachments' : 'Scope Attachments'} ({allMyAtts.length})
                           </span>
                           <span className="text-[10px] text-slate-400">
-                            Shared & Individual files for your scope
+                            {isSubtaskAssignee ? 'Deliverables and files for your subtask' : 'Shared & Individual files for your scope'}
                           </span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -2131,65 +2134,70 @@ export const TaskDetailPage: React.FC = () => {
           </div>
 
           {(() => {
-            const sharedAtts = task.attachments?.filter((a) => !a.task_branch_id) || [];
+            const isTaskCreator = task.creator?.id === currentUser?.id;
+            const isAdminOrSubAdmin = currentUser?.role === 'admin' || currentUser?.role === 'sub_admin';
+            const isSubtaskAssignee = !isTaskCreator && !isAdminOrSubAdmin && task.my_branch && task.my_branch.share_parent_details === false;
+            const sharedAtts = isSubtaskAssignee ? [] : (task.attachments?.filter((a) => !a.task_branch_id) || []);
             const branchAtts = task.attachments?.filter((a) => a.task_branch_id) || [];
 
             return (
               <div className="space-y-6">
-                {/* Section 1: Shared Task Attachments */}
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="font-bold text-slate-800 uppercase tracking-wider text-xs">
-                      Shared Task Attachments ({sharedAtts.length})
-                    </span>
-                    <span className="text-[11px] text-slate-400">
-                      Accessible by all assigned team members
-                    </span>
-                  </div>
-
-                  {sharedAtts.length > 0 ? (
-                    <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden">
-                      {sharedAtts.map((att) => (
-                        <div key={att.id} className="p-3.5 flex items-center justify-between text-xs bg-white hover:bg-slate-50 transition">
-                          <div className="flex items-center gap-3 truncate">
-                            <Paperclip className="w-4 h-4 text-blue-600 shrink-0" />
-                            <div>
-                              <p className="font-bold text-slate-800 truncate">{att.file_name}</p>
-                              <p className="text-[10px] text-slate-400">
-                                {Math.round(att.file_size / 1024)} KB • Uploaded by {att.uploaded_by?.name || 'User'}
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => handleDownloadAttachment(att.id, att.file_name)}
-                            disabled={downloadingId === att.id}
-                            className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5"
-                          >
-                            <Download className="w-3.5 h-3.5" />
-                            <span>{downloadingId === att.id ? 'Downloading...' : 'Download'}</span>
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-xs text-slate-400 italic p-3 bg-slate-50 rounded-xl">
-                      No shared attachments uploaded.
-                    </p>
-                  )}
-                </div>
-
-                {/* Section 2: Individual Assignment Attachments */}
-                {branchAtts.length > 0 && (
+                {/* Section 1: Shared Task Attachments (Hidden for subtask assignees who only receive their subtask) */}
+                {!isSubtaskAssignee && (
                   <div>
                     <div className="flex items-center gap-2 mb-3">
                       <span className="font-bold text-slate-800 uppercase tracking-wider text-xs">
-                        Individual Work Attachments ({branchAtts.length})
+                        Shared Task Attachments ({sharedAtts.length})
                       </span>
                       <span className="text-[11px] text-slate-400">
-                        Assigned to specific subtasks
+                        Accessible by all assigned team members
                       </span>
                     </div>
 
+                    {sharedAtts.length > 0 ? (
+                      <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden">
+                        {sharedAtts.map((att) => (
+                          <div key={att.id} className="p-3.5 flex items-center justify-between text-xs bg-white hover:bg-slate-50 transition">
+                            <div className="flex items-center gap-3 truncate">
+                              <Paperclip className="w-4 h-4 text-blue-600 shrink-0" />
+                              <div>
+                                <p className="font-bold text-slate-800 truncate">{att.file_name}</p>
+                                <p className="text-[10px] text-slate-400">
+                                  {Math.round(att.file_size / 1024)} KB • Uploaded by {att.uploaded_by?.name || 'User'}
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => handleDownloadAttachment(att.id, att.file_name)}
+                              disabled={downloadingId === att.id}
+                              className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold rounded-lg text-xs transition cursor-pointer flex items-center gap-1.5"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                              <span>{downloadingId === att.id ? 'Downloading...' : 'Download'}</span>
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-slate-400 italic p-3 bg-slate-50 rounded-xl">
+                        No shared attachments uploaded.
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Section 2: Individual / Subtask Assignment Attachments */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="font-bold text-slate-800 uppercase tracking-wider text-xs">
+                      {isSubtaskAssignee ? 'Your Subtask Attachments' : 'Individual Work Attachments'} ({branchAtts.length})
+                    </span>
+                    <span className="text-[11px] text-slate-400">
+                      {isSubtaskAssignee ? 'Specific deliverables and reference documents for your subtask' : 'Assigned to specific subtasks'}
+                    </span>
+                  </div>
+
+                  {branchAtts.length > 0 ? (
                     <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden">
                       {branchAtts.map((att) => {
                         const branch = task.branches?.find((b) => b.id === att.task_branch_id);
@@ -2201,7 +2209,7 @@ export const TaskDetailPage: React.FC = () => {
                                 <p className="font-bold text-slate-800 truncate">{att.file_name}</p>
                                 <p className="text-[10px] text-slate-400">
                                   {Math.round(att.file_size / 1024)} KB
-                                  {branch && (
+                                  {branch && !isSubtaskAssignee && (
                                     <span className="font-semibold text-slate-600"> • Scope: {branch.title} ({branch.owner?.name})</span>
                                   )}
                                 </p>
@@ -2219,8 +2227,12 @@ export const TaskDetailPage: React.FC = () => {
                         );
                       })}
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <p className="text-xs text-slate-400 italic p-3 bg-slate-50 rounded-xl">
+                      {isSubtaskAssignee ? 'No individual files attached for your subtask.' : 'No individual attachments assigned.'}
+                    </p>
+                  )}
+                </div>
               </div>
             );
           })()}

@@ -32,7 +32,6 @@ interface IndividualAssignment {
   start_date: string;
   due_date: string;
   files: File[];
-  copy_shared_attachments: boolean;
   share_main_task_details: boolean;
   can_assign_further: boolean;
 }
@@ -164,8 +163,7 @@ export const CreateTaskPage: React.FC = () => {
     start_date: startDate || '',
     due_date: dueDate || '',
     files: [],
-    copy_shared_attachments: false,
-    share_main_task_details: true,
+    share_main_task_details: false,
     can_assign_further: true,
   });
 
@@ -241,19 +239,6 @@ export const CreateTaskPage: React.FC = () => {
     });
   };
 
-  const handleCopySharedAttachments = (userId: number) => {
-    setAssigneeWork((prev) => {
-      const cur = prev[userId] || initAssignmentForUser(selectedUsers.find((u) => u.id === userId));
-      return {
-        ...prev,
-        [userId]: {
-          ...cur,
-          copy_shared_attachments: !cur.copy_shared_attachments,
-        },
-      };
-    });
-  };
-
   const handleClearAssignment = (userId: number) => {
     const user = selectedUsers.find((u) => u.id === userId);
     setAssigneeWork((prev) => ({
@@ -266,8 +251,7 @@ export const CreateTaskPage: React.FC = () => {
         start_date: startDate || '',
         due_date: dueDate || '',
         files: [],
-        copy_shared_attachments: false,
-        share_main_task_details: true,
+        share_main_task_details: false,
         can_assign_further: true,
       },
     }));
@@ -420,9 +404,6 @@ export const CreateTaskPage: React.FC = () => {
             }
             if (work.due_date || dueDate) {
               formData.append(`branches[${idx}][due_date]`, work.due_date || dueDate);
-            }
-            if (work.copy_shared_attachments) {
-              formData.append(`branches[${idx}][copy_shared_attachments]`, '1');
             }
 
             // Individual branch files
@@ -1288,32 +1269,14 @@ export const CreateTaskPage: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* Individual Attachments & Shared Ref */}
+                          {/* Individual Attachments */}
                           <div className="space-y-2 pt-2 border-t border-slate-200/60">
                             <div className="flex items-center justify-between">
                               <span className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
                                 <Paperclip className="w-3 h-3 text-slate-500" />
-                                <span>Individual Attachments for {u.name}</span>
+                                <span>Individual Subtask Attachments for {u.name}</span>
                               </span>
-
-                              {sharedFiles.length > 0 && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleCopySharedAttachments(u.id)}
-                                  className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg border transition cursor-pointer flex items-center gap-1 ${
-                                    work.copy_shared_attachments
-                                      ? 'bg-blue-50 border-blue-300 text-blue-700'
-                                      : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                                  }`}
-                                >
-                                  <Copy className="w-3 h-3" />
-                                  <span>
-                                    {work.copy_shared_attachments
-                                      ? `✓ Shared Files Linked (${sharedFiles.length})`
-                                      : 'Copy Shared Attachments'}
-                                  </span>
-                                </button>
-                              )}
+                              <span className="text-[10px] text-slate-400 font-normal">Private to {u.name}</span>
                             </div>
 
                             <div className="border border-dashed border-slate-200 rounded-xl p-3 text-center bg-white hover:bg-slate-50/50 transition">
@@ -1688,11 +1651,6 @@ export const CreateTaskPage: React.FC = () => {
                           ))
                         ) : (
                           <span className="text-slate-400 italic">No individual files attached</span>
-                        )}
-                        {work.copy_shared_attachments && sharedFiles.length > 0 && (
-                          <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md text-[10px] font-semibold border border-blue-200">
-                            + {sharedFiles.length} shared file{sharedFiles.length !== 1 ? 's' : ''} linked
-                          </span>
                         )}
                       </div>
                     </div>

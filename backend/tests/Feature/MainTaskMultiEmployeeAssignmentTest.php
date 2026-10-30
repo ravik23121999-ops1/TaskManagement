@@ -137,10 +137,10 @@ class MainTaskMultiEmployeeAssignmentTest extends TestCase
         $this->assertCount(1, $visibleBranches);
         $this->assertEquals('Create Employee API', $visibleBranches[0]['title']);
 
-        // Attachments visible to Rohit: only Shared + Rohit's attachment (Aman's attachment MUST NOT be in array)
+        // Attachments visible to Rohit: ONLY Rohit's subtask attachment (main task shared doc and Aman's attachment MUST NOT be in array)
         $rohitVisibleAtts = $rohitRes->json('data.attachments');
         $rohitAttNames = collect($rohitVisibleAtts)->pluck('file_name')->all();
-        $this->assertContains('Project_Overview.pdf', $rohitAttNames);
+        $this->assertNotContains('Project_Overview.pdf', $rohitAttNames);
         $this->assertContains('Backend_Requirements.pdf', $rohitAttNames);
         $this->assertNotContains('UI_Design.pdf', $rohitAttNames);
 
@@ -148,9 +148,9 @@ class MainTaskMultiEmployeeAssignmentTest extends TestCase
         $downloadAmanAttempt = $this->actingAs($this->rohit, 'sanctum')->get("/api/attachments/{$amanAtt['id']}/download");
         $downloadAmanAttempt->assertStatus(403);
 
-        // URL Security: Rohit downloads Shared file -> 200 OK!
+        // URL Security: Rohit tries to download main task Shared file -> 403 Forbidden (he only has a subtask)!
         $downloadShared = $this->actingAs($this->rohit, 'sanctum')->get("/api/attachments/{$sharedAtt['id']}/download");
-        $downloadShared->assertStatus(200);
+        $downloadShared->assertStatus(403);
 
         // URL Security: Rohit downloads his own file -> 200 OK!
         $downloadRohitOwn = $this->actingAs($this->rohit, 'sanctum')->get("/api/attachments/{$rohitAtt['id']}/download");
@@ -306,13 +306,12 @@ class MainTaskMultiEmployeeAssignmentTest extends TestCase
         $this->assertNotNull($nehaBranch);
         $this->assertEquals('Subtask - JWT Validation', $nehaBranch['title']);
         $this->assertStringContainsString('Neha, implement JWT validation', $nehaBranch['description']);
-        $this->assertStringContainsString('Develop employee CRUD APIs', $nehaBranch['description']);
 
         $nehaAtts = $nehaRes->json('data.attachments');
         $nehaAttNames = collect($nehaAtts)->pluck('file_name')->all();
         $this->assertContains('JWT_Specs.pdf', $nehaAttNames);
-        $this->assertContains('Backend_Requirements.pdf', $nehaAttNames);
-        $this->assertContains('Project_Overview.pdf', $nehaAttNames);
+        $this->assertNotContains('Backend_Requirements.pdf', $nehaAttNames); // Prior attachments NOT shared with subtasks
+        $this->assertNotContains('Project_Overview.pdf', $nehaAttNames);
         $this->assertNotContains('Logging_Guide.pdf', $nehaAttNames); // Vikas's attachment must not be visible
 
         $nehaJwtAtt = collect($nehaAtts)->firstWhere('file_name', 'JWT_Specs.pdf');
@@ -387,18 +386,18 @@ class MainTaskMultiEmployeeAssignmentTest extends TestCase
         $sharedAtt = collect($managerRes->json('data.attachments'))->firstWhere('file_name', 'Company_Secret.pdf');
         $this->assertNotNull($sharedAtt);
 
-        // 1. Rohit (share_main_task_details = true)
+        // 1. Rohit (assigned a subtask - main task shared doc MUST NOT be visible)
         $rohitRes = $this->actingAs($this->rohit, 'sanctum')->getJson("/api/tasks/{$taskId}");
         $rohitAttNames = collect($rohitRes->json('data.attachments'))->pluck('file_name')->all();
-        $this->assertContains('Company_Secret.pdf', $rohitAttNames);
+        $this->assertNotContains('Company_Secret.pdf', $rohitAttNames);
         $this->assertContains('Rohit_Doc.pdf', $rohitAttNames);
-        $this->actingAs($this->rohit, 'sanctum')->get("/api/attachments/{$sharedAtt['id']}/download")->assertStatus(200);
+        $this->actingAs($this->rohit, 'sanctum')->get("/api/attachments/{$sharedAtt['id']}/download")->assertStatus(403);
 
-        // 2. Aman (share_main_task_details = false)
+        // 2. Aman (assigned a subtask - main task shared doc MUST NOT be visible)
         $amanRes = $this->actingAs($this->aman, 'sanctum')->getJson("/api/tasks/{$taskId}");
         $amanAttNames = collect($amanRes->json('data.attachments'))->pluck('file_name')->all();
         $this->assertContains('Aman_Doc.pdf', $amanAttNames);
-        $this->assertNotContains('Company_Secret.pdf', $amanAttNames); // Shared document MUST NOT be in Aman's attachments
+        $this->assertNotContains('Company_Secret.pdf', $amanAttNames);
 
         // Aman tries to download Company_Secret.pdf directly -> 403 Forbidden!
         $this->actingAs($this->aman, 'sanctum')->get("/api/attachments/{$sharedAtt['id']}/download")->assertStatus(403);

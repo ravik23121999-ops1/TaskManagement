@@ -364,12 +364,14 @@ class TaskController extends Controller
 
                     foreach ($validBranches as $bIndex => $bData) {
                         $assigneeId = (int)$bData['owner_id'];
-                        $shareMain = filter_var($bData['share_main_task_details'] ?? $bData['share_previous_branch_details'] ?? true, FILTER_VALIDATE_BOOLEAN);
+                        // Subtask isolation: subtask assignees receive strictly their subtask note and files.
+                        // Main task created documents and parent details are NOT shared with subtasks.
+                        $shareMain = false;
                         $canAssignFurther = filter_var($bData['can_assign_further'] ?? true, FILTER_VALIDATE_BOOLEAN);
                         $branchTitle = !empty($bData['title']) ? trim($bData['title']) : $task->title;
-                        $branchDesc = !empty($bData['description']) ? trim($bData['description']) : $task->description;
-                        $branchExpected = !empty($bData['expected_result']) ? trim($bData['expected_result']) : ($shareMain ? $task->expected_result : null);
-                        $branchCriteria = !empty($bData['acceptance_criteria']) ? trim($bData['acceptance_criteria']) : ($shareMain ? $task->acceptance_criteria : null);
+                        $branchDesc = !empty($bData['description']) ? trim($bData['description']) : (!empty($bData['title']) ? trim($bData['title']) : "Subtask for {$task->title}");
+                        $branchExpected = !empty($bData['expected_result']) ? trim($bData['expected_result']) : null;
+                        $branchCriteria = !empty($bData['acceptance_criteria']) ? trim($bData['acceptance_criteria']) : null;
                         $branchStart = !empty($bData['start_date']) ? now()->parse($bData['start_date']) : $task->start_date;
                         $branchDue = !empty($bData['due_date']) ? now()->parse($bData['due_date']) : $task->due_date;
 
@@ -385,7 +387,7 @@ class TaskController extends Controller
                         ];
 
                         if (Schema::hasColumn('task_branches', 'share_parent_details')) {
-                            $branchDataToCreate['share_parent_details'] = $shareMain;
+                            $branchDataToCreate['share_parent_details'] = false;
                         }
                         if (Schema::hasColumn('task_branches', 'can_assign_further')) {
                             $branchDataToCreate['can_assign_further'] = $canAssignFurther;
@@ -419,21 +421,6 @@ class TaskController extends Controller
                                         'file_type' => $bFile->getMimeType(),
                                     ]);
                                 }
-                            }
-                        }
-
-                        // Explicitly copy shared attachment references into this employee's branch if requested
-                        if (!empty($bData['copy_shared_attachments']) && !empty($createdSharedAttachments)) {
-                            foreach ($createdSharedAttachments as $sAtt) {
-                                TaskAttachment::create([
-                                    'task_id' => $task->id,
-                                    'task_branch_id' => $branch->id,
-                                    'uploaded_by_id' => $user->id,
-                                    'file_name' => $sAtt->file_name,
-                                    'file_path' => $sAtt->file_path,
-                                    'file_size' => $sAtt->file_size,
-                                    'file_type' => $sAtt->file_type,
-                                ]);
                             }
                         }
 
@@ -1037,7 +1024,9 @@ class TaskController extends Controller
         foreach ($targetUserIds as $idx => $assigneeId) {
             $bData = collect($branchesData)->firstWhere('owner_id', $assigneeId) ?: ($branchesData[$idx] ?? []);
             $mode = $bData['mode'] ?? $request->input('mode', 'new_subtask');
-            $sharePrevious = $isDirectDelegation || filter_var($bData['share_previous_branch_details'] ?? $request->input('share_previous_branch_details', true), FILTER_VALIDATE_BOOLEAN);
+            // Only direct delegation shares previous branch details & documents.
+            // When creating subtasks, the subtask recipient only gets their subtask note and files.
+            $sharePrevious = $isDirectDelegation;
             $canAssignFurther = filter_var($bData['can_assign_further'] ?? true, FILTER_VALIDATE_BOOLEAN);
 
             // Avoid duplicate active branch with identical title for the same user
