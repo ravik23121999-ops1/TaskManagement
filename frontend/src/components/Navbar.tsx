@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
 import { notificationsApi } from '../api/tasks';
-import { Search, Bell, Plus, ChevronDown, User, LogOut, Check, MessageSquare } from 'lucide-react';
+import { Search, Bell, Plus, ChevronDown, User, LogOut, Check, MessageSquare, Menu } from 'lucide-react';
 import { messagesApi } from '../api/messages';
 
 interface NotificationItem {
@@ -15,7 +15,11 @@ interface NotificationItem {
   created_at: string;
 }
 
-const Navbar: React.FC = () => {
+interface NavbarProps {
+  onToggleMobileSidebar?: () => void;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ onToggleMobileSidebar }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
@@ -114,18 +118,30 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <header className="h-16 bg-white border-b border-slate-200/80 sticky top-0 z-20 px-6 flex items-center justify-between">
-      {/* Search Input */}
-      <form onSubmit={handleSearchSubmit} className="relative w-72 md:w-96">
-        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-        <input
-          type="text"
-          placeholder="Search tasks, IDs, keywords..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-        />
-      </form>
+    <header className="h-16 bg-white border-b border-slate-200/80 sticky top-0 z-20 px-3 sm:px-6 flex items-center justify-between gap-2">
+      <div className="flex items-center gap-2 flex-1 max-w-md">
+        {/* Mobile Hamburger Menu Button */}
+        <button
+          type="button"
+          onClick={onToggleMobileSidebar}
+          className="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer shrink-0"
+          title="Open Navigation Menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
+        {/* Search Input */}
+        <form onSubmit={handleSearchSubmit} className="relative flex-1">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Search tasks, IDs..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+          />
+        </form>
+      </div>
 
       {/* Right Actions */}
       <div className="flex items-center gap-3">

@@ -372,6 +372,75 @@ class ComprehensiveSystemTest extends TestCase
         $this->assertCount(2, $collabTask->branches);
     }
 
+    public function test_peer_isolation_and_distinct_work_assignment(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        // 1. Create a task assigning DIFFERENT work to Employee 1 and Employee 2
+        $res = $this->postJson('/api/tasks', [
+            'title' => 'Quarterly Infrastructure Upgrade',
+            'description' => 'Parent task overview for all infrastructure teams',
+            'handling_method' => 'assign',
+            'priority' => 'high',
+            'due_date' => now()->addDays(10)->toDateString(),
+            'branches' => [
+                [
+                    'owner_id' => $this->employee1->id,
+                    'title' => 'Database Migration & Index Tuning',
+                    'description' => 'Secret confidential instructions for Employee 1 only: optimize PostgreSQL tables',
+                    'due_date' => now()->addDays(5)->toDateString(),
+                ],
+                [
+                    'owner_id' => $this->employee2->id,
+                    'title' => 'Kubernetes Pod Security Hardening',
+                    'description' => 'Confidential instructions for Employee 2 only: configure network policies and IAM roles',
+                    'due_date' => now()->addDays(8)->toDateString(),
+                ],
+            ],
+        ]);
+
+        $res->assertStatus(201);
+        $taskId = $res->json('data.id');
+
+        // Admin sees ALL branches (both Employee 1 and Employee 2)
+        $adminView = $this->getJson("/api/tasks/{$taskId}");
+        $adminView->assertStatus(200);
+        $this->assertCount(2, $adminView->json('data.branches'));
+        $this->assertFalse($adminView->json('data.is_peer_isolated'));
+
+        // 2. Employee 1 views the task: STRICT PEER ISOLATION
+        Sanctum::actingAs($this->employee1);
+        $emp1View = $this->getJson("/api/tasks/{$taskId}");
+        $emp1View->assertStatus(200);
+
+        // Employee 1 must ONLY see their own branch (1 branch)
+        $this->assertTrue($emp1View->json('data.is_peer_isolated'));
+        $this->assertCount(1, $emp1View->json('data.branches'));
+        $this->assertEquals('Database Migration & Index Tuning', $emp1View->json('data.branches.0.title'));
+        $this->assertEquals('Secret confidential instructions for Employee 1 only: optimize PostgreSQL tables', $emp1View->json('data.branches.0.description'));
+        $this->assertEquals($this->employee1->id, $emp1View->json('data.branches.0.owner.id'));
+
+        // Ensure Employee 1 NEVER sees Employee 2's work or name in branches
+        $branchTitles = array_column($emp1View->json('data.branches'), 'title');
+        $this->assertNotContains('Kubernetes Pod Security Hardening', $branchTitles);
+
+        // 3. Employee 2 views the task: STRICT PEER ISOLATION
+        Sanctum::actingAs($this->employee2);
+        $emp2View = $this->getJson("/api/tasks/{$taskId}");
+        $emp2View->assertStatus(200);
+
+        // Employee 2 must ONLY see their own branch (1 branch)
+        $this->assertTrue($emp2View->json('data.is_peer_isolated'));
+        $this->assertCount(1, $emp2View->json('data.branches'));
+        $this->assertEquals('Kubernetes Pod Security Hardening', $emp2View->json('data.branches.0.title'));
+        $this->assertEquals('Confidential instructions for Employee 2 only: configure network policies and IAM roles', $emp2View->json('data.branches.0.description'));
+        $this->assertEquals($this->employee2->id, $emp2View->json('data.branches.0.owner.id'));
+
+        // Ensure Employee 2 NEVER sees Employee 1's work or name in branches
+        $emp2BranchTitles = array_column($emp2View->json('data.branches'), 'title');
+        $this->assertNotContains('Database Migration & Index Tuning', $emp2BranchTitles);
+    }
+
     public function test_task_lifecycle_hold_resume_cancel(): void
     {
         Sanctum::actingAs($this->admin);

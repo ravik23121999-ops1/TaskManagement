@@ -29,6 +29,7 @@ class StoreTaskRequest extends FormRequest
             'collaborators.*' => ['exists:users,id'],
             'branches' => ['nullable', 'array'],
             'branches.*.title' => ['required_with:branches', 'string', 'max:255'],
+            'branches.*.description' => ['nullable', 'string'],
             'branches.*.owner_id' => ['required_with:branches', 'exists:users,id'],
             'branches.*.due_date' => ['nullable', 'date'],
             'files' => ['nullable', 'array'],
@@ -42,9 +43,15 @@ class StoreTaskRequest extends FormRequest
             $user = $this->user();
             if ($this->input('handling_method') === 'assign') {
                 $assignees = (array) $this->input('assignees', []);
-                if (empty($assignees)) {
+                $branches = (array) $this->input('branches', []);
+
+                $allAssigneeIds = !empty($branches)
+                    ? array_filter(array_column($branches, 'owner_id'))
+                    : $assignees;
+
+                if (empty($allAssigneeIds)) {
                     $validator->errors()->add('assignees', 'Please select at least one assignee for this task.');
-                } elseif ($user && in_array($user->id, $assignees)) {
+                } elseif ($user && in_array($user->id, $allAssigneeIds)) {
                     $validator->errors()->add('assignees', 'You cannot assign a task to yourself. Use "Work Alone" if you want to execute this task.');
                 }
             }

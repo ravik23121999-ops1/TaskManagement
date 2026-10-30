@@ -16,7 +16,8 @@ import {
   Sparkles,
   AlertCircle,
   Plus,
-  Search
+  Search,
+  Lock
 } from 'lucide-react';
 
 export const CreateTaskPage: React.FC = () => {
@@ -45,6 +46,8 @@ export const CreateTaskPage: React.FC = () => {
 
   // Optional Custom Subtask Branches for Collaboration
   const [branches, setBranches] = useState<Array<{ title: string; owner_id: number }>>([]);
+  // Individual distinct work per assignee/collaborator (Strict Peer Isolation)
+  const [assigneeWork, setAssigneeWork] = useState<Record<number, { title: string; description: string; due_date: string }>>({});
 
   // Files
   const [files, setFiles] = useState<File[]>([]);
@@ -128,6 +131,14 @@ export const CreateTaskPage: React.FC = () => {
   // Select a single user (for single assignee mode)
   const selectSingleUser = (user: any) => {
     setSelectedUsers([user]);
+    setAssigneeWork((prev) => ({
+      ...prev,
+      [user.id]: prev[user.id] || {
+        title: title.trim() ? `${title.trim()} (${user.name})` : `${user.name}'s Scope`,
+        description: '',
+        due_date: dueDate || '',
+      },
+    }));
   };
 
   // Toggle user selection (for multiple assignees or collaborate mode)
@@ -136,6 +147,14 @@ export const CreateTaskPage: React.FC = () => {
       setSelectedUsers(selectedUsers.filter((u) => u.id !== user.id));
     } else {
       setSelectedUsers([...selectedUsers, user]);
+      setAssigneeWork((prev) => ({
+        ...prev,
+        [user.id]: prev[user.id] || {
+          title: title.trim() ? `${title.trim()} (${user.name})` : `${user.name}'s Scope`,
+          description: '',
+          due_date: dueDate || '',
+        },
+      }));
     }
   };
 
@@ -144,6 +163,19 @@ export const CreateTaskPage: React.FC = () => {
     setError('');
 
     try {
+      // Build distinct branches/subtasks payload for each teammate with Strict Peer Isolation
+      const branchesPayload = (handlingMethod === 'assign' || handlingMethod === 'collaborate')
+        ? selectedUsers.map((u) => {
+            const work = assigneeWork[u.id] || {};
+            return {
+              owner_id: u.id,
+              title: (work.title && work.title.trim()) || `${u.name}'s Scope`,
+              description: (work.description && work.description.trim()) || description.trim(),
+              due_date: work.due_date || dueDate || undefined,
+            };
+          })
+        : [];
+
       // If no files attached, send pure JSON for 100% reliable array & type parsing
       if (files.length === 0) {
         const payload: any = {
@@ -160,13 +192,11 @@ export const CreateTaskPage: React.FC = () => {
 
         if (handlingMethod === 'assign') {
           payload.assignees = selectedUsers.map((u) => u.id);
+          payload.branches = branchesPayload;
         } else if (handlingMethod === 'collaborate') {
           payload.assignees = selectedUsers.map((u) => u.id);
           payload.collaborators = selectedUsers.map((u) => u.id);
-          const validBranches = branches.filter((b) => b.title.trim() && b.owner_id > 0);
-          if (validBranches.length > 0) {
-            payload.branches = validBranches;
-          }
+          payload.branches = branchesPayload;
         }
 
         const result = await tasksApi.create(payload);
@@ -190,19 +220,23 @@ export const CreateTaskPage: React.FC = () => {
         selectedUsers.forEach((u) => {
           formData.append('assignees[]', String(u.id));
         });
+        branchesPayload.forEach((b, idx) => {
+          formData.append(`branches[${idx}][owner_id]`, String(b.owner_id));
+          formData.append(`branches[${idx}][title]`, b.title);
+          if (b.description) formData.append(`branches[${idx}][description]`, b.description);
+          if (b.due_date) formData.append(`branches[${idx}][due_date]`, b.due_date);
+        });
       } else if (handlingMethod === 'collaborate') {
         selectedUsers.forEach((u) => {
           formData.append('assignees[]', String(u.id));
           formData.append('collaborators[]', String(u.id));
         });
-
-        const validBranches = branches.filter((b) => b.title.trim() && b.owner_id > 0);
-        if (validBranches.length > 0) {
-          validBranches.forEach((b, idx) => {
-            formData.append(`branches[${idx}][title]`, b.title.trim());
-            formData.append(`branches[${idx}][owner_id]`, String(b.owner_id));
-          });
-        }
+        branchesPayload.forEach((b, idx) => {
+          formData.append(`branches[${idx}][owner_id]`, String(b.owner_id));
+          formData.append(`branches[${idx}][title]`, b.title);
+          if (b.description) formData.append(`branches[${idx}][description]`, b.description);
+          if (b.due_date) formData.append(`branches[${idx}][due_date]`, b.due_date);
+        });
       }
 
       files.forEach((f) => {
@@ -898,6 +932,127 @@ export const CreateTaskPage: React.FC = () => {
                 </div>
               )}
 
+              
+              {/* Work Breakdown & Individual Instructions (Strict Peer Privacy) */}
+              {selectedUsers.length > 0 && (
+                <div className="pt-6 border-t border-slate-100 space-y-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                          <Sparkles className="w-4 h-4 text-blue-600" />
+                          <span>Individual Work Breakdown & Instructions</span>
+                        </h3>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                          <Lock className="w-3 h-3" />
+                          <span>Strict Peer Privacy</span>
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                        Specify custom work titles, instructions, and deadlines for each teammate.
+                        <strong className="text-slate-700 font-semibold"> Each teammate will ONLY see their own work and deliverables—never what is assigned to other peers.</strong>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    {selectedUsers.map((u, idx) => {
+                      const work = assigneeWork[u.id] || {
+                        title: `${u.name}'s Scope`,
+                        description: '',
+                        due_date: dueDate || '',
+                      };
+
+                      return (
+                        <div
+                          key={u.id}
+                          className="p-4 bg-slate-50/80 border border-slate-200/90 rounded-2xl space-y-3 transition hover:border-blue-300"
+                        >
+                          <div className="flex items-center justify-between pb-2 border-b border-slate-200/60">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                                {u.name.charAt(0)}
+                              </div>
+                              <div>
+                                <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                                  <span>{u.name}</span>
+                                  <span className="text-[10px] text-slate-400 font-normal">
+                                    ({u.email})
+                                  </span>
+                                </span>
+                                <p className="text-[10px] text-slate-500 capitalize">
+                                  {u.role?.replace('_', ' ')} {u.department ? `• ${u.department.name}` : ''}
+                                </p>
+                              </div>
+                            </div>
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100/70 text-blue-800">
+                              Teammate #{idx + 1}
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div className="sm:col-span-2 space-y-1">
+                              <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                                <span>Work / Subtask Title</span>
+                                <span className="text-rose-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={work.title}
+                                onChange={(e) =>
+                                  setAssigneeWork((prev) => ({
+                                    ...prev,
+                                    [u.id]: { ...work, title: e.target.value },
+                                  }))
+                                }
+                                placeholder={`e.g. ${u.name}'s Scope (or Architecture Design, Testing, Documentation)`}
+                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-[11px] font-bold text-slate-700">
+                                Individual Due Date
+                              </label>
+                              <input
+                                type="date"
+                                value={work.due_date}
+                                onChange={(e) =>
+                                  setAssigneeWork((prev) => ({
+                                    ...prev,
+                                    [u.id]: { ...work, due_date: e.target.value },
+                                  }))
+                                }
+                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                              />
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <label className="text-[11px] font-bold text-slate-700 flex items-center justify-between">
+                              <span>Specific Instructions & Deliverables for {u.name}</span>
+                              <span className="text-[10px] text-slate-400 font-normal">Private to {u.name}</span>
+                            </label>
+                            <textarea
+                              rows={2}
+                              value={work.description}
+                              onChange={(e) =>
+                                setAssigneeWork((prev) => ({
+                                  ...prev,
+                                  [u.id]: { ...work, description: e.target.value },
+                                }))
+                              }
+                              placeholder={`Enter specific instructions or deliverables for ${u.name}. (Only ${u.name} and management will see this).`}
+                              className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 resize-none"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Optional Custom Subtasks builder for Collaboration */}
               <div className="pt-4 border-t border-slate-100 space-y-3">
                 <div className="flex justify-between items-center">
@@ -1028,20 +1183,37 @@ export const CreateTaskPage: React.FC = () => {
               <span className="font-bold text-slate-500 block mb-1">Description:</span>
               <p className="text-slate-700 whitespace-pre-wrap">{description}</p>
             </div>
-            {handlingMethod !== 'work_alone' && (
-              <div>
-                <span className="font-bold text-slate-500 block mb-1">
-                  {handlingMethod === 'assign' ? 'Assignees:' : 'Collaborators:'}
-                </span>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {selectedUsers.map((u) => (
-                    <span
-                      key={u.id}
-                      className="px-2.5 py-1 bg-white border border-slate-200 rounded-lg font-semibold text-slate-700"
-                    >
-                      {u.name}
-                    </span>
-                  ))}
+            {handlingMethod !== 'work_alone' && selectedUsers.length > 0 && (
+              <div className="space-y-3 pt-2 border-t border-slate-200/60">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-700 block text-xs uppercase tracking-wider">
+                    {handlingMethod === 'assign' ? 'Work Distribution per Assignee' : 'Work Distribution per Collaborator'}
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                    <Lock className="w-3 h-3" />
+                    <span>Strict Peer Privacy Active</span>
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {selectedUsers.map((u) => {
+                    const work = assigneeWork[u.id] || {};
+                    return (
+                      <div key={u.id} className="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-slate-900">{u.name}: {(work.title && work.title.trim()) || `${u.name}'s Scope`}</span>
+                          <span className="text-[11px] text-slate-500 font-medium">Due: {work.due_date || dueDate || 'Not set'}</span>
+                        </div>
+                        {work.description && (
+                          <p className="text-[11px] text-slate-600 italic whitespace-pre-wrap pl-2 border-l-2 border-blue-400">
+                            "{work.description}"
+                          </p>
+                        )}
+                        <span className="text-[10px] text-slate-400 block pt-0.5">
+                          🔒 Visible exclusively to {u.name} and task overseers.
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

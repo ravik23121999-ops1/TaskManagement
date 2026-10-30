@@ -1061,6 +1061,83 @@ export const TaskDetailPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: Basic Information */}
           <div className="lg:col-span-2 bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
+            {/* STRICT PEER ISOLATION: YOUR ASSIGNED WORK CARD */}
+            {task.is_peer_isolated && task.my_branch && (
+              <div className="p-5 bg-gradient-to-br from-blue-50/90 via-indigo-50/50 to-blue-50/90 border-2 border-blue-200/90 rounded-2xl space-y-4 shadow-sm animate-in fade-in">
+                <div className="flex items-center justify-between pb-3 border-b border-blue-200/60">
+                  <div className="flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
+                      <Sparkles className="w-4 h-4" />
+                    </span>
+                    <div>
+                      <span className="text-xs font-bold text-blue-950 uppercase tracking-wider block">
+                        Your Personal Assigned Work Scope
+                      </span>
+                      <span className="text-[10px] text-blue-700/80 font-medium">
+                        Confidential individual assignment
+                      </span>
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                    <span>🔒 Peer Privacy Protected</span>
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <span className="font-bold text-slate-500 uppercase tracking-wider text-[10px] block mb-0.5">
+                      Your Work Title
+                    </span>
+                    <h3 className="text-sm font-bold text-slate-900">
+                      {task.my_branch.title}
+                    </h3>
+                  </div>
+
+                  {task.my_branch.description && (
+                    <div className="p-3 bg-white/90 border border-blue-200/80 rounded-xl space-y-1">
+                      <span className="font-bold text-blue-900 text-[10px] uppercase tracking-wider block">
+                        Individual Instructions & Deliverable Scope
+                      </span>
+                      <p className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
+                        {task.my_branch.description}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between flex-wrap gap-2 pt-1 text-xs">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Status</span>
+                        <StatusBadge status={task.my_branch.status as any} size="sm" />
+                      </div>
+                      {task.my_branch.due_date && (
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Your Due Date</span>
+                          <span className="font-semibold text-slate-800">
+                            {new Date(task.my_branch.due_date).toLocaleDateString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {task.permissions.can_submit && (
+                      <button
+                        onClick={() => setIsSubmitModalOpen(true)}
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Submit Work Deliverables</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-2.5 bg-blue-100/50 rounded-xl text-[11px] text-blue-900 flex items-center gap-2">
+                  <span className="font-bold text-blue-700">🔒 Peer Confidentiality:</span>
+                  <span>You only see your own assigned work. Work and instructions assigned to other peers remain strictly confidential.</span>
+                </div>
+              </div>
+            )}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <FileText className="w-4 h-4 text-blue-600" />

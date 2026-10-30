@@ -24,12 +24,25 @@ import {
   ChevronRight,
   MessageSquare,
   Ban,
+  X,
 } from 'lucide-react';
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onMobileClose }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+
+  const handleNav = (path: string) => {
+    navigate(path);
+    if (onMobileClose) {
+      onMobileClose();
+    }
+  };
 
   const mainMenuItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -83,41 +96,64 @@ const Sidebar: React.FC = () => {
   const avatarSrc = user?.avatar_url || `/assets/roles/${role}_${gender}.png`;
 
   return (
-    <aside className="w-64 bg-gradient-to-b from-[#080d1e] via-[#0b1328] to-[#050814] text-slate-300 h-screen max-h-screen flex flex-col fixed left-0 top-0 z-30 shadow-2xl border-r border-slate-800/80 select-none overflow-hidden">
-      {/* Ambient Top Glow Accent */}
-      <div className="pointer-events-none absolute -top-20 -left-20 w-52 h-52 bg-blue-500/15 rounded-full blur-3xl" />
-      <div className="pointer-events-none absolute top-1/2 -left-24 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl" />
+    <>
+      {/* Mobile Drawer Backdrop */}
+      {mobileOpen && (
+        <div
+          onClick={onMobileClose}
+          className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-40 lg:hidden transition-opacity"
+        />
+      )}
 
-      {/* Brand Header */}
-      <div className="p-4 sm:p-5 border-b border-slate-800/80 flex items-center justify-between relative z-10 shrink-0 bg-[#070b18]/70 backdrop-blur-md">
-        <div className="flex items-center gap-3">
-          <div className="relative group cursor-pointer" onClick={() => navigate('/')}>
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-[0_0_20px_rgba(37,99,235,0.45)] border border-white/20 group-hover:scale-105 transition-transform duration-200">
-              <Layers className="w-5 h-5 drop-shadow" />
+      <aside
+        className={`w-64 bg-gradient-to-b from-[#080d1e] via-[#0b1328] to-[#050814] text-slate-300 h-screen max-h-screen flex flex-col fixed left-0 top-0 z-50 shadow-2xl border-r border-slate-800/80 select-none overflow-hidden transition-transform duration-300 ease-in-out ${
+          mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        }`}
+      >
+        {/* Ambient Top Glow Accent */}
+        <div className="pointer-events-none absolute -top-20 -left-20 w-52 h-52 bg-blue-500/15 rounded-full blur-3xl" />
+        <div className="pointer-events-none absolute top-1/2 -left-24 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl" />
+
+        {/* Brand Header */}
+        <div className="p-4 sm:p-5 border-b border-slate-800/80 flex items-center justify-between relative z-10 shrink-0 bg-[#070b18]/70 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <div className="relative group cursor-pointer" onClick={() => handleNav('/')}>
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-[0_0_20px_rgba(37,99,235,0.45)] border border-white/20 group-hover:scale-105 transition-transform duration-200">
+                <Layers className="w-5 h-5 drop-shadow" />
+              </div>
+              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#080d1e] shadow-[0_0_8px_#34d399] animate-pulse" />
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#080d1e] shadow-[0_0_8px_#34d399] animate-pulse" />
-          </div>
-          <div className="cursor-pointer" onClick={() => navigate('/')}>
-            <h1 className="text-base font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
-              QuickLifeNow
-            </h1>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
-              <p className="text-[10px] text-slate-400 font-medium tracking-tight">Internal Enterprise Management</p>
+            <div className="cursor-pointer" onClick={() => handleNav('/')}>
+              <h1 className="text-base font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
+                QuickLifeNow
+              </h1>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
+                <p className="text-[10px] text-slate-400 font-medium tracking-tight">Internal Enterprise Management</p>
+              </div>
             </div>
           </div>
+
+          {/* Mobile Close Button */}
+          <button
+            type="button"
+            onClick={onMobileClose}
+            className="lg:hidden p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 transition cursor-pointer"
+            title="Close Menu"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
-      </div>
 
-      {/* Quick Create Task Action Button */}
-      <div className="px-3 pt-3 shrink-0">
-        <button
-          onClick={() => navigate('/tasks/create')}
-          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
-            location.pathname === '/tasks/create'
-              ? 'bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-500 text-white shadow-lg shadow-blue-500/35 border border-cyan-300/40'
-              : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-md shadow-blue-600/25 hover:shadow-lg hover:shadow-blue-500/35 border border-blue-400/30 hover:-translate-y-0.5'
-          }`}
+        {/* Quick Create Task Action Button */}
+        <div className="px-3 pt-3 shrink-0">
+          <button
+            onClick={() => handleNav('/tasks/create')}
+            className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+              location.pathname === '/tasks/create'
+                ? 'bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-500 text-white shadow-lg shadow-blue-500/35 border border-cyan-300/40'
+                : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-md shadow-blue-600/25 hover:shadow-lg hover:shadow-blue-500/35 border border-blue-400/30 hover:-translate-y-0.5'
+            }`}
         >
           <div className="flex items-center gap-2.5">
             <PlusCircle className="w-4 h-4 text-cyan-200" />
@@ -145,7 +181,7 @@ const Sidebar: React.FC = () => {
               return (
                 <li key={item.path}>
                   <button
-                    onClick={() => navigate(item.path)}
+                    onClick={() => handleNav(item.path)}
                     className={`w-full group relative flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer ${
                       active
                         ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/30 font-bold border border-blue-400/30'
@@ -201,7 +237,7 @@ const Sidebar: React.FC = () => {
                 return (
                   <li key={item.path}>
                     <button
-                      onClick={() => navigate(item.path)}
+                      onClick={() => handleNav(item.path)}
                       className={`w-full group relative flex items-center justify-between px-3.5 py-2 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer ${
                         active
                           ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/30 font-bold border border-blue-400/30'
@@ -247,7 +283,7 @@ const Sidebar: React.FC = () => {
         <div className="flex items-center gap-2.5 p-2 rounded-2xl bg-white/[0.04] border border-white/10 hover:border-white/20 transition-all duration-200 shadow-xl relative group">
           {/* Avatar Photo / 3D Character */}
           <div
-            onClick={() => navigate('/settings')}
+            onClick={() => handleNav('/settings')}
             className="relative shrink-0 cursor-pointer"
             title="Click to customize profile avatar & photo"
           >
@@ -283,7 +319,7 @@ const Sidebar: React.FC = () => {
 
           {/* User Details */}
           <div
-            onClick={() => navigate('/settings')}
+            onClick={() => handleNav('/settings')}
             className="flex-1 min-w-0 cursor-pointer"
             title="View Profile Settings"
           >
@@ -313,6 +349,7 @@ const Sidebar: React.FC = () => {
         </div>
       </div>
     </aside>
+    </>
   );
 };
 

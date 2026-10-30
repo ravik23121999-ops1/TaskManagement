@@ -10,9 +10,30 @@ class TaskResource extends JsonResource
     public function toArray(Request $request): array
     {
         $user = $request->user();
-        $isCreator = $user && $this->creator_id === $user->id;
+        $isCreator = $user && (int)$this->creator_id === (int)$user->id;
         $isAdmin = $user && ($user->role === 'admin' || $user->role === 'sub_admin');
-        
+        $canOverseeAll = $isCreator || $isAdmin;
+
+        // Permissions for current user
+        $isBranchOwner = $user && $this->branches->where('owner_id', $user->id)->isNotEmpty();
+        $userActiveBranch = $user ? ($this->branches->firstWhere('owner_id', $user->id)
+            ?? $this->branches->first(fn($b) => $b->assignments->contains('assigned_to_id', $user->id) || $b->collaborators->contains('user_id', $user->id))) : null;
+
+        // Strict Peer Isolation:
+        // A peer assignee or collaborator must NEVER see another peer's branch work, instructions, or deliverables!
+        // Only the Task Creator and Executive Admins (Overseers) see all branches.
+        $visibleBranches = $this->branches;
+        if (!$canOverseeAll) {
+            $visibleBranches = $this->branches->filter(function ($branch) use ($user) {
+                if (!$user) return false;
+                $isOwner = (int)$branch->owner_id === (int)$user->id;
+                $isAssignedTo = $branch->assignments->contains(fn($a) => (int)$a->assigned_to_id === (int)$user->id);
+                $isAssignedBy = $branch->assignments->contains(fn($a) => (int)$a->assigned_by_id === (int)$user->id && (int)$a->assigned_to_id !== (int)$user->id);
+                $isCollaborator = $branch->collaborators->contains(fn($c) => (int)$c->user_id === (int)$user->id);
+                return $isOwner || $isAssignedTo || $isAssignedBy || $isCollaborator;
+            })->values();
+        }
+
         // Calculate current owner
         $currentOwner = null;
         if ($this->handling_method === 'work_alone') {
@@ -23,26 +44,36 @@ class TaskResource extends JsonResource
                 'role' => $this->creator->role,
             ] : null;
         } else {
-            // Find active branch or first branch
-            $activeBranch = $this->branches->firstWhere('status', 'in_progress')
-                ?? $this->branches->firstWhere('status', 'review')
-                ?? $this->branches->firstWhere('status', 'pending')
-                ?? $this->branches->first();
+            // For isolated assignee, current owner is the user/branch owner
+            if (!$canOverseeAll && $userActiveBranch && $userActiveBranch->owner) {
+                $currentOwner = [
+                    'id' => $userActiveBranch->owner->id,
+                    'name' => $userActiveBranch->owner->name,
+                    'email' => $userActiveBranch->owner->email,
+                    'role' => $userActiveBranch->owner->role,
+                ];
+            } else {
+                // Find active branch or first branch
+                $activeBranch = $visibleBranches->firstWhere('status', 'in_progress')
+                    ?? $visibleBranches->firstWhere('status', 'review')
+                    ?? $visibleBranches->firstWhere('status', 'pending')
+                    ?? $visibleBranches->first();
 
-            if ($activeBranch && $activeBranch->owner) {
-                $currentOwner = [
-                    'id' => $activeBranch->owner->id,
-                    'name' => $activeBranch->owner->name,
-                    'email' => $activeBranch->owner->email,
-                    'role' => $activeBranch->owner->role,
-                ];
-            } elseif ($this->creator) {
-                $currentOwner = [
-                    'id' => $this->creator->id,
-                    'name' => $this->creator->name,
-                    'email' => $this->creator->email,
-                    'role' => $this->creator->role,
-                ];
+                if ($activeBranch && $activeBranch->owner) {
+                    $currentOwner = [
+                        'id' => $activeBranch->owner->id,
+                        'name' => $activeBranch->owner->name,
+                        'email' => $activeBranch->owner->email,
+                        'role' => $activeBranch->owner->role,
+                    ];
+                } elseif ($this->creator) {
+                    $currentOwner = [
+                        'id' => $this->creator->id,
+                        'name' => $this->creator->name,
+                        'email' => $this->creator->email,
+                        'role' => $this->creator->role,
+                    ];
+                }
             }
         }
 
@@ -54,20 +85,22 @@ class TaskResource extends JsonResource
             if ($this->status === 'in_progress') $progress = 50;
             elseif ($this->status === 'review') $progress = 80;
             elseif ($this->status === 'pending') $progress = 10;
+        } elseif (!$canOverseeAll && $userActiveBranch) {
+            // Isolated progress specifically for this assignee's assigned work
+            if ($userActiveBranch->status === 'completed') $progress = 100;
+            elseif ($userActiveBranch->status === 'review') $progress = 90;
+            elseif ($userActiveBranch->status === 'in_progress') $progress = 50;
+            else $progress = 10;
         } else {
-            $totalBranches = $this->branches->count();
+            $totalBranches = $visibleBranches->count();
             if ($totalBranches > 0) {
-                $completedBranches = $this->branches->where('status', 'completed')->count();
+                $completedBranches = $visibleBranches->where('status', 'completed')->count();
                 $progress = (int) round(($completedBranches / $totalBranches) * 100);
                 if ($this->status === 'review' && $progress < 90) $progress = 90;
             } else {
                 $progress = 20;
             }
         }
-
-        // Permissions for current user
-        $isBranchOwner = $user && $this->branches->where('owner_id', $user->id)->isNotEmpty();
-        $userActiveBranch = $user ? $this->branches->firstWhere('owner_id', $user->id) : null;
         
         $canSubmit = false;
         if ($this->status !== 'completed' && $this->status !== 'cancelled' && $this->status !== 'on_hold') {
@@ -242,7 +275,21 @@ class TaskResource extends JsonResource
                 'id' => $this->department->id,
                 'name' => $this->department->name,
             ] : null,
-            'branches' => $this->branches->map(function ($branch) {
+            'is_peer_isolated' => !$canOverseeAll,
+            'my_branch' => $userActiveBranch ? [
+                'id' => $userActiveBranch->id,
+                'title' => $userActiveBranch->title,
+                'description' => $userActiveBranch->description,
+                'status' => $userActiveBranch->status,
+                'due_date' => $userActiveBranch->due_date?->toISOString(),
+                'completed_at' => $userActiveBranch->completed_at?->toISOString(),
+                'assigned_by' => $userActiveBranch->assignments->firstWhere('is_current', true)?->assignedBy ? [
+                    'id' => $userActiveBranch->assignments->firstWhere('is_current', true)->assignedBy->id,
+                    'name' => $userActiveBranch->assignments->firstWhere('is_current', true)->assignedBy->name,
+                    'role' => $userActiveBranch->assignments->firstWhere('is_current', true)->assignedBy->role,
+                ] : null,
+            ] : null,
+            'branches' => $visibleBranches->map(function ($branch) {
                 $currentAssignment = $branch->assignments->firstWhere('is_current', true);
                 $assignedBy = $currentAssignment?->assignedBy;
                 return [
@@ -266,7 +313,7 @@ class TaskResource extends JsonResource
                     'completed_at' => $branch->completed_at?->toISOString(),
                 ];
             }),
-            'collaborators' => $this->branches->flatMap->collaborators->map(fn($c) => [
+            'collaborators' => $visibleBranches->flatMap->collaborators->map(fn($c) => [
                 'id' => $c->user?->id,
                 'name' => $c->user?->name,
                 'email' => $c->user?->email,
@@ -308,7 +355,14 @@ class TaskResource extends JsonResource
                     'role' => $history->changedBy->role,
                 ] : null,
             ]),
-            'submissions' => $this->submissions->sortByDesc('submitted_at')->values()->map(fn($sub) => [
+            'submissions' => $this->submissions
+                ->when(!$canOverseeAll, function ($q) use ($visibleBranches, $user) {
+                    $visibleBranchIds = $visibleBranches->pluck('id')->all();
+                    return $q->filter(function ($sub) use ($visibleBranchIds, $user) {
+                        return in_array($sub->task_branch_id, $visibleBranchIds) || (int)$sub->submitted_by_id === (int)$user->id;
+                    });
+                })
+                ->sortByDesc('submitted_at')->values()->map(fn($sub) => [
                 'id' => $sub->id,
                 'description' => $sub->description,
                 'is_final' => (bool) $sub->is_final,

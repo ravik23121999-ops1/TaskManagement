@@ -324,70 +324,133 @@ class TaskController extends Controller
                     'assigned_at' => now(),
                 ]);
             } elseif ($task->handling_method === 'assign') {
+                $branchesData = (array) $request->input('branches', []);
                 $assignees = (array) $request->input('assignees', []);
-                // Exclude creator - assign is strictly for delegating to other employees
-                $assignees = array_values(array_filter($assignees, fn($id) => (int)$id !== (int)$user->id));
 
-                if (empty($assignees)) {
-                    throw \Illuminate\Validation\ValidationException::withMessages([
-                        'assignees' => ['Please select at least one assignee other than yourself. Use "Work Alone" if you want to execute this task yourself.'],
-                    ]);
-                }
-
-                foreach ($assignees as $assigneeId) {
-                    $branch = $task->branches()->create([
-                        'title' => $task->title,
-                        'description' => $task->description,
-                        'owner_id' => $assigneeId,
-                        'status' => 'pending',
-                        'due_date' => $task->due_date,
-                    ]);
-
-                    $branch->assignments()->create([
-                        'assigned_to_id' => $assigneeId,
-                        'assigned_by_id' => $user->id,
-                        'is_current' => true,
-                        'assigned_at' => now(),
-                    ]);
-
-                    if ($assigneeId !== $user->id) {
-                        SendTaskNotification::dispatch(
-                            $assigneeId,
-                            'task_assigned',
-                            "Task assigned to you — {$task->title}",
-                            $task->id,
-                            'Task Assigned',
-                            $branch->id
-                        );
-                    }
-                }
-            } elseif ($task->handling_method === 'collaborate') {
-                $branchesData = $request->input('branches', []);
-                $collaborators = $request->input('collaborators', []);
-                $assignees = $request->input('assignees', []);
-
+                // If structured branch specifications were provided per assignee
                 if (!empty($branchesData)) {
-                    foreach ($branchesData as $bData) {
+                    // Filter out creator - assign is strictly for delegating to other employees
+                    $validBranches = array_values(array_filter($branchesData, function ($b) use ($user) {
+                        return !empty($b['owner_id']) && (int)$b['owner_id'] !== (int)$user->id;
+                    }));
+
+                    if (empty($validBranches)) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'assignees' => ['Please select at least one assignee other than yourself. Use "Work Alone" if you want to execute this task yourself.'],
+                        ]);
+                    }
+
+                    foreach ($validBranches as $bData) {
+                        $assigneeId = (int)$bData['owner_id'];
+                        $branchTitle = !empty($bData['title']) ? trim($bData['title']) : $task->title;
+                        $branchDesc = !empty($bData['description']) ? trim($bData['description']) : $task->description;
+                        $branchDue = !empty($bData['due_date']) ? now()->parse($bData['due_date']) : $task->due_date;
+
                         $branch = $task->branches()->create([
-                            'title' => $bData['title'] ?? $task->title,
-                            'description' => $task->description,
-                            'owner_id' => $bData['owner_id'],
+                            'title' => $branchTitle,
+                            'description' => $branchDesc,
+                            'owner_id' => $assigneeId,
                             'status' => 'pending',
-                            'due_date' => isset($bData['due_date']) ? now()->parse($bData['due_date']) : $task->due_date,
+                            'due_date' => $branchDue,
                         ]);
 
                         $branch->assignments()->create([
-                            'assigned_to_id' => $bData['owner_id'],
+                            'assigned_to_id' => $assigneeId,
                             'assigned_by_id' => $user->id,
                             'is_current' => true,
                             'assigned_at' => now(),
                         ]);
 
-                        if ($bData['owner_id'] !== $user->id) {
+                        if ($assigneeId !== $user->id) {
                             SendTaskNotification::dispatch(
-                                $bData['owner_id'],
+                                $assigneeId,
+                                'task_assigned',
+                                "Task assigned to you — {$branchTitle}",
+                                $task->id,
+                                'Task Assigned',
+                                $branch->id
+                            );
+                        }
+                    }
+                } else {
+                    // Exclude creator - assign is strictly for delegating to other employees
+                    $assignees = array_values(array_filter($assignees, fn($id) => (int)$id !== (int)$user->id));
+
+                    if (empty($assignees)) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'assignees' => ['Please select at least one assignee other than yourself. Use "Work Alone" if you want to execute this task yourself.'],
+                        ]);
+                    }
+
+                    foreach ($assignees as $assigneeId) {
+                        $branch = $task->branches()->create([
+                            'title' => $task->title,
+                            'description' => $task->description,
+                            'owner_id' => $assigneeId,
+                            'status' => 'pending',
+                            'due_date' => $task->due_date,
+                        ]);
+
+                        $branch->assignments()->create([
+                            'assigned_to_id' => $assigneeId,
+                            'assigned_by_id' => $user->id,
+                            'is_current' => true,
+                            'assigned_at' => now(),
+                        ]);
+
+                        if ($assigneeId !== $user->id) {
+                            SendTaskNotification::dispatch(
+                                $assigneeId,
+                                'task_assigned',
+                                "Task assigned to you — {$task->title}",
+                                $task->id,
+                                'Task Assigned',
+                                $branch->id
+                            );
+                        }
+                    }
+                }
+            } elseif ($task->handling_method === 'collaborate') {
+                $branchesData = (array) $request->input('branches', []);
+                $collaborators = (array) $request->input('collaborators', []);
+                $assignees = (array) $request->input('assignees', []);
+
+                if (!empty($branchesData)) {
+                    foreach ($branchesData as $bData) {
+                        $collabOwnerId = (int)$bData['owner_id'];
+                        $branchTitle = !empty($bData['title']) ? trim($bData['title']) : $task->title;
+                        $branchDesc = !empty($bData['description']) ? trim($bData['description']) : $task->description;
+                        $branchDue = !empty($bData['due_date']) ? now()->parse($bData['due_date']) : $task->due_date;
+
+                        $branch = $task->branches()->create([
+                            'title' => $branchTitle,
+                            'description' => $branchDesc,
+                            'owner_id' => $collabOwnerId,
+                            'status' => 'pending',
+                            'due_date' => $branchDue,
+                        ]);
+
+                        $branch->assignments()->create([
+                            'assigned_to_id' => $collabOwnerId,
+                            'assigned_by_id' => $user->id,
+                            'is_current' => true,
+                            'assigned_at' => now(),
+                        ]);
+
+                        // Register as collaborator on their branch
+                        $branch->collaborators()->create([
+                            'user_id' => $collabOwnerId,
+                            'invited_by_id' => $user->id,
+                            'can_assign' => true,
+                            'can_collaborate' => true,
+                            'invited_at' => now(),
+                        ]);
+
+                        if ($collabOwnerId !== $user->id) {
+                            SendTaskNotification::dispatch(
+                                $collabOwnerId,
                                 'collaboration_invite',
-                                "You were added to collaborative task — {$task->title}",
+                                "You were invited to collaborate on milestone — {$branchTitle}",
                                 $task->id,
                                 'New Collaboration',
                                 $branch->id
@@ -411,9 +474,57 @@ class TaskController extends Controller
                             'assigned_at' => now(),
                         ]);
 
+                        // Attach collaborators to this branch
+                        foreach ($collaborators as $extraCollabId) {
+                            $branch->collaborators()->firstOrCreate([
+                                'user_id' => $extraCollabId,
+                            ], [
+                                'invited_by_id' => $user->id,
+                                'can_assign' => true,
+                                'can_collaborate' => true,
+                                'invited_at' => now(),
+                            ]);
+                        }
+
                         if ($assigneeId !== $user->id) {
                             SendTaskNotification::dispatch(
                                 $assigneeId,
+                                'collaboration_invite',
+                                "You were invited to collaborate on — {$task->title}",
+                                $task->id,
+                                'New Collaboration',
+                                $branch->id
+                            );
+                        }
+                    }
+                } elseif (!empty($collaborators)) {
+                    foreach ($collaborators as $collabId) {
+                        $branch = $task->branches()->create([
+                            'title' => $task->title,
+                            'description' => $task->description,
+                            'owner_id' => $collabId,
+                            'status' => 'pending',
+                            'due_date' => $task->due_date,
+                        ]);
+
+                        $branch->assignments()->create([
+                            'assigned_to_id' => $collabId,
+                            'assigned_by_id' => $user->id,
+                            'is_current' => true,
+                            'assigned_at' => now(),
+                        ]);
+
+                        $branch->collaborators()->create([
+                            'user_id' => $collabId,
+                            'invited_by_id' => $user->id,
+                            'can_assign' => true,
+                            'can_collaborate' => true,
+                            'invited_at' => now(),
+                        ]);
+
+                        if ($collabId !== $user->id) {
+                            SendTaskNotification::dispatch(
+                                $collabId,
                                 'collaboration_invite',
                                 "You were invited to collaborate on — {$task->title}",
                                 $task->id,
@@ -786,15 +897,22 @@ class TaskController extends Controller
         }
 
         $addedCount = 0;
+        $branchesData = (array) $request->input('branches', []);
+
         foreach ($targetUserIds as $assigneeId) {
             $exists = $task->branches()->where('owner_id', $assigneeId)->whereNotIn('status', ['cancelled'])->exists();
             if (!$exists) {
+                $bData = collect($branchesData)->firstWhere('owner_id', $assigneeId);
+                $branchTitle = !empty($bData['title']) ? trim($bData['title']) : $task->title;
+                $branchDesc = !empty($bData['description']) ? trim($bData['description']) : $task->description;
+                $branchDue = !empty($bData['due_date']) ? now()->parse($bData['due_date']) : $task->due_date;
+
                 $branch = $task->branches()->create([
-                    'title' => $task->title,
-                    'description' => $task->description,
+                    'title' => $branchTitle,
+                    'description' => $branchDesc,
                     'owner_id' => $assigneeId,
                     'status' => 'pending',
-                    'due_date' => $task->due_date,
+                    'due_date' => $branchDue,
                 ]);
 
                 $branch->assignments()->create([
@@ -808,7 +926,7 @@ class TaskController extends Controller
                     SendTaskNotification::dispatch(
                         $assigneeId,
                         'task_assigned',
-                        "Task assigned to you — {$task->title}",
+                        "Task assigned to you — {$branchTitle}",
                         $task->id,
                         'Task Assigned',
                         $branch->id

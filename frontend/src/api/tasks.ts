@@ -84,6 +84,16 @@ export interface Task {
   creator: UserSummary | null;
   current_owner: UserSummary | null;
   department: { id: number; name: string } | null;
+  is_peer_isolated?: boolean;
+  my_branch?: {
+    id: number;
+    title: string;
+    description: string | null;
+    status: 'pending' | 'in_progress' | 'review' | 'on_hold' | 'post_comment' | 'completed' | 'cancelled';
+    due_date: string | null;
+    completed_at: string | null;
+    assigned_by?: UserSummary | null;
+  } | null;
   branches: TaskBranch[];
   collaborators: UserSummary[];
   comments: TaskComment[];
@@ -136,6 +146,7 @@ export interface CreateTaskData {
   collaborators?: number[];
   branches?: Array<{
     title: string;
+    description?: string;
     owner_id: number;
     due_date?: string;
   }>;

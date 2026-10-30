@@ -603,7 +603,7 @@ export const MessagesPage: React.FC = () => {
   return (
     <div className="space-y-4">
       {/* Top Header & Overview */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${selectedBranchId ? 'hidden sm:flex' : 'flex'}`}>
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Work Messages & Communications</h1>
@@ -651,7 +651,7 @@ export const MessagesPage: React.FC = () => {
       </div>
 
       {/* Main Messenger Container */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden h-[calc(100vh-230px)] min-h-[580px] flex">
+      <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden h-[calc(100dvh-135px)] sm:h-[calc(100vh-210px)] min-h-[440px] flex">
         {/* ======================================================== */}
         {/* LEFT PANE: THREADS LIST (Instagram DM Style)               */}
         {/* ======================================================== */}
@@ -855,7 +855,7 @@ export const MessagesPage: React.FC = () => {
         {/* ======================================================== */}
         {/* RIGHT PANE: ACTIVE CHAT FEED (Instagram Direct Style)      */}
         {/* ======================================================== */}
-        <div className="flex-1 flex flex-col bg-white overflow-hidden relative">
+        <div className="flex-1 flex flex-col bg-white overflow-hidden relative h-full min-h-0">
           {!selectedBranchId || !activeThreadData ? (
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-slate-400">
               <div className="w-16 h-16 rounded-3xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center mb-3 shadow-inner">
@@ -869,7 +869,7 @@ export const MessagesPage: React.FC = () => {
           ) : (
             <>
               {/* Active Conversation Top Bar */}
-              <div className="p-4 border-b border-slate-200/80 bg-white flex items-center justify-between gap-3 shadow-2xs z-10">
+              <div className="p-3 sm:p-4 border-b border-slate-200/80 bg-white flex items-center justify-between gap-2 sm:gap-3 shadow-2xs z-10 shrink-0">
                 <div className="flex items-center gap-3 min-w-0">
                   {/* Mobile Back Button */}
                   <button
@@ -1235,9 +1235,9 @@ export const MessagesPage: React.FC = () => {
               )}
 
               {/* Bottom Work Action Chips & Message Composer */}
-              <div className="p-3 sm:p-4 bg-white border-t border-slate-200 space-y-2.5">
+              <div className="p-2.5 sm:p-4 bg-white border-t border-slate-200 space-y-2 shrink-0 z-20 sticky bottom-0">
                 {/* Work Context Action Chips */}
-                <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs shrink-0">
                   <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0">
                     {activeThreadData.is_overseer ? 'Reviewer Actions:' : 'Quick Work Actions:'}
                   </span>
@@ -1357,7 +1357,7 @@ export const MessagesPage: React.FC = () => {
                 )}
 
                 {/* Message Input Box */}
-                <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+                <form onSubmit={handleSendMessage} className="flex items-center gap-1.5 sm:gap-2">
                   {/* File Upload Button */}
                   <input
                     type="file"
@@ -1379,21 +1379,21 @@ export const MessagesPage: React.FC = () => {
                   </button>
 
                   {/* Text Input */}
-                  <div className="flex-1 relative">
+                  <div className="flex-1 min-w-0 relative">
                     <input
                       type="text"
                       placeholder={
                         activeThreadData.is_overseer
-                          ? 'Post review remarks, guidance, or missing details request to this branch...'
+                          ? 'Post review remarks or missing details...'
                           : messageType === 'missing_details_request'
-                          ? 'Specify missing details or requirements needed...'
+                          ? 'Specify missing details needed...'
                           : messageType === 'details_provided'
-                          ? 'Describe provided details or attached docs...'
-                          : 'Type a message to discuss this branch...'
+                          ? 'Describe provided details or docs...'
+                          : 'Type a message...'
                       }
                       value={messageInput}
                       onChange={(e) => setMessageInput(e.target.value)}
-                      className="w-full h-10 px-4 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      className="w-full h-10 px-3 sm:px-4 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                     />
                   </div>
 
@@ -1401,10 +1401,10 @@ export const MessagesPage: React.FC = () => {
                   <button
                     type="submit"
                     disabled={sendingMessage || uploadingFile || (!messageInput.trim() && !selectedFile)}
-                    className="h-10 px-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
+                    className="h-10 px-3.5 sm:px-5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs sm:text-sm font-semibold shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
                   >
                     {sendingMessage ? (
-                      <span>Sending...</span>
+                      <span className="text-xs">...</span>
                     ) : (
                       <>
                         <Send className="w-4 h-4" />
