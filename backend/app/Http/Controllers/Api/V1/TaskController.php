@@ -986,14 +986,6 @@ class TaskController extends Controller
             return response()->json(['message' => 'Unauthorized to assign this task'], 403);
         }
 
-        // Check if assigner has permission to assign further
-        if ($isBranchOwner && !$isAdmin && !$isCreator) {
-            $userBranches = $task->branches()->where('owner_id', $user->id)->get();
-            if ($userBranches->isNotEmpty() && $userBranches->every(fn($b) => $b->can_assign_further === false)) {
-                return response()->json(['message' => 'Permission denied: Your assigner has stopped further delegation for this task.'], 403);
-            }
-        }
-
         if (in_array($task->status, ['completed', 'cancelled'])) {
             return response()->json(['message' => 'Cannot add assignees to a completed or cancelled task'], 422);
         }

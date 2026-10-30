@@ -1412,24 +1412,15 @@ export const TaskDetailPage: React.FC = () => {
 
                     <div className="flex items-center gap-2">
                       {task.status !== 'completed' && task.status !== 'cancelled' && (
-                        task.permissions?.can_assign ? (
-                          <button
-                            type="button"
-                            onClick={() => openAssignModal('assign')}
-                            className="px-3.5 py-2 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
-                            title="Assign further / delegate with independent subtasks and attachments"
-                          >
-                            <UserPlus className="w-3.5 h-3.5" />
-                            <span>+ Assign Further</span>
-                          </button>
-                        ) : (
-                          <span
-                            className="px-3 py-1.5 bg-slate-100 text-slate-500 border border-slate-200 rounded-xl text-[11px] font-medium inline-flex items-center gap-1"
-                            title="Your assigner has restricted further delegation for this task."
-                          >
-                            🔒 Delegation Restricted
-                          </span>
-                        )
+                        <button
+                          type="button"
+                          onClick={() => openAssignModal('assign')}
+                          className="px-3.5 py-2 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                          title="Assign further / delegate with independent subtasks and attachments"
+                        >
+                          <UserPlus className="w-3.5 h-3.5" />
+                          <span>+ Assign Further</span>
+                        </button>
                       )}
                       {task.permissions.can_submit && (
                         <button
@@ -2978,7 +2969,7 @@ export const TaskDetailPage: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* TOGGLE 1 IN MODAL: STOP / PASS ASSIGNER WORK & DOCUMENTS */}
+                          {/* TOGGLE: PERMISSION TO SHARE WORK & DOCUMENTS FROM ABOVE BRANCH */}
                           <div
                             className={`p-3.5 rounded-2xl border transition-all duration-150 ${
                               work.share_previous
@@ -2990,7 +2981,7 @@ export const TaskDetailPage: React.FC = () => {
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <span className="font-bold text-xs text-slate-900">
-                                    Share Assigner Work & Documents:
+                                    Permission: Share Work & Documents Got from Above Branch:
                                   </span>
                                   <span
                                     className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider ${
@@ -3004,8 +2995,8 @@ export const TaskDetailPage: React.FC = () => {
                                 </div>
                                 <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
                                   {work.share_previous
-                                    ? '✓ PASS (Permission YES): Assignee will receive prior work instructions and shared documents from the assigner, alongside their new subtask note and attachments.'
-                                    : '✕ STOP (Permission NO): Stopped! Previous documents and assigner instructions remain confidential. Assignee ONLY sees their new subtask note and attachments.'}
+                                    ? '✓ PASS (YES): Downstream assignee will receive what you got from your above branch/assigner, alongside this new subtask note and attachment.'
+                                    : '✕ STOP (NO): Stopped! What you got from your above branch is confidential. Downstream assignee will ONLY receive this new subtask note and attachment.'}
                                 </p>
                               </div>
 
@@ -3019,7 +3010,7 @@ export const TaskDetailPage: React.FC = () => {
                                       ? 'bg-rose-600 text-white shadow-xs'
                                       : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
                                   }`}
-                                  title="STOP: Do not share previous work or documents with this assignee"
+                                  title="STOP: Do not provide above branch work or documents to this assignee"
                                 >
                                   <span>✕ STOP / NO</span>
                                 </button>
@@ -3031,58 +3022,11 @@ export const TaskDetailPage: React.FC = () => {
                                       ? 'bg-emerald-600 text-white shadow-xs'
                                       : 'text-slate-500 hover:text-slate-800 hover:bg-slate-100'
                                   }`}
-                                  title="PASS: Share previous work and documents with this assignee"
+                                  title="PASS: Provide above branch work and documents to this assignee"
                                 >
                                   <span>✓ PASS / YES</span>
                                 </button>
                               </div>
-                            </div>
-                          </div>
-
-                          {/* TOGGLE 2 IN MODAL: PERMISSION TO ASSIGN FURTHER (YES / NO) */}
-                          <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 text-xs flex-wrap gap-2">
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-slate-800">Permission to Assign / Delegate Further:</span>
-                                <span
-                                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                    work.can_assign_further !== false
-                                      ? 'bg-emerald-100 text-emerald-800'
-                                      : 'bg-rose-100 text-rose-800'
-                                  }`}
-                                >
-                                  {work.can_assign_further !== false ? '✓ Permitted (YES)' : '✕ Blocked (NO)'}
-                                </span>
-                              </div>
-                              <span className="text-[11px] text-slate-500 block mt-0.5">
-                                {work.can_assign_further !== false
-                                  ? '✓ Permitted: This assignee can assign and delegate subtasks further to other teammates.'
-                                  : '✕ Blocked: This assignee is restricted and cannot assign work further to anyone.'}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 shrink-0">
-                              <button
-                                type="button"
-                                onClick={() => updateModalWork(uid, { can_assign_further: false })}
-                                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
-                                  work.can_assign_further === false
-                                    ? 'bg-rose-600 text-white shadow-xs'
-                                    : 'text-slate-600 hover:text-slate-900'
-                                }`}
-                              >
-                                ✕ NO
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => updateModalWork(uid, { can_assign_further: true })}
-                                className={`px-3 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
-                                  work.can_assign_further !== false
-                                    ? 'bg-emerald-600 text-white shadow-xs'
-                                    : 'text-slate-600 hover:text-slate-900'
-                                }`}
-                              >
-                                ✓ YES
-                              </button>
                             </div>
                           </div>
 
