@@ -362,10 +362,11 @@ class TaskController extends Controller
 
                     foreach ($validBranches as $bIndex => $bData) {
                         $assigneeId = (int)$bData['owner_id'];
+                        $shareMain = filter_var($bData['share_main_task_details'] ?? $bData['share_previous_branch_details'] ?? true, FILTER_VALIDATE_BOOLEAN);
                         $branchTitle = !empty($bData['title']) ? trim($bData['title']) : $task->title;
                         $branchDesc = !empty($bData['description']) ? trim($bData['description']) : $task->description;
-                        $branchExpected = !empty($bData['expected_result']) ? trim($bData['expected_result']) : $task->expected_result;
-                        $branchCriteria = !empty($bData['acceptance_criteria']) ? trim($bData['acceptance_criteria']) : $task->acceptance_criteria;
+                        $branchExpected = !empty($bData['expected_result']) ? trim($bData['expected_result']) : ($shareMain ? $task->expected_result : null);
+                        $branchCriteria = !empty($bData['acceptance_criteria']) ? trim($bData['acceptance_criteria']) : ($shareMain ? $task->acceptance_criteria : null);
                         $branchStart = !empty($bData['start_date']) ? now()->parse($bData['start_date']) : $task->start_date;
                         $branchDue = !empty($bData['due_date']) ? now()->parse($bData['due_date']) : $task->due_date;
 
@@ -378,6 +379,7 @@ class TaskController extends Controller
                             'start_date' => $branchStart,
                             'status' => 'pending',
                             'due_date' => $branchDue,
+                            'share_parent_details' => $shareMain,
                         ]);
 
                         $branch->assignments()->create([
@@ -1102,6 +1104,7 @@ class TaskController extends Controller
                 'start_date' => $branchStart,
                 'status' => 'pending',
                 'due_date' => $branchDue,
+                'share_parent_details' => $sharePrevious,
             ]);
 
             $branch->assignments()->create([

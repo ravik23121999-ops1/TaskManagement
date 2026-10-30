@@ -341,4 +341,66 @@ class MainTaskMultiEmployeeAssignmentTest extends TestCase
         // Vikas attempts to access Neha's file -> 403 Forbidden!
         $this->actingAs($vikas, 'sanctum')->get("/api/attachments/{$nehaJwtAtt['id']}/download")->assertStatus(403);
     }
+
+    public function test_manager_can_create_task_with_unticked_share_main_task_details_keeping_shared_attachments_confidential()
+    {
+        $sharedSecretPdf = UploadedFile::fake()->create('Company_Secret.pdf', 500, 'application/pdf');
+        $rohitPdf = UploadedFile::fake()->create('Rohit_Doc.pdf', 300, 'application/pdf');
+        $amanPdf = UploadedFile::fake()->create('Aman_Doc.pdf', 400, 'application/pdf');
+
+        $response = $this->actingAs($this->manager, 'sanctum')->post('/api/tasks', [
+            'title' => 'Confidential Security Audit',
+            'description' => 'Main task executive instructions with classified company details.',
+            'handling_method' => 'assign',
+            'priority' => 'high',
+            'department_id' => $this->department->id,
+            'due_date' => '2026-11-20',
+            'shared_files' => [$sharedSecretPdf],
+            'assignees' => [$this->rohit->id, $this->aman->id],
+            'branches' => [
+                [
+                    'owner_id' => $this->rohit->id,
+                    'title' => 'Rohit - Shared Access Subtask',
+                    'description' => 'Rohit, analyze company secret document.',
+                    'share_main_task_details' => true,
+                    'files' => [$rohitPdf],
+                ],
+                [
+                    'owner_id' => $this->aman->id,
+                    'title' => 'Aman - Strictly Confidential Subtask',
+                    'description' => 'Aman, do isolated unit test only.',
+                    'share_main_task_details' => false,
+                    'files' => [$amanPdf],
+                ],
+            ],
+            'branch_files' => [
+                $this->rohit->id => [$rohitPdf],
+                $this->aman->id => [$amanPdf],
+            ],
+        ]);
+
+        $response->assertStatus(201);
+        $taskId = $response->json('data.id');
+
+        // Manager view to get shared attachment ID
+        $managerRes = $this->actingAs($this->manager, 'sanctum')->getJson("/api/tasks/{$taskId}");
+        $sharedAtt = collect($managerRes->json('data.attachments'))->firstWhere('file_name', 'Company_Secret.pdf');
+        $this->assertNotNull($sharedAtt);
+
+        // 1. Rohit (share_main_task_details = true)
+        $rohitRes = $this->actingAs($this->rohit, 'sanctum')->getJson("/api/tasks/{$taskId}");
+        $rohitAttNames = collect($rohitRes->json('data.attachments'))->pluck('file_name')->all();
+        $this->assertContains('Company_Secret.pdf', $rohitAttNames);
+        $this->assertContains('Rohit_Doc.pdf', $rohitAttNames);
+        $this->actingAs($this->rohit, 'sanctum')->get("/api/attachments/{$sharedAtt['id']}/download")->assertStatus(200);
+
+        // 2. Aman (share_main_task_details = false)
+        $amanRes = $this->actingAs($this->aman, 'sanctum')->getJson("/api/tasks/{$taskId}");
+        $amanAttNames = collect($amanRes->json('data.attachments'))->pluck('file_name')->all();
+        $this->assertContains('Aman_Doc.pdf', $amanAttNames);
+        $this->assertNotContains('Company_Secret.pdf', $amanAttNames); // Shared document MUST NOT be in Aman's attachments
+
+        // Aman tries to download Company_Secret.pdf directly -> 403 Forbidden!
+        $this->actingAs($this->aman, 'sanctum')->get("/api/attachments/{$sharedAtt['id']}/download")->assertStatus(403);
+    }
 }

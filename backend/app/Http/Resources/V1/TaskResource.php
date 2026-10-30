@@ -303,6 +303,7 @@ class TaskResource extends JsonResource
                     'name' => $userActiveBranch->assignments->firstWhere('is_current', true)->assignedBy->name,
                     'role' => $userActiveBranch->assignments->firstWhere('is_current', true)->assignedBy->role,
                 ] : null,
+                'share_parent_details' => $userActiveBranch->share_parent_details ?? true,
                 'attachments' => $this->attachments->where('task_branch_id', $userActiveBranch->id)->values()->map(fn($att) => $this->formatAttachment($att)),
                 'submissions' => $this->submissions->where('task_branch_id', $userActiveBranch->id)->sortByDesc('submitted_at')->values()->map(fn($sub) => [
                     'id' => $sub->id,
@@ -374,6 +375,7 @@ class TaskResource extends JsonResource
                     ] : null,
                     'attachments' => $branchAttachments,
                     'submissions' => $branchSubmissions,
+                    'share_parent_details' => $branch->share_parent_details ?? true,
                 ];
             }),
             'collaborators' => $visibleBranches->flatMap->collaborators->map(fn($c) => [
@@ -392,11 +394,19 @@ class TaskResource extends JsonResource
                     'role' => $comment->user->role,
                 ] : null,
             ]),
-            'shared_attachments' => $this->attachments->whereNull('task_branch_id')->values()->map(fn($att) => $this->formatAttachment($att)),
-            'attachments' => $this->attachments->filter(function ($att) use ($canOverseeAll, $visibleBranches) {
+            'shared_attachments' => (!$canOverseeAll && $userActiveBranch && $userActiveBranch->share_parent_details === false)
+                ? []
+                : $this->attachments->whereNull('task_branch_id')->values()->map(fn($att) => $this->formatAttachment($att)),
+            'attachments' => $this->attachments->filter(function ($att) use ($canOverseeAll, $visibleBranches, $userActiveBranch) {
                 if ($canOverseeAll) return true;
                 $visibleBranchIds = $visibleBranches->pluck('id')->all();
-                return is_null($att->task_branch_id) || in_array($att->task_branch_id, $visibleBranchIds);
+                if (is_null($att->task_branch_id)) {
+                    if ($userActiveBranch && $userActiveBranch->share_parent_details === false) {
+                        return false;
+                    }
+                    return true;
+                }
+                return in_array($att->task_branch_id, $visibleBranchIds);
             })->values()->map(fn($att) => $this->formatAttachment($att)),
             'status_history' => $this->statusHistory->sortBy('changed_at')->values()->map(fn($history) => [
                 'id' => $history->id,

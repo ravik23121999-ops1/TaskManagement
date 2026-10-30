@@ -81,6 +81,12 @@ class AttachmentController extends Controller
                 }
             } else {
                 // Shared task attachment: Any authorized participant of the task can access
+                // unless all branches owned by this user have share_parent_details === false
+                $userBranches = $task->branches()->where('owner_id', $user->id)->get();
+                if ($userBranches->isNotEmpty() && $userBranches->every(fn($b) => $b->share_parent_details === false)) {
+                    return response()->json(['message' => 'Unauthorized: This shared attachment is not shared with your assignment.'], 403);
+                }
+
                 $isParticipant = $isCreator
                     || $isUploader
                     || $task->branches()->where('owner_id', $user->id)->exists()

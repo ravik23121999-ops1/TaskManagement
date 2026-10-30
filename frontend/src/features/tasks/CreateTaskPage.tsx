@@ -32,6 +32,7 @@ interface IndividualAssignment {
   due_date: string;
   files: File[];
   copy_shared_attachments: boolean;
+  share_main_task_details: boolean;
 }
 
 const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg'];
@@ -159,6 +160,7 @@ export const CreateTaskPage: React.FC = () => {
     due_date: dueDate || '',
     files: [],
     copy_shared_attachments: false,
+    share_main_task_details: true,
   });
 
   // Select a single user
@@ -259,6 +261,7 @@ export const CreateTaskPage: React.FC = () => {
         due_date: dueDate || '',
         files: [],
         copy_shared_attachments: false,
+        share_main_task_details: true,
       },
     }));
   };
@@ -404,6 +407,8 @@ export const CreateTaskPage: React.FC = () => {
           if (work.due_date || dueDate) {
             formData.append(`branches[${idx}][due_date]`, work.due_date || dueDate);
           }
+          formData.append(`branches[${idx}][share_main_task_details]`, work.share_main_task_details ? '1' : '0');
+          formData.append(`branches[${idx}][share_previous_branch_details]`, work.share_main_task_details ? '1' : '0');
           if (work.copy_shared_attachments) {
             formData.append(`branches[${idx}][copy_shared_attachments]`, '1');
           }
@@ -1107,6 +1112,48 @@ export const CreateTaskPage: React.FC = () => {
                             </div>
                           </div>
 
+                          {/* THE TICK / UNTICK OPTION FOR MAIN TASK DOCS & INSTRUCTIONS */}
+                          <div
+                            className={`p-3 rounded-xl border transition ${
+                              work.share_main_task_details
+                                ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
+                                : 'bg-slate-50 border-slate-200 text-slate-800'
+                            }`}
+                          >
+                            <label className="flex items-start gap-2.5 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={work.share_main_task_details}
+                                onChange={(e) =>
+                                  setAssigneeWork((prev) => ({
+                                    ...prev,
+                                    [u.id]: { ...work, share_main_task_details: e.target.checked },
+                                  }))
+                                }
+                                className="mt-0.5 w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                              />
+                              <div className="text-xs">
+                                <span className="font-bold flex items-center gap-1.5">
+                                  <span>Share main task document & description with this assignment</span>
+                                  {work.share_main_task_details ? (
+                                    <span className="px-1.5 py-0.2 bg-emerald-200 text-emerald-800 rounded font-semibold text-[10px]">
+                                      Shared
+                                    </span>
+                                  ) : (
+                                    <span className="px-1.5 py-0.2 bg-slate-200 text-slate-700 rounded font-semibold text-[10px]">
+                                      Confidential (Subtask Only)
+                                    </span>
+                                  )}
+                                </span>
+                                <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
+                                  {work.share_main_task_details
+                                    ? '✓ Ticked: This assignee will receive the main task description, shared instructions, and all shared attachments in addition to their individual subtask note & individual files.'
+                                    : '✗ Unticked (Strictly Confidential): This assignee will only receive their individual subtask description and individual files. Main task description and shared files remain completely hidden from this assignee.'}
+                                </p>
+                              </div>
+                            </label>
+                          </div>
+
                           {/* Individual Description */}
                           <div className="space-y-1">
                             <label className="text-[11px] font-bold text-slate-700 flex items-center justify-between">
@@ -1477,6 +1524,48 @@ export const CreateTaskPage: React.FC = () => {
                         <p className="text-slate-700 whitespace-pre-wrap pl-2.5 border-l-2 border-blue-500">
                           {work.description || description}
                         </p>
+                      </div>
+
+                      {/* Interactive Tick / Untick Toggle directly in Review & Submit */}
+                      <div
+                        className={`p-3 rounded-xl border transition ${
+                          work.share_main_task_details
+                            ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
+                            : 'bg-slate-50 border-slate-200 text-slate-800'
+                        }`}
+                      >
+                        <label className="flex items-start gap-2.5 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={work.share_main_task_details}
+                            onChange={(e) =>
+                              setAssigneeWork((prev) => ({
+                                ...prev,
+                                [u.id]: { ...work, share_main_task_details: e.target.checked },
+                              }))
+                            }
+                            className="mt-0.5 w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                          />
+                          <div className="text-xs">
+                            <span className="font-bold flex items-center gap-1.5">
+                              <span>Share main task document & description with this assignment</span>
+                              {work.share_main_task_details ? (
+                                <span className="px-1.5 py-0.2 bg-emerald-200 text-emerald-800 rounded font-semibold text-[10px]">
+                                  Shared
+                                </span>
+                              ) : (
+                                <span className="px-1.5 py-0.2 bg-slate-200 text-slate-700 rounded font-semibold text-[10px]">
+                                  Confidential (Subtask Only)
+                                </span>
+                              )}
+                            </span>
+                            <p className="text-[11px] text-slate-600 mt-1 leading-relaxed">
+                              {work.share_main_task_details
+                                ? '✓ Ticked: This assignee will receive the main task description, shared instructions, and all shared attachments in addition to their individual subtask note & individual files.'
+                                : '✗ Unticked (Strictly Confidential): This assignee will only receive their individual subtask description and individual files. Main task description and shared files remain completely hidden from this assignee.'}
+                            </p>
+                          </div>
+                        </label>
                       </div>
 
                       {work.expected_result && (
