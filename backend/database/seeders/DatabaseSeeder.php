@@ -116,6 +116,40 @@ class DatabaseSeeder extends Seeder
             'is_active' => true,
         ]);
 
+        // Workflow Testing Users: Creator, Checker, Reviewer
+        User::updateOrCreate(['email' => 'creator@company.com'], [
+            'name' => 'Creator',
+            'password' => Hash::make('password'),
+            'role' => 'employee',
+            'gender' => 'male',
+            'avatar_type' => 'preset',
+            'avatar_url' => '/assets/roles/employee_male.png',
+            'department_id' => $deptIT->id,
+            'is_active' => true,
+        ]);
+
+        User::updateOrCreate(['email' => 'checker@company.com'], [
+            'name' => 'Checker',
+            'password' => Hash::make('password'),
+            'role' => 'employee',
+            'gender' => 'female',
+            'avatar_type' => 'preset',
+            'avatar_url' => '/assets/roles/employee_female.png',
+            'department_id' => $deptIT->id,
+            'is_active' => true,
+        ]);
+
+        User::updateOrCreate(['email' => 'reviewer@company.com'], [
+            'name' => 'Reviewer',
+            'password' => Hash::make('password'),
+            'role' => 'employee',
+            'gender' => 'male',
+            'avatar_type' => 'preset',
+            'avatar_url' => '/assets/roles/employee_male.png',
+            'department_id' => $deptIT->id,
+            'is_active' => true,
+        ]);
+
         // 3. Default System Permissions
         SystemSetting::set('allow_subadmin_delete_records', false);
         SystemSetting::set('allow_subadmin_cancel_tasks', false);
