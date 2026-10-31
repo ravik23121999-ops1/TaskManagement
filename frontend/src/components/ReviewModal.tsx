@@ -300,11 +300,11 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
                   handleSubmitDecision('returned');
                 }}
                 disabled={loading || isSelfSubmission}
-                className="flex-1 sm:flex-none px-4 py-2.5 bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 sm:flex-none px-4 py-2.5 bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
                 title="Send work back to submitter with feedback for changes"
               >
                 <AlertCircle className="w-4 h-4" />
-                <span>Send Back for Changes</span>
+                <span>Request Changes (Send Back)</span>
               </button>
               <button
                 type="button"
@@ -317,7 +317,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
                 title="Approve work and advance to next stage"
               >
                 <CheckCircle className="w-4 h-4" />
-                <span>Approve Submission</span>
+                <span>Approve & Pass Work</span>
               </button>
             </div>
           </div>

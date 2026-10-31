@@ -490,7 +490,7 @@ export const CreateTaskPage: React.FC = () => {
               {currentStep > 2 ? <Check className="w-3.5 h-3.5" /> : '2'}
             </div>
             <span className={`text-xs font-semibold ${currentStep === 2 ? 'text-blue-600 font-bold' : 'text-slate-600'}`}>
-              Assignment (1-to-Many)
+              2. Assign Teammates
             </span>
           </div>
 
@@ -511,7 +511,7 @@ export const CreateTaskPage: React.FC = () => {
               3
             </div>
             <span className={`text-xs font-semibold ${currentStep === 3 ? 'text-blue-600 font-bold' : 'text-slate-600'}`}>
-              Review & Submit
+              3. Review & Create
             </span>
           </div>
         </div>
@@ -573,20 +573,24 @@ export const CreateTaskPage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Expected Result</label>
+              <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                Expected Deliverable <span className="text-slate-500 font-normal">(What needs to be produced?)</span>
+              </label>
               <textarea
                 rows={3}
-                placeholder="What is the overall expected result or deliverable?"
+                placeholder="Describe the final output, report, or deliverable needed..."
                 value={expectedResult}
                 onChange={(e) => setExpectedResult(e.target.value)}
                 className="w-full p-3 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Acceptance Criteria</label>
+              <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                Completion Checklist <span className="text-slate-500 font-normal">(How to verify it is done?)</span>
+              </label>
               <textarea
                 rows={3}
-                placeholder="High-level acceptance criteria and quality standards..."
+                placeholder="List simple checklist items or requirements to verify..."
                 value={acceptanceCriteria}
                 onChange={(e) => setAcceptanceCriteria(e.target.value)}
                 className="w-full p-3 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
@@ -737,9 +741,9 @@ export const CreateTaskPage: React.FC = () => {
                 <User className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 mb-1">Work Solo</h3>
+                <h3 className="text-sm font-bold text-slate-900 mb-1">👤 I'll Do It Myself</h3>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  You will complete this task yourself without delegating to anyone else.
+                  Solo task. You will complete all work yourself without assigning to others.
                 </p>
               </div>
               <div className="mt-3">
@@ -764,9 +768,9 @@ export const CreateTaskPage: React.FC = () => {
                 <UserPlus className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 mb-1">Assign to Teammates</h3>
+                <h3 className="text-sm font-bold text-slate-900 mb-1">👉 Assign to Teammates</h3>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Delegate distinct subtasks to <strong>one or more colleagues</strong> with individual deliverables.
+                  Hand over work to <strong>one or more colleagues</strong> with clear deliverables and due dates.
                 </p>
               </div>
               <div className="mt-3">
@@ -791,9 +795,9 @@ export const CreateTaskPage: React.FC = () => {
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 mb-1">Collaborate with Team</h3>
+                <h3 className="text-sm font-bold text-slate-900 mb-1">🤝 Work as a Team</h3>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Invite <strong>one or more teammates</strong> with individual scopes to collaborate together.
+                  Invite <strong>teammates to collaborate together</strong> with shared progress tracking.
                 </p>
               </div>
               <div className="mt-3">

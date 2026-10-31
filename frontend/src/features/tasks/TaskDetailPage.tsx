@@ -762,10 +762,10 @@ export const TaskDetailPage: React.FC = () => {
             {task.permissions.can_submit && !isWorkAlone && (
               <button
                 onClick={() => setIsSubmitModalOpen(true)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer hover:shadow-md"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Submit for Review</span>
+                <span>Submit Completed Work</span>
               </button>
             )}
 
@@ -781,7 +781,7 @@ export const TaskDetailPage: React.FC = () => {
                 title="Ask assigner for missing details, instructions, or credentials"
               >
                 <HelpCircle className="w-3.5 h-3.5 text-amber-600" />
-                <span>Request Missing Details</span>
+                <span>Ask Question / Need Details</span>
               </button>
             )}
 
@@ -797,7 +797,7 @@ export const TaskDetailPage: React.FC = () => {
                 title="Answer assignee question and resume work"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Provide Missing Details</span>
+                <span>Answer Question</span>
               </button>
             )}
 
@@ -808,10 +808,10 @@ export const TaskDetailPage: React.FC = () => {
                   setSelectedSubmission(latestPendingSubmission);
                   setIsReviewModalOpen(true);
                 }}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer hover:shadow-md"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Review Submission</span>
+                <span>Check & Review Work</span>
               </button>
             )}
 
@@ -827,10 +827,10 @@ export const TaskDetailPage: React.FC = () => {
                   setFinalCompleteFiles([]);
                   setIsFinalCompleteModalOpen(true);
                 }}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer hover:shadow-md"
               >
                 <Check className="w-3.5 h-3.5" />
-                <span>Final Approval & Complete</span>
+                <span>Approve & Complete Task</span>
               </button>
             )}
 
@@ -842,7 +842,7 @@ export const TaskDetailPage: React.FC = () => {
                 title="Place task temporarily on hold with an explanation note"
               >
                 <PauseCircle className="w-3.5 h-3.5" />
-                <span>Hold</span>
+                <span>Pause Task</span>
               </button>
             )}
 

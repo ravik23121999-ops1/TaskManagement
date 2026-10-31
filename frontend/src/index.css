@@ -52,13 +52,13 @@ button, input, select, textarea, optgroup, kbd {
 
 /* ============================================================
    GLOBAL TYPOGRAPHY READABILITY & CONTRAST ENHANCEMENT
-   Restores exact sleek layout geometry and proportions while 
-   delivering high WCAG AA contrast and crisp legibility.
+   Delivers high WCAG AA contrast, sharp text clarity, and clean
+   visual hierarchy without breaking sleek layout geometry.
    ============================================================ */
 
 /* High-contrast clarity for secondary text on light cards */
 .text-slate-400 {
-  color: #64748b; /* Slate-500: crisp and readable without altering dimensions */
+  color: #64748b; /* Slate-500: crisp and readable on white/light surfaces */
 }
 
 /* Preserve bright text inside dark cards and hero backgrounds */
@@ -70,5 +70,24 @@ button, input, select, textarea, optgroup, kbd {
 [class*="from-\[#0a1826\]"] .text-slate-400,
 [class*="bg-\[#080d1e\]"] .text-slate-400,
 .text-white .text-slate-400 {
+  color: #94a3b8;
+}
+
+/* Sharp Table Typography & Headers */
+table th {
+  color: #475569;
+  font-weight: 700;
+}
+
+table td {
+  color: #1e293b;
+}
+
+/* Crisp Form Controls & Focus States */
+input, select, textarea {
+  color: #0f172a;
+}
+
+input::placeholder, textarea::placeholder {
   color: #94a3b8;
 }
