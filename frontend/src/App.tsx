@@ -230,6 +230,22 @@ const App: React.FC = () => {
                 }
               />
               <Route
+                path="/work-logs"
+                element={
+                  <ProtectedRoute>
+                    <WorkLogsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/worklogs"
+                element={
+                  <ProtectedRoute>
+                    <WorkLogsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/logs"
                 element={
                   <ProtectedRoute>
