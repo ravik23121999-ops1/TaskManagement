@@ -52,56 +52,16 @@ button, input, select, textarea, optgroup, kbd {
 
 /* ============================================================
    GLOBAL TYPOGRAPHY READABILITY & CONTRAST ENHANCEMENT
-   Ensures all pages, cards, tables, badges, modals, forms and 
-   metric stats are comfortable and easy to read without any 
-   layout shifting or alignment disruption.
+   Restores exact sleek layout geometry and proportions while 
+   delivering high WCAG AA contrast and crisp legibility.
    ============================================================ */
 
-/* 1. Base Root Scale */
-html {
-  font-size: 16px;
-}
-
-@media (min-width: 1440px) {
-  html {
-    font-size: 16.5px; /* Crisp boost on large monitors */
-  }
-}
-
-/* 2. Micro-text Readability Minimum Floor:
-   Prevent tiny 9px/10px text that causes eye strain on displays */
-.text-\[9px\],
-[class*="text-[9px]"],
-.text-\[10px\],
-[class*="text-[10px]"] {
-  font-size: 0.75rem !important; /* 12px minimum floor */
-  line-height: 1.15rem !important;
-}
-
-/* 3. Small-text scale upgrade:
-   text-[11px] and text-xs become 13px (0.8125rem) */
-.text-\[11px\],
-[class*="text-[11px]"],
-.text-xs {
-  font-size: 0.8125rem !important; /* 13px */
-  line-height: 1.25rem !important;
-}
-
-/* 4. Body & subhead scale:
-   text-sm upgraded from 14px to 15px (0.9375rem) */
-.text-sm {
-  font-size: 0.9375rem !important; /* 15px */
-  line-height: 1.45rem !important;
-}
-
-/* 5. Improved Contrast for Secondary Slate Text:
-   Slate-400 (#94a3b8) on white backgrounds has low contrast.
-   Map to #64748b (Slate-500) for sharp readability. */
+/* High-contrast clarity for secondary text on light cards */
 .text-slate-400 {
-  color: #64748b;
+  color: #64748b; /* Slate-500: crisp and readable without altering dimensions */
 }
 
-/* Preserve bright slate-400 inside dark cards and hero backgrounds */
+/* Preserve bright text inside dark cards and hero backgrounds */
 .bg-slate-900 .text-slate-400,
 .bg-slate-950 .text-slate-400,
 .bg-black .text-slate-400,
@@ -111,23 +71,4 @@ html {
 [class*="bg-\[#080d1e\]"] .text-slate-400,
 .text-white .text-slate-400 {
   color: #94a3b8;
-}
-
-/* 6. Form Inputs & Selects Readability */
-input,
-select,
-textarea {
-  font-size: 0.875rem !important; /* 14px */
-}
-
-/* 7. Tables Readability: Headers & Cell Text */
-table th {
-  font-size: 0.75rem !important; /* 12px uppercase */
-  font-weight: 700 !important;
-  color: #475569 !important; /* slate-600 */
-  letter-spacing: 0.04em !important;
-}
-
-table td {
-  font-size: 0.8125rem !important; /* 13px */
 }

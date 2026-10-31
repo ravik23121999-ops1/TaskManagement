@@ -519,7 +519,7 @@ export const Dashboard: React.FC = () => {
                   >
                     <div>
                       <p className="font-semibold text-slate-800 hover:text-blue-600 transition">
-                        <span className="font-bold text-blue-600 mr-1.5">{task.task_code}</span>
+                        <span className="font-bold text-blue-600 mr-1.5 whitespace-nowrap">{task.task_code}</span>
                         {task.title}
                       </p>
                       <p className="text-[10px] text-slate-400 mt-0.5">Due: {task.due_date}</p>
@@ -832,12 +832,12 @@ export const Dashboard: React.FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-slate-100 text-slate-400 font-semibold text-left">
-                      <th className="pb-3 font-semibold">Task</th>
-                      <th className="pb-3 font-semibold">Status</th>
-                      <th className="pb-3 font-semibold">Priority</th>
-                      <th className="pb-3 font-semibold">Due Date</th>
-                      <th className="pb-3 font-semibold text-right">Action</th>
+                    <tr className="border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider text-[11px] text-left">
+                      <th className="pb-3 font-bold">Task</th>
+                      <th className="pb-3 font-bold">Status</th>
+                      <th className="pb-3 font-bold">Priority</th>
+                      <th className="pb-3 font-bold">Due Date</th>
+                      <th className="pb-3 font-bold text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -854,7 +854,7 @@ export const Dashboard: React.FC = () => {
                             <div className="flex items-center gap-2">
                               <span
                                 onClick={() => navigate(`/tasks/${task.id}`)}
-                                className="font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-md cursor-pointer transition"
+                                className="font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-md cursor-pointer transition whitespace-nowrap shrink-0"
                               >
                                 {task.task_code}
                               </span>
@@ -866,26 +866,26 @@ export const Dashboard: React.FC = () => {
                               </span>
                             </div>
                           </td>
-                          <td className="py-3.5">
+                          <td className="py-3.5 whitespace-nowrap">
                             <StatusBadge status={task.status} size="sm" />
                           </td>
-                          <td className="py-3.5">
+                          <td className="py-3.5 whitespace-nowrap">
                             <PriorityBadge priority={task.priority} />
                           </td>
-                          <td className="py-3.5 text-slate-500">
-                            <div className="flex items-center gap-1.5">
+                          <td className="py-3.5 text-slate-500 whitespace-nowrap">
+                            <div className="flex items-center gap-1.5 whitespace-nowrap">
                               <span>{task.due_date}</span>
                               {task.is_overdue && (
-                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200">
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200 shrink-0">
                                   Overdue
                                 </span>
                               )}
                             </div>
                           </td>
-                          <td className="py-3.5 text-right">
+                          <td className="py-3.5 text-right whitespace-nowrap">
                             <button
                               onClick={() => navigate(`/tasks/${task.id}`)}
-                              className="px-3 py-1.5 text-xs font-semibold text-blue-600 hover:text-white hover:bg-blue-600 bg-blue-50 rounded-xl transition cursor-pointer group-hover:shadow-2xs"
+                              className="px-3 py-1.5 text-xs font-semibold text-blue-600 hover:text-white hover:bg-blue-600 bg-blue-50 rounded-xl transition cursor-pointer group-hover:shadow-2xs whitespace-nowrap"
                             >
                               Open Task →
                             </button>

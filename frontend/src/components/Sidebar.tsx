@@ -270,7 +270,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                           }`}
                         />
                       )}
-                      <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
+                      <div className={`flex items-center min-w-0 ${collapsed ? 'justify-center' : 'gap-3'}`}>
                         <Icon
                           className={`w-4 h-4 shrink-0 transition-transform duration-150 ${
                             active
@@ -279,14 +279,14 @@ const Sidebar: React.FC<SidebarProps> = ({
                           }`}
                         />
                         {!collapsed && (
-                          <span className="transition-transform duration-150 group-hover:translate-x-0.5">
+                          <span className="transition-transform duration-150 group-hover:translate-x-0.5 whitespace-nowrap">
                             {item.label}
                           </span>
                         )}
                       </div>
 
                       {!collapsed && item.badge && !active && (
-                        <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-blue-500/20 text-cyan-300 border border-blue-400/30 shadow-xs">
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-blue-500/20 text-cyan-300 border border-blue-400/30 shadow-xs shrink-0 whitespace-nowrap ml-1.5">
                           {item.badge}
                         </span>
                       )}
@@ -352,7 +352,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                             }`}
                           />
                         )}
-                        <div className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'}`}>
+                        <div className={`flex items-center min-w-0 ${collapsed ? 'justify-center' : 'gap-3'}`}>
                           <Icon
                             className={`w-4 h-4 shrink-0 transition-transform duration-150 ${
                               active
@@ -361,14 +361,14 @@ const Sidebar: React.FC<SidebarProps> = ({
                             }`}
                           />
                           {!collapsed && (
-                            <span className="transition-transform duration-150 group-hover:translate-x-0.5">
+                            <span className="transition-transform duration-150 group-hover:translate-x-0.5 whitespace-nowrap">
                               {item.label}
                             </span>
                           )}
                         </div>
 
                         {!collapsed && item.badge && !active && (
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/35 shadow-xs">
+                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/35 shadow-xs shrink-0 whitespace-nowrap ml-1.5">
                             {item.badge}
                           </span>
                         )}
