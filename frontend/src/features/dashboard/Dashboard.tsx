@@ -3,22 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { dashboardApi } from '../../api/tasks';
 import { StatusBadge, PriorityBadge } from '../../components/StatusBadge';
-import { WelcomeBanner } from '../../components/WelcomeBanner';
+import { DashboardTopFold } from './DashboardTopFold';
 import { EnterpriseWorkflowGuide } from '../../components/EnterpriseWorkflowGuide';
 import {
   Clock,
   Activity,
-  Sparkles,
   Users,
   Bell,
-  ArrowRight,
-  Zap,
   RotateCcw,
   GitBranch,
-  FileCheck2,
-  UserCheck,
-  TrendingUp,
-  CheckCircle2,
 } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
@@ -86,22 +79,47 @@ export const Dashboard: React.FC = () => {
     const pendingReviewTasks = adminData.pending_review || 0;
     const completedTasks = adminData.completed || 0;
 
-    const inProgressPct = totalTasks > 0 ? Math.min(100, Math.round((inProgressTasks / totalTasks) * 100)) : 0;
-    const reviewPct = totalTasks > 0 ? Math.min(100, Math.round((pendingReviewTasks / totalTasks) * 100)) : 0;
-    const completedPct = totalTasks > 0 ? Math.min(100, Math.round((completedTasks / totalTasks) * 100)) : 0;
-
     return (
       <div className="space-y-8">
-        {/* Executive Welcome Hero Banner */}
-        <WelcomeBanner
+        {/* TOP FOLD: HERO WELCOME + 6 KPIs SIDE-BY-SIDE */}
+        <DashboardTopFold
           user={user}
+          isAdmin={true}
           metrics={{
-            totalTasks: adminData.total_tasks,
-            inProgress: adminData.in_progress,
-            pendingReview: adminData.pending_review,
-            completed: adminData.completed,
+            totalTasks: totalTasks,
+            pendingTasks: adminData.open_tasks || 0,
+            inProgressTasks: inProgressTasks,
+            completedTasks: completedTasks,
+            reviewTasks: pendingReviewTasks,
+            onHoldTasks: adminData.on_hold || 0,
+            todayTasks: adminData.today_tasks ?? 0,
+            todayProgressTasks: inProgressTasks,
           }}
         />
+
+        {/* Operational Attention Alerts (Past Due / Returned) */}
+        {(adminData.overdue > 0 || adminData.returned > 0) && (
+          <div className="flex flex-wrap items-center gap-3">
+            {adminData.overdue > 0 && (
+              <div
+                onClick={() => navigate('/reports')}
+                className="px-4 py-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm font-bold flex items-center gap-2 cursor-pointer hover:bg-rose-100 transition shadow-2xs"
+              >
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping" />
+                <span>{adminData.overdue} Tasks Past Due Date</span>
+              </div>
+            )}
+            {adminData.returned > 0 && (
+              <div
+                onClick={() => navigate('/tasks/pending?status=post_comment')}
+                className="px-4 py-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-xs sm:text-sm font-bold flex items-center gap-2 cursor-pointer hover:bg-amber-100 transition shadow-2xs"
+              >
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-600 animate-pulse" />
+                <span>{adminData.returned} Tasks Returned for Revision</span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Enterprise 5-Stage Visual Workflow Stepper & Rule Guide */}
         <EnterpriseWorkflowGuide
@@ -114,240 +132,14 @@ export const Dashboard: React.FC = () => {
           }}
         />
 
-        {/* Top 4 Primary Interactive Metric KPI Cards (Luxe Studio Edition) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Card 1: Total Tasks */}
-          <div
-            onClick={() => navigate('/tasks')}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-luxe hover:shadow-luxe-hover hover:-translate-y-1 hover:border-blue-400/60 transition-all duration-300 cursor-pointer relative overflow-hidden group"
-          >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500" />
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Tasks</span>
-              <span className="p-2.5 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl shadow-md shadow-blue-500/25 group-hover:scale-110 transition-transform">
-                <Sparkles className="w-4 h-4 text-white" />
-              </span>
-            </div>
-
-            <div className="flex items-baseline justify-between mt-2.5">
-              <div className="text-3xl font-extrabold text-slate-900 tracking-tight group-hover:text-blue-600 transition-colors">
-                {totalTasks}
-              </div>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200/60">
-                <TrendingUp className="w-3 h-3 text-blue-600" />
-                Live Pipeline
-              </span>
-            </div>
-
-            {/* Micro Progress Bar */}
-            <div className="mt-4 space-y-1.5">
-              <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
-                <span>System Throughput</span>
-                <span className="font-bold text-slate-700">100% Active</span>
-              </div>
-              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full w-full" />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-2.5 border-t border-slate-100/80">
-              <span>All company tasks</span>
-              <span className="text-blue-600 font-semibold group-hover:underline flex items-center gap-1">
-                View all <ArrowRight className="w-3 h-3" />
-              </span>
-            </div>
-          </div>
-
-          {/* Card 2: In Progress */}
-          <div
-            onClick={() => navigate('/tasks?status=in_progress')}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-luxe hover:shadow-luxe-hover hover:-translate-y-1 hover:border-sky-400/60 transition-all duration-300 cursor-pointer relative overflow-hidden group"
-          >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 via-cyan-500 to-teal-400" />
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">In Progress</span>
-              <span className="p-2.5 bg-gradient-to-tr from-sky-500 to-cyan-500 text-white rounded-xl shadow-md shadow-sky-500/25 group-hover:scale-110 transition-transform">
-                <Activity className="w-4 h-4 text-white" />
-              </span>
-            </div>
-
-            <div className="flex items-baseline justify-between mt-2.5">
-              <div className="text-3xl font-extrabold text-sky-600 tracking-tight flex items-center gap-2">
-                <span>{inProgressTasks}</span>
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500" />
-                </span>
-              </div>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200/60">
-                In Execution
-              </span>
-            </div>
-
-            {/* Micro Progress Bar */}
-            <div className="mt-4 space-y-1.5">
-              <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
-                <span>Workload Share</span>
-                <span className="font-bold text-sky-600">{inProgressPct}% of total</span>
-              </div>
-              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-sky-500 to-cyan-500 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.max(inProgressTasks > 0 ? 12 : 0, inProgressPct)}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-2.5 border-t border-slate-100/80">
-              <span>Under active development</span>
-              <span className="text-sky-600 font-semibold group-hover:underline flex items-center gap-1">
-                See active <ArrowRight className="w-3 h-3" />
-              </span>
-            </div>
-          </div>
-
-          {/* Card 3: Pending Review */}
-          <div
-            onClick={() => navigate('/tasks/review')}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-luxe hover:shadow-luxe-hover hover:-translate-y-1 hover:border-purple-400/60 transition-all duration-300 cursor-pointer relative overflow-hidden group"
-          >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-600 via-violet-500 to-pink-500" />
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Pending Review</span>
-              <span className="p-2.5 bg-gradient-to-tr from-violet-600 to-purple-600 text-white rounded-xl shadow-md shadow-purple-500/25 group-hover:scale-110 transition-transform">
-                <Clock className="w-4 h-4 text-white" />
-              </span>
-            </div>
-
-            <div className="flex items-baseline justify-between mt-2.5">
-              <div className="text-3xl font-extrabold text-purple-600 tracking-tight">
-                {pendingReviewTasks}
-              </div>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200/60">
-                Action Needed
-              </span>
-            </div>
-
-            {/* Micro Progress Bar */}
-            <div className="mt-4 space-y-1.5">
-              <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
-                <span>Verification Queue</span>
-                <span className="font-bold text-purple-600">{pendingReviewTasks} to approve</span>
-              </div>
-              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-violet-600 to-purple-600 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.max(pendingReviewTasks > 0 ? 12 : 0, reviewPct)}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-2.5 border-t border-slate-100/80">
-              <span>Awaiting sign-off</span>
-              <span className="text-purple-600 font-semibold group-hover:underline flex items-center gap-1">
-                Review now <ArrowRight className="w-3 h-3" />
-              </span>
-            </div>
-          </div>
-
-          {/* Card 4: Completed */}
-          <div
-            onClick={() => navigate('/tasks/completed')}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-luxe hover:shadow-luxe-hover hover:-translate-y-1 hover:border-emerald-400/60 transition-all duration-300 cursor-pointer relative overflow-hidden group"
-          >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-400" />
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Completed</span>
-              <span className="p-2.5 bg-gradient-to-tr from-emerald-500 to-teal-500 text-white rounded-xl shadow-md shadow-emerald-500/25 group-hover:scale-110 transition-transform">
-                <Sparkles className="w-4 h-4 text-white" />
-              </span>
-            </div>
-
-            <div className="flex items-baseline justify-between mt-2.5">
-              <div className="text-3xl font-extrabold text-emerald-600 tracking-tight">
-                {completedTasks}
-              </div>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                Delivered
-              </span>
-            </div>
-
-            {/* Micro Progress Bar */}
-            <div className="mt-4 space-y-1.5">
-              <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
-                <span>Completion Velocity</span>
-                <span className="font-bold text-emerald-600">{completedPct}% success</span>
-              </div>
-              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.max(completedTasks > 0 ? 12 : 0, completedPct)}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-2.5 border-t border-slate-100/80">
-              <span>Finished & verified</span>
-              <span className="text-emerald-600 font-semibold group-hover:underline flex items-center gap-1">
-                View completed <ArrowRight className="w-3 h-3" />
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Secondary Operational Quick-Status Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-          <div
-            onClick={() => navigate('/tasks?status=pending')}
-            className="bg-white p-3.5 rounded-xl border border-slate-200/80 hover:border-orange-200 hover:bg-orange-50/20 transition cursor-pointer flex items-center justify-between"
-          >
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Not Started Yet</p>
-              <p className="text-lg font-bold text-orange-600 mt-0.5">{adminData.open_tasks}</p>
-            </div>
-            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-orange-100 text-orange-700">Ready</span>
-          </div>
-
-          <div
-            onClick={() => navigate('/tasks/pending?status=post_comment')}
-            className="bg-white p-3.5 rounded-xl border border-slate-200/80 hover:border-rose-200 hover:bg-rose-50/20 transition cursor-pointer flex items-center justify-between"
-          >
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Returned for Changes</p>
-              <p className="text-lg font-bold text-rose-600 mt-0.5">{adminData.returned ?? 0}</p>
-            </div>
-            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 text-rose-700">Needs Fix</span>
-          </div>
-
-          <div
-            onClick={() => navigate('/reports')}
-            className="bg-white p-3.5 rounded-xl border border-slate-200/80 hover:border-red-200 hover:bg-red-50/20 transition cursor-pointer flex items-center justify-between"
-          >
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Past Due Date</p>
-              <p className="text-lg font-bold text-red-600 mt-0.5">{adminData.overdue ?? 0}</p>
-            </div>
-            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-100 text-red-700">Late</span>
-          </div>
-
-          <div
-            onClick={() => navigate('/tasks/on-hold')}
-            className="bg-white p-3.5 rounded-xl border border-slate-200/80 hover:border-amber-200 hover:bg-amber-50/20 transition cursor-pointer flex items-center justify-between"
-          >
-            <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">On Hold</p>
-              <p className="text-lg font-bold text-amber-600 mt-0.5">{adminData.on_hold}</p>
-            </div>
-            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-700">Paused</span>
-          </div>
-        </div>
-
         {/* Charts Middle Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Donut Chart: Tasks by Status */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-            <h2 className="text-sm font-bold text-slate-800 mb-4">Tasks by Status</h2>
+          <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+              Tasks by Status
+            </h2>
             <div className="flex flex-col sm:flex-row items-center justify-around gap-6 pt-2">
               <div className="relative w-44 h-44 shrink-0 flex items-center justify-center">
                 <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
@@ -376,20 +168,20 @@ export const Dashboard: React.FC = () => {
                   })()}
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="text-2xl font-bold text-slate-800 leading-none">{adminData.total_tasks}</span>
-                  <span className="text-[11px] text-slate-400 font-medium mt-0.5">Total Tasks</span>
+                  <span className="text-2xl sm:text-3xl font-extrabold text-slate-800 leading-none">{adminData.total_tasks}</span>
+                  <span className="text-xs text-slate-500 font-semibold mt-1">Total Tasks</span>
                 </div>
               </div>
 
               {/* Legend */}
-              <div className="space-y-2.5 w-full sm:w-auto">
+              <div className="space-y-3 w-full sm:w-auto">
                 {tasksByStatus.map((item: any, idx: number) => (
-                  <div key={idx} className="flex items-center justify-between sm:justify-start gap-4 text-xs">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                      <span className="text-slate-600 font-medium">{item.name}</span>
+                  <div key={idx} className="flex items-center justify-between sm:justify-start gap-4 text-xs sm:text-sm">
+                    <div className="flex items-center gap-2.5">
+                      <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                      <span className="text-slate-700 font-semibold">{item.name}</span>
                     </div>
-                    <span className="font-bold text-slate-800">{item.value}</span>
+                    <span className="font-extrabold text-slate-900">{item.value}</span>
                   </div>
                 ))}
               </div>
@@ -397,9 +189,12 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Bar Chart: Tasks by Department */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-            <h2 className="text-sm font-bold text-slate-800 mb-4">Tasks by Department</h2>
-            <div className="space-y-3.5 pt-2">
+          <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
+              Tasks by Department
+            </h2>
+            <div className="space-y-4 pt-2">
               {tasksByDepartment.map((dept: any, idx: number) => {
                 const maxVal = Math.max(...tasksByDepartment.map((d: any) => d.count || 0), 1);
                 const percent = Math.round(((dept.count || 0) / maxVal) * 100);
@@ -407,12 +202,12 @@ export const Dashboard: React.FC = () => {
                 const color = colors[idx % colors.length];
 
                 return (
-                  <div key={idx} className="space-y-1">
-                    <div className="flex justify-between text-xs font-semibold">
-                      <span className="text-slate-700">{dept.name}</span>
-                      <span className="text-slate-500 font-medium">{dept.count || 0} tasks</span>
+                  <div key={idx} className="space-y-1.5">
+                    <div className="flex justify-between text-xs sm:text-sm font-semibold">
+                      <span className="text-slate-800">{dept.name}</span>
+                      <span className="text-slate-500 font-bold">{dept.count || 0} tasks</span>
                     </div>
-                    <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-500"
                         style={{ width: `${percent}%`, backgroundColor: color }}
@@ -427,42 +222,42 @@ export const Dashboard: React.FC = () => {
 
         {/* Employee Workload Distribution */}
         {employeeWorkload.length > 0 && (
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+          <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <Users className="w-4 h-4 text-blue-600" />
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+                <Users className="w-5 h-5 text-blue-600" />
                 Employee Workload Summary
               </h2>
               <button
                 onClick={() => navigate('/reports')}
-                className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition"
+                className="text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-800 transition"
               >
                 View Full Analytics →
               </button>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full text-left text-xs sm:text-sm">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-500 font-bold uppercase tracking-wider">
-                    <th className="py-3 px-4">Employee</th>
-                    <th className="py-3 px-4">Role</th>
-                    <th className="py-3 px-4">Department</th>
-                    <th className="py-3 px-4">Active Tasks</th>
-                    <th className="py-3 px-4">Completed</th>
+                  <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 font-bold uppercase tracking-wider text-xs">
+                    <th className="py-3.5 px-4">Employee</th>
+                    <th className="py-3.5 px-4">Role</th>
+                    <th className="py-3.5 px-4">Department</th>
+                    <th className="py-3.5 px-4">Active Tasks</th>
+                    <th className="py-3.5 px-4">Completed</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {employeeWorkload.map((emp: any) => (
-                    <tr key={emp.id} className="hover:bg-slate-50 transition">
-                      <td className="py-3 px-4 font-bold text-slate-800">{emp.name}</td>
-                      <td className="py-3 px-4 capitalize text-slate-500">{emp.role?.replace('_', ' ')}</td>
-                      <td className="py-3 px-4 text-slate-600 font-medium">{emp.department}</td>
-                      <td className="py-3 px-4">
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                    <tr key={emp.id} className="hover:bg-slate-50/70 transition">
+                      <td className="py-3.5 px-4 font-bold text-slate-900">{emp.name}</td>
+                      <td className="py-3.5 px-4 capitalize text-slate-600">{emp.role?.replace('_', ' ')}</td>
+                      <td className="py-3.5 px-4 text-slate-600 font-medium">{emp.department}</td>
+                      <td className="py-3.5 px-4">
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200/80">
                           {emp.active_tasks} active
                         </span>
                       </td>
-                      <td className="py-3 px-4 font-semibold text-emerald-600">{emp.completed_tasks}</td>
+                      <td className="py-3.5 px-4 font-bold text-emerald-600">{emp.completed_tasks}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -474,27 +269,27 @@ export const Dashboard: React.FC = () => {
         {/* Bottom Row: Recent Activity & Upcoming Deadlines */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recent Activity */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-            <h2 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <Activity className="w-4 h-4 text-blue-600" />
+          <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <Activity className="w-5 h-5 text-blue-600" />
               Recent Activity
             </h2>
             <div className="divide-y divide-slate-100">
               {recentActivity.length === 0 ? (
-                <p className="text-xs text-slate-400 italic py-4">No recent activity recorded.</p>
+                <p className="text-xs sm:text-sm text-slate-400 italic py-4">No recent activity recorded.</p>
               ) : (
                 recentActivity.slice(0, 5).map((log: any) => (
-                  <div key={log.id} className="py-3 flex items-center justify-between text-xs">
+                  <div key={log.id} className="py-3.5 flex items-center justify-between text-xs sm:text-sm">
                     <div className="flex items-center gap-3">
-                      <div className="w-7 h-7 rounded-full bg-blue-50 text-blue-600 font-bold flex items-center justify-center text-[10px] shrink-0 border border-blue-100">
+                      <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 font-bold flex items-center justify-center text-xs shrink-0 border border-blue-100">
                         {log.actor?.name?.charAt(0) || 'U'}
                       </div>
                       <div>
                         <p className="font-semibold text-slate-800">{log.description}</p>
-                        <p className="text-[10px] text-slate-400">By {log.actor?.name || 'System'}</p>
+                        <p className="text-xs text-slate-400">By {log.actor?.name || 'System'}</p>
                       </div>
                     </div>
-                    <span className="text-[11px] text-slate-400 shrink-0 font-medium">{log.time_ago}</span>
+                    <span className="text-xs text-slate-400 shrink-0 font-medium">{log.time_ago}</span>
                   </div>
                 ))
               )}
@@ -502,31 +297,31 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Upcoming Deadlines */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-            <h2 className="text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-amber-500" />
+          <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs">
+            <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <Clock className="w-5 h-5 text-amber-500" />
               Upcoming Deadlines
             </h2>
             <div className="divide-y divide-slate-100">
               {upcomingDeadlines.length === 0 ? (
-                <p className="text-xs text-slate-400 italic py-4">No upcoming deadlines.</p>
+                <p className="text-xs sm:text-sm text-slate-400 italic py-4">No upcoming deadlines.</p>
               ) : (
                 upcomingDeadlines.slice(0, 5).map((task: any) => (
                   <div
                     key={task.id}
                     onClick={() => navigate(`/tasks/${task.id}`)}
-                    className="py-3 flex items-center justify-between text-xs hover:bg-slate-50 transition p-2 rounded-xl cursor-pointer"
+                    className="py-3 flex items-center justify-between text-xs sm:text-sm hover:bg-slate-50 transition p-2 rounded-xl cursor-pointer"
                   >
                     <div>
                       <p className="font-semibold text-slate-800 hover:text-blue-600 transition">
                         <span className="font-bold text-blue-600 mr-1.5">{task.task_code}</span>
                         {task.title}
                       </p>
-                      <p className="text-[10px] text-slate-400 mt-0.5">Due: {task.due_date}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">Due: {task.due_date}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       {task.is_overdue && (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200">
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-600 border border-rose-200">
                           Overdue
                         </span>
                       )}
@@ -556,21 +351,21 @@ export const Dashboard: React.FC = () => {
     const awaitingReviewCount = employeeData.awaiting_review || 0;
     const collaborationsCount = employeeData.my_collaborations || 0;
 
-    const empTotal = Math.max(1, myActionCount + assignedToMeCount + awaitingReviewCount + collaborationsCount);
-    const myActionPct = Math.min(100, Math.round((myActionCount / empTotal) * 100));
-    const assignedPct = Math.min(100, Math.round((assignedToMeCount / empTotal) * 100));
-    const awaitingPct = Math.min(100, Math.round((awaitingReviewCount / empTotal) * 100));
-    const collabPct = Math.min(100, Math.round((collaborationsCount / empTotal) * 100));
-
     return (
       <div className="space-y-8">
-        {/* Contributor Welcome Hero Banner */}
-        <WelcomeBanner
+        {/* TOP FOLD: HERO WELCOME + 6 KPIs SIDE-BY-SIDE */}
+        <DashboardTopFold
           user={user}
+          isAdmin={false}
           metrics={{
-            inProgress: employeeData.my_in_progress,
-            myAction: employeeData.my_action,
-            pendingReview: employeeData.my_pending_review,
+            totalTasks: assignedToMeCount,
+            pendingTasks: myActionCount,
+            inProgressTasks: employeeData.my_in_progress ?? 0,
+            completedTasks: employeeData.completed ?? 0,
+            reviewTasks: awaitingReviewCount,
+            onHoldTasks: collaborationsCount,
+            todayTasks: employeeData.today_tasks ?? 0,
+            todayProgressTasks: employeeData.my_in_progress ?? 0,
           }}
         />
 
@@ -585,204 +380,24 @@ export const Dashboard: React.FC = () => {
           isEmployeeView={true}
         />
 
-        {/* Top 4 Primary Interactive Metric KPI Cards (Luxe Studio Edition) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Card 1: My Action */}
-          <div
-            onClick={() => navigate('/tasks/pending')}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-luxe hover:shadow-luxe-hover hover:-translate-y-1 hover:border-blue-400/60 transition-all duration-300 cursor-pointer relative overflow-hidden group"
-          >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500" />
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">My Action Tasks</span>
-              <span className="p-2.5 bg-gradient-to-tr from-blue-600 to-indigo-600 text-white rounded-xl shadow-md shadow-blue-500/25 group-hover:scale-110 transition-transform">
-                <Zap className="w-4 h-4 text-white" />
-              </span>
-            </div>
-
-            <div className="flex items-baseline justify-between mt-2.5">
-              <div className="text-3xl font-extrabold text-slate-900 tracking-tight group-hover:text-blue-600 transition-colors">
-                {myActionCount}
-              </div>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200/60">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-ping" />
-                Active Now
-              </span>
-            </div>
-
-            {/* Micro Progress Bar */}
-            <div className="mt-4 space-y-1.5">
-              <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
-                <span>Priority Share</span>
-                <span className="font-bold text-blue-600">{myActionPct}% of queue</span>
-              </div>
-              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.max(myActionCount > 0 ? 12 : 0, myActionPct)}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-2.5 border-t border-slate-100/80">
-              <span>Items waiting for your step</span>
-              <span className="text-blue-600 font-semibold group-hover:underline flex items-center gap-1">
-                View tasks <ArrowRight className="w-3 h-3" />
-              </span>
-            </div>
-          </div>
-
-          {/* Card 2: Assigned to Me */}
-          <div
-            onClick={() => navigate('/tasks')}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-luxe hover:shadow-luxe-hover hover:-translate-y-1 hover:border-cyan-400/60 transition-all duration-300 cursor-pointer relative overflow-hidden group"
-          >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-400" />
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Assigned to Me</span>
-              <span className="p-2.5 bg-gradient-to-tr from-cyan-500 to-teal-500 text-white rounded-xl shadow-md shadow-cyan-500/25 group-hover:scale-110 transition-transform">
-                <UserCheck className="w-4 h-4 text-white" />
-              </span>
-            </div>
-
-            <div className="flex items-baseline justify-between mt-2.5">
-              <div className="text-3xl font-extrabold text-slate-900 tracking-tight group-hover:text-cyan-600 transition-colors">
-                {assignedToMeCount}
-              </div>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-50 text-cyan-700 border border-cyan-200/60">
-                Direct Work
-              </span>
-            </div>
-
-            {/* Micro Progress Bar */}
-            <div className="mt-4 space-y-1.5">
-              <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
-                <span>Personal Allocation</span>
-                <span className="font-bold text-cyan-600">{assignedPct}% load</span>
-              </div>
-              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-cyan-500 to-teal-500 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.max(assignedToMeCount > 0 ? 12 : 0, assignedPct)}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-2.5 border-t border-slate-100/80">
-              <span>Tasks assigned to you</span>
-              <span className="text-cyan-600 font-semibold group-hover:underline flex items-center gap-1">
-                See all <ArrowRight className="w-3 h-3" />
-              </span>
-            </div>
-          </div>
-
-          {/* Card 3: Awaiting Review */}
-          <div
-            onClick={() => navigate('/tasks/review')}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-luxe hover:shadow-luxe-hover hover:-translate-y-1 hover:border-amber-400/60 transition-all duration-300 cursor-pointer relative overflow-hidden group"
-          >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-yellow-500 to-orange-400" />
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Submitted for Review</span>
-              <span className="p-2.5 bg-gradient-to-tr from-amber-500 to-yellow-500 text-white rounded-xl shadow-md shadow-amber-500/25 group-hover:scale-110 transition-transform">
-                <FileCheck2 className="w-4 h-4 text-white" />
-              </span>
-            </div>
-
-            <div className="flex items-baseline justify-between mt-2.5">
-              <div className="text-3xl font-extrabold text-slate-900 tracking-tight group-hover:text-amber-600 transition-colors">
-                {awaitingReviewCount}
-              </div>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/60">
-                In Evaluation
-              </span>
-            </div>
-
-            {/* Micro Progress Bar */}
-            <div className="mt-4 space-y-1.5">
-              <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
-                <span>Approval Pipeline</span>
-                <span className="font-bold text-amber-600">{awaitingReviewCount} submitted</span>
-              </div>
-              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.max(awaitingReviewCount > 0 ? 12 : 0, awaitingPct)}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-2.5 border-t border-slate-100/80">
-              <span>Waiting for approval</span>
-              <span className="text-amber-600 font-semibold group-hover:underline flex items-center gap-1">
-                View list <ArrowRight className="w-3 h-3" />
-              </span>
-            </div>
-          </div>
-
-          {/* Card 4: Collaborations */}
-          <div
-            onClick={() => navigate('/tasks/collaborations')}
-            className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-luxe hover:shadow-luxe-hover hover:-translate-y-1 hover:border-purple-400/60 transition-all duration-300 cursor-pointer relative overflow-hidden group"
-          >
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-600 via-pink-500 to-rose-400" />
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Team Collaborations</span>
-              <span className="p-2.5 bg-gradient-to-tr from-purple-600 to-pink-500 text-white rounded-xl shadow-md shadow-purple-500/25 group-hover:scale-110 transition-transform">
-                <Users className="w-4 h-4 text-white" />
-              </span>
-            </div>
-
-            <div className="flex items-baseline justify-between mt-2.5">
-              <div className="text-3xl font-extrabold text-slate-900 tracking-tight group-hover:text-purple-600 transition-colors">
-                {collaborationsCount}
-              </div>
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200/60">
-                Cross-Branch
-              </span>
-            </div>
-
-            {/* Micro Progress Bar */}
-            <div className="mt-4 space-y-1.5">
-              <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
-                <span>Synergy Velocity</span>
-                <span className="font-bold text-purple-600">{collabPct}% joint work</span>
-              </div>
-              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-purple-600 to-pink-500 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.max(collaborationsCount > 0 ? 12 : 0, collabPct)}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between text-[11px] text-slate-400 mt-3 pt-2.5 border-t border-slate-100/80">
-              <span>Tasks you are helping with</span>
-              <span className="text-purple-600 font-semibold group-hover:underline flex items-center gap-1">
-                See team tasks <ArrowRight className="w-3 h-3" />
-              </span>
-            </div>
-          </div>
-        </div>
-
         {/* 2 Secondary Operational Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div
             onClick={() => navigate('/tasks/pending?status=post_comment')}
-            className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-sm hover:border-rose-300 transition cursor-pointer flex items-center justify-between group"
+            className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md hover:border-rose-300 transition cursor-pointer flex items-center justify-between group"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <RotateCcw className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Returned For Revision</p>
-                <p className="text-xs text-slate-400">Submissions that need changes or re-work</p>
+                <p className="text-xs sm:text-sm font-bold text-slate-800">Returned For Revision</p>
+                <p className="text-xs text-slate-500">Submissions that need changes or re-work</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-2xl font-bold text-rose-600">{employeeData.returned_tasks ?? 0}</span>
-              <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
+              <span className="text-2xl sm:text-3xl font-extrabold text-rose-600">{employeeData.returned_tasks ?? 0}</span>
+              <span className="px-3 py-1 rounded-xl text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
                 Needs Correction
               </span>
             </div>
@@ -790,20 +405,20 @@ export const Dashboard: React.FC = () => {
 
           <div
             onClick={() => navigate('/tasks/pending-with-others')}
-            className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-sm hover:border-emerald-300 transition cursor-pointer flex items-center justify-between group"
+            className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md hover:border-emerald-300 transition cursor-pointer flex items-center justify-between group"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <div className="flex items-center gap-3.5">
+              <div className="w-11 h-11 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <GitBranch className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">My Initiated Tasks</p>
-                <p className="text-xs text-slate-400">Tasks created and delegated by you</p>
+                <p className="text-xs sm:text-sm font-bold text-slate-800">My Initiated Tasks</p>
+                <p className="text-xs text-slate-500">Tasks created and delegated by you</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-2xl font-bold text-emerald-600">{employeeData.my_created}</span>
-              <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="text-2xl sm:text-3xl font-extrabold text-emerald-600">{employeeData.my_created}</span>
+              <span className="px-3 py-1 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                 Tracked
               </span>
             </div>
@@ -815,35 +430,35 @@ export const Dashboard: React.FC = () => {
           {/* Left: My Upcoming Tasks & Status Donut */}
           <div className="lg:col-span-2 space-y-6">
             {/* Table */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+            <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-sm font-bold text-slate-800">My Upcoming Tasks</h2>
-                  <p className="text-[11px] text-slate-400">High priority and active milestones scheduled for delivery</p>
+                  <h2 className="text-base sm:text-lg font-bold text-slate-900">My Upcoming Tasks</h2>
+                  <p className="text-xs text-slate-500">High priority and active milestones scheduled for delivery</p>
                 </div>
                 <button
                   onClick={() => navigate('/tasks/pending')}
-                  className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition cursor-pointer"
+                  className="text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-800 transition cursor-pointer"
                 >
                   View all ({employeeData.upcoming_tasks?.length || 0}) →
                 </button>
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-xs">
+                <table className="w-full text-xs sm:text-sm">
                   <thead>
-                    <tr className="border-b border-slate-100 text-slate-400 font-semibold text-left">
-                      <th className="pb-3 font-semibold">Task</th>
-                      <th className="pb-3 font-semibold">Status</th>
-                      <th className="pb-3 font-semibold">Priority</th>
-                      <th className="pb-3 font-semibold">Due Date</th>
-                      <th className="pb-3 font-semibold text-right">Action</th>
+                    <tr className="border-b border-slate-100 text-slate-500 font-bold uppercase text-xs text-left">
+                      <th className="pb-3.5">Task</th>
+                      <th className="pb-3.5">Status</th>
+                      <th className="pb-3.5">Priority</th>
+                      <th className="pb-3.5">Due Date</th>
+                      <th className="pb-3.5 text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {upcomingTasks.length === 0 ? (
                       <tr>
-                        <td colSpan={5} className="py-8 text-center text-slate-400 italic">
+                        <td colSpan={5} className="py-8 text-center text-slate-400 italic text-sm">
                           No upcoming tasks pending. You are completely caught up!
                         </td>
                       </tr>
@@ -854,7 +469,7 @@ export const Dashboard: React.FC = () => {
                             <div className="flex items-center gap-2">
                               <span
                                 onClick={() => navigate(`/tasks/${task.id}`)}
-                                className="font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded-md cursor-pointer transition"
+                                className="font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg cursor-pointer transition text-xs"
                               >
                                 {task.task_code}
                               </span>
@@ -872,11 +487,11 @@ export const Dashboard: React.FC = () => {
                           <td className="py-3.5">
                             <PriorityBadge priority={task.priority} />
                           </td>
-                          <td className="py-3.5 text-slate-500">
+                          <td className="py-3.5 text-slate-600 font-medium">
                             <div className="flex items-center gap-1.5">
                               <span>{task.due_date}</span>
                               {task.is_overdue && (
-                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-200">
+                                <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-600 border border-rose-200">
                                   Overdue
                                 </span>
                               )}
@@ -885,7 +500,7 @@ export const Dashboard: React.FC = () => {
                           <td className="py-3.5 text-right">
                             <button
                               onClick={() => navigate(`/tasks/${task.id}`)}
-                              className="px-3 py-1.5 text-xs font-semibold text-blue-600 hover:text-white hover:bg-blue-600 bg-blue-50 rounded-xl transition cursor-pointer group-hover:shadow-2xs"
+                              className="px-3.5 py-1.5 text-xs font-bold text-blue-600 hover:text-white hover:bg-blue-600 bg-blue-50 rounded-xl transition cursor-pointer group-hover:shadow-2xs"
                             >
                               Open Task →
                             </button>
@@ -899,8 +514,11 @@ export const Dashboard: React.FC = () => {
             </div>
 
             {/* Status Donut Graphic for Employee */}
-            <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-              <h2 className="text-sm font-bold text-slate-800 mb-4">My Task Status Distribution</h2>
+            <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs">
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-600" />
+                My Task Status Distribution
+              </h2>
               <div className="flex flex-col sm:flex-row items-center justify-around gap-6">
                 <div className="relative w-44 h-44 shrink-0 flex items-center justify-center">
                   <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
@@ -929,19 +547,19 @@ export const Dashboard: React.FC = () => {
                     })()}
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                    <span className="text-2xl font-bold text-slate-800 leading-none">
+                    <span className="text-2xl sm:text-3xl font-extrabold text-slate-800 leading-none">
                       {employeeData.my_action}
                     </span>
-                    <span className="text-[11px] text-slate-400 font-medium mt-0.5">My Action</span>
+                    <span className="text-xs text-slate-500 font-semibold mt-1">My Action</span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 w-full sm:w-auto">
                   {tasksByStatus.map((item: any, idx: number) => (
-                    <div key={idx} className="flex items-center gap-2 text-xs p-2 rounded-xl bg-slate-50/70">
-                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                      <span className="text-slate-600 truncate">{item.name}:</span>
-                      <span className="font-bold text-slate-800 ml-auto">{item.value}</span>
+                    <div key={idx} className="flex items-center gap-2.5 text-xs sm:text-sm p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                      <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                      <span className="text-slate-700 font-medium truncate">{item.name}:</span>
+                      <span className="font-extrabold text-slate-900 ml-auto">{item.value}</span>
                     </div>
                   ))}
                 </div>
@@ -950,15 +568,15 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Right Column: Recent Notifications Feed */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+          <div className="bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/90 shadow-2xs">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <Bell className="w-4 h-4 text-blue-600" />
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+                <Bell className="w-5 h-5 text-blue-600" />
                 Recent Notifications
               </h2>
               <button
                 onClick={() => navigate('/notifications')}
-                className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition cursor-pointer"
+                className="text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-800 transition cursor-pointer"
               >
                 All →
               </button>
@@ -966,21 +584,21 @@ export const Dashboard: React.FC = () => {
 
             <div className="divide-y divide-slate-100">
               {recentNotifications.length === 0 ? (
-                <p className="text-xs text-slate-400 italic py-6 text-center">No recent notifications.</p>
+                <p className="text-xs sm:text-sm text-slate-400 italic py-6 text-center">No recent notifications.</p>
               ) : (
                 recentNotifications.map((notif: any) => (
                   <div
                     key={notif.id}
                     onClick={() => notif.task_id && navigate(`/tasks/${notif.task_id}`)}
-                    className="py-3 hover:bg-slate-50 transition p-2.5 rounded-xl cursor-pointer group"
+                    className="py-3.5 hover:bg-slate-50 transition p-2.5 rounded-xl cursor-pointer group"
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <h4 className="text-xs font-bold text-slate-800 group-hover:text-blue-600 transition">
+                      <h4 className="text-xs sm:text-sm font-bold text-slate-800 group-hover:text-blue-600 transition">
                         {notif.title}
                       </h4>
-                      <span className="text-[10px] text-slate-400 shrink-0">{notif.time_ago}</span>
+                      <span className="text-xs text-slate-400 shrink-0">{notif.time_ago}</span>
                     </div>
-                    <p className="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">{notif.message}</p>
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-2 leading-relaxed">{notif.message}</p>
                   </div>
                 ))
               )}
