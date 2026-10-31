@@ -72,4 +72,25 @@ class SystemSettingController extends Controller
             'settings' => $updatedSettings,
         ]);
     }
+
+    /**
+     * Clear all testing tasks, attachments, messages, logs and notifications (Super Admin only)
+     */
+    public function clearTestingData(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->role !== 'admin') {
+            return response()->json([
+                'message' => 'Unauthorized: Only Super Administrators can clear system testing data.',
+            ], 403);
+        }
+
+        $result = \App\Services\TestingDataCleaner::clean();
+
+        return response()->json([
+            'message' => 'All testing data has been completely cleared from the system.',
+            'result' => $result,
+        ]);
+    }
 }

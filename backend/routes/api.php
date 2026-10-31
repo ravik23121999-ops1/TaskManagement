@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar']);
     Route::get('/settings/system', [SystemSettingController::class, 'index']);
     Route::put('/settings/system', [SystemSettingController::class, 'update']);
+    Route::post('/settings/clear-testing-data', [SystemSettingController::class, 'clearTestingData']);
 
     // Dashboards & Reports
     Route::get('/dashboard/admin', [ReportsController::class, 'adminDashboard']);
