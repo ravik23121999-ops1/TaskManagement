@@ -19,25 +19,27 @@ class ReportsController extends Controller
 {
     public function adminDashboard(Request $request): JsonResponse
     {
-        $data = Cache::remember('admin_dashboard_metrics', 30, function () {
+        $data = Cache::remember('admin_dashboard_metrics', 10, function () {
             $totalTasks = Task::count();
-            $openTasks = Task::whereIn('status', ['pending', 'in_progress', 'review', 'post_comment'])->count();
+            $pending = Task::where('status', 'pending')->count();
             $inProgress = Task::where('status', 'in_progress')->count();
             $pendingReview = Task::where('status', 'review')->count();
             $onHold = Task::where('status', 'on_hold')->count();
             $completed = Task::where('status', 'completed')->count();
-            $returned = Task::where('status', 'post_comment')->count();
+            $cancelled = Task::whereIn('status', ['cancelled', 'rejected'])->count();
+            $clarification = Task::where('status', 'post_comment')->count();
             $overdue = Task::where('due_date', '<', now())
-                ->whereNotIn('status', ['completed', 'cancelled'])
+                ->whereNotIn('status', ['completed', 'cancelled', 'rejected'])
                 ->count();
 
-            // Tasks by Status for Donut Chart
+            // Tasks by Status for Donut Chart (Mutually exclusive & exhaustive, sum == $totalTasks)
             $tasksByStatus = [
-                ['name' => 'Open', 'value' => $openTasks, 'color' => '#f97316'],
-                ['name' => 'In Progress', 'value' => $inProgress, 'color' => '#3b82f6'],
+                ['name' => 'Open', 'value' => $pending, 'color' => '#f97316'],
+                ['name' => 'In Progress', 'value' => $inProgress + $clarification, 'color' => '#3b82f6'],
                 ['name' => 'Pending Review', 'value' => $pendingReview, 'color' => '#eab308'],
                 ['name' => 'Completed', 'value' => $completed, 'color' => '#22c55e'],
                 ['name' => 'On Hold', 'value' => $onHold, 'color' => '#ef4444'],
+                ['name' => 'Cancelled', 'value' => $cancelled, 'color' => '#94a3b8'],
             ];
 
             // Tasks by Department for Bar Chart
@@ -100,12 +102,13 @@ class ReportsController extends Controller
 
             return [
                 'total_tasks' => $totalTasks,
-                'open_tasks' => $openTasks,
+                'open_tasks' => $pending,
                 'in_progress' => $inProgress,
                 'pending_review' => $pendingReview,
                 'on_hold' => $onHold,
+                'cancelled' => $cancelled,
                 'overdue' => $overdue,
-                'returned' => $returned,
+                'returned' => $clarification,
                 'completed' => $completed,
                 'tasks_by_status' => $tasksByStatus,
                 'tasks_by_department' => $tasksByDepartment,
@@ -226,11 +229,12 @@ class ReportsController extends Controller
             })->get();
 
             $tasksByStatus = [
-                ['name' => 'My Action', 'value' => $myActionCount, 'color' => '#3b82f6'],
-                ['name' => 'In Progress', 'value' => $userTasks->where('status', 'in_progress')->count(), 'color' => '#06b6d4'],
+                ['name' => 'Open', 'value' => $userTasks->where('status', 'pending')->count(), 'color' => '#f97316'],
+                ['name' => 'In Progress', 'value' => $userTasks->whereIn('status', ['in_progress', 'post_comment'])->count(), 'color' => '#3b82f6'],
                 ['name' => 'Pending Review', 'value' => $userTasks->where('status', 'review')->count(), 'color' => '#eab308'],
                 ['name' => 'Completed', 'value' => $userTasks->where('status', 'completed')->count(), 'color' => '#22c55e'],
                 ['name' => 'On Hold', 'value' => $userTasks->where('status', 'on_hold')->count(), 'color' => '#ef4444'],
+                ['name' => 'Cancelled', 'value' => $userTasks->whereIn('status', ['cancelled', 'rejected'])->count(), 'color' => '#94a3b8'],
             ];
 
             // Recent Notifications
@@ -280,23 +284,26 @@ class ReportsController extends Controller
         };
 
         $totalTasks = Task::where('created_at', '>=', $startDate)->count();
-        $openTasks = Task::where('created_at', '>=', $startDate)->whereIn('status', ['pending', 'in_progress'])->count();
+        $openTasks = Task::where('created_at', '>=', $startDate)->where('status', 'pending')->count();
+        $inProgressTasks = Task::where('created_at', '>=', $startDate)->whereIn('status', ['in_progress', 'post_comment'])->count();
         $reviewTasks = Task::where('created_at', '>=', $startDate)->where('status', 'review')->count();
         $completedTasks = Task::where('created_at', '>=', $startDate)->where('status', 'completed')->count();
         $onHoldTasks = Task::where('created_at', '>=', $startDate)->where('status', 'on_hold')->count();
+        $cancelledTasks = Task::where('created_at', '>=', $startDate)->whereIn('status', ['cancelled', 'rejected'])->count();
         $overdueTasks = Task::where('due_date', '<', now())
-            ->whereNotIn('status', ['completed', 'cancelled'])
+            ->whereNotIn('status', ['completed', 'cancelled', 'rejected'])
             ->count();
 
         $completionRate = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0;
 
-        // Tasks by Status
+        // Tasks by Status (Mutually exclusive & exhaustive, sum == $totalTasks)
         $tasksByStatus = [
-            ['status' => 'Open', 'count' => $openTasks, 'color' => '#3b82f6'],
-            ['status' => 'In Progress', 'count' => Task::where('status', 'in_progress')->count(), 'color' => '#0ea5e9'],
-            ['status' => 'Review', 'count' => $reviewTasks, 'color' => '#8b5cf6'],
-            ['status' => 'Completed', 'count' => $completedTasks, 'color' => '#10b981'],
+            ['status' => 'Open', 'count' => $openTasks, 'color' => '#f97316'],
+            ['status' => 'In Progress', 'count' => $inProgressTasks, 'color' => '#3b82f6'],
+            ['status' => 'Review', 'count' => $reviewTasks, 'color' => '#eab308'],
+            ['status' => 'Completed', 'count' => $completedTasks, 'color' => '#22c55e'],
             ['status' => 'On Hold', 'count' => $onHoldTasks, 'color' => '#ef4444'],
+            ['status' => 'Cancelled', 'count' => $cancelledTasks, 'color' => '#94a3b8'],
         ];
 
         // Tasks by Department

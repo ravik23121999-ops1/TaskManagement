@@ -297,7 +297,7 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Secondary Operational Quick-Status Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
           <div
             onClick={() => navigate('/tasks?status=pending')}
             className="bg-white p-3.5 rounded-xl border border-slate-200/80 hover:border-orange-200 hover:bg-orange-50/20 transition cursor-pointer flex items-center justify-between"
@@ -340,6 +340,17 @@ export const Dashboard: React.FC = () => {
               <p className="text-lg font-bold text-amber-600 mt-0.5">{adminData.on_hold}</p>
             </div>
             <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-700">Paused</span>
+          </div>
+
+          <div
+            onClick={() => navigate('/tasks/cancelled')}
+            className="bg-white p-3.5 rounded-xl border border-slate-200/80 hover:border-slate-300 hover:bg-slate-50 transition cursor-pointer flex items-center justify-between"
+          >
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cancelled Tasks</p>
+              <p className="text-lg font-bold text-slate-600 mt-0.5">{adminData.cancelled ?? 0}</p>
+            </div>
+            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600">Closed</span>
           </div>
         </div>
 
