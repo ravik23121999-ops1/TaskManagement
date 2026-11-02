@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Navigate } from 'react-router-dom';
+import { useSettings } from '../settings/SettingsContext';
 
 import { messagesApi } from '../../api/messages';
 import { tasksApi } from '../../api/tasks';
@@ -115,7 +116,12 @@ export const formatThreadTimeAgo = (isoString?: string, fallback?: string): stri
 
 export const MessagesPage: React.FC = () => {
   const navigate = useNavigate();
+  const { enableWorkMessages } = useSettings();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  if (!enableWorkMessages) {
+    return <Navigate to="/" replace />;
+  }
 
 
   // Active Tab: 'my_chats' (direct 1-on-1 branch chat) vs 'other' (subordinate branch oversight)

@@ -20,17 +20,25 @@ class SystemSettingController extends Controller
 
         $allowSubAdminDelete = (bool) ($settings['allow_subadmin_delete_records'] ?? false);
         $allowSubAdminCancel = (bool) ($settings['allow_subadmin_cancel_tasks'] ?? false);
+        $enableWorkMessages = (bool) ($settings['enable_work_messages'] ?? true);
 
         // Effective user capabilities
         $canDeleteRecords = $user->role === 'admin' || ($user->role === 'sub_admin' && $allowSubAdminDelete);
         $canCancelTasks = $user->role === 'admin' || ($user->role === 'sub_admin' && $allowSubAdminCancel);
 
+        $allSettings = array_merge($settings, [
+            'allow_subadmin_delete_records' => $allowSubAdminDelete,
+            'allow_subadmin_cancel_tasks' => $allowSubAdminCancel,
+            'enable_work_messages' => $enableWorkMessages,
+        ]);
+
         return response()->json([
-            'settings' => $settings,
+            'settings' => $allSettings,
             'user_capabilities' => [
                 'role' => $user->role,
                 'can_delete_records' => $canDeleteRecords,
                 'can_cancel_tasks' => $canCancelTasks,
+                'enable_work_messages' => $enableWorkMessages,
             ],
         ]);
     }
@@ -52,10 +60,13 @@ class SystemSettingController extends Controller
         $validated = $request->validate([
             'allow_subadmin_delete_records' => 'nullable|boolean',
             'allow_subadmin_cancel_tasks' => 'nullable|boolean',
+            'enable_work_messages' => 'nullable|boolean',
         ]);
 
         foreach ($validated as $key => $value) {
-            SystemSetting::set($key, (bool) $value);
+            if ($value !== null) {
+                SystemSetting::set($key, (bool) $value);
+            }
         }
 
         ActivityLogger::log(
@@ -66,6 +77,9 @@ class SystemSettingController extends Controller
         );
 
         $updatedSettings = SystemSetting::getAllSettings();
+        if (!isset($updatedSettings['enable_work_messages'])) {
+            $updatedSettings['enable_work_messages'] = true;
+        }
 
         return response()->json([
             'message' => 'System settings updated successfully',

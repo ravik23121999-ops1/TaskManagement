@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
+import { useSettings } from '../features/settings/SettingsContext';
 import { notificationsApi } from '../api/tasks';
 import {
   Search,
@@ -41,6 +42,7 @@ const Navbar: React.FC<NavbarProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { enableWorkMessages } = useSettings();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadMessages, setUnreadMessages] = useState<number>(0);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -129,19 +131,27 @@ const Navbar: React.FC<NavbarProps> = ({
 
   useEffect(() => {
     loadNotifications();
-    loadUnreadMessages();
+    if (enableWorkMessages) {
+      loadUnreadMessages();
+    } else {
+      setUnreadMessages(0);
+    }
 
     // High-scale: only poll when tab is actively visible to eliminate 70% unnecessary background traffic
     const interval = setInterval(() => {
       if (document.hidden) return;
       loadNotifications();
-      loadUnreadMessages();
+      if (enableWorkMessages) {
+        loadUnreadMessages();
+      }
     }, 8000); // 8s active poll for notifications and message badges
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
         loadNotifications();
-        loadUnreadMessages();
+        if (enableWorkMessages) {
+          loadUnreadMessages();
+        }
       }
     };
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -150,9 +160,13 @@ const Navbar: React.FC<NavbarProps> = ({
       clearInterval(interval);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []);
+  }, [enableWorkMessages]);
 
   const loadUnreadMessages = async () => {
+    if (!enableWorkMessages) {
+      setUnreadMessages(0);
+      return;
+    }
     try {
       const res = await messagesApi.getUnreadCount();
       setUnreadMessages(res?.unread_count || 0);
@@ -262,22 +276,24 @@ const Navbar: React.FC<NavbarProps> = ({
         </button>
 
         {/* Work Messages Button */}
-        <button
-          onClick={() => navigate('/messages')}
-          className={`w-9 h-9 rounded-lg border transition relative cursor-pointer flex items-center justify-center ${
-            location.pathname === '/messages'
-              ? 'bg-blue-50 text-blue-600 border-blue-300 shadow-2xs font-bold'
-              : 'border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600'
-          }`}
-          title="Work Messages & Branch Communications"
-        >
-          <MessageSquare className="w-4 h-4" />
-          {unreadMessages > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shadow-xs">
-              {unreadMessages > 9 ? '9+' : unreadMessages}
-            </span>
-          )}
-        </button>
+        {enableWorkMessages && (
+          <button
+            onClick={() => navigate('/messages')}
+            className={`w-9 h-9 rounded-lg border transition relative cursor-pointer flex items-center justify-center ${
+              location.pathname === '/messages'
+                ? 'bg-blue-50 text-blue-600 border-blue-300 shadow-2xs font-bold'
+                : 'border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600'
+            }`}
+            title="Work Messages & Branch Communications"
+          >
+            <MessageSquare className="w-4 h-4" />
+            {unreadMessages > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] font-bold flex items-center justify-center shadow-xs">
+                {unreadMessages > 9 ? '9+' : unreadMessages}
+              </span>
+            )}
+          </button>
+        )}
 
         <div className="relative" ref={notificationRef}>
           <button

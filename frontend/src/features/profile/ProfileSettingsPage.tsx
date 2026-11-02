@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../auth/AuthContext';
+import { useSettings } from '../settings/SettingsContext';
 import { authApi } from '../../api/auth';
 import { settingsApi } from '../../api/settings';
 import { User, Lock, Sliders, CheckCircle2, AlertCircle, Camera, Sparkles, ShieldCheck } from 'lucide-react';
@@ -31,8 +32,10 @@ export const ProfileSettingsPage: React.FC = () => {
   const [soundEnabled, setSoundEnabled] = useState(false);
 
   // System Settings & Permissions (Admin only)
+  const { updateSettings: updateContextSettings } = useSettings();
   const [subAdminDelete, setSubAdminDelete] = useState(false);
   const [subAdminCancel, setSubAdminCancel] = useState(false);
+  const [enableMessages, setEnableMessages] = useState(true);
   const [loadingSettings, setLoadingSettings] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsMsg, setSettingsMsg] = useState('');
@@ -50,6 +53,7 @@ export const ProfileSettingsPage: React.FC = () => {
       const data = await settingsApi.getSystemSettings();
       setSubAdminDelete(Boolean(data.settings?.allow_subadmin_delete_records));
       setSubAdminCancel(Boolean(data.settings?.allow_subadmin_cancel_tasks));
+      setEnableMessages(data.settings?.enable_work_messages !== false);
     } catch (err: any) {
       console.error('Failed to load system settings', err);
     } finally {
@@ -63,13 +67,15 @@ export const ProfileSettingsPage: React.FC = () => {
     setSettingsMsg('');
     setSettingsError('');
     try {
-      const res = await settingsApi.updateSystemSettings({
+      const updated = await updateContextSettings({
         allow_subadmin_delete_records: subAdminDelete,
         allow_subadmin_cancel_tasks: subAdminCancel,
+        enable_work_messages: enableMessages,
       });
-      setSubAdminDelete(Boolean(res.settings?.allow_subadmin_delete_records));
-      setSubAdminCancel(Boolean(res.settings?.allow_subadmin_cancel_tasks));
-      setSettingsMsg('System permissions updated successfully.');
+      setSubAdminDelete(Boolean(updated?.allow_subadmin_delete_records));
+      setSubAdminCancel(Boolean(updated?.allow_subadmin_cancel_tasks));
+      setEnableMessages(updated?.enable_work_messages !== false);
+      setSettingsMsg('System settings and permissions updated successfully.');
     } catch (err: any) {
       setSettingsError(err.response?.data?.message || 'Failed to update system permissions.');
     } finally {
@@ -475,6 +481,34 @@ export const ProfileSettingsPage: React.FC = () => {
                       type="checkbox"
                       checked={subAdminCancel}
                       onChange={(e) => setSubAdminCancel(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Setting 3: Enable Work Messages */}
+              <div className="p-4 rounded-2xl border border-slate-200 hover:border-slate-300 transition bg-slate-50/40">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-slate-900 text-xs">Enable Work Messages & Direct Communications</p>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        enableMessages ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                      }`}>
+                        {enableMessages ? 'Active / Visible' : 'Disabled / Hidden'}
+                      </span>
+                    </div>
+                    <p className="text-slate-500 text-[11px] leading-relaxed">
+                      Controls whether the internal messaging feature is available. When disabled, the "Work Messages" sidebar link, header message icon, and chat buttons are completely hidden across the platform.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={enableMessages}
+                      onChange={(e) => setEnableMessages(e.target.checked)}
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>

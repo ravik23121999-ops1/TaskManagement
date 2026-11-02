@@ -4,6 +4,7 @@ import { departmentsApi } from '../../api/departments';
 import { settingsApi } from '../../api/settings';
 import type { Department, DepartmentMember } from '../../api/departments';
 import { useAuth } from '../auth/AuthContext';
+import { useSettings } from '../settings/SettingsContext';
 import { Pagination } from '../../components/Pagination';
 import { TableSkeleton } from '../../components/TableSkeleton';
 import { Building2, Plus, Edit2, Search, X, Users, MessageSquare, ChevronRight, ExternalLink, Trash2, AlertCircle, CheckCircle2 } from 'lucide-react';
@@ -11,6 +12,7 @@ import { Building2, Plus, Edit2, Search, X, Users, MessageSquare, ChevronRight, 
 export const DepartmentsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
+  const { enableWorkMessages } = useSettings();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -598,18 +600,20 @@ export const DepartmentsPage: React.FC = () => {
                           </span>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsMembersModalOpen(false);
-                            navigate('/messages');
-                          }}
-                          className="h-7 px-2.5 rounded-lg border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 text-slate-600 transition text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer"
-                          title="Open Work Messages"
-                        >
-                          <MessageSquare className="w-3 h-3 text-blue-600" />
-                          <span>Chat</span>
-                        </button>
+                        {enableWorkMessages && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsMembersModalOpen(false);
+                              navigate('/messages');
+                            }}
+                            className="h-7 px-2.5 rounded-lg border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 text-slate-600 transition text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer"
+                            title="Open Work Messages"
+                          >
+                            <MessageSquare className="w-3 h-3 text-blue-600" />
+                            <span>Chat</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   );

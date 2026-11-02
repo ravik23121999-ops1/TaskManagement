@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
+import { useSettings } from '../features/settings/SettingsContext';
 import {
   LayoutDashboard,
   Zap,
@@ -44,6 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { enableWorkMessages } = useSettings();
 
   const handleNav = (path: string) => {
     navigate(path);
@@ -58,7 +60,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { path: '/tasks/pending-with-others', label: 'Waiting on Others', icon: Clock },
     { path: '/tasks', label: 'All Tasks', icon: ListTodo },
     { path: '/tasks/collaborations', label: 'My Collaborations', icon: Users2 },
-    { path: '/messages', label: 'Work Messages', icon: MessageSquare, badge: 'Direct' },
+    ...(enableWorkMessages ? [{ path: '/messages', label: 'Work Messages', icon: MessageSquare, badge: 'Direct' }] : []),
     { path: '/tasks/review', label: 'Review Queue', icon: FileCheck2 },
     { path: '/tasks/completed', label: 'Completed', icon: CheckCircle2 },
     { path: '/tasks/on-hold', label: 'On Hold', icon: PauseCircle },

@@ -18,12 +18,23 @@ use Illuminate\Support\Str;
 
 class MessageController extends Controller
 {
+    private function isMessagingEnabled(): bool
+    {
+        return (bool) \App\Models\SystemSetting::get('enable_work_messages', true);
+    }
+
     /**
      * Get list of conversation threads (branch-wise)
      * Tab: 'my_chats' (direct conversations) or 'other' (subordinate branch oversight)
      */
     public function threads(Request $request): JsonResponse
     {
+        if (!$this->isMessagingEnabled()) {
+            return response()->json([
+                'message' => 'Work messaging is currently disabled by administrator.',
+            ], 403);
+        }
+
         $user = $request->user();
         $tab = $request->query('tab', 'my_chats');
 
@@ -433,6 +444,12 @@ class MessageController extends Controller
      */
     public function getThreadMessages(Request $request, $branchId): JsonResponse
     {
+        if (!$this->isMessagingEnabled()) {
+            return response()->json([
+                'message' => 'Work messaging is currently disabled by administrator.',
+            ], 403);
+        }
+
         $user = $request->user();
         $isOverseer = filter_var($request->query('is_overseer', false), FILTER_VALIDATE_BOOLEAN);
         $requestedPartnerId = $request->query('partner_id') ? (int) $request->query('partner_id') : null;
@@ -652,6 +669,12 @@ class MessageController extends Controller
      */
     public function sendMessage(Request $request): JsonResponse
     {
+        if (!$this->isMessagingEnabled()) {
+            return response()->json([
+                'message' => 'Work messaging is currently disabled by administrator.',
+            ], 403);
+        }
+
         $user = $request->user();
 
         $validated = $request->validate([
@@ -799,6 +822,12 @@ class MessageController extends Controller
      */
     public function uploadAttachment(Request $request): JsonResponse
     {
+        if (!$this->isMessagingEnabled()) {
+            return response()->json([
+                'message' => 'Work messaging is currently disabled by administrator.',
+            ], 403);
+        }
+
         $user = $request->user();
 
         $request->validate([
@@ -844,6 +873,12 @@ class MessageController extends Controller
      */
     public function unreadCount(Request $request): JsonResponse
     {
+        if (!$this->isMessagingEnabled()) {
+            return response()->json([
+                'unread_count' => 0,
+            ]);
+        }
+
         $user = $request->user();
         $count = TaskMessage::where('recipient_id', $user->id)
             ->where('is_read', false)

@@ -3,12 +3,14 @@ import apiClient from './client';
 export interface SystemSettings {
   allow_subadmin_delete_records: boolean;
   allow_subadmin_cancel_tasks: boolean;
+  enable_work_messages?: boolean;
 }
 
 export interface UserCapabilities {
   role: string;
   can_delete_records: boolean;
   can_cancel_tasks: boolean;
+  enable_work_messages?: boolean;
 }
 
 export interface SystemSettingsResponse {

@@ -1,6 +1,7 @@
 import React, { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './features/auth/AuthContext';
+import { SettingsProvider, useSettings } from './features/settings/SettingsContext';
 import Layout from './components/Layout';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -71,13 +72,22 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return !isAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
 };
 
+const MessagesRoute: React.FC = () => {
+  const { enableWorkMessages } = useSettings();
+  if (!enableWorkMessages) {
+    return <Navigate to="/" replace />;
+  }
+  return <MessagesPage />;
+};
+
 const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <BrowserRouter>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
+        <SettingsProvider>
+          <BrowserRouter>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
               {/* Public Auth Routes */}
               <Route
                 path="/login"
@@ -257,7 +267,7 @@ const App: React.FC = () => {
                 path="/messages"
                 element={
                   <ProtectedRoute>
-                    <MessagesPage />
+                    <MessagesRoute />
                   </ProtectedRoute>
                 }
               />
@@ -283,6 +293,7 @@ const App: React.FC = () => {
             </Routes>
           </Suspense>
         </BrowserRouter>
+        </SettingsProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

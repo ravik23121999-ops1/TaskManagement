@@ -219,4 +219,52 @@ class AdminPermissionsAndCancellationTest extends TestCase
             'name' => 'Admin Archive',
         ]);
     }
+
+    public function test_admin_can_enable_and_disable_work_messages()
+    {
+        $admin = User::create([
+            'name' => 'Settings Admin',
+            'email' => 'settings_admin@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'admin',
+        ]);
+
+        $employee = User::create([
+            'name' => 'Chat Employee',
+            'email' => 'chat_emp@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'employee',
+        ]);
+
+        // 1. By default, messaging is enabled
+        $resDefault = $this->actingAs($employee, 'sanctum')->getJson('/api/messages/threads');
+        $resDefault->assertStatus(200);
+
+        // 2. Admin disables messaging
+        $putRes = $this->actingAs($admin, 'sanctum')->putJson('/api/settings/system', [
+            'enable_work_messages' => false,
+        ]);
+        $putRes->assertStatus(200);
+        $this->assertFalse(SystemSetting::get('enable_work_messages'));
+
+        // 3. Employee accessing threads or sending message now receives 403 Forbidden
+        $resDisabled = $this->actingAs($employee, 'sanctum')->getJson('/api/messages/threads');
+        $resDisabled->assertStatus(403);
+        $resDisabled->assertJsonFragment(['message' => 'Work messaging is currently disabled by administrator.']);
+
+        $resUnread = $this->actingAs($employee, 'sanctum')->getJson('/api/messages/unread-count');
+        $resUnread->assertStatus(200);
+        $resUnread->assertJson(['unread_count' => 0]);
+
+        // 4. Admin re-enables messaging
+        $reEnableRes = $this->actingAs($admin, 'sanctum')->putJson('/api/settings/system', [
+            'enable_work_messages' => true,
+        ]);
+        $reEnableRes->assertStatus(200);
+        $this->assertTrue(SystemSetting::get('enable_work_messages'));
+
+        // 5. Employee accessing threads now succeeds
+        $resEnabled = $this->actingAs($employee, 'sanctum')->getJson('/api/messages/threads');
+        $resEnabled->assertStatus(200);
+    }
 }
