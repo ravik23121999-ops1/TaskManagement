@@ -386,9 +386,9 @@ export const WorkLogsPage: React.FC = () => {
         {/* Card 3: Stage Transitions */}
         <div
           onClick={() => {
-            setViewMode('journeys');
-            setStatusFilter('review');
-            setJourneysPage(1);
+            setViewMode('stream');
+            setTypeFilter('status_change');
+            setStreamPage(1);
           }}
           className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.03),0_6px_12px_rgba(15,23,42,0.02)] hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 relative overflow-hidden cursor-pointer group"
         >
@@ -506,6 +506,7 @@ export const WorkLogsPage: React.FC = () => {
                 <option value="post_comment">Needs Correction</option>
                 <option value="pending">Pending</option>
                 <option value="on_hold">On Hold</option>
+                <option value="cancelled">Cancelled</option>
               </select>
             </div>
           )}
@@ -746,6 +747,10 @@ export const WorkLogsPage: React.FC = () => {
                               badgeClass = 'bg-sky-50 text-sky-700 border-sky-200';
                               dotBg = 'bg-sky-600 ring-sky-100';
                               IconComponent = User;
+                            } else if (step.stage_type === 'status_change') {
+                              badgeClass = 'bg-amber-50 text-amber-700 border-amber-200';
+                              dotBg = 'bg-amber-600 ring-amber-100';
+                              IconComponent = GitBranch;
                             } else if (step.stage_type === 'submission') {
                               badgeClass = 'bg-amber-50 text-amber-700 border-amber-200';
                               dotBg = 'bg-amber-600 ring-amber-100';
@@ -1321,6 +1326,7 @@ export const WorkLogsPage: React.FC = () => {
                         else if (step.type === 'approved' || step.type === 'completed' || step.stage_type === 'completed') dotColor = 'bg-emerald-600';
                         else if (step.type === 'returned' || step.stage_type === 'review_returned') dotColor = 'bg-rose-600';
                         else if (step.type === 'hold') dotColor = 'bg-amber-600';
+                        else if (step.stage_type === 'status_change') dotColor = 'bg-amber-500';
 
                         return (
                           <div key={idx} className="relative group">

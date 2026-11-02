@@ -488,7 +488,39 @@ class WorkLogController extends Controller
             }
         }
 
-        // 3. Submissions with their attached deliverables and reviews
+        // 3. Stage Transitions / Status History
+        foreach ($task->statusHistory as $sh) {
+            $isReviewOrSub = str_contains(strtolower($sh->reason ?? ''), 'approved by') 
+                || str_contains(strtolower($sh->reason ?? ''), 'returned by')
+                || str_contains(strtolower($sh->reason ?? ''), 'submitted for review');
+            
+            if ($isReviewOrSub) {
+                continue;
+            }
+
+            $fromStr = strtoupper(str_replace('_', ' ', $sh->from_status ?? 'draft'));
+            $toStr = strtoupper(str_replace('_', ' ', $sh->to_status));
+
+            $steps->push([
+                'raw_time' => Carbon::parse($sh->changed_at)->timestamp,
+                'sort_order' => 25,
+                'timestamp' => Carbon::parse($sh->changed_at)->toIso8601String(),
+                'formatted_time' => Carbon::parse($sh->changed_at)->format('M d, Y h:i A'),
+                'time_ago' => Carbon::parse($sh->changed_at)->diffForHumans(),
+                'stage_type' => 'status_change',
+                'badge_label' => 'Stage Transition',
+                'title' => "Stage Transition: {$fromStr} → {$toStr}",
+                'actor' => [
+                    'name' => $sh->changedBy?->name ?? 'System',
+                    'role' => $sh->changedBy?->role ?? 'user',
+                    'department' => $sh->changedBy?->department?->name ?? 'Operations',
+                ],
+                'summary' => $sh->reason ?: "Status moved to " . str_replace('_', ' ', $sh->to_status),
+                'attachments' => [],
+            ]);
+        }
+
+        // 4. Submissions with their attached deliverables and reviews
         foreach ($task->submissions as $sub) {
             $subAttachments = $task->attachments->filter(function ($att) use ($sub) {
                 if ($att->task_branch_id && $sub->task_branch_id && (int)$att->task_branch_id === (int)$sub->task_branch_id) {
@@ -546,7 +578,7 @@ class WorkLogController extends Controller
             }
         }
 
-        // 4. Comments & Clarifications
+        // 5. Comments & Clarifications
         foreach ($task->comments as $com) {
             if (str_starts_with($com->comment, '⚠️ Work Returned for Correction:')) {
                 continue;
@@ -573,7 +605,7 @@ class WorkLogController extends Controller
             ]);
         }
 
-        // 5. On Hold & Resume
+        // 6. On Hold & Resume
         foreach ($task->holdRecords as $hold) {
             $steps->push([
                 'raw_time' => Carbon::parse($hold->held_at ?? $hold->created_at)->timestamp,
@@ -594,7 +626,7 @@ class WorkLogController extends Controller
             ]);
         }
 
-        // 6. Final Closure
+        // 7. Final Closure
         if ($task->status === 'completed' && $task->completed_at) {
             $steps->push([
                 'raw_time' => Carbon::parse($task->completed_at)->timestamp + 2,
