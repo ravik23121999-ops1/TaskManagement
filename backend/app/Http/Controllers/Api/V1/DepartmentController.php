@@ -82,7 +82,7 @@ class DepartmentController extends Controller
         $subAdminCanDelete = $user->role === 'sub_admin' && \App\Models\SystemSetting::get('allow_subadmin_delete_records', false);
 
         if ($user->role !== 'admin' && !$subAdminCanDelete) {
-            return response()->json(['message' => 'Unauthorized: Deleting departments is restricted to Administrators (or authorized Sub-Administrators)'], 403);
+            return response()->json(['message' => 'Unauthorized: Only Administrators have the right to delete departments.'], 403);
         }
 
         // Rule: If a department is already used by historical tasks, deactivate it rather than permanently deleting

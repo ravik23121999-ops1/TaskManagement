@@ -128,7 +128,7 @@ class UserController extends Controller
 
         if ($currentUser->role !== 'admin' && !$subAdminCanDelete) {
             return response()->json([
-                'message' => 'Unauthorized: Deleting user records is restricted to Administrators (or authorized Sub-Administrators).'
+                'message' => 'Unauthorized: Only Administrators have the right to delete user records.'
             ], 403);
         }
 

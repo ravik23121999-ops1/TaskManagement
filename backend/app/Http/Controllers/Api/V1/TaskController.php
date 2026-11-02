@@ -992,7 +992,7 @@ class TaskController extends Controller
 
         if ($user->role !== 'admin' && !$subAdminCanDelete) {
             return response()->json([
-                'message' => 'Unauthorized: Deleting tasks is restricted to Administrators (or authorized Sub-Administrators).'
+                'message' => 'Unauthorized: Only Administrators have the right to delete task records.'
             ], 403);
         }
 
