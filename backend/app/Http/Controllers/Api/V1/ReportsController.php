@@ -19,18 +19,28 @@ class ReportsController extends Controller
 {
     public function adminDashboard(Request $request): JsonResponse
     {
-        $data = Cache::remember('admin_dashboard_metrics', 10, function () {
-            $totalTasks = Task::count();
-            $pending = Task::where('status', 'pending')->count();
-            $inProgress = Task::where('status', 'in_progress')->count();
-            $pendingReview = Task::where('status', 'review')->count();
-            $onHold = Task::where('status', 'on_hold')->count();
-            $completed = Task::where('status', 'completed')->count();
-            $cancelled = Task::whereIn('status', ['cancelled', 'rejected'])->count();
-            $clarification = Task::where('status', 'post_comment')->count();
-            $overdue = Task::where('due_date', '<', now())
-                ->whereNotIn('status', ['completed', 'cancelled', 'rejected'])
-                ->count();
+        $data = Cache::remember('admin_dashboard_metrics', 25, function () {
+            $counts = Task::selectRaw("
+                count(*) as total_tasks,
+                count(case when status = 'pending' then 1 end) as open_tasks,
+                count(case when status = 'in_progress' then 1 end) as in_progress,
+                count(case when status = 'review' then 1 end) as pending_review,
+                count(case when status = 'on_hold' then 1 end) as on_hold,
+                count(case when status = 'completed' then 1 end) as completed,
+                count(case when status in ('cancelled', 'rejected') then 1 end) as cancelled,
+                count(case when status = 'post_comment' then 1 end) as clarification,
+                count(case when due_date < ? and status not in ('completed', 'cancelled', 'rejected') then 1 end) as overdue
+            ", [now()])->first();
+
+            $totalTasks = (int) ($counts->total_tasks ?? 0);
+            $pending = (int) ($counts->open_tasks ?? 0);
+            $inProgress = (int) ($counts->in_progress ?? 0);
+            $pendingReview = (int) ($counts->pending_review ?? 0);
+            $onHold = (int) ($counts->on_hold ?? 0);
+            $completed = (int) ($counts->completed ?? 0);
+            $cancelled = (int) ($counts->cancelled ?? 0);
+            $clarification = (int) ($counts->clarification ?? 0);
+            $overdue = (int) ($counts->overdue ?? 0);
 
             // Tasks by Status for Donut Chart (Mutually exclusive & exhaustive, sum == $totalTasks)
             $tasksByStatus = [
@@ -43,14 +53,15 @@ class ReportsController extends Controller
             ];
 
             // Tasks by Department for Bar Chart
-            $departments = Department::withCount('tasks')->get();
+            $departments = Department::withCount('tasks')->get(['id', 'name']);
             $tasksByDepartment = $departments->map(fn($d) => [
                 'name' => $d->name,
                 'count' => $d->tasks_count,
             ])->values()->all();
 
             // Recent Activity
-            $recentActivity = ActivityLog::with('actor')
+            $recentActivity = ActivityLog::with('actor:id,name,role')
+                ->select('id', 'action', 'description', 'actor_id', 'created_at')
                 ->latest('created_at')
                 ->take(10)
                 ->get()
@@ -68,8 +79,9 @@ class ReportsController extends Controller
                 ])->values()->all();
 
             // Upcoming Deadlines
-            $upcomingDeadlines = Task::whereNotNull('due_date')
-                ->whereNotIn('status', ['completed', 'cancelled'])
+            $upcomingDeadlines = Task::select('id', 'title', 'due_date', 'priority', 'status')
+                ->whereNotNull('due_date')
+                ->whereNotIn('status', ['completed', 'cancelled', 'rejected'])
                 ->orderBy('due_date', 'asc')
                 ->take(6)
                 ->get()
@@ -83,8 +95,8 @@ class ReportsController extends Controller
                     'status' => $t->status,
                 ])->values()->all();
 
-            // Employee Workload Summary
-            $employeeWorkload = User::withCount([
+            // Employee Workload Summary (eager loaded department to eliminate N+1 queries)
+            $employeeWorkload = User::with('department:id,name')->withCount([
                 'ownedBranches as active_count' => fn($q) => $q->whereNotIn('status', ['completed', 'cancelled']),
                 'ownedBranches as completed_count' => fn($q) => $q->where('status', 'completed'),
             ])
@@ -202,27 +214,28 @@ class ReportsController extends Controller
             })->where('status', 'completed')->count();
 
             // My Upcoming Tasks
-            $upcomingTasks = Task::where(function ($q) use ($user) {
-                $q->where('creator_id', $user->id)
-                  ->orWhereHas('branches', fn($b) => $b->where('owner_id', $user->id))
-                  ->orWhereHas('branches.assignments', fn($a) => $a->where('assigned_to_id', $user->id)->where('is_current', true));
-            })
-            ->whereNotIn('status', ['cancelled'])
-            ->orderBy('due_date', 'asc')
-            ->take(6)
-            ->get()
-            ->map(fn($t) => [
-                'id' => $t->id,
-                'task_code' => sprintf('T-%03d', $t->id),
-                'title' => $t->title,
-                'status' => $t->status,
-                'priority' => $t->priority,
-                'due_date' => $t->due_date ? $t->due_date->format('d M Y') : 'No Date',
-                'is_overdue' => $t->due_date ? $t->due_date->isPast() && $t->status !== 'completed' : false,
-            ])->values()->all();
+            $upcomingTasks = Task::select('id', 'title', 'status', 'priority', 'due_date')
+                ->where(function ($q) use ($user) {
+                    $q->where('creator_id', $user->id)
+                      ->orWhereHas('branches', fn($b) => $b->where('owner_id', $user->id))
+                      ->orWhereHas('branches.assignments', fn($a) => $a->where('assigned_to_id', $user->id)->where('is_current', true));
+                })
+                ->whereNotIn('status', ['cancelled'])
+                ->orderBy('due_date', 'asc')
+                ->take(6)
+                ->get()
+                ->map(fn($t) => [
+                    'id' => $t->id,
+                    'task_code' => sprintf('T-%03d', $t->id),
+                    'title' => $t->title,
+                    'status' => $t->status,
+                    'priority' => $t->priority,
+                    'due_date' => $t->due_date ? $t->due_date->format('d M Y') : 'No Date',
+                    'is_overdue' => $t->due_date ? $t->due_date->isPast() && $t->status !== 'completed' : false,
+                ])->values()->all();
 
-            // Status Breakdown for Employee
-            $userTasks = Task::where(function ($q) use ($user) {
+            // Status Breakdown for Employee (lightweight column selection)
+            $userTasks = Task::select('id', 'status')->where(function ($q) use ($user) {
                 $q->where('creator_id', $user->id)
                   ->orWhereHas('branches', fn($b) => $b->where('owner_id', $user->id))
                   ->orWhereHas('branches.assignments', fn($a) => $a->where('assigned_to_id', $user->id)->where('is_current', true));
@@ -238,7 +251,8 @@ class ReportsController extends Controller
             ];
 
             // Recent Notifications
-            $recentNotifications = SystemNotification::where('user_id', $user->id)
+            $recentNotifications = SystemNotification::select('id', 'type', 'title', 'message', 'is_read', 'created_at', 'task_id')
+                ->where('user_id', $user->id)
                 ->latest('created_at')
                 ->take(6)
                 ->get()

@@ -144,7 +144,7 @@ const Navbar: React.FC<NavbarProps> = ({
       if (enableWorkMessages) {
         loadUnreadMessages();
       }
-    }, 8000); // 8s active poll for notifications and message badges
+    }, 20000); // 20s active poll with instant tab-focus refresh
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {

@@ -5,6 +5,8 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [react()],
   build: {
-    chunkSizeWarningLimit: 1000,
+    target: 'es2022',
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 1200,
   },
 })

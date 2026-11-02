@@ -271,17 +271,17 @@ class WorkLogController extends Controller
             return $unauthorized;
         }
 
-        $totalComments = TaskComment::count();
-        $totalStatusChanges = TaskStatusHistory::count();
-        $totalAttachments = TaskAttachment::count();
-        $totalReviews = TaskReview::count();
-        $totalTasks = Task::count();
-        $totalActivities = ActivityLog::count();
+        $data = \Illuminate\Support\Facades\Cache::remember('work_logs_stats_metrics', 20, function () {
+            $totalComments = TaskComment::count();
+            $totalStatusChanges = TaskStatusHistory::count();
+            $totalAttachments = TaskAttachment::count();
+            $totalReviews = TaskReview::count();
+            $totalTasks = Task::count();
+            $totalActivities = ActivityLog::count();
 
-        $totalLogs = $totalComments + $totalStatusChanges + $totalAttachments + $totalReviews;
+            $totalLogs = $totalComments + $totalStatusChanges + $totalAttachments + $totalReviews;
 
-        return response()->json([
-            'data' => [
+            return [
                 'total_logs' => $totalLogs,
                 'total_comments' => $totalComments,
                 'total_status_changes' => $totalStatusChanges,
@@ -289,7 +289,11 @@ class WorkLogController extends Controller
                 'total_reviews' => $totalReviews,
                 'total_tasks' => $totalTasks,
                 'total_activities' => $totalActivities,
-            ],
+            ];
+        });
+
+        return response()->json([
+            'data' => $data,
         ]);
     }
 
