@@ -1001,30 +1001,16 @@ export const TaskDetailPage: React.FC = () => {
           </div>
         )}
 
-        {/* 3. Creator Final Approval Ready Banner */}
+        {/* 3. Creator Ready to Complete Banner */}
         {task.permissions.can_final_submit && !isWorkAlone && (
-          <div className="mt-4 p-4 bg-emerald-50/90 border border-emerald-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs animate-in fade-in">
-            <div className="flex items-start gap-2.5">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-bold text-emerald-950">All Deliverables Approved & Ready for Final Sign-off</p>
-                <p className="text-emerald-800 mt-0.5">
-                  All assigned parts of this task have been completed and approved. You can now complete the project with final remarks and deliverable files.
-                </p>
-              </div>
+          <div className="mt-4 p-4 bg-emerald-50/90 border border-emerald-200 rounded-2xl flex items-center gap-3 text-xs shadow-2xs animate-in fade-in">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <div>
+              <p className="font-bold text-emerald-950">All Deliverables Approved & Ready for Completion</p>
+              <p className="text-emerald-800 mt-0.5">
+                All assigned parts of this task have been completed and approved. Click "Approve & Complete Task" in the action buttons above to close the project with final remarks.
+              </p>
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                setFinalCompleteDesc('Final deliverables verified and approved for project completion.');
-                setFinalCompleteFiles([]);
-                setIsFinalCompleteModalOpen(true);
-              }}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
-            >
-              <Check className="w-3.5 h-3.5" />
-              <span>Final Approval & Complete</span>
-            </button>
           </div>
         )}
 
@@ -2461,7 +2447,7 @@ export const TaskDetailPage: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">
-                    {isWorkAlone ? 'Final Task Completion & Deliverables' : 'Final Approval & Task Completion'}
+                    {isWorkAlone ? 'Task Completion & Deliverables' : 'Approve & Complete Task'}
                   </h3>
                   <p className="text-xs text-slate-500">
                     {isWorkAlone
@@ -2580,7 +2566,7 @@ export const TaskDetailPage: React.FC = () => {
                   className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
                 >
                   <Check className="w-3.5 h-3.5" />
-                  <span>{submittingFinal ? 'Completing Task...' : 'Submit & Complete Task'}</span>
+                  <span>{submittingFinal ? 'Completing Task...' : 'Approve & Complete Task'}</span>
                 </button>
               </div>
             </form>
