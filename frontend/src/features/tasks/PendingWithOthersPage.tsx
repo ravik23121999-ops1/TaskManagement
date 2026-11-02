@@ -286,6 +286,10 @@ export const PendingWithOthersPage: React.FC = () => {
                         <StatusBadge status="clarification_requested" customLabel="Waiting for Assigner" />
                       ) : task.latest_return && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment')) ? (
                         <StatusBadge status="returned" customLabel="Needs Correction" />
+                      ) : ((task as any).is_ready_for_final_signoff || (task as any).all_branches_completed) && task.status !== 'completed' ? (
+                        <StatusBadge status="approval" customLabel="Final Sign-off" />
+                      ) : task.status === 'review' || task.branches?.some((b) => b.status === 'review') ? (
+                        <StatusBadge status="review" customLabel="Under Review" />
                       ) : (
                         <StatusBadge status={task.status} />
                       )}

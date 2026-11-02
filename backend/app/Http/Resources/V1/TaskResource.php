@@ -34,9 +34,15 @@ class TaskResource extends JsonResource
             })->values();
         }
 
-        // Calculate current owner
+        // Calculate aggregated branch completion metrics
+        $allBranches = $this->branches;
+        $totalBranchCount = $allBranches->count();
+        $completedBranchCount = $allBranches->where('status', 'completed')->count();
+        $allBranchesCompleted = ($totalBranchCount > 0 && $completedBranchCount === $totalBranchCount);
+
+        // Calculate current owner / responsibility
         $currentOwner = null;
-        if ($this->handling_method === 'work_alone') {
+        if ($this->handling_method === 'work_alone' || $this->status === 'completed' || $allBranchesCompleted) {
             $currentOwner = $this->creator ? [
                 'id' => $this->creator->id,
                 'name' => $this->creator->name,
@@ -44,20 +50,34 @@ class TaskResource extends JsonResource
                 'role' => $this->creator->role,
             ] : null;
         } else {
-            // For isolated assignee, current owner is the user/branch owner
-            if (!$canOverseeAll && $userActiveBranch && $userActiveBranch->owner) {
+            // If the viewer has an active branch they are actively working on:
+            if (!$canOverseeAll && $userActiveBranch && in_array($userActiveBranch->status, ['pending', 'in_progress', 'post_comment']) && $userActiveBranch->owner) {
                 $currentOwner = [
                     'id' => $userActiveBranch->owner->id,
                     'name' => $userActiveBranch->owner->name,
                     'email' => $userActiveBranch->owner->email,
                     'role' => $userActiveBranch->owner->role,
                 ];
+            } elseif (!$canOverseeAll && $userActiveBranch && $userActiveBranch->status === 'review') {
+                // Assignee submitted work, currently awaiting review from assigner
+                $assigner = $userActiveBranch->assignments->firstWhere('is_current', true)?->assignedBy ?? $this->creator;
+                if ($assigner) {
+                    $currentOwner = [
+                        'id' => $assigner->id,
+                        'name' => $assigner->name,
+                        'email' => $assigner->email,
+                        'role' => $assigner->role,
+                    ];
+                }
             } else {
-                // Find active branch or first branch
+                // Assignee's branch is completed, OR user can oversee all branches:
+                // Find remaining active branch or first non-completed branch
                 $activeBranch = $visibleBranches->firstWhere('status', 'in_progress')
                     ?? $visibleBranches->firstWhere('status', 'review')
                     ?? $visibleBranches->firstWhere('status', 'pending')
-                    ?? $visibleBranches->first();
+                    ?? $allBranches->firstWhere('status', 'in_progress')
+                    ?? $allBranches->firstWhere('status', 'review')
+                    ?? $allBranches->firstWhere('status', 'pending');
 
                 if ($activeBranch && $activeBranch->owner) {
                     $currentOwner = [
@@ -283,6 +303,8 @@ class TaskResource extends JsonResource
                 'role' => $this->creator->role,
             ] : null,
             'current_owner' => $currentOwner,
+            'is_ready_for_final_signoff' => ($this->handling_method !== 'work_alone') && ($totalBranchCount > 0 && $completedBranchCount === $totalBranchCount) && !in_array($this->status, ['completed', 'cancelled']),
+            'all_branches_completed' => ($totalBranchCount > 0 && $completedBranchCount === $totalBranchCount),
             'department' => $this->department ? [
                 'id' => $this->department->id,
                 'name' => $this->department->name,

@@ -276,7 +276,11 @@ export const CollaborationsPage: React.FC = () => {
                         <PriorityBadge priority={task.priority} />
                       </td>
                       <td className="py-4 px-6 whitespace-nowrap">
-                        <StatusBadge status={task.status} />
+                        {((task as any).is_ready_for_final_signoff || (task as any).all_branches_completed) && task.status !== 'completed' ? (
+                          <StatusBadge status="approval" customLabel="Final Sign-off" />
+                        ) : (
+                          <StatusBadge status={task.status} />
+                        )}
                       </td>
                       <td className="py-4 px-6 whitespace-nowrap text-slate-600 font-medium">
                         {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'Not set'}

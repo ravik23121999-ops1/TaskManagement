@@ -640,14 +640,30 @@ export const TaskDetailPage: React.FC = () => {
 
   const isWorkAlone = task.handling_method === 'work_alone';
   const isCompleted = task.status === 'completed';
-  const isReadyForFinalSignOff = !isWorkAlone && Boolean(task.permissions.can_final_submit) && !isCompleted;
-  const isUnderReview = !isCompleted && !isReadyForFinalSignOff && (task.status === 'review' || task.branches?.some((b) => b.status === 'review'));
+
+  const allBranchesCompleted =
+    Boolean((task as any).is_ready_for_final_signoff) ||
+    Boolean((task as any).all_branches_completed) ||
+    (task.progress_summary && task.progress_summary.total > 0 && task.progress_summary.completed === task.progress_summary.total) ||
+    (task.branches && task.branches.length > 0 && task.branches.every((b) => b.status === 'completed'));
+
+  const isReadyForFinalSignOff =
+    !isWorkAlone &&
+    !isCompleted &&
+    (allBranchesCompleted || Boolean(task.permissions?.can_final_submit));
+
+  const isUnderReview =
+    !isCompleted &&
+    !isReadyForFinalSignOff &&
+    (task.status === 'review' || task.branches?.some((b) => b.status === 'review'));
+
+  const isMyWorkDone = Boolean(task.my_branch && task.my_branch.status === 'completed');
 
   const getLifecycleStageState = (stageKey: string) => {
     if (stageKey === 'created') return 'completed';
 
     if (stageKey === 'in_progress') {
-      if (isCompleted || isReadyForFinalSignOff || isUnderReview) return 'completed';
+      if (isCompleted || isReadyForFinalSignOff || isUnderReview || isMyWorkDone) return 'completed';
       if (task.status === 'on_hold') return 'paused';
       if (task.status === 'in_progress' || task.status === 'post_comment' || task.status === 'pending') return 'current';
       return 'upcoming';
@@ -656,6 +672,8 @@ export const TaskDetailPage: React.FC = () => {
     if (stageKey === 'review') {
       if (isCompleted || isReadyForFinalSignOff) return 'completed';
       if (isUnderReview) return 'current';
+      if (task.my_branch && task.my_branch.status === 'review') return 'current';
+      if (isMyWorkDone) return 'completed';
       return 'upcoming';
     }
 
@@ -712,6 +730,8 @@ export const TaskDetailPage: React.FC = () => {
                     ? 'approval'
                     : isUnderReview
                     ? 'review'
+                    : isMyWorkDone && task.status === 'in_progress'
+                    ? 'in_progress'
                     : task.status
                 }
                 customLabel={
@@ -721,6 +741,8 @@ export const TaskDetailPage: React.FC = () => {
                     ? 'Final Sign-off'
                     : isUnderReview
                     ? 'Under Review'
+                    : isMyWorkDone && task.status === 'in_progress'
+                    ? 'Your Part Done (In Progress)'
                     : undefined
                 }
               />
@@ -1006,6 +1028,32 @@ export const TaskDetailPage: React.FC = () => {
           </div>
         )}
 
+        {/* 4. For Team Members / Assignees when task is in Final Sign-off */}
+        {!task.permissions.can_final_submit && isReadyForFinalSignOff && !isCompleted && (
+          <div className="mt-4 p-4 bg-purple-50/90 border border-purple-200 rounded-2xl flex items-center gap-3 text-xs shadow-2xs animate-in fade-in">
+            <CheckCircle2 className="w-5 h-5 text-purple-600 shrink-0" />
+            <div>
+              <p className="font-bold text-purple-950">All Deliverables Approved — Awaiting Final Sign-off</p>
+              <p className="text-purple-800 mt-0.5">
+                All branch assignments have been successfully reviewed and approved. The task is currently with the Task Creator ({task.creator?.name || 'Creator'}) for final project sign-off and completion.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* 5. For Assignee whose branch is completed, while upper workflow is in progress */}
+        {isMyWorkDone && !isReadyForFinalSignOff && !isCompleted && task.status === 'in_progress' && (
+          <div className="mt-4 p-4 bg-emerald-50/90 border border-emerald-200 rounded-2xl flex items-center gap-3 text-xs shadow-2xs animate-in fade-in">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <div>
+              <p className="font-bold text-emerald-950">Your Assigned Work is Approved & Completed</p>
+              <p className="text-emerald-800 mt-0.5">
+                Your submitted deliverables have been approved. The task is progressing through the upper workflow with {task.current_owner?.name && task.current_owner.id !== currentUser?.id ? task.current_owner.name : (task.my_branch?.assigned_by?.name || 'the assigner')}.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Real-time Turn & Responsibility Tracker */}
         <div className="mt-4 p-3.5 rounded-xl bg-slate-50/90 border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2.5">
@@ -1023,6 +1071,8 @@ export const TaskDetailPage: React.FC = () => {
                   ? `Task Assigner: ${task.creator?.name || 'Assigner'} (Question to Answer)`
                   : task.latest_return && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment'))
                   ? `Submitter (Updating changes)`
+                  : isMyWorkDone
+                  ? `Assignee: ${task.current_owner?.name && task.current_owner.id !== currentUser?.id ? task.current_owner.name : (task.my_branch?.assigned_by?.name || 'Upper Assignee')} (Upper Workflow)`
                   : `Assignee: ${task.current_owner?.name || 'In Progress'}`}
               </span>
             </div>
@@ -1422,7 +1472,13 @@ export const TaskDetailPage: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      {task.status !== 'completed' && task.status !== 'cancelled' && (
+                      {task.my_branch.status === 'completed' && (
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold shadow-2xs">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Deliverables Approved & Completed</span>
+                        </div>
+                      )}
+                      {task.status !== 'completed' && task.status !== 'cancelled' && task.my_branch.status !== 'completed' && (
                         <button
                           type="button"
                           onClick={() => openAssignModal('assign')}

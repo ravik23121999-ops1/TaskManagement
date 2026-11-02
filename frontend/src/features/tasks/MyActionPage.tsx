@@ -318,8 +318,8 @@ export const MyActionPage: React.FC = () => {
                         <StatusBadge status="clarification_requested" customLabel="Clarification Needed" />
                       ) : task.latest_return && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment')) ? (
                         <StatusBadge status="returned" customLabel="Needs Correction" />
-                      ) : task.permissions.can_final_submit && task.handling_method !== 'work_alone' && task.status === 'in_progress' ? (
-                        <StatusBadge status="in_progress" customLabel="Ready for Sign-off" />
+                      ) : (task.permissions.can_final_submit || (task as any).is_ready_for_final_signoff || (task as any).all_branches_completed) && task.handling_method !== 'work_alone' && task.status !== 'completed' ? (
+                        <StatusBadge status="approval" customLabel="Final Sign-off" />
                       ) : (
                         <StatusBadge status={task.status} />
                       )}

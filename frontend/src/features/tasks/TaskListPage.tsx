@@ -239,7 +239,7 @@ export const TaskListPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-4 px-6 whitespace-nowrap">
-                      {task.permissions?.can_final_submit && task.handling_method !== 'work_alone' && task.status !== 'completed' ? (
+                      {(Boolean((task as any).is_ready_for_final_signoff) || Boolean((task as any).all_branches_completed) || (task.permissions?.can_final_submit && task.handling_method !== 'work_alone')) && task.status !== 'completed' ? (
                         <StatusBadge status="approval" customLabel="Final Sign-off" />
                       ) : task.status === 'review' || task.branches?.some((b) => b.status === 'review') ? (
                         <StatusBadge status="review" customLabel="Under Review" />
