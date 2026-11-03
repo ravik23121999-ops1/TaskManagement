@@ -131,23 +131,27 @@ class TaskResource extends JsonResource
             elseif ($userActiveBranch->status === 'in_progress') $progress = 50;
             else $progress = 10;
         } else {
-            $totalBranches = $visibleBranches->count();
+            $activeVisibleBranches = $visibleBranches->filter(fn($b) => $b->status !== 'cancelled');
+            $totalBranches = $activeVisibleBranches->count();
             if ($totalBranches > 0) {
-                $completedBranches = $visibleBranches->where('status', 'completed')->count();
+                $completedBranches = $activeVisibleBranches->where('status', 'completed')->count();
                 $progress = (int) round(($completedBranches / $totalBranches) * 100);
                 if ($this->status === 'review' && $progress < 90) $progress = 90;
+            } elseif ($allBranches->where('status', 'cancelled')->isNotEmpty()) {
+                $progress = 0;
             } else {
                 $progress = 20;
             }
         }
 
-        // Aggregated progress summary
+        // Aggregated progress summary (total represents active non-cancelled assignments)
+        $activeAllBranches = $allBranches->filter(fn($b) => $b->status !== 'cancelled');
         $progressSummary = [
-            'total' => $allBranches->count(),
-            'completed' => $allBranches->where('status', 'completed')->count(),
-            'in_progress' => $allBranches->where('status', 'in_progress')->count(),
-            'pending_review' => $allBranches->where('status', 'review')->count(),
-            'pending' => $allBranches->where('status', 'pending')->count(),
+            'total' => $activeAllBranches->count(),
+            'completed' => $activeAllBranches->where('status', 'completed')->count(),
+            'in_progress' => $activeAllBranches->where('status', 'in_progress')->count(),
+            'pending_review' => $activeAllBranches->where('status', 'review')->count(),
+            'pending' => $activeAllBranches->where('status', 'pending')->count(),
             'cancelled' => $allBranches->where('status', 'cancelled')->count(),
         ];
         

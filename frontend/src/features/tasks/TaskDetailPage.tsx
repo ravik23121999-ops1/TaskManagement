@@ -746,7 +746,9 @@ export const TaskDetailPage: React.FC = () => {
     Boolean((task as any).is_ready_for_final_signoff) ||
     Boolean((task as any).all_branches_completed) ||
     (task.progress_summary && task.progress_summary.total > 0 && task.progress_summary.completed === task.progress_summary.total) ||
-    (task.branches && task.branches.length > 0 && task.branches.every((b) => b.status === 'completed'));
+    (task.branches &&
+      task.branches.filter((b) => b.status !== 'cancelled').length > 0 &&
+      task.branches.filter((b) => b.status !== 'cancelled').every((b) => b.status === 'completed'));
 
   const isReadyForFinalSignOff =
     !isWorkAlone &&
@@ -1397,7 +1399,7 @@ export const TaskDetailPage: React.FC = () => {
       {activeTab === 'overview' && (
         <div className="space-y-6">
           {/* Aggregated Progress Summary for Task Overseers / Managers */}
-          {!task.is_peer_isolated && task.progress_summary && task.progress_summary.total > 0 && (
+          {!task.is_peer_isolated && task.progress_summary && (task.progress_summary.total > 0 || (task.progress_summary.cancelled ?? 0) > 0) && (
             <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5">
@@ -1409,13 +1411,13 @@ export const TaskDetailPage: React.FC = () => {
                       Assignment Progress & Allocation
                     </h3>
                     <p className="text-[11px] text-slate-500">
-                      Overall status breakdown across all assigned employees
+                      Overall status breakdown across active assigned employees
                     </p>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-xs">
                   <span className="font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
-                    Assignments: {task.progress_summary.total}
+                    Active Assignments: {task.progress_summary.total}
                   </span>
                   <span className="font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
                     Completed: {task.progress_summary.completed}
@@ -1426,6 +1428,11 @@ export const TaskDetailPage: React.FC = () => {
                   <span className="font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
                     Pending Review: {task.progress_summary.pending_review}
                   </span>
+                  {task.progress_summary.cancelled !== undefined && task.progress_summary.cancelled > 0 && (
+                    <span className="font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg">
+                      Revoked: {task.progress_summary.cancelled}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -1434,21 +1441,21 @@ export const TaskDetailPage: React.FC = () => {
                 <div
                   className="bg-emerald-500 h-full transition-all duration-500"
                   style={{
-                    width: `${(task.progress_summary.completed / task.progress_summary.total) * 100}%`,
+                    width: `${task.progress_summary.total > 0 ? (task.progress_summary.completed / task.progress_summary.total) * 100 : 0}%`,
                   }}
                   title={`Completed: ${task.progress_summary.completed}`}
                 />
                 <div
                   className="bg-amber-400 h-full transition-all duration-500"
                   style={{
-                    width: `${(task.progress_summary.pending_review / task.progress_summary.total) * 100}%`,
+                    width: `${task.progress_summary.total > 0 ? (task.progress_summary.pending_review / task.progress_summary.total) * 100 : 0}%`,
                   }}
                   title={`Pending Review: ${task.progress_summary.pending_review}`}
                 />
                 <div
                   className="bg-blue-500 h-full transition-all duration-500"
                   style={{
-                    width: `${(task.progress_summary.in_progress / task.progress_summary.total) * 100}%`,
+                    width: `${task.progress_summary.total > 0 ? (task.progress_summary.in_progress / task.progress_summary.total) * 100 : 0}%`,
                   }}
                   title={`In Progress: ${task.progress_summary.in_progress}`}
                 />
@@ -1819,12 +1826,20 @@ export const TaskDetailPage: React.FC = () => {
                       statusLabel = 'Completed';
                     } else if (b.status === 'in_progress') {
                       statusLabel = 'In Progress';
+                    } else if (b.status === 'cancelled') {
+                      statusLabel = 'Revoked';
                     }
+
+                    const isCancelled = b.status === 'cancelled';
 
                     return (
                       <div
                         key={b.id}
-                        className="p-2.5 rounded-xl border border-slate-100 bg-slate-50/60 hover:bg-slate-50 transition-colors space-y-1.5"
+                        className={`p-2.5 rounded-xl border transition-colors space-y-1.5 ${
+                          isCancelled
+                            ? 'border-slate-100 bg-slate-50/40 opacity-75'
+                            : 'border-slate-100 bg-slate-50/60 hover:bg-slate-50'
+                        }`}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2 min-w-0">
@@ -1836,22 +1851,30 @@ export const TaskDetailPage: React.FC = () => {
                                   ? 'bg-amber-100 text-amber-600 animate-pulse'
                                   : b.status === 'post_comment'
                                   ? 'bg-rose-100 text-rose-600'
+                                  : isCancelled
+                                  ? 'bg-rose-100 text-rose-500'
                                   : 'bg-blue-100 text-blue-600'
                               }`}
                             >
                               {b.status === 'completed' ? (
                                 <Check className="w-2.5 h-2.5" />
+                              ) : isCancelled ? (
+                                <X className="w-2.5 h-2.5" />
                               ) : (
                                 <div className="w-1.5 h-1.5 rounded-full bg-current" />
                               )}
                             </span>
                             <div className="min-w-0">
-                              <span className="font-semibold text-slate-800 text-xs block truncate">
+                              <span
+                                className={`font-semibold text-xs block truncate ${
+                                  isCancelled ? 'text-slate-400 line-through' : 'text-slate-800'
+                                }`}
+                              >
                                 {ownerName}
                               </span>
                               {b.assigned_by && b.owner && b.assigned_by.id !== b.owner.id && (
                                 <span className="text-[10px] text-slate-400 block truncate">
-                                  Assigned by {b.assigned_by.name}
+                                  {isCancelled ? `Revoked by ${b.assigned_by.name}` : `Assigned by ${b.assigned_by.name}`}
                                 </span>
                               )}
                             </div>

@@ -879,14 +879,39 @@ class TaskWorkflowTest extends TestCase
         $res->assertStatus(200);
         $this->assertTrue($res->json('data.permissions.can_final_submit'));
 
+        // Progress summary should only count active branches in total
+        $summary = $res->json('data.progress_summary');
+        $this->assertEquals(1, $summary['total']); // 1 active branch (excluding cancelled)
+        $this->assertEquals(1, $summary['completed']);
+        $this->assertEquals(1, $summary['cancelled']);
+        $this->assertEquals(100, $res->json('data.progress')); // 1 completed out of 1 active = 100%
+
+        // When a third active branch is added (e.g. newly assigned employee)
+        $task->update(['status' => 'in_progress']);
+        $b3 = \App\Models\TaskBranch::create([
+            'task_id' => $task->id,
+            'title' => 'Branch 3',
+            'owner_id' => $this->subAdmin->id,
+            'status' => 'in_progress',
+        ]);
+
+        $resWith3 = $this->actingAs($this->admin)->getJson("/api/tasks/{$task->id}");
+        $summaryWith3 = $resWith3->json('data.progress_summary');
+        $this->assertEquals(2, $summaryWith3['total']); // 2 active branches (1 completed + 1 in_progress)
+        $this->assertEquals(1, $summaryWith3['completed']);
+        $this->assertEquals(1, $summaryWith3['in_progress']);
+        $this->assertEquals(1, $summaryWith3['cancelled']);
+        $this->assertEquals(50, $resWith3->json('data.progress')); // 1 / 2 = 50%
+        $this->assertFalse($resWith3->json('data.permissions.can_final_submit'));
+
         // Can also reassign the cancelled branch to another employee
         $reassignRes = $this->actingAs($this->admin)->postJson("/api/task-branches/{$b2->id}/transfer", [
-            'new_owner_id' => $this->subAdmin->id,
+            'new_owner_id' => $this->employee1->id,
             'reason' => 'Reviving cancelled branch with new owner',
         ]);
         $reassignRes->assertStatus(200);
         $b2->refresh();
-        $this->assertEquals($this->subAdmin->id, $b2->owner_id);
+        $this->assertEquals($this->employee1->id, $b2->owner_id);
         $this->assertEquals('in_progress', $b2->status);
     }
 }

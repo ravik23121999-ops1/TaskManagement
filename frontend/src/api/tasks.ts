@@ -101,6 +101,7 @@ export interface Task {
     in_progress: number;
     pending_review: number;
     pending: number;
+    cancelled?: number;
   };
   shared_attachments?: TaskAttachment[];
   my_branch?: {
