@@ -239,7 +239,10 @@ class TaskController extends Controller
             } elseif ($view === 'on_hold') {
                 $query->where('status', 'on_hold');
             } elseif ($view === 'all_open' || $view === 'open') {
-                $query->whereNotIn('status', ['completed', 'cancelled']);
+                $hasSearch = $request->has('search') && trim((string)$request->search) !== '';
+                if (!$hasSearch) {
+                    $query->whereNotIn('status', ['completed', 'cancelled']);
+                }
             }
         }
 
@@ -261,7 +264,11 @@ class TaskController extends Controller
             }
         } elseif (!$request->has('view') || in_array($request->view, ['all', 'all_open', 'open'])) {
             // In All Tasks, only show active/open tasks; completed and cancelled tasks move to Completed phase
-            $query->whereNotIn('status', ['completed', 'cancelled']);
+            // However, when a user is actively searching by keyword/code, include all statuses so they find their task!
+            $hasSearch = $request->has('search') && trim((string)$request->search) !== '';
+            if (!$hasSearch) {
+                $query->whereNotIn('status', ['completed', 'cancelled']);
+            }
         }
 
         // Priority filter

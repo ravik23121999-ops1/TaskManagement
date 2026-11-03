@@ -560,4 +560,41 @@ class TaskWorkflowTest extends TestCase
         $this->assertTrue($empView3['permissions']['can_submit']);
         $this->assertFalse($empView3['permissions']['can_provide_details']);
     }
+
+    public function test_searching_by_keyword_or_code_returns_matching_tasks_across_all_statuses_including_completed(): void
+    {
+        // Create an active task
+        $activeTask = $this->actingAs($this->admin)->postJson('/api/tasks', [
+            'title' => 'Alpha Active Project',
+            'description' => 'Active task in progress',
+            'handling_method' => 'work_alone',
+        ])->json('data');
+
+        // Create a completed task
+        $completedTask = \App\Models\Task::create([
+            'title' => 'Build House Project',
+            'description' => 'Completed construction initiative',
+            'status' => 'completed',
+            'handling_method' => 'work_alone',
+            'creator_id' => $this->admin->id,
+            'completed_at' => now(),
+        ]);
+
+        // 1. Browsing default list (without search query) hides completed tasks
+        $browseRes = $this->actingAs($this->admin)->getJson('/api/tasks');
+        $browseTitles = collect($browseRes->json('data'))->pluck('title')->all();
+        $this->assertContains('Alpha Active Project', $browseTitles);
+        $this->assertNotContains('Build House Project', $browseTitles);
+
+        // 2. Searching by title keyword "Build House" finds the completed task immediately without needing explicit status
+        $searchRes = $this->actingAs($this->admin)->getJson('/api/tasks?search=Build+House');
+        $searchTitles = collect($searchRes->json('data'))->pluck('title')->all();
+        $this->assertContains('Build House Project', $searchTitles);
+
+        // 3. Searching by task code (e.g. T-00X) finds the task
+        $code = sprintf('T-%03d', $completedTask->id);
+        $searchCodeRes = $this->actingAs($this->admin)->getJson("/api/tasks?search={$code}");
+        $codeTitles = collect($searchCodeRes->json('data'))->pluck('title')->all();
+        $this->assertContains('Build House Project', $codeTitles);
+    }
 }

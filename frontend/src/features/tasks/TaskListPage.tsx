@@ -11,7 +11,7 @@ import { Search, Plus, AlertCircle, Eye, Building2, Calendar, CheckCircle2, Ban,
 export const TaskListPage: React.FC = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,15 +30,26 @@ export const TaskListPage: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Sync internal state when URL searchParams change
+  useEffect(() => {
+    const urlSearch = searchParams.get('search') || '';
+    const urlStatus = searchParams.get('status') || 'all';
+    const urlPriority = searchParams.get('priority') || 'all';
+    setSearch(urlSearch);
+    setStatus(urlStatus);
+    setPriority(urlPriority);
+  }, [searchParams]);
+
   useEffect(() => {
     loadTasks();
-  }, [page, status, priority]);
+  }, [page, status, priority, searchParams]);
 
   const loadTasks = async () => {
     setLoading(true);
     try {
+      const currentSearch = searchParams.get('search') ?? search;
       const response = await tasksApi.list({
-        search: search.trim() || undefined,
+        search: currentSearch.trim() || undefined,
         status: status !== 'all' ? status : undefined,
         priority: priority !== 'all' ? priority : undefined,
         page,
@@ -74,7 +85,20 @@ export const TaskListPage: React.FC = () => {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setPage(1);
-    loadTasks();
+    const params: Record<string, string> = {};
+    if (search.trim()) params.search = search.trim();
+    if (status !== 'all') params.status = status;
+    if (priority !== 'all') params.priority = priority;
+    setSearchParams(params);
+  };
+
+  const handleClearSearch = () => {
+    setSearch('');
+    setPage(1);
+    const params: Record<string, string> = {};
+    if (status !== 'all') params.status = status;
+    if (priority !== 'all') params.priority = priority;
+    setSearchParams(params);
   };
 
   const statusPills = [
@@ -90,13 +114,17 @@ export const TaskListPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">All Open Tasks</h1>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+              {search.trim() ? 'Search Results' : 'All Open Tasks'}
+            </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
-              {total} active open
+              {total} {search.trim() ? 'found' : 'active open'}
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Active organizational tasks across operational workflows. Completed tasks automatically move to the Completed phase.
+            {search.trim()
+              ? `Showing results matching "${search.trim()}" across all task phases (active open, completed, on hold, archived).`
+              : 'Active organizational tasks across operational workflows. Completed tasks automatically move to the Completed phase.'}
           </p>
         </div>
 
@@ -206,6 +234,17 @@ export const TaskListPage: React.FC = () => {
           >
             Search
           </button>
+
+          {search.trim() && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+            >
+              <X className="w-3.5 h-3.5 text-slate-500" />
+              <span>Clear Search</span>
+            </button>
+          )}
         </form>
       </div>
 

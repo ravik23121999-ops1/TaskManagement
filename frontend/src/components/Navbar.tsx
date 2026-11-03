@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
 import { useSettings } from '../features/settings/SettingsContext';
-import { notificationsApi } from '../api/tasks';
+import { notificationsApi, tasksApi } from '../api/tasks';
+import type { Task } from '../api/tasks';
 import {
   Search,
   Bell,
@@ -15,6 +16,10 @@ import {
   Menu,
   Maximize2,
   Minimize2,
+  Loader2,
+  ArrowRight,
+  Sparkles,
+  Building2,
 } from 'lucide-react';
 import { messagesApi } from '../api/messages';
 
@@ -48,11 +53,44 @@ const Navbar: React.FC<NavbarProps> = ({
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<Task[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const notificationRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  // Live Instant Search debounced by 200ms
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (!trimmed) {
+      setSearchResults([]);
+      setIsSearching(false);
+      setShowSearchResults(false);
+      return;
+    }
+
+    setIsSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await tasksApi.list({
+          search: trimmed,
+          per_page: 5,
+        });
+        setSearchResults(res?.data || []);
+        setShowSearchResults(true);
+      } catch (err) {
+        console.error('Instant search error:', err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Global Ctrl + K / Cmd + K keyboard listener for instant command search
   useEffect(() => {
@@ -183,6 +221,9 @@ const Navbar: React.FC<NavbarProps> = ({
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setShowUserMenu(false);
       }
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setShowSearchResults(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -219,9 +260,16 @@ const Navbar: React.FC<NavbarProps> = ({
     setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
   };
 
+  const handleSelectTask = (taskId: number) => {
+    setShowSearchResults(false);
+    setSearchQuery('');
+    navigate(`/tasks/${taskId}`);
+  };
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
+      setShowSearchResults(false);
       navigate(`/tasks?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
@@ -240,22 +288,110 @@ const Navbar: React.FC<NavbarProps> = ({
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* Search Input with Ctrl + K discoverability badge */}
-        <form onSubmit={handleSearchSubmit} className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            ref={searchInputRef}
-            type="text"
-            placeholder="Search tasks, IDs..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-14 py-2 bg-slate-50/80 border border-slate-200/80 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
-          />
-          <div className="hidden sm:flex items-center gap-0.5 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
-            <kbd className="px-1.5 py-0.5 text-[9px] font-bold text-slate-400 bg-white border border-slate-200 rounded shadow-2xs">Ctrl</kbd>
-            <kbd className="px-1.5 py-0.5 text-[9px] font-bold text-slate-400 bg-white border border-slate-200 rounded shadow-2xs">K</kbd>
-          </div>
-        </form>
+        {/* Search Input with Instant Dropdown & Ctrl + K discoverability badge */}
+        <div ref={searchContainerRef} className="relative flex-1">
+          <form onSubmit={handleSearchSubmit} className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search tasks, IDs (e.g. T-007)..."
+              value={searchQuery}
+              onFocus={() => {
+                if (searchQuery.trim() && searchResults.length > 0) {
+                  setShowSearchResults(true);
+                }
+              }}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-14 py-2 bg-slate-50/80 border border-slate-200/80 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
+            />
+            {isSearching ? (
+              <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin absolute right-3 top-1/2 -translate-y-1/2" />
+            ) : (
+              <div className="hidden sm:flex items-center gap-0.5 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                <kbd className="px-1.5 py-0.5 text-[9px] font-bold text-slate-400 bg-white border border-slate-200 rounded shadow-2xs">Ctrl</kbd>
+                <kbd className="px-1.5 py-0.5 text-[9px] font-bold text-slate-400 bg-white border border-slate-200 rounded shadow-2xs">K</kbd>
+              </div>
+            )}
+          </form>
+
+          {/* Instant Search Results Dropdown */}
+          {showSearchResults && searchQuery.trim() && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-slate-200/90 shadow-xl shadow-slate-900/10 z-50 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+              <div className="p-2.5 border-b border-slate-100 flex items-center justify-between text-[11px] text-slate-500 bg-slate-50/60">
+                <span className="font-semibold text-slate-700 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Instant Results</span>
+                </span>
+                <span className="text-[10px] text-slate-400">{searchResults.length} matching</span>
+              </div>
+
+              {searchResults.length > 0 ? (
+                <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+                  {searchResults.map((task) => (
+                    <div
+                      key={task.id}
+                      onClick={() => handleSelectTask(task.id)}
+                      className="p-3 hover:bg-blue-50/60 cursor-pointer transition flex items-center justify-between gap-3 group"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-blue-100 text-blue-700">
+                            {task.task_code}
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 text-[10px] font-semibold rounded-full capitalize ${
+                              task.status === 'completed'
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : task.status === 'in_progress'
+                                ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                : task.status === 'review'
+                                ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                                : task.status === 'on_hold'
+                                ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                                : 'bg-slate-100 text-slate-700 border border-slate-200'
+                            }`}
+                          >
+                            {task.status.replace('_', ' ')}
+                          </span>
+                        </div>
+                        <h4 className="text-xs font-bold text-slate-900 group-hover:text-blue-600 truncate transition">
+                          {task.title}
+                        </h4>
+                        <div className="flex items-center gap-3 text-[10px] text-slate-400 mt-0.5">
+                          {task.department && (
+                            <span className="flex items-center gap-1">
+                              <Building2 className="w-3 h-3 text-slate-400" />
+                              <span>{task.department.name}</span>
+                            </span>
+                          )}
+                          <span>Owner: {task.current_owner?.name || task.creator?.name || 'Unassigned'}</span>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition shrink-0" />
+                    </div>
+                  ))}
+                </div>
+              ) : !isSearching ? (
+                <div className="p-5 text-center text-xs text-slate-400">
+                  <p className="font-semibold text-slate-600">No tasks found</p>
+                  <p className="text-[11px] text-slate-400 mt-1">Try task code (e.g. T-007) or title keyword</p>
+                </div>
+              ) : null}
+
+              <div className="p-2 border-t border-slate-100 bg-slate-50/70">
+                <button
+                  type="button"
+                  onClick={handleSearchSubmit}
+                  className="w-full py-1.5 px-3 bg-white hover:bg-blue-50 text-blue-600 rounded-xl text-xs font-semibold transition border border-slate-200/80 flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                  <span>View all results for "{searchQuery.trim()}"</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Center Operational Status Pill */}
