@@ -20,15 +20,18 @@ class SystemSettingController extends Controller
 
         $allowSubAdminDelete = (bool) ($settings['allow_subadmin_delete_records'] ?? false);
         $allowSubAdminCancel = (bool) ($settings['allow_subadmin_cancel_tasks'] ?? false);
+        $allowSubAdminImpersonate = (bool) ($settings['allow_subadmin_impersonate'] ?? false);
         $enableWorkMessages = (bool) ($settings['enable_work_messages'] ?? true);
 
         // Effective user capabilities
         $canDeleteRecords = $user->role === 'admin' || ($user->role === 'sub_admin' && $allowSubAdminDelete);
         $canCancelTasks = $user->role === 'admin' || ($user->role === 'sub_admin' && $allowSubAdminCancel);
+        $canImpersonate = $user->role === 'admin' || ($user->role === 'sub_admin' && $allowSubAdminImpersonate);
 
         $allSettings = array_merge($settings, [
             'allow_subadmin_delete_records' => $allowSubAdminDelete,
             'allow_subadmin_cancel_tasks' => $allowSubAdminCancel,
+            'allow_subadmin_impersonate' => $allowSubAdminImpersonate,
             'enable_work_messages' => $enableWorkMessages,
         ]);
 
@@ -38,6 +41,7 @@ class SystemSettingController extends Controller
                 'role' => $user->role,
                 'can_delete_records' => $canDeleteRecords,
                 'can_cancel_tasks' => $canCancelTasks,
+                'can_impersonate' => $canImpersonate,
                 'enable_work_messages' => $enableWorkMessages,
             ],
         ]);
@@ -60,6 +64,7 @@ class SystemSettingController extends Controller
         $validated = $request->validate([
             'allow_subadmin_delete_records' => 'nullable|boolean',
             'allow_subadmin_cancel_tasks' => 'nullable|boolean',
+            'allow_subadmin_impersonate' => 'nullable|boolean',
             'enable_work_messages' => 'nullable|boolean',
         ]);
 

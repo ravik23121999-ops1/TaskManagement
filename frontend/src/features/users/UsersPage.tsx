@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usersApi } from '../../api/users';
 import { departmentsApi } from '../../api/departments';
 import { settingsApi } from '../../api/settings';
@@ -14,10 +15,16 @@ import {
   Trash2,
   AlertCircle,
   CheckCircle2,
+  Eye,
+  EyeOff,
+  Copy,
+  Check,
+  LogIn,
 } from 'lucide-react';
 
 export const UsersPage: React.FC = () => {
-  const { user: currentUser } = useAuth();
+  const navigate = useNavigate();
+  const { user: currentUser, impersonateUser } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,8 +54,23 @@ export const UsersPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  // Password Reveal & Copy State (Admin only)
+  const [revealedPasswords, setRevealedPasswords] = useState<{ [userId: number]: boolean }>({});
+  const [copiedId, setCopiedId] = useState<number | null>(null);
+
+  const togglePasswordReveal = (userId: number) => {
+    setRevealedPasswords((prev) => ({ ...prev, [userId]: !prev[userId] }));
+  };
+
+  const copyPassword = (userId: number, pass: string) => {
+    navigator.clipboard.writeText(pass);
+    setCopiedId(userId);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
   // Delete records permission & modal state
   const [canDeleteRecords, setCanDeleteRecords] = useState(false);
+  const [canImpersonate, setCanImpersonate] = useState(false);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
@@ -63,6 +85,15 @@ export const UsersPage: React.FC = () => {
     }, 4000);
   };
 
+  const handleLoginAs = async (targetUser: User) => {
+    try {
+      await impersonateUser(targetUser.id);
+      navigate('/');
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Failed to log in as user.', 'error');
+    }
+  };
+
   useEffect(() => {
     checkPermissions();
   }, [currentUser?.role]);
@@ -70,17 +101,21 @@ export const UsersPage: React.FC = () => {
   const checkPermissions = async () => {
     if (currentUser?.role === 'admin') {
       setCanDeleteRecords(true);
+      setCanImpersonate(true);
       return;
     }
     if (currentUser?.role === 'sub_admin') {
       try {
         const res = await settingsApi.getSystemSettings();
         setCanDeleteRecords(Boolean(res.user_capabilities?.can_delete_records));
+        setCanImpersonate(Boolean(res.user_capabilities?.can_impersonate));
       } catch {
         setCanDeleteRecords(false);
+        setCanImpersonate(false);
       }
     } else {
       setCanDeleteRecords(false);
+      setCanImpersonate(false);
     }
   };
 
@@ -302,6 +337,9 @@ export const UsersPage: React.FC = () => {
                 <th className="py-3.5 px-6">Email</th>
                 <th className="py-3.5 px-6">Role</th>
                 <th className="py-3.5 px-6">Department</th>
+                {currentUser?.role === 'admin' && (
+                  <th className="py-3.5 px-6">Password</th>
+                )}
                 <th className="py-3.5 px-6">Status</th>
                 <th className="py-3.5 px-6 text-right">Action</th>
               </tr>
@@ -309,11 +347,11 @@ export const UsersPage: React.FC = () => {
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">Loading users...</td>
+                  <td colSpan={currentUser?.role === 'admin' ? 8 : 7} className="py-12 text-center text-slate-400">Loading users...</td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-400">
+                  <td colSpan={currentUser?.role === 'admin' ? 8 : 7} className="py-12 text-center text-slate-400">
                     <Users className="w-8 h-8 mx-auto text-slate-300 mb-2" />
                     <p className="font-semibold text-slate-600">No users match your filters.</p>
                   </td>
@@ -344,6 +382,31 @@ export const UsersPage: React.FC = () => {
                       <td className="py-4 px-6 whitespace-nowrap text-slate-700 font-medium">
                         {u.department?.name || 'Unassigned'}
                       </td>
+                      {currentUser?.role === 'admin' && (
+                        <td className="py-4 px-6 whitespace-nowrap">
+                          <div className="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200/80 px-2 py-1 rounded-lg">
+                            <span className="font-mono text-[11px] font-semibold text-slate-700 min-w-[70px] select-all">
+                              {revealedPasswords[u.id] ? (u.plain_password || 'password') : '••••••••'}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => togglePasswordReveal(u.id)}
+                              className="text-slate-400 hover:text-slate-600 transition p-0.5 cursor-pointer"
+                              title={revealedPasswords[u.id] ? 'Hide password' : 'Show password'}
+                            >
+                              {revealedPasswords[u.id] ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => copyPassword(u.id, u.plain_password || 'password')}
+                              className="text-slate-400 hover:text-blue-600 transition p-0.5 cursor-pointer relative"
+                              title="Copy password"
+                            >
+                              {copiedId === u.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                        </td>
+                      )}
                       <td className="py-4 px-6 whitespace-nowrap">
                         <button
                           onClick={() => handleToggleActive(u)}
@@ -358,6 +421,17 @@ export const UsersPage: React.FC = () => {
                       </td>
                       <td className="py-4 px-6 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
+                          {canImpersonate && u.id !== currentUser?.id && (currentUser?.role === 'admin' || u.role === 'employee') && (
+                            <button
+                              onClick={() => handleLoginAs(u)}
+                              className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg font-semibold text-xs transition inline-flex items-center gap-1 cursor-pointer shadow-2xs hover:shadow-xs"
+                              title={`Log in as ${u.name}`}
+                            >
+                              <LogIn className="w-3 h-3 text-emerald-600" />
+                              <span>Login As</span>
+                            </button>
+                          )}
+
                           <button
                             onClick={() => openEditModal(u)}
                             className="px-3 py-1 bg-slate-100 hover:bg-blue-50 text-blue-600 rounded-lg font-semibold text-xs transition inline-flex items-center gap-1 cursor-pointer"
@@ -434,12 +508,22 @@ export const UsersPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Password {editingUser ? '(leave blank to keep unchanged)' : '*'}
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-bold text-slate-700">
+                    Password {editingUser ? '(leave blank to keep unchanged)' : '*'}
+                  </label>
+                  {editingUser && currentUser?.role === 'admin' && (
+                    <span className="text-[11px] text-slate-500 font-normal">
+                      Current password:{' '}
+                      <strong className="text-slate-800 font-mono select-all">
+                        {editingUser.plain_password || 'password'}
+                      </strong>
+                    </span>
+                  )}
+                </div>
                 <input
                   type="password"
-                  placeholder={editingUser ? '••••••••' : 'Min 6 characters'}
+                  placeholder={editingUser ? 'Enter new password to change' : 'Min 6 characters'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required={!editingUser}

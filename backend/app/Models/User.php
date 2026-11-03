@@ -14,12 +14,28 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'role', 'department_id', 'is_active', 'gender', 'avatar_type', 'custom_avatar_path', 'avatar_url'])]
-#[Hidden(['password', 'remember_token'])]
+#[Fillable(['name', 'email', 'password', 'encrypted_password', 'role', 'department_id', 'is_active', 'gender', 'avatar_type', 'custom_avatar_path', 'avatar_url'])]
+#[Hidden(['password', 'encrypted_password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, HasApiTokens, SoftDeletes;
+
+    /**
+     * Decrypt password for Super Admin inspection.
+     */
+    public function getDecryptedPassword(): ?string
+    {
+        if (!$this->encrypted_password) {
+            return 'password';
+        }
+
+        try {
+            return \Illuminate\Support\Facades\Crypt::decryptString($this->encrypted_password);
+        } catch (\Exception $e) {
+            return 'password';
+        }
+    }
 
     /**
      * Get computed avatar URL.

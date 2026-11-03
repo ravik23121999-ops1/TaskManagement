@@ -5,8 +5,12 @@ import type { User } from '../../api/auth';
 interface AuthContextType {
   user: User | null;
   token: string | null;
+  impersonator: User | null;
+  isImpersonating: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  impersonateUser: (userId: number) => Promise<void>;
+  stopImpersonating: () => void;
   updateUser: (updatedUser: Partial<User>) => void;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -19,6 +23,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(() => {
     try {
       const cached = localStorage.getItem('user');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const [impersonator, setImpersonator] = useState<User | null>(() => {
+    try {
+      const cached = localStorage.getItem('impersonator_user');
       return cached ? JSON.parse(cached) : null;
     } catch {
       return null;
@@ -69,8 +82,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     authApi.logout().catch(console.error);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    localStorage.removeItem('impersonator_token');
+    localStorage.removeItem('impersonator_user');
     setToken(null);
     setUser(null);
+    setImpersonator(null);
+  };
+
+  const impersonateUser = async (userId: number) => {
+    const currentToken = localStorage.getItem('token') || token;
+    const currentUser = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : user;
+
+    const res = await authApi.impersonate(userId);
+
+    if (!localStorage.getItem('impersonator_token')) {
+      if (currentToken) localStorage.setItem('impersonator_token', currentToken);
+      if (currentUser) localStorage.setItem('impersonator_user', JSON.stringify(currentUser));
+      setImpersonator(currentUser);
+    }
+
+    localStorage.setItem('token', res.token);
+    localStorage.setItem('user', JSON.stringify(res.user));
+    setToken(res.token);
+    setUser(res.user);
+  };
+
+  const stopImpersonating = () => {
+    const origToken = localStorage.getItem('impersonator_token');
+    const origUser = localStorage.getItem('impersonator_user');
+
+    if (origToken && origUser) {
+      localStorage.setItem('token', origToken);
+      localStorage.setItem('user', origUser);
+      localStorage.removeItem('impersonator_token');
+      localStorage.removeItem('impersonator_user');
+
+      setToken(origToken);
+      try {
+        setUser(JSON.parse(origUser));
+      } catch {
+        setUser(null);
+      }
+      setImpersonator(null);
+    }
   };
 
   const updateUser = (updated: Partial<User>) => {
@@ -82,7 +136,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, updateUser, isAuthenticated: !!token, isLoading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        impersonator,
+        isImpersonating: !!impersonator,
+        login,
+        logout,
+        impersonateUser,
+        stopImpersonating,
+        updateUser,
+        isAuthenticated: !!token,
+        isLoading,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

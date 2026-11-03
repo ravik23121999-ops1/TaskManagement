@@ -20,6 +20,10 @@ class UserResource extends JsonResource
             'department_id' => $this->department_id,
             'is_active' => $this->is_active,
             'department' => $this->when($this->department, new DepartmentResource($this->department)),
+            'plain_password' => $this->when(
+                $request->user() && $request->user()->role === 'admin',
+                fn() => $this->getDecryptedPassword()
+            ),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

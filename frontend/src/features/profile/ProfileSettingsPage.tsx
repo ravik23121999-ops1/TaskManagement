@@ -35,6 +35,7 @@ export const ProfileSettingsPage: React.FC = () => {
   const { updateSettings: updateContextSettings } = useSettings();
   const [subAdminDelete, setSubAdminDelete] = useState(false);
   const [subAdminCancel, setSubAdminCancel] = useState(false);
+  const [subAdminImpersonate, setSubAdminImpersonate] = useState(false);
   const [enableMessages, setEnableMessages] = useState(true);
   const [loadingSettings, setLoadingSettings] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
@@ -53,6 +54,7 @@ export const ProfileSettingsPage: React.FC = () => {
       const data = await settingsApi.getSystemSettings();
       setSubAdminDelete(Boolean(data.settings?.allow_subadmin_delete_records));
       setSubAdminCancel(Boolean(data.settings?.allow_subadmin_cancel_tasks));
+      setSubAdminImpersonate(Boolean(data.settings?.allow_subadmin_impersonate));
       setEnableMessages(data.settings?.enable_work_messages !== false);
     } catch (err: any) {
       console.error('Failed to load system settings', err);
@@ -70,10 +72,12 @@ export const ProfileSettingsPage: React.FC = () => {
       const updated = await updateContextSettings({
         allow_subadmin_delete_records: subAdminDelete,
         allow_subadmin_cancel_tasks: subAdminCancel,
+        allow_subadmin_impersonate: subAdminImpersonate,
         enable_work_messages: enableMessages,
       });
       setSubAdminDelete(Boolean(updated?.allow_subadmin_delete_records));
       setSubAdminCancel(Boolean(updated?.allow_subadmin_cancel_tasks));
+      setSubAdminImpersonate(Boolean(updated?.allow_subadmin_impersonate));
       setEnableMessages(updated?.enable_work_messages !== false);
       setSettingsMsg('System settings and permissions updated successfully.');
     } catch (err: any) {
@@ -481,6 +485,34 @@ export const ProfileSettingsPage: React.FC = () => {
                       type="checkbox"
                       checked={subAdminCancel}
                       onChange={(e) => setSubAdminCancel(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Setting 3: Sub-Admin Login As User (Impersonation) */}
+              <div className="p-4 rounded-2xl border border-slate-200 hover:border-slate-300 transition bg-slate-50/40">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-slate-900 text-xs">Allow Sub-Admins to Login as Users (Account Impersonation)</p>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        subAdminImpersonate ? 'bg-amber-100 text-amber-800' : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {subAdminImpersonate ? 'Access Granted' : 'Super Admin Only (Default)'}
+                      </span>
+                    </div>
+                    <p className="text-slate-500 text-[11px] leading-relaxed">
+                      Super Administrators can always log in directly as any employee without a password. When enabled, Sub-Administrators are also authorized to log into employee accounts to troubleshoot or assist.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
+                    <input
+                      type="checkbox"
+                      checked={subAdminImpersonate}
+                      onChange={(e) => setSubAdminImpersonate(e.target.checked)}
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>

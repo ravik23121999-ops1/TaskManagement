@@ -7,11 +7,11 @@ import { useAuth } from '../auth/AuthContext';
 import { useSettings } from '../settings/SettingsContext';
 import { Pagination } from '../../components/Pagination';
 import { TableSkeleton } from '../../components/TableSkeleton';
-import { Building2, Plus, Edit2, Search, X, Users, MessageSquare, ChevronRight, ExternalLink, Trash2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Building2, Plus, Edit2, Search, X, Users, MessageSquare, ChevronRight, ExternalLink, Trash2, AlertCircle, CheckCircle2, LogIn } from 'lucide-react';
 
 export const DepartmentsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, impersonateUser } = useAuth();
   const { enableWorkMessages } = useSettings();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,6 +23,7 @@ export const DepartmentsPage: React.FC = () => {
 
   // Deletion permission & modal state
   const [canDeleteRecords, setCanDeleteRecords] = useState(false);
+  const [canImpersonate, setCanImpersonate] = useState(false);
   const [deletingDept, setDeletingDept] = useState<Department | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
@@ -59,17 +60,31 @@ export const DepartmentsPage: React.FC = () => {
   const checkPermissions = async () => {
     if (currentUser?.role === 'admin') {
       setCanDeleteRecords(true);
+      setCanImpersonate(true);
       return;
     }
     if (currentUser?.role === 'sub_admin') {
       try {
         const res = await settingsApi.getSystemSettings();
         setCanDeleteRecords(Boolean(res.user_capabilities?.can_delete_records));
+        setCanImpersonate(Boolean(res.user_capabilities?.can_impersonate));
       } catch {
         setCanDeleteRecords(false);
+        setCanImpersonate(false);
       }
     } else {
       setCanDeleteRecords(false);
+      setCanImpersonate(false);
+    }
+  };
+
+  const handleLoginAs = async (member: DepartmentMember) => {
+    try {
+      await impersonateUser(member.id);
+      setIsMembersModalOpen(false);
+      navigate('/');
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Failed to log in as user.', 'error');
     }
   };
 
@@ -599,6 +614,18 @@ export const DepartmentsPage: React.FC = () => {
                             {member.completed_tasks_count} done
                           </span>
                         </div>
+
+                        {canImpersonate && member.id !== currentUser?.id && (currentUser?.role === 'admin' || member.role === 'employee') && (
+                          <button
+                            type="button"
+                            onClick={() => handleLoginAs(member)}
+                            className="h-7 px-2.5 rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer shadow-2xs hover:shadow-xs"
+                            title={`Log in as ${member.name}`}
+                          >
+                            <LogIn className="w-3 h-3 text-emerald-600" />
+                            <span>Login As</span>
+                          </button>
+                        )}
 
                         {enableWorkMessages && (
                           <button

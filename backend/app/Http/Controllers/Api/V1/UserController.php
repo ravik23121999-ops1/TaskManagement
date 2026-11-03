@@ -12,6 +12,7 @@ use App\Services\ActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Crypt;
 
 class UserController extends Controller
 {
@@ -62,11 +63,9 @@ class UserController extends Controller
         }
 
         $data = $request->validated();
-        if (isset($data['password'])) {
-            $data['password'] = Hash::make($data['password']);
-        } else {
-            $data['password'] = Hash::make('password123');
-        }
+        $rawPassword = $data['password'] ?? 'password123';
+        $data['encrypted_password'] = Crypt::encryptString($rawPassword);
+        $data['password'] = Hash::make($rawPassword);
         $data['is_active'] = $data['is_active'] ?? true;
 
         $user = User::create($data);
@@ -106,6 +105,7 @@ class UserController extends Controller
 
         $data = $request->validated();
         if (!empty($data['password'])) {
+            $data['encrypted_password'] = Crypt::encryptString($data['password']);
             $data['password'] = Hash::make($data['password']);
         } else {
             unset($data['password']);

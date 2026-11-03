@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useAuth } from '../features/auth/AuthContext';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
+import { ImpersonationBanner } from './ImpersonationBanner';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -46,26 +47,29 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f8fafc] via-[#f9fafc] to-[#f1f5f9] text-slate-800 flex flex-col lg:flex-row font-sans selection:bg-blue-600 selection:text-white">
-      <Sidebar
-        mobileOpen={mobileSidebarOpen}
-        onMobileClose={() => setMobileSidebarOpen(false)}
-        collapsed={sidebarCollapsed}
-        onToggleCollapse={toggleSidebarCollapse}
-      />
-      <div
-        className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out ${
-          sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
-        } ml-0`}
-      >
-        <Navbar
-          onToggleSidebar={handleToggleSidebar}
-          onToggleMobileSidebar={() => setMobileSidebarOpen((prev) => !prev)}
-          isSidebarCollapsed={sidebarCollapsed}
+    <div className="min-h-screen bg-gradient-to-br from-[#f8fafc] via-[#f9fafc] to-[#f1f5f9] text-slate-800 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
+      <ImpersonationBanner />
+      <div className="flex-1 flex flex-col lg:flex-row">
+        <Sidebar
+          mobileOpen={mobileSidebarOpen}
+          onMobileClose={() => setMobileSidebarOpen(false)}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={toggleSidebarCollapse}
         />
-        <main className="flex-1 p-3 sm:p-6 md:p-8 max-w-7xl w-full mx-auto">
-          {children}
-        </main>
+        <div
+          className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out ${
+            sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-64'
+          } ml-0`}
+        >
+          <Navbar
+            onToggleSidebar={handleToggleSidebar}
+            onToggleMobileSidebar={() => setMobileSidebarOpen((prev) => !prev)}
+            isSidebarCollapsed={sidebarCollapsed}
+          />
+          <main className="flex-1 p-3 sm:p-6 md:p-8 max-w-7xl w-full mx-auto">
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   );

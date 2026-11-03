@@ -26,6 +26,9 @@ Route::get('/attachments/{attachment}/download', [AttachmentController::class, '
 Route::get('/v1/attachments/{attachment}/download', [AttachmentController::class, 'download']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    // Impersonate / Login as user
+    Route::post('/auth/impersonate/{user}', [AuthController::class, 'impersonate']);
+
     // Profile & Settings
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile', [ProfileController::class, 'update']);

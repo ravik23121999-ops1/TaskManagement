@@ -19,6 +19,7 @@ export interface User {
   gender?: 'male' | 'female';
   avatar_type?: string;
   avatar_url?: string;
+  plain_password?: string;
   created_at?: string;
 }
 
@@ -27,9 +28,20 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface ImpersonateResponse {
+  token: string;
+  user: User;
+  impersonator: User;
+}
+
 export const authApi = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     const response = await apiClient.post('/auth/login', credentials);
+    return response.data.data;
+  },
+
+  impersonate: async (userId: number): Promise<ImpersonateResponse> => {
+    const response = await apiClient.post(`/auth/impersonate/${userId}`);
     return response.data.data;
   },
 
