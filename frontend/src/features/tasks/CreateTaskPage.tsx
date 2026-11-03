@@ -326,6 +326,10 @@ export const CreateTaskPage: React.FC = () => {
               setError(`Due Date is required for ${u.name}.`);
               return;
             }
+            if (dueDate && work.due_date && new Date(work.due_date) > new Date(dueDate)) {
+              setError(`Individual Due Date for ${u.name} cannot be later than the overall task due date (${dueDate}).`);
+              return;
+            }
           }
         }
       } else if (handlingMethod === 'collaborate') {
@@ -1158,6 +1162,7 @@ export const CreateTaskPage: React.FC = () => {
                               </label>
                               <input
                                 type="date"
+                                max={dueDate || undefined}
                                 value={work.due_date}
                                 onChange={(e) =>
                                   setAssigneeWork((prev) => ({

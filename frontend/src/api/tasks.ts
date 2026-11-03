@@ -221,6 +221,11 @@ export const tasksApi = {
     return response.data;
   },
 
+  reopen: async (id: number, reason?: string) => {
+    const response = await apiClient.post(`/tasks/${id}/reopen`, { reason });
+    return response.data;
+  },
+
   delete: async (id: number) => {
     const response = await apiClient.delete(`/tasks/${id}`);
     return response.data;

@@ -542,13 +542,20 @@ class ComprehensiveSystemTest extends TestCase
         $task = Task::create([
             'title' => 'Collaboration & Communication Task',
             'description' => 'Discussion between team members',
-            'handling_method' => 'work_alone',
+            'handling_method' => 'assign',
             'creator_id' => $this->admin->id,
             'department_id' => $this->department->id,
             'status' => 'in_progress',
             'priority' => 'low',
             'start_date' => now(),
             'due_date' => now()->addDays(5),
+        ]);
+
+        TaskBranch::create([
+            'task_id' => $task->id,
+            'title' => 'Employee 1 Assignment',
+            'owner_id' => $this->employee1->id,
+            'status' => 'in_progress',
         ]);
 
         // 1. Employee posts comment

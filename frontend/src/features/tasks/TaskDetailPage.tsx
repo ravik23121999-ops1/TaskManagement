@@ -37,6 +37,7 @@ import {
   Sparkles,
   Ban,
   Trash2,
+  RotateCcw,
 } from 'lucide-react';
 
 export const TaskDetailPage: React.FC = () => {
@@ -102,6 +103,12 @@ export const TaskDetailPage: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingTask, setDeletingTask] = useState(false);
   const [deleteError, setDeleteError] = useState('');
+
+  // Reopen Task Modal state
+  const [isReopenModalOpen, setIsReopenModalOpen] = useState(false);
+  const [reopenReason, setReopenReason] = useState('');
+  const [reopeningTask, setReopeningTask] = useState(false);
+  const [reopenError, setReopenError] = useState('');
 
   // Hold Task Modal state
   const [isHoldModalOpen, setIsHoldModalOpen] = useState(false);
@@ -415,6 +422,22 @@ export const TaskDetailPage: React.FC = () => {
       setDeleteError(err.response?.data?.message || 'Failed to delete task.');
     } finally {
       setDeletingTask(false);
+    }
+  };
+
+  const handleConfirmReopen = async () => {
+    if (!task) return;
+    setReopeningTask(true);
+    setReopenError('');
+    try {
+      await tasksApi.reopen(task.id, reopenReason.trim() || undefined);
+      setIsReopenModalOpen(false);
+      setReopenReason('');
+      loadTask(task.id);
+    } catch (err: any) {
+      setReopenError(err.response?.data?.message || 'Failed to reopen task.');
+    } finally {
+      setReopeningTask(false);
     }
   };
 
@@ -899,6 +922,19 @@ export const TaskDetailPage: React.FC = () => {
               >
                 <Trash2 className="w-3.5 h-3.5 text-rose-600" />
                 <span>Delete Task</span>
+              </button>
+            )}
+
+            {/* Reopen Task (Admin, Sub-Admin, or Creator on Completed / Cancelled tasks) */}
+            {(task.status === 'completed' || task.status === 'cancelled') &&
+              (currentUser?.role === 'admin' || currentUser?.role === 'sub_admin' || currentUser?.id === task.creator?.id) && (
+              <button
+                onClick={() => { setReopenReason(''); setReopenError(''); setIsReopenModalOpen(true); }}
+                className="px-3.5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                title="Re-open this task back to active in-progress workflow"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Re-open Task</span>
               </button>
             )}
           </div>
@@ -3538,6 +3574,74 @@ export const TaskDetailPage: React.FC = () => {
                 className="px-5 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 text-white rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
               >
                 {deletingTask ? 'Deleting...' : 'Delete Permanently'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reopen Task Confirmation Modal */}
+      {isReopenModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-6 text-slate-800 space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center">
+                  <RotateCcw className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Reopen Task</h3>
+                  <p className="text-xs text-slate-500">Return task to active in-progress workflow</p>
+                </div>
+              </div>
+              <button
+                onClick={() => { setIsReopenModalOpen(false); setReopenReason(''); }}
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {reopenError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{reopenError}</span>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Reason for Reopening <span className="text-slate-400 font-normal">(Optional)</span>
+              </label>
+              <textarea
+                rows={3}
+                value={reopenReason}
+                onChange={(e) => setReopenReason(e.target.value)}
+                placeholder="Explain why this task is being reopened (optional)..."
+                className="w-full px-3.5 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                autoFocus
+              />
+              <p className="text-[11px] text-slate-400 mt-1">
+                This will move the task status back to "In Progress" and allow work, submissions, and reviews to continue.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => { setIsReopenModalOpen(false); setReopenReason(''); }}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+              >
+                Nevermind
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmReopen}
+                disabled={reopeningTask}
+                className="px-5 py-2 text-xs font-bold bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>{reopeningTask ? 'Reopening Task...' : 'Confirm Reopen'}</span>
               </button>
             </div>
           </div>

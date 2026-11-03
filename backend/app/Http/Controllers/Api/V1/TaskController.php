@@ -834,6 +834,10 @@ class TaskController extends Controller
             return response()->json(['message' => 'Unauthorized to put this task on hold'], 403);
         }
 
+        if (in_array($task->status, ['completed', 'cancelled'])) {
+            return response()->json(['message' => 'Cannot put a completed or cancelled task on hold'], 422);
+        }
+
         if ($task->status === 'on_hold') {
             return response()->json(['message' => 'Task is already on hold'], 422);
         }
@@ -909,18 +913,27 @@ class TaskController extends Controller
             ]);
         }
 
-        $task->update(['status' => 'in_progress']);
+        $previousStatus = TaskStatusHistory::where('task_id', $task->id)
+            ->where('to_status', 'on_hold')
+            ->latest('id')
+            ->value('from_status') ?? 'in_progress';
+
+        $resumeStatus = in_array($previousStatus, ['pending', 'in_progress', 'review', 'post_comment'])
+            ? $previousStatus
+            : 'in_progress';
+
+        $task->update(['status' => $resumeStatus]);
 
         TaskStatusHistory::create([
             'task_id' => $task->id,
             'from_status' => 'on_hold',
-            'to_status' => 'in_progress',
+            'to_status' => $resumeStatus,
             'changed_by_id' => $user->id,
-            'reason' => 'Task resumed from hold',
+            'reason' => "Task resumed from hold back to {$resumeStatus}",
             'changed_at' => now(),
         ]);
 
-        ActivityLogger::log('task_resumed', "Task resumed from hold: {$task->title}", $task->id);
+        ActivityLogger::log('task_resumed', "Task resumed from hold back to {$resumeStatus}: {$task->title}", $task->id);
 
         return response()->json([
             'message' => 'Task resumed successfully',
@@ -979,6 +992,82 @@ class TaskController extends Controller
 
         return response()->json([
             'message' => 'Task cancelled successfully',
+            'data' => new TaskResource($task->fresh()->load([
+                'creator',
+                'cancelledBy',
+                'department',
+                'branches.owner',
+                'branches.collaborators.user',
+                'comments.user',
+                'attachments.uploadedBy',
+                'statusHistory.changedBy',
+                'submissions.submittedBy',
+                'submissions.reviews.reviewer',
+                'holdRecords.putOnHoldBy'
+            ])),
+        ]);
+    }
+
+    public function reopen(Request $request, Task $task): JsonResponse
+    {
+        $request->validate(['reason' => 'nullable|string|max:1000']);
+        $user = $request->user();
+        $isCreator = (int) $task->creator_id === (int) $user->id;
+        $isAdmin = $user->role === 'admin' || $user->role === 'sub_admin';
+
+        if (!$isCreator && !$isAdmin) {
+            return response()->json([
+                'message' => 'Unauthorized: Only the task creator or an Administrator can reopen this task.'
+            ], 403);
+        }
+
+        if (!in_array($task->status, ['completed', 'cancelled'])) {
+            return response()->json(['message' => 'Task is already active and cannot be reopened.'], 422);
+        }
+
+        $oldStatus = $task->status;
+        $reason = $request->input('reason', "Task reopened from {$oldStatus} by {$user->name}");
+
+        $task->update([
+            'status' => 'in_progress',
+            'completed_at' => null,
+            'cancelled_at' => null,
+            'cancellation_reason' => null,
+            'cancelled_by_id' => null,
+        ]);
+
+        // Reopen branches if they were cancelled
+        $task->branches()->whereIn('status', ['cancelled'])->update([
+            'status' => 'in_progress',
+        ]);
+
+        TaskStatusHistory::create([
+            'task_id' => $task->id,
+            'from_status' => $oldStatus,
+            'to_status' => 'in_progress',
+            'changed_by_id' => $user->id,
+            'reason' => "Task reopened: {$reason}",
+            'changed_at' => now(),
+        ]);
+
+        ActivityLogger::log('task_reopened', "Reopened task: {$task->title}. Reason: {$reason}", $task->id, $user->id);
+
+        // Notify participants
+        $participants = $task->branches->pluck('owner_id')->filter()->unique();
+        foreach ($participants as $participantId) {
+            if ($participantId !== $user->id) {
+                SendTaskNotification::dispatch(
+                    $participantId,
+                    'task_reopened',
+                    "Task '{$task->title}' was reopened by {$user->name}",
+                    $task->id,
+                    'Task Reopened'
+                );
+            }
+        }
+
+        return response()->json([
+            'message' => 'Task reopened successfully and returned to in-progress workflow.',
             'data' => new TaskResource($task->fresh()->load([
                 'creator',
                 'cancelledBy',

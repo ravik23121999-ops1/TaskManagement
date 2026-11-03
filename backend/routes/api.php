@@ -54,6 +54,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Tasks
     Route::apiResource('tasks', TaskController::class);
     Route::post('/tasks/{task}/cancel', [TaskController::class, 'cancel']);
+    Route::post('/tasks/{task}/reopen', [TaskController::class, 'reopen']);
     Route::post('/tasks/{task}/submit', [TaskSubmissionController::class, 'submit']);
     Route::post('/tasks/{task}/final-submit', [TaskSubmissionController::class, 'finalSubmit']);
     Route::put('/tasks/{task}/hold', [TaskController::class, 'hold']);

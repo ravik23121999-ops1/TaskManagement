@@ -597,4 +597,90 @@ class TaskWorkflowTest extends TestCase
         $codeTitles = collect($searchCodeRes->json('data'))->pluck('title')->all();
         $this->assertContains('Build House Project', $codeTitles);
     }
+
+    public function test_multi_branch_task_can_complete_when_one_branch_is_cancelled(): void
+    {
+        // 1. Create task with 2 branches (Employee 1 & Employee 2)
+        $createRes = $this->actingAs($this->admin)->postJson('/api/tasks', [
+            'title' => 'Multi Branch Cancel Test',
+            'description' => 'Test completion when one branch is cancelled',
+            'handling_method' => 'assign',
+            'assignees' => [$this->employee1->id, $this->employee2->id],
+        ]);
+        $createRes->assertStatus(201);
+        $taskId = $createRes->json('data.id');
+        $branch1Id = $createRes->json('data.branches.0.id');
+        $branch2Id = $createRes->json('data.branches.1.id');
+
+        // 2. Employee 1 submits work, Admin approves it -> Branch 1 is completed
+        $submitRes = $this->actingAs($this->employee1)->postJson("/api/tasks/{$taskId}/submit", [
+            'task_branch_id' => $branch1Id,
+            'description' => 'Deliverables for branch 1',
+        ]);
+        $subId = $submitRes->json('data.id');
+        $this->actingAs($this->admin)->postJson("/api/submissions/{$subId}/review", [
+            'decision' => 'approved',
+            'comments' => 'Looks good',
+        ])->assertStatus(201);
+
+        // 3. Branch 2 is cancelled
+        \App\Models\TaskBranch::find($branch2Id)->update(['status' => 'cancelled']);
+
+        // Check task resource: all active branches completed should be true!
+        $taskRes = $this->actingAs($this->admin)->getJson("/api/tasks/{$taskId}")->json('data');
+        $this->assertTrue($taskRes['all_branches_completed']);
+
+        // 4. Admin final signoff succeeds cleanly without being blocked by cancelled branch
+        $finalRes = $this->actingAs($this->admin)->postJson("/api/tasks/{$taskId}/final-submit", [
+            'description' => 'Final sign-off complete',
+        ]);
+        $finalRes->assertStatus(200);
+        $this->assertEquals('completed', $finalRes->json('data.status'));
+    }
+
+    public function test_task_reopen_restores_active_workflow(): void
+    {
+        // Create and complete task
+        $task = \App\Models\Task::create([
+            'title' => 'Task to Reopen',
+            'description' => 'Testing reopening',
+            'status' => 'completed',
+            'handling_method' => 'work_alone',
+            'creator_id' => $this->admin->id,
+            'completed_at' => now(),
+        ]);
+
+        // Non-admin non-creator cannot reopen
+        $this->actingAs($this->employee1)->postJson("/api/tasks/{$task->id}/reopen")
+            ->assertStatus(403);
+
+        // Admin can reopen
+        $reopenRes = $this->actingAs($this->admin)->postJson("/api/tasks/{$task->id}/reopen", [
+            'reason' => 'Client requested additional scope',
+        ]);
+        $reopenRes->assertStatus(200);
+        $this->assertEquals('in_progress', $reopenRes->json('data.status'));
+        $this->assertNull($reopenRes->json('data.completed_at'));
+    }
+
+    public function test_status_guards_prevent_submissions_on_completed_or_held_tasks(): void
+    {
+        $completedTask = \App\Models\Task::create([
+            'title' => 'Guarded Completed Task',
+            'description' => 'Testing guards',
+            'status' => 'completed',
+            'handling_method' => 'work_alone',
+            'creator_id' => $this->admin->id,
+        ]);
+
+        // Submit should be rejected
+        $this->actingAs($this->admin)->postJson("/api/tasks/{$completedTask->id}/submit", [
+            'description' => 'Attempted submission on completed task',
+        ])->assertStatus(422);
+
+        // Clarification should be rejected
+        $this->actingAs($this->admin)->postJson("/api/tasks/{$completedTask->id}/request-details", [
+            'question' => 'Attempted question on completed task',
+        ])->assertStatus(422);
+    }
 }

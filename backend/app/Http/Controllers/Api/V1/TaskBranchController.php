@@ -17,13 +17,24 @@ class TaskBranchController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $branch = TaskBranch::create($request->validate([
+        $validated = $request->validate([
             'task_id' => 'required|exists:tasks,id',
             'title' => 'required|string',
             'description' => 'nullable|string',
             'owner_id' => 'required|exists:users,id',
             'due_date' => 'nullable|date',
-        ]));
+        ]);
+
+        $task = \App\Models\Task::find($validated['task_id']);
+        if ($task && $task->due_date && !empty($validated['due_date'])) {
+            if (strtotime($validated['due_date']) > strtotime($task->due_date)) {
+                return response()->json([
+                    'message' => 'Subtask due date cannot exceed the parent task due date.'
+                ], 422);
+            }
+        }
+
+        $branch = TaskBranch::create($validated);
 
         return response()->json(['data' => $branch->load(['owner', 'task'])], 201);
     }
@@ -35,13 +46,23 @@ class TaskBranchController extends Controller
 
     public function update(Request $request, TaskBranch $branch): JsonResponse
     {
-        $branch->update($request->validate([
+        $validated = $request->validate([
             'title' => 'sometimes|string',
             'description' => 'sometimes|nullable|string',
             'status' => 'sometimes|in:pending,in_progress,review,on_hold,post_comment,completed,cancelled',
             'due_date' => 'sometimes|nullable|date',
             'owner_id' => 'sometimes|exists:users,id',
-        ]));
+        ]);
+
+        if (!empty($validated['due_date']) && $branch->task && $branch->task->due_date) {
+            if (strtotime($validated['due_date']) > strtotime($branch->task->due_date)) {
+                return response()->json([
+                    'message' => 'Subtask due date cannot exceed the parent task due date.'
+                ], 422);
+            }
+        }
+
+        $branch->update($validated);
 
         // If owner changed, create new assignment record
         if ($request->has('owner_id') && $request->owner_id !== $branch->owner_id) {

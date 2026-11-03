@@ -91,18 +91,19 @@ class TaskReviewController extends Controller
                     ]);
                 }
 
-                // Check if all branches of the task are now completed
-                $totalBranches = $task->branches()->count();
-                $completedBranches = $task->branches()->where('status', 'completed')->count();
+                // Check if all active (non-cancelled) branches of the task are now completed
+                $activeBranches = $task->branches()->where('status', '!=', 'cancelled');
+                $totalActive = $activeBranches->count();
+                $completedActive = $activeBranches->where('status', 'completed')->count();
 
-                if ($totalBranches > 0 && $completedBranches === $totalBranches) {
-                    // All branches approved! Move task to 'review' (Final Sign-off stage) for creator final completion
+                if ($totalActive > 0 && $completedActive === $totalActive) {
+                    // All active branches approved! Move task to 'review' (Final Sign-off stage) for creator final completion
                     $task->update(['status' => 'review']);
                     
                     SendTaskNotification::dispatch(
                         $task->creator_id,
                         'final_check_ready',
-                        "All {$totalBranches} branches approved on '{$task->title}'. Ready in your Pending Tasks for final check & completion.",
+                        "All {$totalActive} active branches approved on '{$task->title}'. Ready in your Pending Tasks for final check & completion.",
                         $task->id,
                         'Final Check Ready'
                     );

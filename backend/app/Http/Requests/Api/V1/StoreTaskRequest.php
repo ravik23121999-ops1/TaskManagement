@@ -67,6 +67,25 @@ class StoreTaskRequest extends FormRequest
                     $validator->errors()->add('assignees', 'You cannot assign a task to yourself. Use "Work Alone" if you want to execute this task.');
                 }
             }
+
+            // Enforce rule: Subtask due date cannot exceed parent task due date
+            $parentDueDate = $this->input('due_date');
+            if ($parentDueDate) {
+                $parentTimestamp = strtotime($parentDueDate);
+                $branches = (array) $this->input('branches', []);
+                foreach ($branches as $index => $branch) {
+                    if (!empty($branch['due_date'])) {
+                        $branchTimestamp = strtotime($branch['due_date']);
+                        if ($branchTimestamp > $parentTimestamp) {
+                            $branchTitle = $branch['title'] ?? 'Subtask #' . ($index + 1);
+                            $validator->errors()->add(
+                                "branches.{$index}.due_date",
+                                "The subtask \"{$branchTitle}\" due date cannot be later than the parent task due date."
+                            );
+                        }
+                    }
+                }
+            }
         });
     }
 }

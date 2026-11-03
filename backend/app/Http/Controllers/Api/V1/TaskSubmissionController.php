@@ -30,6 +30,13 @@ class TaskSubmissionController extends Controller
         $isAdmin = $user->role === 'admin' || $user->role === 'sub_admin';
         $branchId = $request->task_branch_id;
 
+        if (in_array($task->status, ['completed', 'cancelled'])) {
+            return response()->json(['message' => 'Cannot submit deliverables: Task is already completed or cancelled.'], 422);
+        }
+        if ($task->status === 'on_hold') {
+            return response()->json(['message' => 'Cannot submit deliverables: Task is currently on hold. Resume the task first.'], 422);
+        }
+
         return DB::transaction(function () use ($request, $task, $user, $isAdmin, $branchId) {
             if ($task->handling_method === 'work_alone') {
                 // Creator works alone - directly completes the work
@@ -212,19 +219,27 @@ class TaskSubmissionController extends Controller
         $user = $request->user();
         $isAdmin = $user->role === 'admin' || $user->role === 'sub_admin';
 
+        if (in_array($task->status, ['completed', 'cancelled'])) {
+            return response()->json(['message' => 'Cannot complete task: Task is already completed or cancelled.'], 422);
+        }
+        if ($task->status === 'on_hold') {
+            return response()->json(['message' => 'Cannot complete task: Task is currently on hold. Resume the task first.'], 422);
+        }
+
         // Approved workflow rule: The creator performs final check and final submission
         if ($task->creator_id !== $user->id && !$isAdmin) {
             return response()->json(['message' => 'Unauthorized: Only the original creator (or Admin) can give final completion approval'], 403);
         }
 
-        // Validate parent task completion rule: All branches must be completed
+        // Validate parent task completion rule: All active (non-cancelled) branches must be completed
         if ($task->handling_method !== 'work_alone') {
-            $totalBranches = $task->branches()->count();
-            $completedBranches = $task->branches()->where('status', 'completed')->count();
+            $activeBranches = $task->branches()->where('status', '!=', 'cancelled');
+            $totalActive = $activeBranches->count();
+            $completedActive = $activeBranches->where('status', 'completed')->count();
 
-            if ($totalBranches > 0 && $completedBranches < $totalBranches) {
+            if ($totalActive > 0 && $completedActive < $totalActive) {
                 return response()->json([
-                    'message' => "Cannot complete task: All branches must be approved first ({$completedBranches} of {$totalBranches} approved)",
+                    'message' => "Cannot complete task: All active branches must be approved first ({$completedActive} of {$totalActive} approved)",
                 ], 422);
             }
         }
@@ -236,8 +251,8 @@ class TaskSubmissionController extends Controller
                 'completed_at' => now(),
             ]);
 
-            // Ensure all branches are marked completed
-            $task->branches()->where('status', '!=', 'completed')->update([
+            // Ensure all non-cancelled branches are marked completed
+            $task->branches()->whereNotIn('status', ['completed', 'cancelled'])->update([
                 'status' => 'completed',
                 'completed_at' => now(),
             ]);

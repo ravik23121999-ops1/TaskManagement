@@ -97,8 +97,8 @@ class ReportsController extends Controller
 
             // Employee Workload Summary (eager loaded department to eliminate N+1 queries)
             $employeeWorkload = User::with('department:id,name')->withCount([
-                'ownedBranches as active_count' => fn($q) => $q->whereNotIn('status', ['completed', 'cancelled']),
-                'ownedBranches as completed_count' => fn($q) => $q->where('status', 'completed'),
+                'ownedBranches as active_count' => fn($q) => $q->whereHas('task')->whereNotIn('status', ['completed', 'cancelled']),
+                'ownedBranches as completed_count' => fn($q) => $q->whereHas('task')->where('status', 'completed'),
             ])
             ->where('is_active', true)
             ->take(6)
@@ -208,7 +208,7 @@ class ReportsController extends Controller
             })->where('status', 'post_comment')->count();
 
             // 8. Completed count
-            $myCompletedCount = TaskBranch::where(function ($b) use ($user) {
+            $myCompletedCount = TaskBranch::whereHas('task')->where(function ($b) use ($user) {
                 $b->where('owner_id', $user->id)
                   ->orWhereHas('assignments', fn($a) => $a->where('assigned_to_id', $user->id)->where('is_current', true));
             })->where('status', 'completed')->count();
@@ -328,13 +328,14 @@ class ReportsController extends Controller
             'count' => $d->tasks_count,
         ])->values()->all();
 
-        // Employee Workload Table
-        $employees = User::withCount([
-            'ownedBranches as assigned_count' => fn($q) => $q->whereNotIn('status', ['cancelled']),
-            'ownedBranches as completed_count' => fn($q) => $q->where('status', 'completed'),
-            'ownedBranches as pending_count' => fn($q) => $q->whereIn('status', ['pending', 'in_progress']),
+        // Employee Workload Table (eager loaded department to eliminate N+1 queries)
+        $employees = User::with('department')->withCount([
+            'ownedBranches as assigned_count' => fn($q) => $q->whereHas('task')->whereNotIn('status', ['cancelled']),
+            'ownedBranches as completed_count' => fn($q) => $q->whereHas('task')->where('status', 'completed'),
+            'ownedBranches as pending_count' => fn($q) => $q->whereHas('task')->whereIn('status', ['pending', 'in_progress']),
         ])->get()->map(function ($u) {
             $overdueCount = TaskBranch::where('owner_id', $u->id)
+                ->whereHas('task')
                 ->where('due_date', '<', now())
                 ->whereNotIn('status', ['completed', 'cancelled'])
                 ->count();

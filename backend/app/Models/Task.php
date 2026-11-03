@@ -36,6 +36,21 @@ class Task extends Model
         'cancelled_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::deleting(function (Task $task) {
+            if ($task->isForceDeleting()) {
+                $task->branches()->forceDelete();
+            } else {
+                $task->branches()->delete();
+            }
+        });
+
+        static::restoring(function (Task $task) {
+            $task->branches()->withTrashed()->restore();
+        });
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'creator_id');

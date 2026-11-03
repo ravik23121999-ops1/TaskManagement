@@ -32,6 +32,13 @@ class TaskClarificationController extends Controller
 
         $user = $request->user();
 
+        if (in_array($task->status, ['completed', 'cancelled'])) {
+            return response()->json(['message' => 'Cannot request details: Task is already completed or cancelled.'], 422);
+        }
+        if ($task->status === 'on_hold') {
+            return response()->json(['message' => 'Cannot request details: Task is currently on hold. Resume the task first.'], 422);
+        }
+
         // Find user's branch
         $branch = null;
         if ($request->branch_id) {
@@ -151,6 +158,10 @@ class TaskClarificationController extends Controller
         $user = $request->user();
         $isAdmin = $user->role === 'admin' || $user->role === 'sub_admin';
         $isCreator = (int)$task->creator_id === (int)$user->id;
+
+        if (in_array($task->status, ['completed', 'cancelled'])) {
+            return response()->json(['message' => 'Cannot provide details: Task is already completed or cancelled.'], 422);
+        }
 
         // Find the branch awaiting details
         $branch = null;

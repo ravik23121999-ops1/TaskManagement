@@ -34,10 +34,11 @@ class TaskResource extends JsonResource
             })->values();
         }
 
-        // Calculate aggregated branch completion metrics
+        // Calculate aggregated branch completion metrics (excluding cancelled branches)
         $allBranches = $this->branches;
-        $totalBranchCount = $allBranches->count();
-        $completedBranchCount = $allBranches->where('status', 'completed')->count();
+        $activeBranches = $allBranches->filter(fn($b) => $b->status !== 'cancelled');
+        $totalBranchCount = $activeBranches->count();
+        $completedBranchCount = $activeBranches->filter(fn($b) => $b->status === 'completed')->count();
         $allBranchesCompleted = ($totalBranchCount > 0 && $completedBranchCount === $totalBranchCount);
 
         // Calculate current owner / responsibility
@@ -141,14 +142,13 @@ class TaskResource extends JsonResource
         }
 
         // Aggregated progress summary
-        $allBranches = $this->branches;
-        $totalBranchCount = $allBranches->count();
         $progressSummary = [
-            'total' => $totalBranchCount,
+            'total' => $allBranches->count(),
             'completed' => $allBranches->where('status', 'completed')->count(),
             'in_progress' => $allBranches->where('status', 'in_progress')->count(),
             'pending_review' => $allBranches->where('status', 'review')->count(),
             'pending' => $allBranches->where('status', 'pending')->count(),
+            'cancelled' => $allBranches->where('status', 'cancelled')->count(),
         ];
         
         // Determine active Clarification Request vs active Return for Correction

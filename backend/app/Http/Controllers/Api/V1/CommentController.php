@@ -23,6 +23,19 @@ class CommentController extends Controller
         $user = $request->user();
         $task = Task::findOrFail($request->task_id);
 
+        $isAdmin = $user->role === 'admin' || $user->role === 'sub_admin';
+        $isParticipant = (int)$task->creator_id === (int)$user->id
+            || $task->branches()->where('owner_id', $user->id)->exists()
+            || $task->branches()->whereHas('assignments', fn($a) => $a->where('assigned_to_id', $user->id)->orWhere('assigned_by_id', $user->id))->exists()
+            || $task->branches()->whereHas('collaborators', fn($c) => $c->where('user_id', $user->id)->orWhere('invited_by_id', $user->id))->exists()
+            || $task->submissions()->whereHas('reviews', fn($r) => $r->where('reviewer_id', $user->id))->exists();
+
+        if (!$isAdmin && !$isParticipant) {
+            return response()->json([
+                'message' => 'Unauthorized: You are not assigned to or collaborating on this task, and cannot post comments.'
+            ], 403);
+        }
+
         $comment = TaskComment::create([
             'task_id' => $task->id,
             'task_branch_id' => $request->task_branch_id,
@@ -66,8 +79,21 @@ class CommentController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $user = $request->user();
         $query = TaskComment::with('user');
         if ($request->has('task_id')) {
+            $task = Task::find($request->task_id);
+            if ($task && $user && $user->role !== 'admin' && $user->role !== 'sub_admin') {
+                $isParticipant = (int)$task->creator_id === (int)$user->id
+                    || $task->branches()->where('owner_id', $user->id)->exists()
+                    || $task->branches()->whereHas('assignments', fn($a) => $a->where('assigned_to_id', $user->id)->orWhere('assigned_by_id', $user->id))->exists()
+                    || $task->branches()->whereHas('collaborators', fn($c) => $c->where('user_id', $user->id)->orWhere('invited_by_id', $user->id))->exists()
+                    || $task->submissions()->whereHas('reviews', fn($r) => $r->where('reviewer_id', $user->id))->exists();
+
+                if (!$isParticipant) {
+                    return response()->json(['message' => 'Unauthorized to view comments on this task.'], 403);
+                }
+            }
             $query->where('task_id', $request->task_id);
         }
         $comments = $query->oldest()->get();
