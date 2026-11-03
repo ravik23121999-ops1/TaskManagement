@@ -119,9 +119,9 @@ class TaskBranchController extends Controller
             ], 422);
         }
 
-        if (in_array($branch->status, ['completed', 'cancelled'])) {
+        if ($branch->status === 'completed') {
             return response()->json([
-                'message' => 'Cannot reassign a completed or cancelled subtask.'
+                'message' => 'Cannot reassign an already completed subtask.'
             ], 422);
         }
 
@@ -142,8 +142,8 @@ class TaskBranchController extends Controller
 
         // Update branch owner
         $updates = ['owner_id' => $newOwner->id];
-        // If status was in post_comment (e.g. details needed/correction), reset to in_progress so new assignee starts active
-        if ($branch->status === 'post_comment') {
+        // If status was in post_comment or cancelled, reset to in_progress so new assignee starts active
+        if (in_array($branch->status, ['post_comment', 'cancelled'])) {
             $updates['status'] = 'in_progress';
         }
         $branch->update($updates);

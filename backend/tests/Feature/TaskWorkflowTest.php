@@ -848,4 +848,45 @@ class TaskWorkflowTest extends TestCase
 
         \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\TaskAssignedMail::class);
     }
+
+    public function test_can_final_submit_when_other_branch_is_cancelled(): void
+    {
+        $task = Task::create([
+            'title' => 'Task with Completed and Cancelled Branches',
+            'description' => 'Testing can_final_submit',
+            'status' => 'review',
+            'handling_method' => 'assign',
+            'creator_id' => $this->admin->id,
+        ]);
+
+        $b1 = \App\Models\TaskBranch::create([
+            'task_id' => $task->id,
+            'title' => 'Branch 1',
+            'owner_id' => $this->employee1->id,
+            'status' => 'completed',
+            'completed_at' => now(),
+        ]);
+
+        $b2 = \App\Models\TaskBranch::create([
+            'task_id' => $task->id,
+            'title' => 'Branch 2',
+            'owner_id' => $this->employee2->id,
+            'status' => 'cancelled',
+            'cancelled_at' => now(),
+        ]);
+
+        $res = $this->actingAs($this->admin)->getJson("/api/tasks/{$task->id}");
+        $res->assertStatus(200);
+        $this->assertTrue($res->json('data.permissions.can_final_submit'));
+
+        // Can also reassign the cancelled branch to another employee
+        $reassignRes = $this->actingAs($this->admin)->postJson("/api/task-branches/{$b2->id}/transfer", [
+            'new_owner_id' => $this->subAdmin->id,
+            'reason' => 'Reviving cancelled branch with new owner',
+        ]);
+        $reassignRes->assertStatus(200);
+        $b2->refresh();
+        $this->assertEquals($this->subAdmin->id, $b2->owner_id);
+        $this->assertEquals('in_progress', $b2->status);
+    }
 }

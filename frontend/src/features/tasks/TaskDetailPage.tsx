@@ -957,7 +957,7 @@ export const TaskDetailPage: React.FC = () => {
             )}
 
             {/* Final Submit button (Creator Final Approval & Complete) */}
-            {task.permissions.can_final_submit && (
+            {(task.permissions.can_final_submit || isReadyForFinalSignOff) && (currentUser?.role === 'admin' || currentUser?.role === 'sub_admin' || task.creator?.id === currentUser?.id) && (
               <button
                 onClick={() => {
                   setFinalCompleteDesc(
@@ -971,7 +971,7 @@ export const TaskDetailPage: React.FC = () => {
                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer hover:shadow-md"
               >
                 <Check className="w-3.5 h-3.5" />
-                <span>Approve & Complete Task</span>
+                <span>Final Sign-off & Complete Task</span>
               </button>
             )}
 
@@ -2080,8 +2080,7 @@ export const TaskDetailPage: React.FC = () => {
                       b.assigned_by?.id === currentUser?.id) &&
                     task.status !== 'completed' &&
                     task.status !== 'cancelled' &&
-                    b.status !== 'completed' &&
-                    b.status !== 'cancelled';
+                    b.status !== 'completed';
 
                   return (
                     <div
@@ -3478,7 +3477,7 @@ export const TaskDetailPage: React.FC = () => {
                     )
                     .map((u) => {
                       const isSelected = selectedModalUserIds.includes(u.id);
-                      const alreadyBranchOwner = task.branches?.some((b) => b.owner?.id === u.id);
+                      const alreadyBranchOwner = task.branches?.some((b) => b.owner?.id === u.id && b.status !== 'cancelled');
                       const alreadyCollaborator = task.collaborators?.some((c) => c.id === u.id);
 
                       return (
@@ -3516,7 +3515,7 @@ export const TaskDetailPage: React.FC = () => {
                                   Already Assigned
                                 </span>
                                 {(() => {
-                                  const bOwner = task.branches?.find((b) => b.owner?.id === u.id);
+                                  const bOwner = task.branches?.find((b) => b.owner?.id === u.id && b.status !== 'cancelled');
                                   const canReassign =
                                     bOwner &&
                                     (currentUser?.role === 'admin' ||

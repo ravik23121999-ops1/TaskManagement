@@ -280,8 +280,9 @@ class TaskResource extends JsonResource
             if ($this->handling_method === 'work_alone') {
                 $canFinalSubmit = true;
             } else {
-                $totalBranches = $this->branches->count();
-                $completedBranches = $this->branches->where('status', 'completed')->count();
+                $activeBranches = $this->branches->filter(fn($b) => $b->status !== 'cancelled');
+                $totalBranches = $activeBranches->count();
+                $completedBranches = $activeBranches->where('status', 'completed')->count();
                 if ($totalBranches > 0 && $completedBranches === $totalBranches) {
                     $canFinalSubmit = true;
                 }
