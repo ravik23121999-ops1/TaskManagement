@@ -3117,34 +3117,6 @@ export const TaskDetailPage: React.FC = () => {
                             />
                           </div>
 
-                          {/* Expected Result & Acceptance Criteria */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                              <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">
-                                Expected Result (Optional)
-                              </label>
-                              <input
-                                type="text"
-                                value={work.expected_result}
-                                onChange={(e) => updateModalWork(uid, { expected_result: e.target.value })}
-                                placeholder="e.g. Working API endpoints"
-                                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-[10px] font-bold text-slate-600 uppercase tracking-wider block">
-                                Acceptance Criteria (Optional)
-                              </label>
-                              <input
-                                type="text"
-                                value={work.acceptance_criteria}
-                                onChange={(e) => updateModalWork(uid, { acceptance_criteria: e.target.value })}
-                                placeholder="e.g. All unit tests pass"
-                                className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
-                              />
-                            </div>
-                          </div>
-
                           {/* Individual Attachments for this subtask */}
                           <div className="space-y-2 pt-1 border-t border-slate-100">
                             <div className="flex items-center justify-between">

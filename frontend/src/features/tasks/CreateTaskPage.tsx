@@ -50,10 +50,7 @@ export const CreateTaskPage: React.FC = () => {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
   const [description, setDescription] = useState('');
-  const [expectedResult, setExpectedResult] = useState('');
-  const [acceptanceCriteria, setAcceptanceCriteria] = useState('');
   const [departmentId, setDepartmentId] = useState<number | undefined>(undefined);
-  const [startDate, setStartDate] = useState('');
   const [dueDate, setDueDate] = useState('');
 
   // Shared Files (Step 1)
@@ -160,7 +157,7 @@ export const CreateTaskPage: React.FC = () => {
     description: '',
     expected_result: '',
     acceptance_criteria: '',
-    start_date: startDate || '',
+    start_date: '',
     due_date: dueDate || '',
     files: [],
     share_main_task_details: false,
@@ -185,10 +182,8 @@ export const CreateTaskPage: React.FC = () => {
     const defaultTitle2 = `${user?.name}'s Scope`;
     const hasCustomTitle = work.title.trim() !== '' && work.title !== defaultTitle1 && work.title !== defaultTitle2;
     const hasCustomDesc = work.description.trim() !== '';
-    const hasCustomExpected = work.expected_result.trim() !== '';
-    const hasCustomCriteria = work.acceptance_criteria.trim() !== '';
     const hasFiles = work.files.length > 0;
-    return hasCustomTitle || hasCustomDesc || hasCustomExpected || hasCustomCriteria || hasFiles;
+    return hasCustomTitle || hasCustomDesc || hasFiles;
   };
 
   const requestRemoveUser = (user: any) => {
@@ -232,8 +227,6 @@ export const CreateTaskPage: React.FC = () => {
         [userId]: {
           ...cur,
           description: description || cur.description,
-          expected_result: expectedResult || cur.expected_result,
-          acceptance_criteria: acceptanceCriteria || cur.acceptance_criteria,
         },
       };
     });
@@ -248,7 +241,7 @@ export const CreateTaskPage: React.FC = () => {
         description: '',
         expected_result: '',
         acceptance_criteria: '',
-        start_date: startDate || '',
+        start_date: '',
         due_date: dueDate || '',
         files: [],
         share_main_task_details: false,
@@ -363,12 +356,9 @@ export const CreateTaskPage: React.FC = () => {
       const formData = new FormData();
       formData.append('title', title.trim());
       formData.append('description', description.trim());
-      if (expectedResult.trim()) formData.append('expected_result', expectedResult.trim());
-      if (acceptanceCriteria.trim()) formData.append('acceptance_criteria', acceptanceCriteria.trim());
       formData.append('handling_method', handlingMethod);
       formData.append('priority', priority);
       if (departmentId) formData.append('department_id', String(departmentId));
-      if (startDate) formData.append('start_date', startDate);
       if (dueDate) formData.append('due_date', dueDate);
 
       // Shared Attachments
@@ -573,33 +563,6 @@ export const CreateTaskPage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                Expected Deliverable <span className="text-slate-500 font-normal">(What needs to be produced?)</span>
-              </label>
-              <textarea
-                rows={3}
-                placeholder="Describe the final output, report, or deliverable needed..."
-                value={expectedResult}
-                onChange={(e) => setExpectedResult(e.target.value)}
-                className="w-full p-3 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-800 mb-1.5">
-                Completion Checklist <span className="text-slate-500 font-normal">(How to verify it is done?)</span>
-              </label>
-              <textarea
-                rows={3}
-                placeholder="List simple checklist items or requirements to verify..."
-                value={acceptanceCriteria}
-                onChange={(e) => setAcceptanceCriteria(e.target.value)}
-                className="w-full p-3 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">Department (Optional)</label>
               <select
                 value={departmentId || ''}
@@ -613,15 +576,6 @@ export const CreateTaskPage: React.FC = () => {
                   </option>
                 ))}
               </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Start Date</label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
-              />
             </div>
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1.5">Main Due Date</label>
@@ -1239,40 +1193,6 @@ export const CreateTaskPage: React.FC = () => {
                             />
                           </div>
 
-                          {/* Expected Result & Acceptance Criteria */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div className="space-y-1">
-                              <label className="text-[11px] font-bold text-slate-700">Expected Result</label>
-                              <textarea
-                                rows={2}
-                                value={work.expected_result}
-                                onChange={(e) =>
-                                  setAssigneeWork((prev) => ({
-                                    ...prev,
-                                    [u.id]: { ...work, expected_result: e.target.value },
-                                  }))
-                                }
-                                placeholder="Expected deliverable from this employee..."
-                                className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
-                              />
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-[11px] font-bold text-slate-700">Acceptance Criteria</label>
-                              <textarea
-                                rows={2}
-                                value={work.acceptance_criteria}
-                                onChange={(e) =>
-                                  setAssigneeWork((prev) => ({
-                                    ...prev,
-                                    [u.id]: { ...work, acceptance_criteria: e.target.value },
-                                  }))
-                                }
-                                placeholder="Validation criteria for this subtask..."
-                                className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
-                              />
-                            </div>
-                          </div>
-
                           {/* Individual Attachments */}
                           <div className="space-y-2 pt-2 border-t border-slate-200/60">
                             <div className="flex items-center justify-between">
@@ -1439,12 +1359,10 @@ export const CreateTaskPage: React.FC = () => {
                 <span className="font-bold text-slate-500 block">Due Date:</span>
                 <span className="font-medium text-slate-800">{dueDate || 'Not set'}</span>
               </div>
-              {startDate && (
-                <div>
-                  <span className="font-bold text-slate-500 block">Start Date:</span>
-                  <span className="font-medium text-slate-800">{startDate}</span>
-                </div>
-              )}
+              <div>
+                <span className="font-bold text-slate-500 block">Start Date:</span>
+                <span className="font-medium text-emerald-600">Auto (On Creation)</span>
+              </div>
               {departmentId && (
                 <div>
                   <span className="font-bold text-slate-500 block">Department:</span>
@@ -1461,24 +1379,6 @@ export const CreateTaskPage: React.FC = () => {
                 {description}
               </p>
             </div>
-
-            {expectedResult && (
-              <div>
-                <span className="font-bold text-slate-500 block mb-1">Expected Result:</span>
-                <p className="text-slate-700 whitespace-pre-wrap bg-white p-2.5 rounded-xl border border-slate-200">
-                  {expectedResult}
-                </p>
-              </div>
-            )}
-
-            {acceptanceCriteria && (
-              <div>
-                <span className="font-bold text-slate-500 block mb-1">Acceptance Criteria:</span>
-                <p className="text-slate-700 whitespace-pre-wrap bg-white p-2.5 rounded-xl border border-slate-200">
-                  {acceptanceCriteria}
-                </p>
-              </div>
-            )}
 
             {sharedFiles.length > 0 && (
               <div>
@@ -1622,24 +1522,6 @@ export const CreateTaskPage: React.FC = () => {
                           {work.description || description}
                         </p>
                       </div>
-
-                      {work.expected_result && (
-                        <div>
-                          <span className="font-bold text-slate-500 block mb-0.5">Expected Result:</span>
-                          <p className="text-slate-700 whitespace-pre-wrap text-[11px]">
-                            {work.expected_result}
-                          </p>
-                        </div>
-                      )}
-
-                      {work.acceptance_criteria && (
-                        <div>
-                          <span className="font-bold text-slate-500 block mb-0.5">Acceptance Criteria:</span>
-                          <p className="text-slate-700 whitespace-pre-wrap text-[11px]">
-                            {work.acceptance_criteria}
-                          </p>
-                        </div>
-                      )}
 
                       <div className="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-2">
                         <span className="font-bold text-slate-500">Attachments:</span>
