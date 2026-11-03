@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SendTaskNotification;
+use App\Mail\TaskAssignedMail;
 use App\Models\Task;
 use App\Models\TaskBranch;
 use App\Models\TaskStatusHistory;
@@ -181,6 +182,8 @@ class TaskBranchController extends Controller
                 "Subtask Assigned: {$taskCode}",
                 $branch->id
             );
+
+            TaskAssignedMail::safeSend($task, $newOwner, $user, $branch, $reasonNote, 'transferred');
 
             if ($oldOwner && (int) $oldOwner->id !== (int) $user->id) {
                 SendTaskNotification::dispatch(

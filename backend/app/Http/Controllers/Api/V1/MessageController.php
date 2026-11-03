@@ -707,10 +707,17 @@ class MessageController extends Controller
 
         $recipientId = $validated['recipient_id'] ?? null;
         if (!$recipientId) {
-            // Default recipient: if current user is assigner, send to assignee; else send to assigner
-            $recipientId = ($user->id === $assigner->id) ? $assignee->id : $assigner->id;
-            if ($user->id === $recipientId) {
-                $recipientId = ($assignee->id !== $user->id) ? $assignee->id : $assigner->id;
+            $assignerId = $assigner?->id ?? $task->creator_id;
+            $assigneeId = $assignee?->id ?? $branch->owner_id;
+
+            if ($user->id === $assignerId) {
+                $recipientId = ($assigneeId && $assigneeId !== $user->id) ? $assigneeId : null;
+            } else {
+                $recipientId = $assignerId;
+            }
+
+            if (!$recipientId || (int)$recipientId === (int)$user->id) {
+                $recipientId = ($branch->owner_id !== $user->id) ? $branch->owner_id : $task->creator_id;
             }
         }
 

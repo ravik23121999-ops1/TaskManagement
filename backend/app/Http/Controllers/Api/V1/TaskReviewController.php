@@ -92,9 +92,8 @@ class TaskReviewController extends Controller
                 }
 
                 // Check if all active (non-cancelled) branches of the task are now completed
-                $activeBranches = $task->branches()->where('status', '!=', 'cancelled');
-                $totalActive = $activeBranches->count();
-                $completedActive = $activeBranches->where('status', 'completed')->count();
+                $totalActive = $task->branches()->where('status', '!=', 'cancelled')->count();
+                $completedActive = $task->branches()->where('status', 'completed')->count();
 
                 if ($totalActive > 0 && $completedActive === $totalActive) {
                     // All active branches approved! Move task to 'review' (Final Sign-off stage) for creator final completion

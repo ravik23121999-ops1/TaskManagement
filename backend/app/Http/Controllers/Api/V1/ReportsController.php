@@ -29,7 +29,7 @@ class ReportsController extends Controller
                 count(case when status = 'completed' then 1 end) as completed,
                 count(case when status in ('cancelled', 'rejected') then 1 end) as cancelled,
                 count(case when status = 'post_comment' then 1 end) as clarification,
-                count(case when due_date < ? and status not in ('completed', 'cancelled', 'rejected') then 1 end) as overdue
+                count(case when due_date < ? and status not in ('completed', 'cancelled', 'rejected', 'on_hold') then 1 end) as overdue
             ", [now()])->first();
 
             $totalTasks = (int) ($counts->total_tasks ?? 0);
@@ -305,7 +305,7 @@ class ReportsController extends Controller
         $onHoldTasks = Task::where('created_at', '>=', $startDate)->where('status', 'on_hold')->count();
         $cancelledTasks = Task::where('created_at', '>=', $startDate)->whereIn('status', ['cancelled', 'rejected'])->count();
         $overdueTasks = Task::where('due_date', '<', now())
-            ->whereNotIn('status', ['completed', 'cancelled', 'rejected'])
+            ->whereNotIn('status', ['completed', 'cancelled', 'rejected', 'on_hold'])
             ->count();
 
         $completionRate = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0;
@@ -337,7 +337,7 @@ class ReportsController extends Controller
             $overdueCount = TaskBranch::where('owner_id', $u->id)
                 ->whereHas('task')
                 ->where('due_date', '<', now())
-                ->whereNotIn('status', ['completed', 'cancelled'])
+                ->whereNotIn('status', ['completed', 'cancelled', 'on_hold'])
                 ->count();
 
             return [
@@ -363,6 +363,58 @@ class ReportsController extends Controller
                 'tasks_by_department' => $tasksByDepartment,
                 'employee_workload' => $employees,
             ],
+        ]);
+    }
+
+    public function exportCsv(Request $request)
+    {
+        $employees = User::with('department')->withCount([
+            'ownedBranches as assigned_count' => fn($q) => $q->whereHas('task')->whereNotIn('status', ['cancelled']),
+            'ownedBranches as completed_count' => fn($q) => $q->whereHas('task')->where('status', 'completed'),
+            'ownedBranches as pending_count' => fn($q) => $q->whereHas('task')->whereIn('status', ['pending', 'in_progress']),
+        ])->get();
+
+        $csvHeader = ['User ID', 'Name', 'Email', 'Role', 'Department', 'Assigned Subtasks', 'Completed Subtasks', 'Active/Pending', 'Overdue Subtasks', 'Completion Rate (%)'];
+
+        $callback = function () use ($employees, $csvHeader) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, $csvHeader);
+
+            foreach ($employees as $u) {
+                $overdueCount = TaskBranch::where('owner_id', $u->id)
+                    ->whereHas('task')
+                    ->where('due_date', '<', now())
+                    ->whereNotIn('status', ['completed', 'cancelled', 'on_hold'])
+                    ->count();
+
+                $assigned = (int) $u->assigned_count;
+                $completed = (int) $u->completed_count;
+                $rate = $assigned > 0 ? round(($completed / $assigned) * 100, 1) : 0;
+
+                fputcsv($file, [
+                    $u->id,
+                    $u->name,
+                    $u->email,
+                    $u->role,
+                    $u->department?->name ?? 'Unassigned',
+                    $assigned,
+                    $completed,
+                    $u->pending_count,
+                    $overdueCount,
+                    $rate . '%',
+                ]);
+            }
+            fclose($file);
+        };
+
+        $fileName = 'Employee_Workload_Report_' . date('Y-m-d') . '.csv';
+
+        return response()->stream($callback, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
         ]);
     }
 }

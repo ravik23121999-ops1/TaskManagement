@@ -787,4 +787,65 @@ class TaskWorkflowTest extends TestCase
             'reason' => 'Malicious cancel',
         ])->assertStatus(403);
     }
+
+    public function test_cannot_update_completed_task(): void
+    {
+        $task = Task::create([
+            'title' => 'Completed Task Protection',
+            'description' => 'Original description',
+            'status' => 'completed',
+            'handling_method' => 'work_alone',
+            'creator_id' => $this->admin->id,
+            'completed_at' => now(),
+        ]);
+
+        $res = $this->actingAs($this->admin)->putJson("/api/tasks/{$task->id}", [
+            'title' => 'Attempted Edit on Completed Task',
+        ]);
+
+        $res->assertStatus(422);
+    }
+
+    public function test_export_reports_csv(): void
+    {
+        $res = $this->actingAs($this->admin)->get('/api/reports/export-csv');
+        $res->assertStatus(200);
+        $res->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
+    }
+
+    public function test_soft_deleted_user_relations(): void
+    {
+        $employee = \App\Models\User::factory()->create(['role' => 'employee']);
+        $task = Task::create([
+            'title' => 'Task with Deleted Creator',
+            'description' => 'Testing withTrashed',
+            'status' => 'in_progress',
+            'handling_method' => 'work_alone',
+            'creator_id' => $employee->id,
+        ]);
+
+        // Soft delete the creator
+        $employee->delete();
+
+        $freshTask = Task::find($task->id);
+        $this->assertNotNull($freshTask->creator);
+        $this->assertEquals($employee->name, $freshTask->creator->name);
+    }
+
+    public function test_task_assigned_mail_generation(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+
+        $task = Task::create([
+            'title' => 'Mail Test Task',
+            'description' => 'Testing email dispatch',
+            'status' => 'in_progress',
+            'handling_method' => 'assign',
+            'creator_id' => $this->admin->id,
+        ]);
+
+        \App\Mail\TaskAssignedMail::safeSend($task, $this->employee1, $this->admin, null, 'Test Note', 'new_assignment');
+
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\TaskAssignedMail::class);
+    }
 }

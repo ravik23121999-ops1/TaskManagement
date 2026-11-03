@@ -39,6 +39,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard/admin', [ReportsController::class, 'adminDashboard']);
     Route::get('/dashboard/employee', [ReportsController::class, 'employeeDashboard']);
     Route::get('/reports', [ReportsController::class, 'reports']);
+    Route::get('/reports/export-csv', [ReportsController::class, 'exportCsv']);
 
     // Users
     Route::apiResource('users', UserController::class);

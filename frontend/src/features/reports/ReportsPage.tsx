@@ -6,6 +6,7 @@ export const ReportsPage: React.FC = () => {
   const [range, setRange] = useState('last_30_days');
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [exportingCsv, setExportingCsv] = useState(false);
 
   useEffect(() => {
     loadReports();
@@ -20,6 +21,17 @@ export const ReportsPage: React.FC = () => {
       console.error('Failed to load reports', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExportCsv = async () => {
+    setExportingCsv(true);
+    try {
+      await dashboardApi.exportReportsCsv();
+    } catch (err) {
+      console.error('Failed to export CSV', err);
+    } finally {
+      setExportingCsv(false);
     }
   };
 
@@ -76,6 +88,16 @@ export const ReportsPage: React.FC = () => {
               <option value="last_year">Last Year</option>
             </select>
           </div>
+
+          <button
+            onClick={handleExportCsv}
+            disabled={exportingCsv}
+            className="px-3.5 py-2 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-800 rounded-xl text-xs font-semibold shadow-2xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            title="Download full employee workload breakdown as CSV"
+          >
+            <Download className="w-3.5 h-3.5 text-emerald-600" />
+            <span>{exportingCsv ? 'Exporting...' : 'Export CSV'}</span>
+          </button>
 
           <button
             onClick={handlePrint}

@@ -40,6 +40,7 @@ import {
   RotateCcw,
   ArrowRightLeft,
   UserMinus,
+  RefreshCw,
 } from 'lucide-react';
 
 export const TaskDetailPage: React.FC = () => {
@@ -49,6 +50,7 @@ export const TaskDetailPage: React.FC = () => {
 
   const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'workflow' | 'assignments' | 'comments' | 'attachments' | 'history'>('overview');
 
   // Interactive Action states
@@ -855,6 +857,24 @@ export const TaskDetailPage: React.FC = () => {
 
           {/* Action Buttons */}
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Quick Refresh Button */}
+            <button
+              type="button"
+              onClick={async () => {
+                if (!id) return;
+                setIsRefreshing(true);
+                await loadTask(Number(id));
+                setIsRefreshing(false);
+                showToast('Task details refreshed', 'info');
+              }}
+              disabled={isRefreshing}
+              className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              title="Refresh task data"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${isRefreshing ? 'animate-spin text-blue-600' : ''}`} />
+              <span className="hidden sm:inline">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+            </button>
+
             {/* Assign (1 or More) */}
             {task.status !== 'completed' && task.status !== 'cancelled' && (
               <button
@@ -2195,7 +2215,29 @@ export const TaskDetailPage: React.FC = () => {
                       </div>
 
                       <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-100">
-                        <span>Due: {b.due_date ? new Date(b.due_date).toLocaleDateString() : 'Task deadline'}</span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span>Due: {b.due_date ? new Date(b.due_date).toLocaleDateString() : 'Task deadline'}</span>
+                          {(() => {
+                            if (!b.due_date || b.status === 'completed' || b.status === 'cancelled') return null;
+                            const diffMs = new Date(b.due_date).getTime() - Date.now();
+                            const diffHours = diffMs / (1000 * 60 * 60);
+                            if (diffHours > 0 && diffHours <= 24) {
+                              return (
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 inline-flex items-center gap-0.5">
+                                  <Clock className="w-2.5 h-2.5" /> Due in {Math.max(1, Math.round(diffHours))}h
+                                </span>
+                              );
+                            }
+                            if (diffHours <= 0) {
+                              return (
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 inline-flex items-center gap-0.5">
+                                  <AlertCircle className="w-2.5 h-2.5" /> Overdue
+                                </span>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
                         {b.completed_at && (
                           <span className="text-emerald-600 font-semibold">Done: {new Date(b.completed_at).toLocaleDateString()}</span>
                         )}

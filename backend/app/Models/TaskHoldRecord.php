@@ -36,12 +36,12 @@ class TaskHoldRecord extends Model
 
     public function putOnHoldBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'put_on_hold_by_id');
+        return $this->belongsTo(User::class, 'put_on_hold_by_id')->withTrashed();
     }
 
     public function resumedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'resumed_by_id');
+        return $this->belongsTo(User::class, 'resumed_by_id')->withTrashed();
     }
 
     public function isActive(): bool

@@ -341,7 +341,7 @@ class TaskResource extends JsonResource
             'status' => $this->status,
             'start_date' => $this->start_date?->toISOString(),
             'due_date' => $this->due_date?->toISOString(),
-            'is_overdue' => (bool) ($this->due_date && $this->due_date->isPast() && !in_array($this->status, ['completed', 'cancelled'])),
+            'is_overdue' => (bool) ($this->due_date && $this->due_date->isPast() && !in_array($this->status, ['completed', 'cancelled', 'on_hold'])),
             'completed_at' => $this->completed_at?->toISOString(),
             'cancelled_at' => $this->cancelled_at?->toISOString(),
             'cancellation_reason' => $this->cancellation_reason,

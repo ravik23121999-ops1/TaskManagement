@@ -36,7 +36,7 @@ class TaskSubmission extends Model
 
     public function submittedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'submitted_by_id');
+        return $this->belongsTo(User::class, 'submitted_by_id')->withTrashed();
     }
 
     public function reviews(): HasMany

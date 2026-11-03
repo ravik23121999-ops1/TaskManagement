@@ -14,8 +14,10 @@ use App\Models\TaskCollaborator;
 use App\Models\TaskAttachment;
 use App\Models\TaskHoldRecord;
 use App\Models\TaskStatusHistory;
+use App\Models\User;
 use App\Services\ActivityLogger;
 use App\Jobs\SendTaskNotification;
+use App\Mail\TaskAssignedMail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -468,6 +470,11 @@ class TaskController extends Controller
                             } catch (\Throwable $e) {
                                 \Illuminate\Support\Facades\Log::error('SendTaskNotification failed: ' . $e->getMessage());
                             }
+
+                            $assigneeModel = User::find($assigneeId);
+                            if ($assigneeModel) {
+                                TaskAssignedMail::safeSend($task, $assigneeModel, $user, $branch, null, 'new_assignment');
+                            }
                         }
                     }
                 } else {
@@ -517,6 +524,11 @@ class TaskController extends Controller
                                 'Task Assigned',
                                 $branch->id
                             );
+
+                            $assigneeModel = User::find($assigneeId);
+                            if ($assigneeModel) {
+                                TaskAssignedMail::safeSend($task, $assigneeModel, $user, $branch, null, 'new_assignment');
+                            }
                         }
                     }
                 }
@@ -800,6 +812,12 @@ class TaskController extends Controller
 
         if (!$isAdmin && $task->creator_id !== $user->id) {
             return response()->json(['message' => 'Unauthorized to update this task'], 403);
+        }
+
+        if (in_array($task->status, ['completed', 'cancelled'])) {
+            return response()->json([
+                'message' => 'Cannot edit a completed or cancelled task. Please reopen the task first.'
+            ], 422);
         }
 
         $task->update($request->validated());
@@ -1217,6 +1235,12 @@ class TaskController extends Controller
                     'Task Assigned',
                     $userBranch->id
                 );
+
+                $assigneeModel = User::find($assigneeId);
+                if ($assigneeModel) {
+                    TaskAssignedMail::safeSend($task, $assigneeModel, $user, $userBranch, null, 'new_assignment');
+                }
+
                 $addedCount++;
                 continue;
             }
@@ -1335,6 +1359,12 @@ class TaskController extends Controller
                 'Task Assigned',
                 $branch->id
             );
+
+            $assigneeModel = User::find($assigneeId);
+            if ($assigneeModel) {
+                TaskAssignedMail::safeSend($task, $assigneeModel, $user, $branch, null, 'new_assignment');
+            }
+
             $addedCount++;
         }
 

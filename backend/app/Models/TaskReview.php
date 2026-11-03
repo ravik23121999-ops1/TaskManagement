@@ -41,12 +41,12 @@ class TaskReview extends Model
 
     public function reviewer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'reviewer_id');
+        return $this->belongsTo(User::class, 'reviewer_id')->withTrashed();
     }
 
     public function nextReviewer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'next_reviewer_id');
+        return $this->belongsTo(User::class, 'next_reviewer_id')->withTrashed();
     }
 
     public function isApproved(): bool

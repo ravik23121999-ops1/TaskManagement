@@ -37,6 +37,6 @@ class TaskStatusHistory extends Model
 
     public function changedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'changed_by_id');
+        return $this->belongsTo(User::class, 'changed_by_id')->withTrashed();
     }
 }

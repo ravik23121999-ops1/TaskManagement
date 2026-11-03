@@ -53,12 +53,12 @@ class Task extends Model
 
     public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'creator_id');
+        return $this->belongsTo(User::class, 'creator_id')->withTrashed();
     }
 
     public function cancelledBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'cancelled_by_id');
+        return $this->belongsTo(User::class, 'cancelled_by_id')->withTrashed();
     }
 
     public function department(): BelongsTo

@@ -233,9 +233,8 @@ class TaskSubmissionController extends Controller
 
         // Validate parent task completion rule: All active (non-cancelled) branches must be completed
         if ($task->handling_method !== 'work_alone') {
-            $activeBranches = $task->branches()->where('status', '!=', 'cancelled');
-            $totalActive = $activeBranches->count();
-            $completedActive = $activeBranches->where('status', 'completed')->count();
+            $totalActive = $task->branches()->where('status', '!=', 'cancelled')->count();
+            $completedActive = $task->branches()->where('status', 'completed')->count();
 
             if ($totalActive > 0 && $completedActive < $totalActive) {
                 return response()->json([
