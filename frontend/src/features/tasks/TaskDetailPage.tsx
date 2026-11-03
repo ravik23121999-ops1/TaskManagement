@@ -984,7 +984,7 @@ export const TaskDetailPage: React.FC = () => {
                   "{task.latest_return.comments}"
                 </p>
                 <p className="text-[10px] text-red-600 mt-1">
-                  Reviewed on {new Date(task.latest_return.reviewed_at).toLocaleString()} • {task.permissions.can_submit ? 'Please review the feedback, update your work, and resubmit.' : `Awaiting ${task.current_owner?.name || 'assignee'} to review feedback, update deliverables, and resubmit.`}
+                  Reviewed on {new Date(task.latest_return.reviewed_at).toLocaleString()} • {task.permissions.can_submit ? 'Please review the feedback, update your work, and resubmit.' : `Awaiting ${task.current_owners && task.current_owners.length > 1 ? task.current_owners.map((o) => o.name).join(' & ') : (task.current_owner?.name || 'assignee')} to review feedback, update deliverables, and resubmit.`}
                 </p>
               </div>
             </div>
@@ -1056,9 +1056,11 @@ export const TaskDetailPage: React.FC = () => {
                   : task.latest_clarification && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment'))
                   ? `Task Assigner: ${task.creator?.name || 'Assigner'} (Question to Answer)`
                   : task.latest_return && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment'))
-                  ? `Assignee: ${task.current_owner?.name || 'Assignee'} (Revising Deliverables)`
+                  ? `Assignee: ${task.current_owners && task.current_owners.length > 1 ? task.current_owners.map((o) => o.name).join(', ') : (task.current_owner?.name || 'Assignee')} (Revising Deliverables)`
                   : isMyWorkDone
                   ? `Assignee: ${task.current_owner?.name && task.current_owner.id !== currentUser?.id ? task.current_owner.name : (task.my_branch?.assigned_by?.name || 'Upper Assignee')} (Upper Workflow)`
+                  : task.current_owners && task.current_owners.length > 1
+                  ? `Assignees: ${task.current_owners.map((o) => o.name).join(', ')}`
                   : `Assignee: ${task.current_owner?.name || 'In Progress'}`}
               </span>
             </div>
@@ -1164,7 +1166,7 @@ export const TaskDetailPage: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <strong>Returned For Revision.</strong> Waiting for {task.current_owner?.name || 'assignee'} to address requested corrections.
+                      <strong>Returned For Revision.</strong> Waiting for {task.current_owners && task.current_owners.length > 1 ? task.current_owners.map((o) => o.name).join(' & ') : (task.current_owner?.name || 'assignee')} to address requested corrections.
                     </>
                   )}
                 </span>
@@ -1760,10 +1762,46 @@ export const TaskDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Current Owner Card matching Mockup */}
+            {/* Current Owner(s) Card matching Mockup */}
             <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Current Owner</h3>
-              {task.current_owner ? (
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
+                {task.current_owners && task.current_owners.length > 1
+                  ? `Current Owners (${task.current_owners.length})`
+                  : 'Current Owner'}
+              </h3>
+              {task.current_owners && task.current_owners.length > 1 ? (
+                <div className="space-y-3">
+                  <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
+                    {task.current_owners.map((owner) => (
+                      <div
+                        key={owner.id}
+                        className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 text-white font-bold flex items-center justify-center text-xs shadow-xs shrink-0">
+                          {owner.name.charAt(0)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-xs font-bold text-slate-900 truncate">{owner.name}</h4>
+                          <p className="text-[11px] text-slate-500 capitalize">
+                            {owner.role?.replace('_', ' ') || 'Assignee'}
+                          </p>
+                          <p className="text-[10px] text-slate-400 truncate">{owner.email}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('comments')}
+                    className="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center justify-between border border-slate-200/80 cursor-pointer"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <MessageSquare className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Leave Message / Note</span>
+                    </span>
+                    <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+                  </button>
+                </div>
+              ) : task.current_owner ? (
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">

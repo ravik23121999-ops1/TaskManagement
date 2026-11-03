@@ -273,23 +273,50 @@ export const TaskListPage: React.FC = () => {
                       <PriorityBadge priority={task.priority} />
                     </td>
                     <td className="py-4 px-6 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-6 rounded-full bg-blue-50 text-blue-700 font-bold flex items-center justify-center text-[10px] border border-blue-100">
-                          {task.current_owner?.name?.charAt(0) || task.creator?.name?.charAt(0) || 'U'}
+                      {task.current_owners && task.current_owners.length > 1 ? (
+                        <div className="flex items-center gap-2">
+                          <div className="flex -space-x-2 overflow-hidden">
+                            {task.current_owners.slice(0, 3).map((owner) => (
+                              <div
+                                key={owner.id}
+                                title={owner.name}
+                                className="w-6 h-6 rounded-full bg-blue-50 text-blue-700 font-bold flex items-center justify-center text-[10px] border-2 border-white ring-1 ring-blue-200"
+                              >
+                                {owner.name.charAt(0)}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span
+                              className="font-semibold text-slate-700 truncate max-w-[150px]"
+                              title={task.current_owners.map((o) => o.name).join(', ')}
+                            >
+                              {task.current_owners.map((o) => o.name).join(', ')}
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              {task.current_owners.length} Active Assignees
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-slate-700">
-                            {task.current_owner?.name || task.creator?.name || 'Unassigned'}
-                          </span>
-                          <span className="text-[10px] text-slate-400">
-                            {task.status === 'review' || task.branches?.some((b) => b.status === 'review')
-                              ? 'Under Review'
-                              : task.permissions?.can_final_submit && task.handling_method !== 'work_alone'
-                              ? 'Awaiting Sign-off'
-                              : 'Active Assignee'}
-                          </span>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-full bg-blue-50 text-blue-700 font-bold flex items-center justify-center text-[10px] border border-blue-100">
+                            {task.current_owner?.name?.charAt(0) || task.creator?.name?.charAt(0) || 'U'}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-slate-700">
+                              {task.current_owner?.name || task.creator?.name || 'Unassigned'}
+                            </span>
+                            <span className="text-[10px] text-slate-400">
+                              {task.status === 'review' || task.branches?.some((b) => b.status === 'review')
+                                ? 'Under Review'
+                                : task.permissions?.can_final_submit && task.handling_method !== 'work_alone'
+                                ? 'Awaiting Sign-off'
+                                : 'Active Assignee'}
+                            </span>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </td>
                     <td className="py-4 px-6 whitespace-nowrap">
                       <div className="flex items-center gap-1.5 text-xs text-slate-600">

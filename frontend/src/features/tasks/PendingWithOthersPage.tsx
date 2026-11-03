@@ -267,19 +267,46 @@ export const PendingWithOthersPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-4 px-6 whitespace-nowrap">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-[11px] shadow-2xs border border-slate-200">
-                          {task.current_owner?.name?.charAt(0) || 'U'}
+                      {task.current_owners && task.current_owners.length > 1 ? (
+                        <div className="flex items-center gap-2.5">
+                          <div className="flex -space-x-2 overflow-hidden">
+                            {task.current_owners.slice(0, 3).map((owner) => (
+                              <div
+                                key={owner.id}
+                                title={owner.name}
+                                className="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-[11px] border-2 border-white ring-1 ring-slate-200"
+                              >
+                                {owner.name.charAt(0)}
+                              </div>
+                            ))}
+                          </div>
+                          <div>
+                            <p
+                              className="font-semibold text-slate-800 leading-tight truncate max-w-[150px]"
+                              title={task.current_owners.map((o) => o.name).join(', ')}
+                            >
+                              {task.current_owners.map((o) => o.name).join(', ')}
+                            </p>
+                            <p className="text-[10px] text-slate-400">
+                              {task.current_owners.length} Assignees
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-semibold text-slate-800 leading-tight">
-                            {task.current_owner?.name || 'Unassigned'}
-                          </p>
-                          <p className="text-[10px] text-slate-400 capitalize">
-                            {task.current_owner?.role?.replace('_', ' ') || 'Assignee'}
-                          </p>
+                      ) : (
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-full bg-slate-100 text-slate-700 font-bold flex items-center justify-center text-[11px] shadow-2xs border border-slate-200">
+                            {task.current_owner?.name?.charAt(0) || 'U'}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-800 leading-tight">
+                              {task.current_owner?.name || 'Unassigned'}
+                            </p>
+                            <p className="text-[10px] text-slate-400 capitalize">
+                              {task.current_owner?.role?.replace('_', ' ') || 'Assignee'}
+                            </p>
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </td>
                     <td className="py-4 px-6 whitespace-nowrap">
                       {task.latest_clarification && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment')) ? (

@@ -465,6 +465,23 @@ class TaskWorkflowTest extends TestCase
         $this->assertCount(1, $branches);
         $this->assertEquals($this->employee1->id, $branches[0]['owner']['id']);
         $this->assertEquals($this->employee1->id, $singleAssignRes->json('data.current_owner.id'));
+        $this->assertCount(1, $singleAssignRes->json('data.current_owners'));
+
+        // 3. Assigning multiple employees returns all active assignees as current_owners
+        $multiAssignRes = $this->actingAs($this->admin)->postJson('/api/tasks', [
+            'title' => 'Assign Multiple Employees Task',
+            'description' => 'Admin assigning to multiple employees',
+            'handling_method' => 'assign',
+            'assignees' => [$this->employee1->id, $this->employee2->id],
+        ]);
+        $multiAssignRes->assertStatus(201);
+        $multiBranches = $multiAssignRes->json('data.branches');
+        $this->assertCount(2, $multiBranches);
+        $currentOwners = $multiAssignRes->json('data.current_owners');
+        $this->assertCount(2, $currentOwners);
+        $ownerIds = collect($currentOwners)->pluck('id')->all();
+        $this->assertContains($this->employee1->id, $ownerIds);
+        $this->assertContains($this->employee2->id, $ownerIds);
     }
 
     public function test_clarification_is_superseded_when_work_is_returned_for_revision(): void

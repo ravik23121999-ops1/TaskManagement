@@ -92,6 +92,7 @@ export interface Task {
   progress: number;
   creator: UserSummary | null;
   current_owner: UserSummary | null;
+  current_owners?: UserSummary[];
   department: { id: number; name: string } | null;
   is_peer_isolated?: boolean;
   progress_summary?: {
