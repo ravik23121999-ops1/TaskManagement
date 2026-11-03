@@ -466,4 +466,81 @@ class TaskWorkflowTest extends TestCase
         $this->assertEquals($this->employee1->id, $branches[0]['owner']['id']);
         $this->assertEquals($this->employee1->id, $singleAssignRes->json('data.current_owner.id'));
     }
+
+    public function test_clarification_is_superseded_when_work_is_returned_for_revision(): void
+    {
+        // 1. Admin creates task assigned to Employee 1
+        $createRes = $this->actingAs($this->admin)->postJson('/api/tasks', [
+            'title' => 'Clarification vs Return Test',
+            'description' => 'Test clarification supersession by return',
+            'handling_method' => 'assign',
+            'assignees' => [$this->employee1->id],
+        ]);
+        $createRes->assertStatus(201);
+        $taskId = $createRes->json('data.id');
+        $branchId = $createRes->json('data.branches.0.id');
+
+        // 2. Employee 1 requests missing details
+        $clarifyRes = $this->actingAs($this->employee1)->postJson("/api/tasks/{$taskId}/request-details", [
+            'question' => 'Sir please provide missing spec sheet',
+            'branch_id' => $branchId,
+        ]);
+        $clarifyRes->assertStatus(200);
+
+        // Check task resource as Admin: clarification active, can_provide_details = true
+        $adminView1 = $this->actingAs($this->admin)->getJson("/api/tasks/{$taskId}")->json('data');
+        $this->assertNotNull($adminView1['latest_clarification']);
+        $this->assertTrue($adminView1['permissions']['can_provide_details']);
+
+        // Check task resource as Employee 1: can_provide_details = false, can_submit = false
+        $empView1 = $this->actingAs($this->employee1)->getJson("/api/tasks/{$taskId}")->json('data');
+        $this->assertFalse($empView1['permissions']['can_provide_details']);
+        $this->assertFalse($empView1['permissions']['can_submit']);
+
+        // 3. Employee 1 submits work anyway (or after obtaining info)
+        $submitRes = $this->actingAs($this->employee1)->postJson("/api/tasks/{$taskId}/submit", [
+            'task_branch_id' => $branchId,
+            'description' => 'Completed deliverable attached',
+        ]);
+        $submitRes->assertStatus(201);
+        $submissionId = $submitRes->json('data.id');
+
+        // Check task resource: status is review, clarification no longer active
+        $adminView2 = $this->actingAs($this->admin)->getJson("/api/tasks/{$taskId}")->json('data');
+        $this->assertEquals('review', $adminView2['status']);
+        $this->assertNull($adminView2['latest_clarification']);
+        $this->assertFalse($adminView2['permissions']['can_provide_details']);
+        $this->assertTrue($adminView2['permissions']['can_review']);
+
+        // 4. Admin returns the work for revision with notes
+        $returnRes = $this->actingAs($this->admin)->postJson("/api/submissions/{$submissionId}/review", [
+            'decision' => 'returned',
+            'comments' => 'make it right - formulas are wrong',
+        ]);
+        $returnRes->assertStatus(201);
+
+        // Check task resource as Admin:
+        // - status is post_comment
+        // - latest_clarification MUST BE NULL (old question is superseded!)
+        // - latest_return MUST BE POPULATED with reviewer comments
+        // - can_provide_details MUST BE FALSE for Admin
+        // - can_submit MUST BE FALSE for Admin
+        $adminView3 = $this->actingAs($this->admin)->getJson("/api/tasks/{$taskId}")->json('data');
+        $this->assertEquals('post_comment', $adminView3['status']);
+        $this->assertNull($adminView3['latest_clarification']);
+        $this->assertNotNull($adminView3['latest_return']);
+        $this->assertEquals('make it right - formulas are wrong', $adminView3['latest_return']['comments']);
+        $this->assertFalse($adminView3['permissions']['can_provide_details']);
+        $this->assertFalse($adminView3['permissions']['can_submit']);
+
+        // Check task resource as Employee 1:
+        // - latest_clarification MUST BE NULL
+        // - latest_return MUST BE POPULATED
+        // - can_submit MUST BE TRUE for Employee 1
+        $empView3 = $this->actingAs($this->employee1)->getJson("/api/tasks/{$taskId}")->json('data');
+        $this->assertNull($empView3['latest_clarification']);
+        $this->assertNotNull($empView3['latest_return']);
+        $this->assertTrue($empView3['permissions']['can_submit']);
+        $this->assertFalse($empView3['permissions']['can_provide_details']);
+    }
 }

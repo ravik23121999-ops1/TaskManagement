@@ -984,7 +984,7 @@ export const TaskDetailPage: React.FC = () => {
                   "{task.latest_return.comments}"
                 </p>
                 <p className="text-[10px] text-red-600 mt-1">
-                  Reviewed on {new Date(task.latest_return.reviewed_at).toLocaleString()} • Please review the feedback, update your work, and resubmit.
+                  Reviewed on {new Date(task.latest_return.reviewed_at).toLocaleString()} • {task.permissions.can_submit ? 'Please review the feedback, update your work, and resubmit.' : `Awaiting ${task.current_owner?.name || 'assignee'} to review feedback, update deliverables, and resubmit.`}
                 </p>
               </div>
             </div>
@@ -1056,7 +1056,7 @@ export const TaskDetailPage: React.FC = () => {
                   : task.latest_clarification && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment'))
                   ? `Task Assigner: ${task.creator?.name || 'Assigner'} (Question to Answer)`
                   : task.latest_return && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment'))
-                  ? `Submitter (Updating changes)`
+                  ? `Assignee: ${task.current_owner?.name || 'Assignee'} (Revising Deliverables)`
                   : isMyWorkDone
                   ? `Assignee: ${task.current_owner?.name && task.current_owner.id !== currentUser?.id ? task.current_owner.name : (task.my_branch?.assigned_by?.name || 'Upper Assignee')} (Upper Workflow)`
                   : `Assignee: ${task.current_owner?.name || 'In Progress'}`}
@@ -1153,18 +1153,26 @@ export const TaskDetailPage: React.FC = () => {
             </div>
           )}
 
-          {task.status === 'post_comment' && (
+          {task.status === 'post_comment' && task.latest_return && (
             <div className="mt-4 p-3 bg-rose-50/90 border border-rose-200 rounded-xl flex items-center justify-between text-xs text-rose-900">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
                 <span>
-                  <strong>Action Required: Returned For Revision.</strong> The reviewer requested corrections on deliverables. Check notes below.
+                  {task.permissions.can_submit ? (
+                    <>
+                      <strong>Action Required: Returned For Revision.</strong> The reviewer requested corrections on deliverables. Check notes below.
+                    </>
+                  ) : (
+                    <>
+                      <strong>Returned For Revision.</strong> Waiting for {task.current_owner?.name || 'assignee'} to address requested corrections.
+                    </>
+                  )}
                 </span>
               </div>
               {task.permissions.can_submit && (
                 <button
                   onClick={() => setIsSubmitModalOpen(true)}
-                  className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-semibold transition cursor-pointer text-xs"
+                  className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-semibold transition cursor-pointer text-xs shrink-0 ml-2"
                 >
                   Submit Fixes
                 </button>

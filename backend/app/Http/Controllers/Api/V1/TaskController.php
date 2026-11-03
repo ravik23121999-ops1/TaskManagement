@@ -97,7 +97,8 @@ class TaskController extends Controller
                                          ->where('assigned_to_id', '!=', $user->id);
                                    });
                            })
-                           ->whereRaw('(SELECT changed_by_id FROM task_status_history WHERE task_id = tasks.id AND to_status = ? ORDER BY id DESC LIMIT 1) != ?', ['post_comment', $user->id]);
+                           ->whereRaw('(SELECT changed_by_id FROM task_status_history WHERE task_id = tasks.id AND to_status = ? ORDER BY id DESC LIMIT 1) != ?', ['post_comment', $user->id])
+                           ->whereRaw('(SELECT reason FROM task_status_history WHERE task_id = tasks.id AND to_status = ? ORDER BY id DESC LIMIT 1) LIKE ?', ['post_comment', 'Missing Details Requested%']);
                     })
                     // 5. User is reviewer of a pending submission awaiting review
                     ->orWhere(function ($r) use ($user) {
@@ -156,10 +157,10 @@ class TaskController extends Controller
                        });
                 });
 
-                // Exclude user active assignee on a branch pending/in_progress
+                // Exclude user active assignee on a branch pending/in_progress/post_comment
                 $query->whereDoesntHave('branches', function ($b) use ($user) {
                     $b->where('owner_id', $user->id)
-                      ->whereIn('status', ['pending', 'in_progress']);
+                      ->whereIn('status', ['pending', 'in_progress', 'post_comment']);
                 });
 
                 // Exclude assigner who needs to answer a clarification request
@@ -172,7 +173,9 @@ class TaskController extends Controller
                                      ->where('assigned_by_id', $user->id)
                                      ->where('assigned_to_id', '!=', $user->id);
                                });
-                       });
+                       })
+                       ->whereRaw('(SELECT changed_by_id FROM task_status_history WHERE task_id = tasks.id AND to_status = ? ORDER BY id DESC LIMIT 1) != ?', ['post_comment', $user->id])
+                       ->whereRaw('(SELECT reason FROM task_status_history WHERE task_id = tasks.id AND to_status = ? ORDER BY id DESC LIMIT 1) LIKE ?', ['post_comment', 'Missing Details Requested%']);
                 });
 
                 // Exclude tasks where user is the reviewer of a pending submission

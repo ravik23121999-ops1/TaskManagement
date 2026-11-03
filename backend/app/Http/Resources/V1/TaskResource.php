@@ -73,9 +73,11 @@ class TaskResource extends JsonResource
                 // Assignee's branch is completed, OR user can oversee all branches:
                 // Find remaining active branch or first non-completed branch
                 $activeBranch = $visibleBranches->firstWhere('status', 'in_progress')
+                    ?? $visibleBranches->firstWhere('status', 'post_comment')
                     ?? $visibleBranches->firstWhere('status', 'review')
                     ?? $visibleBranches->firstWhere('status', 'pending')
                     ?? $allBranches->firstWhere('status', 'in_progress')
+                    ?? $allBranches->firstWhere('status', 'post_comment')
                     ?? $allBranches->firstWhere('status', 'review')
                     ?? $allBranches->firstWhere('status', 'pending');
 
@@ -133,12 +135,58 @@ class TaskResource extends JsonResource
             'pending' => $allBranches->where('status', 'pending')->count(),
         ];
         
+        // Determine active Clarification Request vs active Return for Correction
+        $latestClarificationComment = $this->comments->filter(function ($c) {
+            return str_starts_with($c->comment, '❓ Missing Details Requested');
+        })->sortByDesc('created_at')->first();
+
+        $latestDetailsProvidedComment = $this->comments->filter(function ($c) {
+            return str_starts_with($c->comment, '💡 Details Provided');
+        })->sortByDesc('created_at')->first();
+
+        $latestSubmission = $this->submissions->sortByDesc('submitted_at')->first();
+
+        $latestReturnReview = $this->submissions->flatMap->reviews->filter(function ($r) {
+            return in_array($r->decision, ['returned', 'rejected']);
+        })->sortByDesc('reviewed_at')->first();
+
+        $clarificationBranch = $this->branches->firstWhere('status', 'post_comment');
+        $isPostComment = ($this->status === 'post_comment' || $clarificationBranch) && !in_array($this->status, ['completed', 'cancelled', 'on_hold']);
+
+        $isClarificationActive = false;
+        $isReturnActive = false;
+
+        if ($isPostComment) {
+            // Check status history for the definitive latest transition into post_comment
+            $latestPostCommentHistory = $this->statusHistory
+                ->filter(fn($h) => $h->to_status === 'post_comment')
+                ->sortByDesc('id')
+                ->first();
+
+            if ($latestPostCommentHistory) {
+                if (str_starts_with($latestPostCommentHistory->reason ?? '', 'Missing Details Requested')) {
+                    $isClarificationActive = true;
+                } elseif (str_starts_with($latestPostCommentHistory->reason ?? '', 'Returned for correction')) {
+                    $isReturnActive = true;
+                }
+            }
+
+            // Fallback if status history reason not matched
+            if (!$isClarificationActive && !$isReturnActive) {
+                if ($latestReturnReview && (!$latestClarificationComment || $latestReturnReview->reviewed_at >= $latestClarificationComment->created_at)) {
+                    $isReturnActive = true;
+                } elseif ($latestClarificationComment && (!$latestDetailsProvidedComment || $latestDetailsProvidedComment->created_at < $latestClarificationComment->created_at)) {
+                    $isClarificationActive = true;
+                }
+            }
+        }
+
         $canSubmit = false;
         if ($this->status !== 'completed' && $this->status !== 'cancelled' && $this->status !== 'on_hold') {
             if ($this->handling_method === 'work_alone') {
                 $canSubmit = false; // Work alone directly uses Final Approval & Complete
             } else {
-                $canSubmit = $isBranchOwner && $userActiveBranch && in_array($userActiveBranch->status, ['pending', 'in_progress', 'post_comment']);
+                $canSubmit = $isBranchOwner && $userActiveBranch && in_array($userActiveBranch->status, ['pending', 'in_progress', 'post_comment']) && !$isClarificationActive;
             }
         }
 
@@ -235,42 +283,35 @@ class TaskResource extends JsonResource
         $canEdit = ($isCreator || $isAdmin) && !in_array($this->status, ['completed', 'cancelled']);
 
         // Request missing details permission:
-        // Assignee who has branch in pending or in_progress can request missing details from assigner
+        // Assignee who has branch in pending, in_progress, or post_comment (returned) can request clarification
         $canRequestDetails = false;
         if ($user && !in_array($this->status, ['completed', 'cancelled', 'on_hold'])) {
             if ($this->handling_method !== 'work_alone') {
                 $userBranch = $userActiveBranch ?? $this->branches->first(function ($b) use ($user) {
                     return $b->collaborators->where('user_id', $user->id)->isNotEmpty();
                 });
-                if ($userBranch && in_array($userBranch->status, ['pending', 'in_progress'])) {
+                if ($userBranch && in_array($userBranch->status, ['pending', 'in_progress', 'post_comment']) && !$isClarificationActive) {
                     $canRequestDetails = true;
                 }
             }
         }
 
         // Provide missing details permission:
-        // Task or any branch is in post_comment (clarification requested), and user is assigner, creator, or admin
+        // Only active if clarification is actively requested and user is not the person who asked
         $canProvideDetails = false;
-        $clarificationBranch = $this->branches->firstWhere('status', 'post_comment');
-        if ($user && ($this->status === 'post_comment' || $clarificationBranch) && !in_array($this->status, ['completed', 'cancelled', 'on_hold'])) {
-            if ($isAdmin || $isCreator) {
-                $canProvideDetails = true;
-            } elseif ($clarificationBranch) {
-                $curAssign = $clarificationBranch->assignments->firstWhere('is_current', true);
-                if ($curAssign && (int)$curAssign->assigned_by_id === (int)$user->id) {
+        if ($user && $isClarificationActive) {
+            $questionUserId = $latestClarificationComment?->user_id;
+            if ((int)$user->id !== (int)$questionUserId) {
+                if ($isAdmin || $isCreator) {
                     $canProvideDetails = true;
+                } elseif ($clarificationBranch) {
+                    $curAssign = $clarificationBranch->assignments->firstWhere('is_current', true);
+                    if ($curAssign && (int)$curAssign->assigned_by_id === (int)$user->id) {
+                        $canProvideDetails = true;
+                    }
                 }
             }
         }
-
-        // Latest clarification request & return reason
-        $latestClarificationComment = $this->comments->filter(function ($c) {
-            return str_starts_with($c->comment, '❓ Missing Details Requested');
-        })->sortByDesc('created_at')->first();
-
-        $latestReturnReview = $this->submissions->flatMap->reviews->filter(function ($r) {
-            return in_array($r->decision, ['returned', 'rejected']);
-        })->sortByDesc('reviewed_at')->first();
 
         return [
             'id' => $this->id,
@@ -477,7 +518,7 @@ class TaskResource extends JsonResource
                 'held_at' => $this->holdRecords->sortByDesc('held_at')->first()->held_at?->toISOString(),
                 'held_by' => $this->holdRecords->sortByDesc('held_at')->first()->putOnHoldBy?->name,
             ] : null,
-            'latest_clarification' => $latestClarificationComment ? [
+            'latest_clarification' => ($isClarificationActive && $latestClarificationComment) ? [
                 'id' => $latestClarificationComment->id,
                 'comment' => $latestClarificationComment->comment,
                 'requested_by' => $latestClarificationComment->user ? [
@@ -486,7 +527,7 @@ class TaskResource extends JsonResource
                 ] : null,
                 'requested_at' => $latestClarificationComment->created_at?->toISOString(),
             ] : null,
-            'latest_return' => $latestReturnReview ? [
+            'latest_return' => ($isReturnActive && $latestReturnReview) ? [
                 'id' => $latestReturnReview->id,
                 'decision' => $latestReturnReview->decision,
                 'comments' => $latestReturnReview->comments,
