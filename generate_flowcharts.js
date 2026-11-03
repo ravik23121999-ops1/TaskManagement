@@ -1,0 +1,1524 @@
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
+
+console.log('Generating QuickLifeNow Enterprise Flowchart Specification Document...');
+
+// HTML Builder with embedded vector SVGs, corporate print CSS, and executive tables
+const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>QuickLifeNow - Enterprise System Architecture & Feature Flowcharts</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  @page {
+    size: A4 landscape;
+    margin: 12mm 15mm;
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #0f172a;
+    background: #ffffff;
+    margin: 0;
+    padding: 0;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .page {
+    width: 100%;
+    min-height: 100vh;
+    padding: 24px;
+    page-break-after: always;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    background: #ffffff;
+  }
+
+  .page:last-child {
+    page-break-after: avoid;
+  }
+
+  /* Header and Footer */
+  .doc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+  }
+
+  .brand-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .brand-logo {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #2563eb, #4f46e5);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 900;
+    font-size: 16px;
+  }
+
+  .brand-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+  }
+
+  .brand-sub {
+    font-size: 10px;
+    color: #64748b;
+    font-weight: 500;
+  }
+
+  .header-meta {
+    text-align: right;
+    font-size: 9px;
+    color: #64748b;
+  }
+
+  .doc-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 10px;
+    margin-top: 16px;
+    font-size: 9px;
+    color: #64748b;
+  }
+
+  /* Section Title Block */
+  .section-title-block {
+    margin-bottom: 14px;
+  }
+
+  .section-tag {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+
+  .tag-blue { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+  .tag-purple { background: #faf5ff; color: #7e22ce; border: 1px solid #e9d5ff; }
+  .tag-emerald { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+  .tag-amber { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+  .tag-rose { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+  .tag-slate { background: #f8fafc; color: #334155; border: 1px solid #cbd5e1; }
+
+  .section-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.02em;
+  }
+
+  .section-desc {
+    font-size: 11px;
+    color: #475569;
+    margin: 0;
+  }
+
+  /* Flowchart Container */
+  .flowchart-wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Key Takeaway & Business Logic Cards */
+  .logic-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .logic-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+
+  .logic-card-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .logic-card-desc {
+    font-size: 10px;
+    color: #475569;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  /* Cover Page Styling */
+  .cover-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 40px;
+    background: radial-gradient(circle at top right, #f8fafc 0%, #ffffff 100%);
+  }
+
+  .cover-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 9999px;
+    color: #1d4ed8;
+    font-weight: 700;
+    font-size: 11px;
+    width: fit-content;
+  }
+
+  .cover-hero {
+    margin-top: 30px;
+  }
+
+  .cover-title {
+    font-size: 34px;
+    font-weight: 900;
+    color: #0f172a;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    margin: 16px 0 12px 0;
+  }
+
+  .cover-highlight {
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .cover-subtitle {
+    font-size: 14px;
+    color: #475569;
+    max-width: 780px;
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+
+  .exec-summary-box {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-left: 4px solid #2563eb;
+    border-radius: 12px;
+    padding: 20px 24px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+    margin-bottom: 24px;
+  }
+
+  .exec-summary-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .exec-summary-text {
+    font-size: 11px;
+    color: #334155;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .index-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+
+  .index-table th {
+    background: #f1f5f9;
+    color: #334155;
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 10px;
+    font-weight: 700;
+    border: 1px solid #cbd5e1;
+    text-transform: uppercase;
+  }
+
+  .index-table td {
+    padding: 8px 12px;
+    font-size: 10px;
+    border: 1px solid #e2e8f0;
+    color: #1e293b;
+  }
+
+  .index-table tr:nth-child(even) {
+    background: #f8fafc;
+  }
+
+  /* Shape Legend */
+  .shape-legend {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 14px;
+    margin-bottom: 10px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 9px;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  .legend-symbol {
+    width: 18px;
+    height: 12px;
+    display: inline-block;
+  }
+
+  .symbol-oval { border-radius: 9999px; background: #ffe4e6; border: 1.5px solid #e11d48; }
+  .symbol-rect { border-radius: 2px; background: #fef3c7; border: 1.5px solid #d97706; }
+  .symbol-diamond { width: 12px; height: 12px; transform: rotate(45deg); background: #ffedd5; border: 1.5px solid #ea580c; }
+  .symbol-para { transform: skewX(-20deg); background: #e0f2fe; border: 1.5px solid #0284c7; }
+</style>
+</head>
+<body>
+
+<!-- ========================================== -->
+<!-- PAGE 1: COVER & EXECUTIVE ARCHITECTURE MAP -->
+<!-- ========================================== -->
+<div class="page">
+  <div class="cover-container">
+    <div>
+      <div class="cover-badge">
+        <span>⚡ QuickLifeNow Enterprise SaaS Platform</span>
+        <span>•</span>
+        <span>Version 2.0 Architectural Specification</span>
+      </div>
+
+      <div class="cover-hero">
+        <h1 class="cover-title">
+          Complete System Architecture &<br>
+          <span class="cover-highlight">Feature Workflow Flowcharts</span>
+        </h1>
+        <p class="cover-subtitle">
+          An authoritative, enterprise-grade flowchart specification demonstrating the full lifecycle, branching logic, role-based governance, and real-time state machine of the QuickLifeNow Task Management platform.
+        </p>
+      </div>
+
+      <div class="exec-summary-box">
+        <div class="exec-summary-title">
+          <span>📌 Executive Answer: How Many Flowcharts Are Necessary to Completely Understand the Project?</span>
+        </div>
+        <p class="exec-summary-text">
+          To understand 100% of the QuickLifeNow platform without missing any technical or business nuance, exactly <strong>7 focused flowcharts</strong> are required: <strong>1 Master Executive Blueprint</strong> representing the end-to-end bird's-eye view, plus <strong>6 Deep-Dive Domain Flowcharts</strong> detailing every operational subsystem (Creation/Routing, Clarification Loop, Quality Review & Revision Loop, Multi-branch Hierarchical Delegation, Governance & Oversight, and RBAC Security Isolation).
+        </p>
+
+        <table class="index-table">
+          <thead>
+            <tr>
+              <th style="width: 15%;">Diagram No.</th>
+              <th style="width: 35%;">System Workflow Domain</th>
+              <th style="width: 30%;">Key Business & Logic Covered</th>
+              <th style="width: 20%;">Core Platform Stakeholders</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Diagram 1</strong></td>
+              <td><strong>Master End-to-End System Lifecycle</strong></td>
+              <td>Complete lifecycle from creation to sign-off and analytics archive</td>
+              <td>C-Level, PMO, All Roles</td>
+            </tr>
+            <tr>
+              <td><strong>Diagram 2</strong></td>
+              <td><strong>Task Creation, Routing & Allocation</strong></td>
+              <td>Handling methods (Work Alone, Assign, Collaborate), auto-start date</td>
+              <td>Creators, Dept Heads</td>
+            </tr>
+            <tr>
+              <td><strong>Diagram 3</strong></td>
+              <td><strong>Execution & Missing Details Loop</strong></td>
+              <td>Assignee questions, state transition to post_comment, assigner response</td>
+              <td>Assignees, Assigners</td>
+            </tr>
+            <tr>
+              <td><strong>Diagram 4</strong></td>
+              <td><strong>Review, Quality Gate & Revision Loop</strong></td>
+              <td>Deliverable submission, review queue, rejection/return & resubmission</td>
+              <td>Reviewers, Assignees</td>
+            </tr>
+            <tr>
+              <td><strong>Diagram 5</strong></td>
+              <td><strong>Hierarchical Subtask Branching Tree</strong></td>
+              <td>Cascading delegation (can_assign_further), milestone rollups</td>
+              <td>Operations Managers, Team Leads</td>
+            </tr>
+            <tr>
+              <td><strong>Diagram 6</strong></td>
+              <td><strong>Governance, Hold & Cancellation</strong></td>
+              <td>Put on hold, resume, soft cancellation, deletion authorization</td>
+              <td>Administrators, Auditors</td>
+            </tr>
+            <tr>
+              <td><strong>Diagram 7</strong></td>
+              <td><strong>RBAC Security & Privacy Isolation</strong></td>
+              <td>3-Tier RBAC, peer privacy protection, audit logging, API security</td>
+              <td>Security Team, System Architects</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="doc-footer">
+      <span>QuickLifeNow Enterprise Core Documentation</span>
+      <span>ISO/IEC 25010 & IEEE 1016 Architecture Standard Compliant</span>
+      <span>Page 1 of 8</span>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- PAGE 2: DIAGRAM 1 - MASTER SYSTEM LIFECYCLE -->
+<!-- ========================================== -->
+<div class="page">
+  <div class="doc-header">
+    <div class="brand-badge">
+      <div class="brand-logo">Q</div>
+      <div>
+        <div class="brand-title">QuickLifeNow Enterprise</div>
+        <div class="brand-sub">System Architecture Specification</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div><strong>Diagram 1: Master System Lifecycle</strong></div>
+      <div>End-to-End Enterprise Process Flow</div>
+    </div>
+  </div>
+
+  <div class="section-title-block">
+    <span class="section-tag tag-blue">Architectural Blueprint</span>
+    <h2 class="section-title">1. Master End-to-End Task Lifecycle Flowchart</h2>
+    <p class="section-desc">A comprehensive bird's-eye view showing the complete lifecycle of tasks from initiation through execution, quality gates, sign-off, and archival.</p>
+  </div>
+
+  <div class="shape-legend">
+    <span style="font-weight: 700; color: #0f172a; margin-right: 4px;">Standard Notation:</span>
+    <div class="legend-item"><span class="legend-symbol symbol-oval"></span> Terminator (Start / End)</div>
+    <div class="legend-item"><span class="legend-symbol symbol-rect"></span> Action / Process</div>
+    <div class="legend-item"><span class="legend-symbol symbol-diamond"></span> Decision Gate</div>
+    <div class="legend-item"><span class="legend-symbol symbol-para"></span> Data / I/O Document</div>
+    <div class="legend-item" style="margin-left: auto; color: #2563eb;">🔄 Auto-reversion & Return Loops</div>
+  </div>
+
+  <div class="flowchart-wrapper">
+    <svg viewBox="0 0 1020 440" width="1020" height="440">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#475569"/>
+        </marker>
+        <marker id="arrow-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#2563eb"/>
+        </marker>
+        <marker id="arrow-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#e11d48"/>
+        </marker>
+        <marker id="arrow-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#d97706"/>
+        </marker>
+        <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.08"/>
+        </filter>
+      </defs>
+
+      <!-- Step 1: Start -->
+      <rect x="20" y="190" width="100" height="42" rx="21" fill="#ffe4e6" stroke="#e11d48" stroke-width="2" filter="url(#shadow)"/>
+      <text x="70" y="216" font-size="11" font-weight="700" fill="#9f1239" text-anchor="middle">1. Start Task</text>
+
+      <path d="M 120 211 L 150 211" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <!-- Step 2: Create & Configure -->
+      <rect x="150" y="180" width="125" height="62" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2" filter="url(#shadow)"/>
+      <text x="212" y="202" font-size="11" font-weight="700" fill="#92400e" text-anchor="middle">Task Creation</text>
+      <text x="212" y="218" font-size="9" fill="#b45309" text-anchor="middle">Set Title, Priority, Due Date</text>
+      <text x="212" y="230" font-size="8.5" font-weight="600" fill="#2563eb" text-anchor="middle">start_date = now()</text>
+
+      <path d="M 275 211 L 305 211" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <!-- Step 3: Handling Decision -->
+      <polygon points="360,175 425,211 360,247 295,211" fill="#ffedd5" stroke="#ea580c" stroke-width="2" filter="url(#shadow)"/>
+      <text x="360" y="208" font-size="10" font-weight="700" fill="#9a3412" text-anchor="middle">Strategy?</text>
+      <text x="360" y="220" font-size="8" fill="#c2410c" text-anchor="middle">Method</text>
+
+      <!-- Branch: Work Alone -->
+      <path d="M 360 175 L 360 80 L 450 80" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+      <text x="375" y="105" font-size="8.5" font-weight="700" fill="#64748b">Work Alone</text>
+
+      <rect x="450" y="58" width="115" height="44" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="2" filter="url(#shadow)"/>
+      <text x="507" y="77" font-size="10" font-weight="700" fill="#1e40af" text-anchor="middle">Self-Execution</text>
+      <text x="507" y="91" font-size="8.5" fill="#3b82f6" text-anchor="middle">Creator does work</text>
+
+      <!-- Direct / Subtasks Delegate Path -->
+      <path d="M 425 211 L 455 211" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+      <text x="432" y="202" font-size="8.5" font-weight="700" fill="#64748b">Team</text>
+
+      <!-- Step 4: Active Working Stage -->
+      <rect x="455" y="180" width="125" height="62" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2" filter="url(#shadow)"/>
+      <text x="517" y="202" font-size="11" font-weight="700" fill="#1e40af" text-anchor="middle">In Progress</text>
+      <text x="517" y="217" font-size="9" fill="#1d4ed8" text-anchor="middle">Assignee Working</text>
+      <text x="517" y="229" font-size="8" font-weight="600" fill="#047857" text-anchor="middle">Ball: Assignee Court</text>
+
+      <!-- Decision: Clarification Needed? -->
+      <path d="M 517 242 L 517 310" fill="none" stroke="#d97706" stroke-width="2" marker-end="url(#arrow-amber)"/>
+      <text x="525" y="275" font-size="8.5" font-weight="700" fill="#d97706">Need Info?</text>
+
+      <!-- Clarification Subsystem (Bottom Loop) -->
+      <rect x="445" y="310" width="145" height="55" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="2" filter="url(#shadow)"/>
+      <text x="517" y="328" font-size="10" font-weight="700" fill="#92400e" text-anchor="middle">Clarification Loop</text>
+      <text x="517" y="341" font-size="8.5" fill="#b45309" text-anchor="middle">Status: post_comment</text>
+      <text x="517" y="353" font-size="8" font-weight="700" fill="#d97706" text-anchor="middle">Assigner Provides Details</text>
+
+      <path d="M 445 337 L 390 337 L 390 230 L 455 230" fill="none" stroke="#d97706" stroke-width="2" stroke-dasharray="4,4" marker-end="url(#arrow-amber)"/>
+      <text x="400" y="330" font-size="8" font-weight="700" fill="#d97706">Details Provided</text>
+
+      <!-- Progress to Review -->
+      <path d="M 580 211 L 610 211" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <!-- Step 5: Deliverable Submission & Review -->
+      <rect x="610" y="180" width="125" height="62" rx="8" fill="#f3e8ff" stroke="#9333ea" stroke-width="2" filter="url(#shadow)"/>
+      <text x="672" y="202" font-size="11" font-weight="700" fill="#6b21a8" text-anchor="middle">Under Review</text>
+      <text x="672" y="217" font-size="9" fill="#7e22ce" text-anchor="middle">Status: review</text>
+      <text x="672" y="229" font-size="8" font-weight="600" fill="#9333ea" text-anchor="middle">Ball: Reviewer Court</text>
+
+      <!-- Decision Gate: Quality Evaluation -->
+      <path d="M 735 211 L 765 211" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <polygon points="815,175 875,211 815,247 755,211" fill="#ffedd5" stroke="#ea580c" stroke-width="2" filter="url(#shadow)"/>
+      <text x="815" y="208" font-size="10" font-weight="700" fill="#9a3412" text-anchor="middle">Quality</text>
+      <text x="815" y="220" font-size="8.5" fill="#c2410c" text-anchor="middle">Passed?</text>
+
+      <!-- Reject / Return for Correction Loop -->
+      <path d="M 815 247 L 815 390 L 517 390 L 517 242" fill="none" stroke="#e11d48" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#arrow-red)"/>
+      <rect x="620" y="375" width="130" height="24" rx="4" fill="#fff1f2" stroke="#e11d48" stroke-width="1.5"/>
+      <text x="685" y="391" font-size="8.5" font-weight="700" fill="#be123c" text-anchor="middle">Return for Revision ("make it right")</text>
+
+      <!-- Approved Path -->
+      <path d="M 875 211 L 905 211" fill="none" stroke="#047857" stroke-width="2" marker-end="url(#arrow)"/>
+      <text x="885" y="202" font-size="8.5" font-weight="700" fill="#047857">Yes</text>
+
+      <!-- Work Alone direct connect to sign-off -->
+      <path d="M 565 80 L 935 80 L 935 180" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <!-- Step 6: Final Sign-off & Completed -->
+      <rect x="905" y="180" width="95" height="62" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="2" filter="url(#shadow)"/>
+      <text x="952" y="202" font-size="11" font-weight="700" fill="#065f46" text-anchor="middle">Completed</text>
+      <text x="952" y="217" font-size="8.5" fill="#047857" text-anchor="middle">100% Milestone</text>
+      <text x="952" y="229" font-size="8" font-weight="600" fill="#059669" text-anchor="middle">Audited & Closed</text>
+
+      <!-- Flow to End -->
+      <path d="M 952 242 L 952 300" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <rect x="912" y="300" width="80" height="38" rx="19" fill="#ffe4e6" stroke="#e11d48" stroke-width="2" filter="url(#shadow)"/>
+      <text x="952" y="324" font-size="10" font-weight="700" fill="#9f1239" text-anchor="middle">End / Archive</text>
+    </svg>
+  </div>
+
+  <div class="logic-grid">
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #2563eb;">●</span> Real-time Ball Tracker
+      </div>
+      <p class="logic-card-desc">
+        The system dynamically moves the <strong>"Ball is in YOUR court"</strong> indicator: In Progress → Assignee, Review → Reviewer, Missing Details → Assigner, Revision → Assignee.
+      </p>
+    </div>
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #e11d48;">●</span> Strict Rejection Isolation
+      </div>
+      <p class="logic-card-desc">
+        When a reviewer returns work, past clarification requests are superseded immediately. The task transitions to <code>post_comment</code> awaiting assignee fixes.
+      </p>
+    </div>
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #059669;">●</span> Milestone Convergence
+      </div>
+      <p class="logic-card-desc">
+        Child subtasks run concurrently with peer privacy. The parent task automatically unlocks Final Creator Sign-off only when 100% of branches are approved.
+      </p>
+    </div>
+  </div>
+
+  <div class="doc-footer">
+    <span>QuickLifeNow Enterprise Core Documentation</span>
+    <span>Diagram 1 of 7: Master Lifecycle</span>
+    <span>Page 2 of 8</span>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- PAGE 3: DIAGRAM 2 - CREATION & ROUTING -->
+<!-- ========================================== -->
+<div class="page">
+  <div class="doc-header">
+    <div class="brand-badge">
+      <div class="brand-logo">Q</div>
+      <div>
+        <div class="brand-title">QuickLifeNow Enterprise</div>
+        <div class="brand-sub">System Architecture Specification</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div><strong>Diagram 2: Task Creation & Routing</strong></div>
+      <div>Multi-Employee & Department Pipeline</div>
+    </div>
+  </div>
+
+  <div class="section-title-block">
+    <span class="section-tag tag-amber">Module 1 Architecture</span>
+    <h2 class="section-title">2. Task Creation, Routing & Allocation Flowchart</h2>
+    <p class="section-desc">Demonstrates how tasks are configured, auto-dated on creation, routed through departments, and split into direct or multi-branch subtasks.</p>
+  </div>
+
+  <div class="flowchart-wrapper">
+    <svg viewBox="0 0 1020 440" width="1020" height="440">
+      <defs>
+        <marker id="ar2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#475569"/>
+        </marker>
+        <marker id="ar2-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#2563eb"/>
+        </marker>
+      </defs>
+
+      <!-- Step 1: Start -->
+      <rect x="20" y="195" width="90" height="40" rx="20" fill="#ffe4e6" stroke="#e11d48" stroke-width="2"/>
+      <text x="65" y="220" font-size="11" font-weight="700" fill="#9f1239" text-anchor="middle">Start</text>
+
+      <path d="M 110 215 L 140 215" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar2)"/>
+
+      <!-- Step 2: Form Input -->
+      <rect x="140" y="175" width="135" height="80" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+      <text x="207" y="197" font-size="11" font-weight="700" fill="#92400e" text-anchor="middle">Step 1: Details</text>
+      <text x="207" y="213" font-size="9" fill="#78350f" text-anchor="middle">• Title & Description</text>
+      <text x="207" y="227" font-size="9" fill="#78350f" text-anchor="middle">• Priority & Due Date</text>
+      <text x="207" y="241" font-size="9" fill="#78350f" text-anchor="middle">• Department (Opt.)</text>
+
+      <!-- Auto Start Date Banner -->
+      <path d="M 275 215 L 305 215" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar2)"/>
+
+      <rect x="305" y="185" width="120" height="60" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
+      <text x="365" y="207" font-size="10" font-weight="700" fill="#065f46" text-anchor="middle">Auto-Date Injection</text>
+      <text x="365" y="223" font-size="8.5" fill="#047857" text-anchor="middle">start_date = now()</text>
+      <text x="365" y="235" font-size="8" font-weight="600" fill="#059669" text-anchor="middle">Zero manual date input</text>
+
+      <path d="M 425 215 L 455 215" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar2)"/>
+
+      <!-- Decision Gate: Handling Method -->
+      <polygon points="515,175 575,215 515,255 455,215" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+      <text x="515" y="211" font-size="10" font-weight="700" fill="#9a3412" text-anchor="middle">Handling</text>
+      <text x="515" y="224" font-size="8.5" fill="#c2410c" text-anchor="middle">Method?</text>
+
+      <!-- Path 1: Work Alone (Top) -->
+      <path d="M 515 175 L 515 80 L 610 80" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar2)"/>
+      <text x="525" y="105" font-size="8.5" font-weight="700" fill="#64748b">work_alone</text>
+
+      <rect x="610" y="55" width="150" height="50" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+      <text x="685" y="76" font-size="10" font-weight="700" fill="#1e40af" text-anchor="middle">Single Creator Mode</text>
+      <text x="685" y="92" font-size="8.5" fill="#3b82f6" text-anchor="middle">Direct self-execution</text>
+
+      <!-- Path 2: Assign (Center) -->
+      <path d="M 575 215 L 610 215" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar2)"/>
+      <text x="580" y="205" font-size="8.5" font-weight="700" fill="#64748b">assign</text>
+
+      <!-- Decision Gate: Direct Delegation vs Subtasks -->
+      <polygon points="665,180 720,215 665,250 610,215" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+      <text x="665" y="211" font-size="9" font-weight="700" fill="#9a3412" text-anchor="middle">Delegation</text>
+      <text x="665" y="223" font-size="8" fill="#c2410c" text-anchor="middle">Mode?</text>
+
+      <!-- Subpath A: Direct (Straight) -->
+      <path d="M 720 215 L 755 215" fill="none" stroke="#047857" stroke-width="2" marker-end="url(#ar2)"/>
+      <text x="725" y="205" font-size="8" font-weight="700" fill="#047857">direct</text>
+
+      <rect x="755" y="190" width="130" height="50" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+      <text x="820" y="210" font-size="9.5" font-weight="700" fill="#065f46" text-anchor="middle">Direct Delegation</text>
+      <text x="820" y="225" font-size="8" fill="#047857" text-anchor="middle">1 shared scope, no subtasks</text>
+
+      <!-- Subpath B: Subtasks (Down) -->
+      <path d="M 665 250 L 665 315 L 755 315" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#ar2-blue)"/>
+      <text x="675" y="280" font-size="8" font-weight="700" fill="#2563eb">subtasks</text>
+
+      <rect x="755" y="290" width="130" height="50" rx="8" fill="#e0e7ff" stroke="#4f46e5" stroke-width="2"/>
+      <text x="820" y="310" font-size="9.5" font-weight="700" fill="#312e81" text-anchor="middle">Dynamic Subtasks</text>
+      <text x="820" y="325" font-size="8" fill="#4338ca" text-anchor="middle">Individual scope & due dates</text>
+
+      <!-- Path 3: Collaborate (Bottom) -->
+      <path d="M 515 255 L 515 390 L 755 390" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar2)"/>
+      <text x="525" y="350" font-size="8.5" font-weight="700" fill="#64748b">collaborate</text>
+
+      <rect x="755" y="365" width="130" height="50" rx="8" fill="#fdf4ff" stroke="#c026d3" stroke-width="2"/>
+      <text x="820" y="386" font-size="9.5" font-weight="700" fill="#701a75" text-anchor="middle">Collaborate Mode</text>
+      <text x="820" y="401" font-size="8" fill="#86198f" text-anchor="middle">Peer teamwork invitations</text>
+
+      <!-- Merge to Database & Notifications Output -->
+      <path d="M 760 80 L 925 80 L 925 180" fill="none" stroke="#475569" stroke-width="2"/>
+      <path d="M 885 215 L 925 215" fill="none" stroke="#475569" stroke-width="2"/>
+      <path d="M 885 315 L 925 315 L 925 250" fill="none" stroke="#475569" stroke-width="2"/>
+      <path d="M 885 390 L 925 390 L 925 250" fill="none" stroke="#475569" stroke-width="2"/>
+
+      <!-- Final Database & Notification Dispatch Box -->
+      <rect x="880" y="180" width="115" height="70" rx="8" fill="#f8fafc" stroke="#0f172a" stroke-width="2"/>
+      <text x="937" y="202" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle">DB Transaction</text>
+      <text x="937" y="217" font-size="8" fill="#475569" text-anchor="middle">• Status: in_progress</text>
+      <text x="937" y="229" font-size="8" fill="#475569" text-anchor="middle">• Branch IDs mapped</text>
+      <text x="937" y="241" font-size="8" font-weight="700" fill="#2563eb" text-anchor="middle">Dispatches Alerts</text>
+    </svg>
+  </div>
+
+  <div class="logic-grid">
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #059669;">●</span> Automatic Start Timestamp
+      </div>
+      <p class="logic-card-desc">
+        Manual start date inputs have been eliminated. Tasks and subtasks automatically store <code>start_date = now()</code> on creation, preventing discrepancies.
+      </p>
+    </div>
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #4f46e5;">●</span> Dual Delegation Modes
+      </div>
+      <p class="logic-card-desc">
+        Creators choose between <strong>Direct Delegation</strong> (one shared project deliverable) or <strong>Subtask Scopes</strong> (dedicated cards and private scopes per employee).
+      </p>
+    </div>
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #c026d3;">●</span> Self-Assignment Prevention
+      </div>
+      <p class="logic-card-desc">
+        FormRequest validation strictly blocks assigning a task to yourself under <code>assign</code> mode, directing users to <code>work_alone</code> for self-contained work.
+      </p>
+    </div>
+  </div>
+
+  <div class="doc-footer">
+    <span>QuickLifeNow Enterprise Core Documentation</span>
+    <span>Diagram 2 of 7: Creation & Allocation</span>
+    <span>Page 3 of 8</span>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- PAGE 4: DIAGRAM 3 - CLARIFICATION LOOP -->
+<!-- ========================================== -->
+<div class="page">
+  <div class="doc-header">
+    <div class="brand-badge">
+      <div class="brand-logo">Q</div>
+      <div>
+        <div class="brand-title">QuickLifeNow Enterprise</div>
+        <div class="brand-sub">System Architecture Specification</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div><strong>Diagram 3: Execution & Clarification</strong></div>
+      <div>Interactive Question & Answer Subsystem</div>
+    </div>
+  </div>
+
+  <div class="section-title-block">
+    <span class="section-tag tag-purple">Module 2 Architecture</span>
+    <h2 class="section-title">3. Task Execution & Missing Details Loop Flowchart</h2>
+    <p class="section-desc">Illustrates how team members request clarification, shift real-time responsibility, and how assigners provide missing assets without breaking project flow.</p>
+  </div>
+
+  <div class="flowchart-wrapper">
+    <svg viewBox="0 0 1020 440" width="1020" height="440">
+      <defs>
+        <marker id="ar3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#475569"/>
+        </marker>
+        <marker id="ar3-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#d97706"/>
+        </marker>
+        <marker id="ar3-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#059669"/>
+        </marker>
+      </defs>
+
+      <!-- Step 1: Assignee Receives Task -->
+      <rect x="20" y="195" width="100" height="44" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+      <text x="70" y="215" font-size="10" font-weight="700" fill="#1e40af" text-anchor="middle">Task in Queue</text>
+      <text x="70" y="228" font-size="8" fill="#3b82f6" text-anchor="middle">My Action Required</text>
+
+      <path d="M 120 217 L 150 217" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar3)"/>
+
+      <!-- Step 2: Open and Analyze Requirements -->
+      <rect x="150" y="185" width="125" height="64" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+      <text x="212" y="207" font-size="10" font-weight="700" fill="#92400e" text-anchor="middle">Analyze Work Scope</text>
+      <text x="212" y="221" font-size="8.5" fill="#78350f" text-anchor="middle">Check files & instructions</text>
+      <text x="212" y="233" font-size="8" font-weight="600" fill="#2563eb" text-anchor="middle">Ball: In Assignee Court</text>
+
+      <path d="M 275 217 L 305 217" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar3)"/>
+
+      <!-- Decision Gate: Are details missing? -->
+      <polygon points="365,177 425,217 365,257 305,217" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+      <text x="365" y="213" font-size="9.5" font-weight="700" fill="#9a3412" text-anchor="middle">Missing</text>
+      <text x="365" y="226" font-size="8.5" fill="#c2410c" text-anchor="middle">Details?</text>
+
+      <!-- Path NO: Proceed to work (Straight to Right) -->
+      <path d="M 425 217 L 760 217" fill="none" stroke="#059669" stroke-width="2" marker-end="url(#ar3-green)"/>
+      <text x="440" y="207" font-size="9" font-weight="700" fill="#059669">NO (All Clear)</text>
+
+      <!-- Path YES: Request Clarification (Down) -->
+      <path d="M 365 257 L 365 330 L 410 330" fill="none" stroke="#d97706" stroke-width="2" marker-end="url(#ar3-amber)"/>
+      <text x="375" y="285" font-size="9" font-weight="700" fill="#d97706">YES (Need Specs)</text>
+
+      <!-- Step 3: Trigger Clarification Request -->
+      <rect x="410" y="300" width="145" height="60" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+      <text x="482" y="322" font-size="10" font-weight="700" fill="#92400e" text-anchor="middle">Request Missing Details</text>
+      <text x="482" y="336" font-size="8.5" fill="#78350f" text-anchor="middle">Enter specific question</text>
+      <text x="482" y="348" font-size="8" font-weight="600" fill="#be123c" text-anchor="middle">status → post_comment</text>
+
+      <path d="M 555 330 L 590 330" fill="none" stroke="#d97706" stroke-width="2" marker-end="url(#ar3-amber)"/>
+
+      <!-- Step 4: Responsibility Inversion -->
+      <rect x="590" y="295" width="145" height="70" rx="8" fill="#fff1f2" stroke="#e11d48" stroke-width="2"/>
+      <text x="662" y="316" font-size="9.5" font-weight="700" fill="#9f1239" text-anchor="middle">Responsibility Shift</text>
+      <text x="662" y="331" font-size="8.5" fill="#be123c" text-anchor="middle">• Ball: Assigner / Admin</text>
+      <text x="662" y="343" font-size="8" fill="#475569" text-anchor="middle">• Moves to Assigner Pending</text>
+      <text x="662" y="355" font-size="8" fill="#047857" text-anchor="middle">• Assignee Waits (No action)</text>
+
+      <path d="M 735 330 L 765 330" fill="none" stroke="#d97706" stroke-width="2" marker-end="url(#ar3-amber)"/>
+
+      <!-- Step 5: Assigner Provides Details Modal -->
+      <rect x="765" y="300" width="140" height="60" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
+      <text x="835" y="322" font-size="10" font-weight="700" fill="#065f46" text-anchor="middle">Provide Missing Details</text>
+      <text x="835" y="336" font-size="8.5" fill="#047857" text-anchor="middle">Attach files + instructions</text>
+      <text x="835" y="348" font-size="8" font-weight="600" fill="#2563eb" text-anchor="middle">status → in_progress</text>
+
+      <!-- Return Loop Back to Execution -->
+      <path d="M 835 300 L 835 245" fill="none" stroke="#059669" stroke-width="2" marker-end="url(#ar3-green)"/>
+      <text x="845" y="275" font-size="8.5" font-weight="700" fill="#059669">Question Answered</text>
+
+      <!-- Step 6: Full Execution & Ready for Review -->
+      <rect x="760" y="185" width="150" height="64" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+      <text x="835" y="207" font-size="10" font-weight="700" fill="#1e40af" text-anchor="middle">Active Work Execution</text>
+      <text x="835" y="221" font-size="8.5" fill="#3b82f6" text-anchor="middle">Develop deliverables</text>
+      <text x="835" y="233" font-size="8" font-weight="700" fill="#059669" text-anchor="middle">Ready to Submit Work</text>
+
+      <path d="M 910 217 L 945 217" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar3)"/>
+
+      <rect x="945" y="195" width="60" height="44" rx="22" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+      <text x="975" y="221" font-size="9" font-weight="700" fill="#065f46" text-anchor="middle">Next</text>
+    </svg>
+  </div>
+
+  <div class="logic-grid">
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #d97706;">●</span> Contextual Banners
+      </div>
+      <p class="logic-card-desc">
+        When an employee asks a question, the top bar renders an amber alert <code>"Missing Details Requested"</code> with an instant <code>[Provide Missing Details]</code> modal for the assigner.
+      </p>
+    </div>
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #be123c;">●</span> Queue Handover Automation
+      </div>
+      <p class="logic-card-desc">
+        The task moves out of the employee's active queue and into the assigner's <strong>"My Action Required"</strong>, ensuring managers never lose track of questions blocking employees.
+      </p>
+    </div>
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #059669;">●</span> Automatic Resolution State
+      </div>
+      <p class="logic-card-desc">
+        Submitting clarification details automatically flips the task back to <code>in_progress</code> and marks the question answered, returning the ball to the assignee's court immediately.
+      </p>
+    </div>
+  </div>
+
+  <div class="doc-footer">
+    <span>QuickLifeNow Enterprise Core Documentation</span>
+    <span>Diagram 3 of 7: Clarification Loop</span>
+    <span>Page 4 of 8</span>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- PAGE 5: DIAGRAM 4 - REVIEW & REVISION LOOP -->
+<!-- ========================================== -->
+<div class="page">
+  <div class="doc-header">
+    <div class="brand-badge">
+      <div class="brand-logo">Q</div>
+      <div>
+        <div class="brand-title">QuickLifeNow Enterprise</div>
+        <div class="brand-sub">System Architecture Specification</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div><strong>Diagram 4: Review & Revision Loop</strong></div>
+      <div>Quality Assurance & Feedback State Machine</div>
+    </div>
+  </div>
+
+  <div class="section-title-block">
+    <span class="section-tag tag-rose">Module 3 Architecture</span>
+    <h2 class="section-title">4. Deliverable Submission, Review & Revision Return Loop</h2>
+    <p class="section-desc">Details how submitted deliverables are evaluated, how returns for correction cleanly route feedback, and how resubmissions pass through quality gates.</p>
+  </div>
+
+  <div class="flowchart-wrapper">
+    <svg viewBox="0 0 1020 440" width="1020" height="440">
+      <defs>
+        <marker id="ar4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#475569"/>
+        </marker>
+        <marker id="ar4-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#e11d48"/>
+        </marker>
+        <marker id="ar4-green" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#059669"/>
+        </marker>
+      </defs>
+
+      <!-- Step 1: Assignee Submits Work -->
+      <rect x="20" y="185" width="120" height="64" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+      <text x="80" y="207" font-size="10" font-weight="700" fill="#1e40af" text-anchor="middle">Submit Deliverable</text>
+      <text x="80" y="221" font-size="8.5" fill="#3b82f6" text-anchor="middle">Upload proof files</text>
+      <text x="80" y="233" font-size="8" font-weight="700" fill="#2563eb" text-anchor="middle">status → review</text>
+
+      <path d="M 140 217 L 175 217" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar4)"/>
+
+      <!-- Step 2: Enters Review Queue -->
+      <rect x="175" y="185" width="130" height="64" rx="8" fill="#f3e8ff" stroke="#9333ea" stroke-width="2"/>
+      <text x="240" y="207" font-size="10" font-weight="700" fill="#6b21a8" text-anchor="middle">Enters Review Queue</text>
+      <text x="240" y="221" font-size="8.5" fill="#7e22ce" text-anchor="middle">Assigner / Admin court</text>
+      <text x="240" y="233" font-size="8" font-weight="600" fill="#9333ea" text-anchor="middle">Ball: Reviewer Court</text>
+
+      <path d="M 305 217 L 340 217" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar4)"/>
+
+      <!-- Step 3: Review Decision Gate -->
+      <polygon points="405,177 465,217 405,257 345,217" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+      <text x="405" y="213" font-size="9.5" font-weight="700" fill="#9a3412" text-anchor="middle">Evaluation</text>
+      <text x="405" y="226" font-size="8.5" fill="#c2410c" text-anchor="middle">Decision?</text>
+
+      <!-- Option REJECT / RETURN (Down) -->
+      <path d="M 405 257 L 405 330 L 450 330" fill="none" stroke="#e11d48" stroke-width="2" marker-end="url(#ar4-red)"/>
+      <text x="415" y="285" font-size="8.5" font-weight="700" fill="#e11d48">RETURN (Wrong)</text>
+
+      <!-- Step 4: Reviewer Logs Return Comments -->
+      <rect x="450" y="300" width="150" height="60" rx="8" fill="#fff1f2" stroke="#e11d48" stroke-width="2"/>
+      <text x="525" y="322" font-size="9.5" font-weight="700" fill="#9f1239" text-anchor="middle">Return with Feedback</text>
+      <text x="525" y="336" font-size="8.5" fill="#be123c" text-anchor="middle">e.g. "make it right - fix X"</text>
+      <text x="525" y="348" font-size="8" font-weight="700" fill="#e11d48" text-anchor="middle">status → post_comment</text>
+
+      <path d="M 600 330 L 635 330" fill="none" stroke="#e11d48" stroke-width="2" marker-end="url(#ar4-red)"/>
+
+      <!-- Step 5: Clean Handover to Assignee -->
+      <rect x="635" y="295" width="160" height="70" rx="8" fill="#fff1f2" stroke="#e11d48" stroke-width="2"/>
+      <text x="715" y="316" font-size="9.5" font-weight="700" fill="#9f1239" text-anchor="middle">Assignee Action Required</text>
+      <text x="715" y="330" font-size="8.5" fill="#be123c" text-anchor="middle">• Ball: Assignee Court</text>
+      <text x="715" y="342" font-size="8" fill="#475569" text-anchor="middle">• Old questions superseded</text>
+      <text x="715" y="354" font-size="8" font-weight="700" fill="#be123c" text-anchor="middle">[Submit Fixes] button active</text>
+
+      <!-- Resubmit Loop -->
+      <path d="M 795 330 L 860 330 L 860 380 L 80 380 L 80 249" fill="none" stroke="#e11d48" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#ar4-red)"/>
+      <text x="460" y="395" font-size="9" font-weight="700" fill="#be123c">Assignee corrects deliverables and clicks "Submit Fixes" (Resubmission)</text>
+
+      <!-- Option APPROVED (Straight) -->
+      <path d="M 465 217 L 530 217" fill="none" stroke="#059669" stroke-width="2" marker-end="url(#ar4-green)"/>
+      <text x="480" y="207" font-size="9" font-weight="700" fill="#059669">APPROVE</text>
+
+      <!-- Step 6: Branch Completed -->
+      <rect x="530" y="185" width="135" height="64" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+      <text x="597" y="207" font-size="10" font-weight="700" fill="#065f46" text-anchor="middle">Branch Completed</text>
+      <text x="597" y="221" font-size="8.5" fill="#047857" text-anchor="middle">Milestone Progress +1</text>
+      <text x="597" y="233" font-size="8" font-weight="600" fill="#059669" text-anchor="middle">status → completed</text>
+
+      <path d="M 665 217 L 700 217" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar4)"/>
+
+      <!-- Decision Gate: All Branches Finished? -->
+      <polygon points="760,177 820,217 760,257 700,217" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+      <text x="760" y="213" font-size="9" font-weight="700" fill="#9a3412" text-anchor="middle">All Sibling</text>
+      <text x="760" y="226" font-size="8" fill="#c2410c" text-anchor="middle">Branches Done?</text>
+
+      <!-- No (Wait) -->
+      <path d="M 760 177 L 760 110 L 680 110" fill="none" stroke="#64748b" stroke-width="2" marker-end="url(#ar4)"/>
+      <text x="770" y="145" font-size="8.5" font-weight="700" fill="#64748b">NO</text>
+
+      <rect x="550" y="90" width="130" height="40" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+      <text x="615" y="108" font-size="8.5" font-weight="700" fill="#475569" text-anchor="middle">Awaiting Teammates</text>
+      <text x="615" y="121" font-size="7.5" fill="#64748b" text-anchor="middle">Other branches in progress</text>
+
+      <!-- Yes (Proceed to Final Sign-off) -->
+      <path d="M 820 217 L 855 217" fill="none" stroke="#059669" stroke-width="2" marker-end="url(#ar4-green)"/>
+      <text x="830" y="207" font-size="8.5" font-weight="700" fill="#059669">YES</text>
+
+      <!-- Step 7: Final Project Sign-off -->
+      <rect x="855" y="185" width="135" height="64" rx="8" fill="#ecfdf5" stroke="#047857" stroke-width="2"/>
+      <text x="922" y="207" font-size="10" font-weight="700" fill="#065f46" text-anchor="middle">Creator Final Sign-off</text>
+      <text x="922" y="221" font-size="8.5" fill="#047857" text-anchor="middle">Approve & Complete</text>
+      <text x="922" y="233" font-size="8" font-weight="700" fill="#047857" text-anchor="middle">Task 100% Archived</text>
+    </svg>
+  </div>
+
+  <div class="logic-grid">
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #e11d48;">●</span> Clean Feedback Routing
+      </div>
+      <p class="logic-card-desc">
+        When Admin rejects work with remarks (e.g. <em>"make it right"</em>), old questions are superseded. The employee receives a red banner with notes and a <code>[Submit Fixes]</code> action.
+      </p>
+    </div>
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #6b21a8;">●</span> Conflict-Free Dashboard
+      </div>
+      <p class="logic-card-desc">
+        Admin dashboard displays <em>"Returned for revision • Awaiting assignee"</em> with zero false alerts, while the employee's screen clearly highlights <em>"Action Required"</em>.
+      </p>
+    </div>
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #047857;">●</span> Dual-Tier Sign-off Gate
+      </div>
+      <p class="logic-card-desc">
+        Individual subtasks are approved first by their respective assigners. Once all sibling branches succeed, the Project Creator performs the final master sign-off.
+      </p>
+    </div>
+  </div>
+
+  <div class="doc-footer">
+    <span>QuickLifeNow Enterprise Core Documentation</span>
+    <span>Diagram 4 of 7: Review & Revision</span>
+    <span>Page 5 of 8</span>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- PAGE 6: DIAGRAM 5 - MULTI-BRANCH TREE -->
+<!-- ========================================== -->
+<div class="page">
+  <div class="doc-header">
+    <div class="brand-badge">
+      <div class="brand-logo">Q</div>
+      <div>
+        <div class="brand-title">QuickLifeNow Enterprise</div>
+        <div class="brand-sub">System Architecture Specification</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div><strong>Diagram 5: Hierarchical Subtasks</strong></div>
+      <div>Cascading Delegation & Milestones</div>
+    </div>
+  </div>
+
+  <div class="section-title-block">
+    <span class="section-tag tag-emerald">Module 4 Architecture</span>
+    <h2 class="section-title">5. Hierarchical Subtask Branching & Milestone Convergence</h2>
+    <p class="section-desc">Illustrates multi-level organizational delegation down manager trees, peer privacy boundaries, and dynamic milestone progress aggregation.</p>
+  </div>
+
+  <div class="flowchart-wrapper">
+    <svg viewBox="0 0 1020 440" width="1020" height="440">
+      <defs>
+        <marker id="ar5" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#475569"/>
+        </marker>
+        <marker id="ar5-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#2563eb"/>
+        </marker>
+      </defs>
+
+      <!-- Level 1: Master Task -->
+      <rect x="30" y="170" width="150" height="85" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="2.5"/>
+      <text x="105" y="195" font-size="11" font-weight="800" fill="#1e3a8a" text-anchor="middle">Master Task (T-001)</text>
+      <text x="105" y="211" font-size="9" fill="#1e40af" text-anchor="middle">Project Creator: Admin</text>
+      <text x="105" y="225" font-size="8.5" fill="#3b82f6" text-anchor="middle">Department: Engineering</text>
+      <text x="105" y="240" font-size="8" font-weight="700" fill="#059669" text-anchor="middle">Aggregated Progress: 66%</text>
+
+      <!-- Split to Level 2 Branches -->
+      <path d="M 180 212 L 230 212" fill="none" stroke="#475569" stroke-width="2"/>
+      <path d="M 230 90 L 230 330" fill="none" stroke="#475569" stroke-width="2"/>
+      
+      <!-- Connectors to Branches -->
+      <path d="M 230 90 L 260 90" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar5)"/>
+      <path d="M 230 212 L 260 212" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar5)"/>
+      <path d="M 230 330 L 260 330" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar5)"/>
+
+      <!-- Branch 1: Completed -->
+      <rect x="260" y="60" width="170" height="60" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+      <text x="345" y="81" font-size="10" font-weight="700" fill="#065f46" text-anchor="middle">Branch A: Backend API</text>
+      <text x="345" y="95" font-size="8.5" fill="#047857" text-anchor="middle">Assignee: Senior Dev (John)</text>
+      <text x="345" y="108" font-size="8" font-weight="700" fill="#059669" text-anchor="middle">✓ Status: Completed (100%)</text>
+
+      <!-- Branch 2: Sub-delegated with Child Subtasks -->
+      <rect x="260" y="180" width="170" height="65" rx="8" fill="#fef3c7" stroke="#d97706" stroke-width="2"/>
+      <text x="345" y="200" font-size="10" font-weight="700" fill="#92400e" text-anchor="middle">Branch B: Mobile UI</text>
+      <text x="345" y="214" font-size="8.5" fill="#78350f" text-anchor="middle">Assignee: Team Lead (Sarah)</text>
+      <text x="345" y="226" font-size="8" font-weight="700" fill="#2563eb" text-anchor="middle">can_assign_further = true</text>
+      <text x="345" y="238" font-size="7.5" fill="#b45309" text-anchor="middle">Sub-delegates to Junior Devs</text>
+
+      <!-- Branch 3: In Progress -->
+      <rect x="260" y="300" width="170" height="60" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+      <text x="345" y="321" font-size="10" font-weight="700" fill="#1e40af" text-anchor="middle">Branch C: QA & Security</text>
+      <text x="345" y="335" font-size="8.5" fill="#1d4ed8" text-anchor="middle">Assignee: QA Engineer (Alex)</text>
+      <text x="345" y="348" font-size="8" font-weight="700" fill="#d97706" text-anchor="middle">⏳ Status: In Progress (50%)</text>
+
+      <!-- Sarah Sub-delegation Tree (Level 3) -->
+      <path d="M 430 212 L 480 212" fill="none" stroke="#2563eb" stroke-width="2"/>
+      <path d="M 480 150 L 480 270" fill="none" stroke="#2563eb" stroke-width="2"/>
+      <path d="M 480 150 L 510 150" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#ar5-blue)"/>
+      <path d="M 480 270 L 510 270" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#ar5-blue)"/>
+
+      <rect x="510" y="125" width="160" height="50" rx="6" fill="#fdf4ff" stroke="#c026d3" stroke-width="1.5"/>
+      <text x="590" y="145" font-size="9" font-weight="700" fill="#701a75" text-anchor="middle">Subtask B.1: iOS Design</text>
+      <text x="590" y="158" font-size="8" fill="#86198f" text-anchor="middle">Assigned by Sarah to Maya</text>
+      <text x="590" y="169" font-size="7.5" font-weight="600" fill="#059669" text-anchor="middle">Status: Completed</text>
+
+      <rect x="510" y="245" width="160" height="50" rx="6" fill="#fdf4ff" stroke="#c026d3" stroke-width="1.5"/>
+      <text x="590" y="265" font-size="9" font-weight="700" fill="#701a75" text-anchor="middle">Subtask B.2: Android UI</text>
+      <text x="590" y="278" font-size="8" fill="#86198f" text-anchor="middle">Assigned by Sarah to Liam</text>
+      <text x="590" y="289" font-size="7.5" font-weight="600" fill="#d97706" text-anchor="middle">Status: In Review</text>
+
+      <!-- Convergence Gate (Level 4) -->
+      <path d="M 430 90 L 740 90 L 740 180" fill="none" stroke="#059669" stroke-width="2"/>
+      <path d="M 670 150 L 740 150 L 740 180" fill="none" stroke="#475569" stroke-width="2"/>
+      <path d="M 670 270 L 740 270 L 740 240" fill="none" stroke="#475569" stroke-width="2"/>
+      <path d="M 430 330 L 740 330 L 740 240" fill="none" stroke="#475569" stroke-width="2"/>
+
+      <path d="M 740 212 L 775 212" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar5)"/>
+
+      <!-- Milestone Convergence Gate -->
+      <polygon points="825,175 885,212 825,250 765,212" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+      <text x="825" y="208" font-size="9" font-weight="700" fill="#9a3412" text-anchor="middle">Milestone</text>
+      <text x="825" y="221" font-size="8" fill="#c2410c" text-anchor="middle">All 100%?</text>
+
+      <path d="M 885 212 L 920 212" fill="none" stroke="#059669" stroke-width="2" marker-end="url(#ar5)"/>
+      <text x="895" y="203" font-size="8.5" font-weight="700" fill="#059669">YES</text>
+
+      <!-- Final Master Task Closure -->
+      <rect x="920" y="180" width="85" height="64" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+      <text x="962" y="204" font-size="10" font-weight="700" fill="#065f46" text-anchor="middle">Master Task</text>
+      <text x="962" y="218" font-size="8.5" fill="#047857" text-anchor="middle">Sign-off</text>
+      <text x="962" y="232" font-size="7.5" font-weight="700" fill="#059669" text-anchor="middle">Closed 100%</text>
+    </svg>
+  </div>
+
+  <div class="logic-grid">
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #2563eb;">●</span> Multi-Tier Sub-Delegation
+      </div>
+      <p class="logic-card-desc">
+        When enabled (<code>can_assign_further = true</code>), assignees can branch scopes down their organization tree. Sub-assignees report directly up their delegation hierarchy.
+      </p>
+    </div>
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #c026d3;">●</span> Strict Peer Privacy Isolation
+      </div>
+      <p class="logic-card-desc">
+        Assignees on Branch A cannot inspect private deliverables, files, or review comments on Branch B or C, ensuring confidential deliverables remain segregated.
+      </p>
+    </div>
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #059669;">●</span> Automatic Milestone Aggregation
+      </div>
+      <p class="logic-card-desc">
+        The master progress bar mathematically aggregates child branches: <code>Progress = (Completed Branches / Total Branches) * 100</code>, ensuring real-time executive reporting.
+      </p>
+    </div>
+  </div>
+
+  <div class="doc-footer">
+    <span>QuickLifeNow Enterprise Core Documentation</span>
+    <span>Diagram 5 of 7: Hierarchical Branching</span>
+    <span>Page 6 of 8</span>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- PAGE 7: DIAGRAM 6 - GOVERNANCE & ON-HOLD -->
+<!-- ========================================== -->
+<div class="page">
+  <div class="doc-header">
+    <div class="brand-badge">
+      <div class="brand-logo">Q</div>
+      <div>
+        <div class="brand-title">QuickLifeNow Enterprise</div>
+        <div class="brand-sub">System Architecture Specification</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div><strong>Diagram 6: Governance & Audit</strong></div>
+      <div>On-Hold, Cancellation & Security Controls</div>
+    </div>
+  </div>
+
+  <div class="section-title-block">
+    <span class="section-tag tag-slate">Module 5 Architecture</span>
+    <h2 class="section-title">6. Administrative Governance, On-Hold & Cancellation Flowchart</h2>
+    <p class="section-desc">Covers administrative oversight, pausing project SLA clocks with reasons, soft cancellation with audit trails, and deletion security gates.</p>
+  </div>
+
+  <div class="flowchart-wrapper">
+    <svg viewBox="0 0 1020 440" width="1020" height="440">
+      <defs>
+        <marker id="ar6" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#475569"/>
+        </marker>
+        <marker id="ar6-amber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#d97706"/>
+        </marker>
+        <marker id="ar6-red" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#e11d48"/>
+        </marker>
+      </defs>
+
+      <!-- Active Running Task -->
+      <rect x="20" y="195" width="130" height="50" rx="8" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+      <text x="85" y="217" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">Active Task Running</text>
+      <text x="85" y="231" font-size="8.5" fill="#3b82f6" text-anchor="middle">in_progress / review</text>
+
+      <path d="M 150 220 L 190 220" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar6)"/>
+
+      <!-- Governance Action Decision -->
+      <polygon points="250,180 310,220 250,260 190,220" fill="#f1f5f9" stroke="#475569" stroke-width="2"/>
+      <text x="250" y="216" font-size="9.5" font-weight="700" fill="#0f172a" text-anchor="middle">Governance</text>
+      <text x="250" y="228" font-size="8" fill="#64748b" text-anchor="middle">Trigger?</text>
+
+      <!-- Flow 1: Put On Hold (Top) -->
+      <path d="M 250 180 L 250 85 L 340 85" fill="none" stroke="#d97706" stroke-width="2" marker-end="url(#ar6-amber)"/>
+      <text x="260" y="115" font-size="9" font-weight="700" fill="#d97706">Pause / Hold</text>
+
+      <rect x="340" y="60" width="150" height="55" rx="8" fill="#fffbeb" stroke="#d97706" stroke-width="2"/>
+      <text x="415" y="81" font-size="10" font-weight="700" fill="#92400e" text-anchor="middle">Enter Pause Reason</text>
+      <text x="415" y="95" font-size="8.5" fill="#b45309" text-anchor="middle">Mandatory explanation</text>
+      <text x="415" y="106" font-size="7.5" font-weight="600" fill="#d97706" text-anchor="middle">status → on_hold</text>
+
+      <path d="M 490 85 L 530 85" fill="none" stroke="#d97706" stroke-width="2" marker-end="url(#ar6-amber)"/>
+
+      <rect x="530" y="55" width="165" height="65" rx="8" fill="#fef3c7" stroke="#b45309" stroke-width="2"/>
+      <text x="612" y="77" font-size="10" font-weight="700" fill="#78350f" text-anchor="middle">Task Paused State</text>
+      <text x="612" y="91" font-size="8" fill="#92400e" text-anchor="middle">• Dispatches on_hold notifications</text>
+      <text x="612" y="103" font-size="8" fill="#92400e" text-anchor="middle">• Pauses active deadline timers</text>
+      <text x="612" y="114" font-size="7.5" font-weight="700" fill="#2563eb" text-anchor="middle">Renders [Resume Task] CTA</text>
+
+      <!-- Resume Path -->
+      <path d="M 695 85 L 750 85 L 750 195" fill="none" stroke="#059669" stroke-width="2" marker-end="url(#ar6)"/>
+      <text x="760" y="130" font-size="8.5" font-weight="700" fill="#059669">Resume Task</text>
+
+      <!-- Resumed Box -->
+      <rect x="710" y="195" width="140" height="50" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="2"/>
+      <text x="780" y="217" font-size="10" font-weight="700" fill="#065f46" text-anchor="middle">Resumed to Active</text>
+      <text x="780" y="231" font-size="8" fill="#047857" text-anchor="middle">status → in_progress</text>
+
+      <!-- Loop Back to Active -->
+      <path d="M 780 245 L 780 270 L 85 270 L 85 245" fill="none" stroke="#2563eb" stroke-width="2" stroke-dasharray="4,4" marker-end="url(#ar6)"/>
+
+      <!-- Flow 2: Cancellation (Center-Bottom) -->
+      <path d="M 250 260 L 250 350 L 340 350" fill="none" stroke="#e11d48" stroke-width="2" marker-end="url(#ar6-red)"/>
+      <text x="260" y="315" font-size="9" font-weight="700" fill="#e11d48">Cancel Task</text>
+
+      <rect x="340" y="325" width="150" height="55" rx="8" fill="#fff1f2" stroke="#e11d48" stroke-width="2"/>
+      <text x="415" y="346" font-size="10" font-weight="700" fill="#9f1239" text-anchor="middle">Cancellation Dialog</text>
+      <text x="415" y="360" font-size="8.5" fill="#be123c" text-anchor="middle">Enter cancellation reason</text>
+      <text x="415" y="371" font-size="7.5" font-weight="600" fill="#e11d48" text-anchor="middle">Restricted to Admin/Creator</text>
+
+      <path d="M 490 350 L 530 350" fill="none" stroke="#e11d48" stroke-width="2" marker-end="url(#ar6-red)"/>
+
+      <rect x="530" y="325" width="165" height="65" rx="8" fill="#ffe4e6" stroke="#9f1239" stroke-width="2"/>
+      <text x="612" y="346" font-size="10" font-weight="700" fill="#881337" text-anchor="middle">Soft Cancellation</text>
+      <text x="612" y="360" font-size="8" fill="#9f1239" text-anchor="middle">• status → cancelled</text>
+      <text x="612" y="372" font-size="8" fill="#9f1239" text-anchor="middle">• Records cancelled_by & reason</text>
+      <text x="612" y="384" font-size="7.5" font-weight="700" fill="#0f172a" text-anchor="middle">Permanent Audit Trail</text>
+
+      <!-- Flow 3: Hard Delete (Far Right) -->
+      <path d="M 695 350 L 760 350" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar6)"/>
+
+      <rect x="760" y="325" width="150" height="65" rx="8" fill="#f8fafc" stroke="#0f172a" stroke-width="2"/>
+      <text x="835" y="346" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle">Delete Security Gate</text>
+      <text x="835" y="360" font-size="8" fill="#475569" text-anchor="middle">Setting: allow_subadmin_delete</text>
+      <text x="835" y="372" font-size="8" fill="#be123c" text-anchor="middle">Full Admin confirmation</text>
+      <text x="835" y="384" font-size="7.5" font-weight="700" fill="#475569" text-anchor="middle">Purge / Archival</text>
+    </svg>
+  </div>
+
+  <div class="logic-grid">
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #d97706;">●</span> SLA Pause & Resume
+      </div>
+      <p class="logic-card-desc">
+        Putting a task on hold requires documenting a clear rationale. All SLA timers pause and notification banners keep assignees informed until resumed.
+      </p>
+    </div>
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #e11d48;">●</span> Traceable Soft Cancel
+      </div>
+      <p class="logic-card-desc">
+        Cancelled tasks preserve all historical files, comments, and milestones with the exact timestamp and authorizing user recorded in the database.
+      </p>
+    </div>
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #0f172a;">●</span> Deletion Authorization
+      </div>
+      <p class="logic-card-desc">
+        Destructive deletions require Full Administrator clearance or an explicit system toggle (<code>allow_subadmin_delete_records</code>), preventing accidental data loss.
+      </p>
+    </div>
+  </div>
+
+  <div class="doc-footer">
+    <span>QuickLifeNow Enterprise Core Documentation</span>
+    <span>Diagram 6 of 7: Governance & Audit</span>
+    <span>Page 7 of 8</span>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- PAGE 8: DIAGRAM 7 - RBAC SECURITY & PRIVACY -->
+<!-- ========================================== -->
+<div class="page">
+  <div class="doc-header">
+    <div class="brand-badge">
+      <div class="brand-logo">Q</div>
+      <div>
+        <div class="brand-title">QuickLifeNow Enterprise</div>
+        <div class="brand-sub">System Architecture Specification</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div><strong>Diagram 7: Security & RBAC</strong></div>
+      <div>Zero-Trust Data Isolation Architecture</div>
+    </div>
+  </div>
+
+  <div class="section-title-block">
+    <span class="section-tag tag-blue">Security Architecture</span>
+    <h2 class="section-title">7. Role-Based Access Control (RBAC) & Security Architecture</h2>
+    <p class="section-desc">Details the 3-tier user authority matrix, API request security boundaries, peer privacy isolation, and compliance audit trail pipelines.</p>
+  </div>
+
+  <div class="flowchart-wrapper">
+    <svg viewBox="0 0 1020 440" width="1020" height="440">
+      <defs>
+        <marker id="ar7" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#475569"/>
+        </marker>
+        <marker id="ar7-blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#2563eb"/>
+        </marker>
+      </defs>
+
+      <!-- Client Request Gate -->
+      <rect x="20" y="195" width="100" height="45" rx="8" fill="#f8fafc" stroke="#475569" stroke-width="2"/>
+      <text x="70" y="215" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle">Incoming Request</text>
+      <text x="70" y="228" font-size="8" fill="#64748b" text-anchor="middle">API Route / UI</text>
+
+      <path d="M 120 217 L 150 217" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar7)"/>
+
+      <!-- Security Layer 1: Sanctum Auth & Rate Limiting -->
+      <rect x="150" y="180" width="130" height="75" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+      <text x="215" y="202" font-size="10" font-weight="700" fill="#1e40af" text-anchor="middle">Security Gateway</text>
+      <text x="215" y="217" font-size="8" fill="#1d4ed8" text-anchor="middle">• Bearer Token (Sanctum)</text>
+      <text x="215" y="229" font-size="8" fill="#1d4ed8" text-anchor="middle">• CSRF & Rate Limiting</text>
+      <text x="215" y="241" font-size="8" fill="#1d4ed8" text-anchor="middle">• SQL Injection Defense</text>
+
+      <path d="M 280 217 L 315 217" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar7)"/>
+
+      <!-- RBAC Tier Decision -->
+      <polygon points="375,177 435,217 375,257 315,217" fill="#ffedd5" stroke="#ea580c" stroke-width="2"/>
+      <text x="375" y="213" font-size="10" font-weight="700" fill="#9a3412" text-anchor="middle">User Role</text>
+      <text x="375" y="226" font-size="8.5" fill="#c2410c" text-anchor="middle">Tier?</text>
+
+      <!-- Tier 1: Admin (Top) -->
+      <path d="M 375 177 L 375 80 L 460 80" fill="none" stroke="#e11d48" stroke-width="2" marker-end="url(#ar7)"/>
+      <text x="385" y="105" font-size="8.5" font-weight="700" fill="#e11d48">Role: Admin</text>
+
+      <rect x="460" y="55" width="180" height="60" rx="8" fill="#fff1f2" stroke="#e11d48" stroke-width="2"/>
+      <text x="550" y="76" font-size="10.5" font-weight="700" fill="#9f1239" text-anchor="middle">Tier 1: Super Administrator</text>
+      <text x="550" y="90" font-size="8" fill="#be123c" text-anchor="middle">Full Oversight Across All Departments</text>
+      <text x="550" y="102" font-size="8" font-weight="600" fill="#9f1239" text-anchor="middle">System Settings, Users, Cancellation</text>
+
+      <!-- Tier 2: Sub-Admin (Center) -->
+      <path d="M 435 217 L 460 217" fill="none" stroke="#2563eb" stroke-width="2" marker-end="url(#ar7-blue)"/>
+      <text x="440" y="207" font-size="8.5" font-weight="700" fill="#2563eb">Sub-Admin</text>
+
+      <rect x="460" y="185" width="180" height="65" rx="8" fill="#eff6ff" stroke="#2563eb" stroke-width="2"/>
+      <text x="550" y="206" font-size="10.5" font-weight="700" fill="#1e40af" text-anchor="middle">Tier 2: Sub-Administrator</text>
+      <text x="550" y="220" font-size="8" fill="#1d4ed8" text-anchor="middle">Departmental Operations Management</text>
+      <text x="550" y="232" font-size="8" fill="#1d4ed8" text-anchor="middle">Review queue, assign subtasks, logs</text>
+      <text x="550" y="244" font-size="7.5" fill="#64748b" text-anchor="middle">Restricted deletion controls</text>
+
+      <!-- Tier 3: Employee (Bottom) -->
+      <path d="M 375 257 L 375 350 L 460 350" fill="none" stroke="#059669" stroke-width="2" marker-end="url(#ar7)"/>
+      <text x="385" y="320" font-size="8.5" font-weight="700" fill="#059669">Employee</text>
+
+      <rect x="460" y="320" width="180" height="65" rx="8" fill="#ecfdf5" stroke="#059669" stroke-width="2"/>
+      <text x="550" y="341" font-size="10.5" font-weight="700" fill="#065f46" text-anchor="middle">Tier 3: Assigned Contributor</text>
+      <text x="550" y="355" font-size="8" fill="#047857" text-anchor="middle">Execution Scope & Deliverable Submissions</text>
+      <text x="550" y="367" font-size="8" font-weight="700" fill="#047857" text-anchor="middle">Zero-Trust Peer Privacy Protection</text>
+      <text x="550" y="379" font-size="7.5" fill="#065f46" text-anchor="middle">Only sees owned branches & tasks</text>
+
+      <!-- Connect to Data Privacy Isolation Engine -->
+      <path d="M 640 80 L 720 80 L 720 185" fill="none" stroke="#475569" stroke-width="2"/>
+      <path d="M 640 217 L 720 217" fill="none" stroke="#475569" stroke-width="2"/>
+      <path d="M 640 350 L 720 350 L 720 250" fill="none" stroke="#475569" stroke-width="2"/>
+
+      <path d="M 720 217 L 750 217" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar7)"/>
+
+      <!-- Peer Privacy & Data Isolation Sandbox -->
+      <rect x="750" y="170" width="130" height="95" rx="8" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+      <text x="815" y="192" font-size="10" font-weight="700" fill="#0f172a" text-anchor="middle">Privacy Sandbox</text>
+      <text x="815" y="207" font-size="8" fill="#475569" text-anchor="middle">• Branch Scope Isolation</text>
+      <text x="815" y="219" font-size="8" fill="#475569" text-anchor="middle">• Confidential Attachments</text>
+      <text x="815" y="231" font-size="8" fill="#475569" text-anchor="middle">• Hidden Review Notes</text>
+      <text x="815" y="243" font-size="8" font-weight="700" fill="#059669" text-anchor="middle">Peer Privacy Shield</text>
+
+      <path d="M 880 217 L 910 217" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#ar7)"/>
+
+      <!-- Audit Logging & Activity Trail -->
+      <rect x="910" y="180" width="95" height="75" rx="8" fill="#fdf4ff" stroke="#c026d3" stroke-width="2"/>
+      <text x="957" y="202" font-size="9.5" font-weight="700" fill="#701a75" text-anchor="middle">Audit Engine</text>
+      <text x="957" y="217" font-size="8" fill="#86198f" text-anchor="middle">• Status History</text>
+      <text x="957" y="229" font-size="8" fill="#86198f" text-anchor="middle">• User IP & Agent</text>
+      <text x="957" y="241" font-size="7.5" font-weight="700" fill="#c026d3" text-anchor="middle">Immutable Logs</text>
+    </svg>
+  </div>
+
+  <div class="logic-grid">
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #e11d48;">●</span> 3-Tier Enterprise RBAC
+      </div>
+      <p class="logic-card-desc">
+        Enforces clear separation of concerns between <strong>Admin</strong> (Executive Governance), <strong>Sub-Admin</strong> (Operational Oversight), and <strong>Employee</strong> (Focused Execution).
+      </p>
+    </div>
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #059669;">●</span> Zero-Trust Peer Privacy
+      </div>
+      <p class="logic-card-desc">
+        Employees assigned to collaborative tasks cannot inspect each other's private subtask descriptions, uploaded files, or reviewer feedback unless explicitly shared.
+      </p>
+    </div>
+    <div class="logic-card">
+      <div class="logic-card-title">
+        <span style="color: #c026d3;">●</span> Tamper-Proof Audit Trail
+      </div>
+      <p class="logic-card-desc">
+        Every milestone transition, comment, review decision, and file attachment is permanently recorded in <code>task_status_history</code> with user attribution for regulatory compliance.
+      </p>
+    </div>
+  </div>
+
+  <div class="doc-footer">
+    <span>QuickLifeNow Enterprise Core Documentation</span>
+    <span>Diagram 7 of 7: Security & RBAC</span>
+    <span>Page 8 of 8</span>
+  </div>
+</div>
+
+</body>
+</html>
+`;
+
+// Save the HTML file
+const htmlPath = path.resolve('QuickLifeNow_Complete_System_Flowcharts.html');
+fs.writeFileSync(htmlPath, html, 'utf8');
+console.log('HTML Document written successfully:', htmlPath);
+
+// Generate the PDF file using Chrome headless
+const pdfPath = path.resolve('QuickLifeNow_Complete_System_Flowcharts.pdf');
+const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+
+console.log('Rendering vector PDF via Google Chrome Headless Engine...');
+try {
+  execSync(`"${chromePath}" --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf="${pdfPath}" "file:///${htmlPath.replace(/\\/g, '/')}"`, { stdio: 'inherit' });
+  
+  if (fs.existsSync(pdfPath)) {
+    const stats = fs.statSync(pdfPath);
+    console.log('=====================================================');
+    console.log('SUCCESS! PDF generated cleanly:');
+    console.log('Path:', pdfPath);
+    console.log('Size:', stats.size, 'bytes');
+    console.log('=====================================================');
+  } else {
+    console.error('ERROR: PDF file was not created.');
+  }
+} catch (err) {
+  console.error('PDF Generation Failed:', err.message);
+}
