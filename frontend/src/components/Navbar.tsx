@@ -18,6 +18,7 @@ import {
   Minimize2,
   Loader2,
   ArrowRight,
+  ArrowLeft,
   Sparkles,
   Building2,
 } from 'lucide-react';
@@ -46,7 +47,7 @@ const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, impersonator, isImpersonating, stopImpersonating } = useAuth();
   const { enableWorkMessages } = useSettings();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadMessages, setUnreadMessages] = useState<number>(0);
@@ -402,6 +403,22 @@ const Navbar: React.FC<NavbarProps> = ({
 
       {/* Right Actions */}
       <div className="flex items-center gap-2.5">
+        {/* Switch Back Button (Front of Task Creation Button) */}
+        {isImpersonating && impersonator && (
+          <button
+            type="button"
+            onClick={() => {
+              stopImpersonating();
+              navigate('/');
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white rounded-lg text-xs font-bold shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer active:scale-95 animate-pulse"
+            title={`Switch Back to ${impersonator.name} (${impersonator.role.replace('_', ' ')})`}
+          >
+            <ArrowLeft className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span>Switch Back to {impersonator.name}</span>
+          </button>
+        )}
+
         {/* Create Task Button with Luxe Gradient */}
         <button
           onClick={() => navigate('/tasks/create')}
