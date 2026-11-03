@@ -70,6 +70,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('task-branches', TaskBranchController::class);
     Route::post('/task-branches/{branch}/submit', [TaskSubmissionController::class, 'submit']);
     Route::post('/task-branches/{branch}/delegate', [TaskBranchController::class, 'delegate']);
+    Route::post('/task-branches/{branch}/transfer', [TaskBranchController::class, 'transfer']);
+    Route::post('/task-branches/{branch}/cancel-assignment', [TaskBranchController::class, 'cancelAssignment']);
 
     // Comments & Notifications
     Route::apiResource('comments', CommentController::class);

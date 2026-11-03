@@ -333,6 +333,16 @@ export const tasksApi = {
     const apiBase = rawBaseUrl.endsWith('/api') ? rawBaseUrl : `${rawBaseUrl}/api`;
     return `${apiBase}/attachments/${attachmentId}/download?token=${token || ''}`;
   },
+
+  transferBranch: async (branchId: number, data: { new_owner_id: number; reason?: string }) => {
+    const response = await apiClient.post(`/task-branches/${branchId}/transfer`, data);
+    return response.data;
+  },
+
+  cancelBranchAssignment: async (branchId: number, data?: { reason?: string; delete_permanently?: boolean }) => {
+    const response = await apiClient.post(`/task-branches/${branchId}/cancel-assignment`, data);
+    return response.data;
+  },
 };
 
 export const dashboardApi = {

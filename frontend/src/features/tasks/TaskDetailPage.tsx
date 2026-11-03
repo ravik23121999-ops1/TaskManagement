@@ -38,6 +38,8 @@ import {
   Ban,
   Trash2,
   RotateCcw,
+  ArrowRightLeft,
+  UserMinus,
 } from 'lucide-react';
 
 export const TaskDetailPage: React.FC = () => {
@@ -116,6 +118,17 @@ export const TaskDetailPage: React.FC = () => {
   const [holdingTask, setHoldingTask] = useState(false);
   const [holdError, setHoldError] = useState('');
 
+  // Reassign Modal State (Transfer to another person OR Cancel/Remove assignment)
+  const [isReassignModalOpen, setIsReassignModalOpen] = useState(false);
+  const [reassignBranch, setReassignBranch] = useState<any | null>(null);
+  const [reassignOption, setReassignOption] = useState<'transfer' | 'cancel'>('transfer');
+  const [reassignNewOwnerId, setReassignNewOwnerId] = useState<number | null>(null);
+  const [reassignReason, setReassignReason] = useState('');
+  const [reassignDeletePermanently, setReassignDeletePermanently] = useState(false);
+  const [reassignSubmitting, setReassignSubmitting] = useState(false);
+  const [reassignError, setReassignError] = useState<string | null>(null);
+  const [reassignSearch, setReassignSearch] = useState('');
+
   // Toast Notification state
   const [toast, setToast] = useState<{ type: 'success' | 'error' | 'info'; message: string } | null>(null);
 
@@ -124,6 +137,69 @@ export const TaskDetailPage: React.FC = () => {
     setTimeout(() => {
       setToast((prev) => (prev?.message === message ? null : prev));
     }, 4000);
+  };
+
+  const openReassignModal = async (branch: any) => {
+    setReassignBranch(branch);
+    setReassignOption('transfer');
+    setReassignNewOwnerId(null);
+    setReassignReason('');
+    setReassignDeletePermanently(false);
+    setReassignError(null);
+    setReassignSearch('');
+    setIsReassignModalOpen(true);
+
+    if (allUsersList.length === 0) {
+      try {
+        const res = await usersApi.list({ per_page: 100 });
+        setAllUsersList(res.data || []);
+      } catch (err) {
+        console.error('Failed to load users for reassign', err);
+      }
+    }
+  };
+
+  const handleConfirmReassign = async () => {
+    if (!reassignBranch) return;
+
+    if (reassignOption === 'transfer') {
+      if (!reassignNewOwnerId) {
+        setReassignError('Please select a replacement employee to take over this assignment.');
+        return;
+      }
+      setReassignSubmitting(true);
+      setReassignError(null);
+      try {
+        await tasksApi.transferBranch(reassignBranch.id, {
+          new_owner_id: reassignNewOwnerId,
+          reason: reassignReason.trim() || undefined,
+        });
+        showToast('Assignment successfully transferred to new team member!', 'success');
+        setIsReassignModalOpen(false);
+        if (id) await loadTask(Number(id));
+      } catch (err: any) {
+        setReassignError(err.response?.data?.message || 'Failed to transfer assignment.');
+      } finally {
+        setReassignSubmitting(false);
+      }
+    } else {
+      // Cancel / Remove
+      setReassignSubmitting(true);
+      setReassignError(null);
+      try {
+        await tasksApi.cancelBranchAssignment(reassignBranch.id, {
+          reason: reassignReason.trim() || undefined,
+          delete_permanently: reassignDeletePermanently,
+        });
+        showToast('Assignment successfully withdrawn/cancelled.', 'success');
+        setIsReassignModalOpen(false);
+        if (id) await loadTask(Number(id));
+      } catch (err: any) {
+        setReassignError(err.response?.data?.message || 'Failed to cancel assignment.');
+      } finally {
+        setReassignSubmitting(false);
+      }
+    }
   };
 
   useEffect(() => {
@@ -1977,6 +2053,15 @@ export const TaskDetailPage: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {task.branches.map((b) => {
                   const pendingSub = b.submissions?.find((s) => !s.reviews || s.reviews.length === 0);
+                  const canReassignBranch =
+                    (currentUser?.role === 'admin' ||
+                      currentUser?.role === 'sub_admin' ||
+                      task.creator?.id === currentUser?.id ||
+                      b.assigned_by?.id === currentUser?.id) &&
+                    task.status !== 'completed' &&
+                    task.status !== 'cancelled' &&
+                    b.status !== 'completed' &&
+                    b.status !== 'cancelled';
 
                   return (
                     <div
@@ -2001,17 +2086,30 @@ export const TaskDetailPage: React.FC = () => {
                               )}
                             </div>
                           </div>
-                          <StatusBadge
-                            status={b.status}
-                            size="sm"
-                            customLabel={
-                              b.status === 'review'
-                                ? `Under Review: ${b.assigned_by?.name || task.creator?.name || 'Assigner'}`
-                                : b.status === 'post_comment'
-                                ? 'Needs Correction'
-                                : undefined
-                            }
-                          />
+                          <div className="flex items-center gap-2 shrink-0">
+                            <StatusBadge
+                              status={b.status}
+                              size="sm"
+                              customLabel={
+                                b.status === 'review'
+                                  ? `Under Review: ${b.assigned_by?.name || task.creator?.name || 'Assigner'}`
+                                  : b.status === 'post_comment'
+                                  ? 'Needs Correction'
+                                  : undefined
+                              }
+                            />
+                            {canReassignBranch && (
+                              <button
+                                type="button"
+                                onClick={() => openReassignModal(b)}
+                                className="px-2.5 py-1 bg-slate-50 hover:bg-blue-50 text-slate-700 hover:text-blue-700 border border-slate-200 hover:border-blue-300 rounded-lg text-[11px] font-semibold transition flex items-center gap-1 cursor-pointer"
+                                title="Reassign or withdraw this subtask assignment"
+                              >
+                                <ArrowRightLeft className="w-3 h-3 text-blue-600" />
+                                <span>Reassign</span>
+                              </button>
+                            )}
+                          </div>
                         </div>
 
                         <div className="pt-3 space-y-2.5 text-xs">
@@ -3371,9 +3469,40 @@ export const TaskDetailPage: React.FC = () => {
 
                           <div className="flex items-center gap-2 shrink-0">
                             {alreadyBranchOwner && (
-                              <span className="px-1.5 py-0.5 rounded text-[9px] bg-slate-100 text-slate-500 font-medium">
-                                Already Assigned
-                              </span>
+                              <div className="flex items-center gap-1.5">
+                                <span className="px-1.5 py-0.5 rounded text-[9px] bg-slate-100 text-slate-500 font-medium">
+                                  Already Assigned
+                                </span>
+                                {(() => {
+                                  const bOwner = task.branches?.find((b) => b.owner?.id === u.id);
+                                  const canReassign =
+                                    bOwner &&
+                                    (currentUser?.role === 'admin' ||
+                                      currentUser?.role === 'sub_admin' ||
+                                      task.creator?.id === currentUser?.id ||
+                                      bOwner.assigned_by?.id === currentUser?.id) &&
+                                    task.status !== 'completed' &&
+                                    task.status !== 'cancelled' &&
+                                    bOwner.status !== 'completed' &&
+                                    bOwner.status !== 'cancelled';
+                                  if (!canReassign) return null;
+                                  return (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setIsAssignModalOpen(false);
+                                        openReassignModal(bOwner);
+                                      }}
+                                      className="px-2 py-0.5 rounded text-[9px] font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition cursor-pointer flex items-center gap-1"
+                                      title="Click to reassign or withdraw this member's work"
+                                    >
+                                      <ArrowRightLeft className="w-2.5 h-2.5" />
+                                      <span>Reassign</span>
+                                    </button>
+                                  );
+                                })()}
+                              </div>
                             )}
                             {alreadyCollaborator && (
                               <span className="px-1.5 py-0.5 rounded text-[9px] bg-purple-50 text-purple-600 font-medium">
@@ -3575,6 +3704,300 @@ export const TaskDetailPage: React.FC = () => {
               >
                 {deletingTask ? 'Deleting...' : 'Delete Permanently'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reassign Assignment Modal */}
+      {isReassignModalOpen && reassignBranch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-xl w-full p-6 text-slate-800 space-y-4 max-h-[92vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center shrink-0">
+                  <ArrowRightLeft className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Reassign Assignment</h3>
+                  <p className="text-xs text-slate-500">
+                    Manage work allocated to{' '}
+                    <span className="font-semibold text-slate-700">{reassignBranch.owner?.name || 'Assignee'}</span>
+                    {' '}• "{reassignBranch.title}"
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsReassignModalOpen(false);
+                  setReassignBranch(null);
+                }}
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Error Message */}
+            {reassignError && (
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 text-xs rounded-xl flex items-center gap-2 shrink-0">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{reassignError}</span>
+              </div>
+            )}
+
+            {/* Option Selector: The two options requested */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 shrink-0">
+              <div
+                onClick={() => setReassignOption('transfer')}
+                className={`p-3.5 rounded-xl border-2 transition cursor-pointer flex items-start gap-3 ${
+                  reassignOption === 'transfer'
+                    ? 'bg-blue-50/80 border-blue-600 shadow-xs'
+                    : 'bg-white border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition ${
+                    reassignOption === 'transfer' ? 'border-blue-600 bg-blue-600' : 'border-slate-300'
+                  }`}
+                >
+                  {reassignOption === 'transfer' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-900 flex items-center justify-between">
+                    <span>Transfer to Another Person</span>
+                  </p>
+                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                    Select a replacement employee to take over this subtask and deliverables.
+                  </p>
+                </div>
+              </div>
+
+              <div
+                onClick={() => setReassignOption('cancel')}
+                className={`p-3.5 rounded-xl border-2 transition cursor-pointer flex items-start gap-3 ${
+                  reassignOption === 'cancel'
+                    ? 'bg-rose-50/80 border-rose-600 shadow-xs'
+                    : 'bg-white border-slate-200 hover:border-slate-300'
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition ${
+                    reassignOption === 'cancel' ? 'border-rose-600 bg-rose-600' : 'border-slate-300'
+                  }`}
+                >
+                  {reassignOption === 'cancel' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-900 flex items-center justify-between">
+                    <span>Cancel / Remove Assignment</span>
+                  </p>
+                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                    Withdraw the work from this assignee so it no longer blocks completion.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Scrollable Content Body */}
+            <div className="overflow-y-auto flex-1 space-y-4 pr-1">
+              {reassignOption === 'transfer' ? (
+                <>
+                  {/* Current Assignee Banner */}
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-[10px]">
+                        {reassignBranch.owner?.name?.charAt(0) || 'U'}
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Currently Assigned To</span>
+                        <span className="font-bold text-slate-800">{reassignBranch.owner?.name || 'Unassigned'}</span>
+                        <span className="text-[10px] text-slate-400 ml-1.5">({reassignBranch.owner?.email || ''})</span>
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded text-[10px] bg-slate-200/60 text-slate-600 font-medium capitalize">
+                      {reassignBranch.status?.replace('_', ' ')}
+                    </span>
+                  </div>
+
+                  {/* Search and Select Replacement Employee */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-slate-700 block">
+                      Select Replacement Employee <span className="text-rose-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={reassignSearch}
+                        onChange={(e) => setReassignSearch(e.target.value)}
+                        placeholder="Search replacement by name, email, or department..."
+                        className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div className="border border-slate-200/80 rounded-xl p-1.5 max-h-48 overflow-y-auto divide-y divide-slate-100 space-y-1">
+                      {allUsersList
+                        .filter((u) => u.id !== reassignBranch.owner?.id)
+                        .filter(
+                          (u) =>
+                            !reassignSearch ||
+                            u.name.toLowerCase().includes(reassignSearch.toLowerCase()) ||
+                            u.email?.toLowerCase().includes(reassignSearch.toLowerCase()) ||
+                            u.department?.name?.toLowerCase().includes(reassignSearch.toLowerCase()) ||
+                            u.role?.toLowerCase().includes(reassignSearch.toLowerCase())
+                        )
+                        .map((u) => {
+                          const isSelected = reassignNewOwnerId === u.id;
+                          const hasOtherBranch = task?.branches?.some((b) => b.owner?.id === u.id && b.id !== reassignBranch.id);
+
+                          return (
+                            <div
+                              key={u.id}
+                              onClick={() => setReassignNewOwnerId(u.id)}
+                              className={`p-2 rounded-lg flex items-center justify-between text-xs cursor-pointer transition ${
+                                isSelected
+                                  ? 'bg-blue-50/90 border border-blue-200 text-blue-900 font-medium'
+                                  : 'hover:bg-slate-50 text-slate-800'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2 truncate">
+                                <div
+                                  className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[10px] shrink-0 ${
+                                    isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'
+                                  }`}
+                                >
+                                  {u.name.charAt(0)}
+                                </div>
+                                <div className="truncate">
+                                  <span className="font-bold">{u.name}</span>
+                                  <span className="text-[10px] text-slate-400 block truncate">
+                                    {u.email} {u.department ? `• ${u.department.name}` : ''}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0">
+                                {hasOtherBranch && (
+                                  <span className="px-1.5 py-0.5 rounded text-[9px] bg-slate-100 text-slate-500 font-medium">
+                                    Has other subtask
+                                  </span>
+                                )}
+                                <span
+                                  className={`w-4 h-4 rounded-md border flex items-center justify-center ${
+                                    isSelected
+                                      ? 'border-blue-600 bg-blue-600 text-white'
+                                      : 'border-slate-300'
+                                  }`}
+                                >
+                                  {isSelected && <Check className="w-3 h-3" />}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+
+                  {/* Transfer Reason */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Reason for Transfer <span className="text-slate-400 font-normal">(Optional)</span>
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={reassignReason}
+                      onChange={(e) => setReassignReason(e.target.value)}
+                      placeholder="e.g. Current assignee has an urgent personal issue/leave; transferring work to maintain timeline..."
+                      className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
+                    />
+                  </div>
+
+                  <div className="p-3 bg-blue-50/60 border border-blue-200/60 rounded-xl text-[11px] text-blue-800 flex items-start gap-2">
+                    <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                    <span>
+                      The replacement assignee will immediately receive this subtask with all existing instructions, deadlines, and attachments intact.
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Cancel / Withdraw Option Body */}
+                  <div className="p-4 bg-rose-50 border border-rose-200 rounded-xl space-y-2">
+                    <div className="flex items-start gap-2.5">
+                      <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-xs font-bold text-rose-900">Withdraw Work Allocation</h4>
+                        <p className="text-[11px] text-rose-700 leading-relaxed mt-0.5">
+                          You are withdrawing subtask <span className="font-bold">"{reassignBranch.title}"</span> from{' '}
+                          <span className="font-bold">{reassignBranch.owner?.name || 'this assignee'}</span>.
+                          This subtask will be marked as cancelled and will no longer block overall task completion.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                      Reason for Withdrawal <span className="text-slate-400 font-normal">(Optional)</span>
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={reassignReason}
+                      onChange={(e) => setReassignReason(e.target.value)}
+                      placeholder="e.g. Assignee unavailable due to emergency; subtask scope withdrawn..."
+                      className="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 resize-none"
+                    />
+                  </div>
+
+                  <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer pt-1">
+                    <input
+                      type="checkbox"
+                      checked={reassignDeletePermanently}
+                      onChange={(e) => setReassignDeletePermanently(e.target.checked)}
+                      className="rounded border-slate-300 text-rose-600 focus:ring-rose-500"
+                    />
+                    <span>Also remove completely from subtask cards (Soft-delete)</span>
+                  </label>
+                </>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsReassignModalOpen(false);
+                  setReassignBranch(null);
+                }}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              {reassignOption === 'transfer' ? (
+                <button
+                  type="button"
+                  onClick={handleConfirmReassign}
+                  disabled={reassignSubmitting || !reassignNewOwnerId}
+                  className="px-5 py-2 text-xs font-bold bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <ArrowRightLeft className="w-3.5 h-3.5" />
+                  <span>{reassignSubmitting ? 'Transferring...' : 'Confirm Transfer'}</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleConfirmReassign}
+                  disabled={reassignSubmitting}
+                  className="px-5 py-2 text-xs font-bold bg-rose-600 hover:bg-rose-700 disabled:bg-rose-300 text-white rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <UserMinus className="w-3.5 h-3.5" />
+                  <span>{reassignSubmitting ? 'Withdrawing...' : 'Withdraw Assignment'}</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

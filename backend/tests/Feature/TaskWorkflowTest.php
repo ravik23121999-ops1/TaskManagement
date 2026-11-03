@@ -683,4 +683,108 @@ class TaskWorkflowTest extends TestCase
             'question' => 'Attempted question on completed task',
         ])->assertStatus(422);
     }
+
+    public function test_reassign_transfer_subtask_to_another_employee(): void
+    {
+        $task = Task::create([
+            'title' => 'Multi-branch reassign test',
+            'description' => 'Desc',
+            'handling_method' => 'assign',
+            'creator_id' => $this->admin->id,
+            'status' => 'in_progress',
+        ]);
+
+        $branch = \App\Models\TaskBranch::create([
+            'task_id' => $task->id,
+            'title' => 'Backend API Subtask',
+            'owner_id' => $this->employee1->id,
+            'status' => 'in_progress',
+        ]);
+
+        $branch->assignments()->create([
+            'assigned_to_id' => $this->employee1->id,
+            'assigned_by_id' => $this->admin->id,
+            'is_current' => true,
+            'assigned_at' => now(),
+        ]);
+
+        // Transfer from Employee 1 to Employee 2
+        $transferRes = $this->actingAs($this->admin)->postJson("/api/task-branches/{$branch->id}/transfer", [
+            'new_owner_id' => $this->employee2->id,
+            'reason' => 'Employee 1 has personal emergency leave',
+        ]);
+        $transferRes->assertStatus(200);
+
+        $branch->refresh();
+        $this->assertEquals($this->employee2->id, $branch->owner_id);
+
+        // Verify assignment records
+        $currentAssignment = $branch->assignments()->where('is_current', true)->first();
+        $this->assertNotNull($currentAssignment);
+        $this->assertEquals($this->employee2->id, $currentAssignment->assigned_to_id);
+
+        $oldAssignment = $branch->assignments()->where('assigned_to_id', $this->employee1->id)->first();
+        $this->assertFalse((bool) $oldAssignment->is_current);
+
+        // Verify status history
+        $this->assertTrue(
+            \App\Models\TaskStatusHistory::where('task_branch_id', $branch->id)
+                ->where('reason', 'like', '%personal emergency leave%')
+                ->exists()
+        );
+    }
+
+    public function test_reassign_cancel_subtask_assignment(): void
+    {
+        $task = Task::create([
+            'title' => 'Cancel assignment test',
+            'description' => 'Desc',
+            'handling_method' => 'assign',
+            'creator_id' => $this->admin->id,
+            'status' => 'in_progress',
+        ]);
+
+        $branch = \App\Models\TaskBranch::create([
+            'task_id' => $task->id,
+            'title' => 'UI Subtask to cancel',
+            'owner_id' => $this->employee1->id,
+            'status' => 'in_progress',
+        ]);
+
+        // Cancel / withdraw assignment
+        $cancelRes = $this->actingAs($this->admin)->postJson("/api/task-branches/{$branch->id}/cancel-assignment", [
+            'reason' => 'Assignee unavailable, withdrawing assignment',
+        ]);
+        $cancelRes->assertStatus(200);
+
+        $branch->refresh();
+        $this->assertEquals('cancelled', $branch->status);
+    }
+
+    public function test_reassign_unauthorized_user_forbidden(): void
+    {
+        $task = Task::create([
+            'title' => 'Unauthorized reassign test',
+            'description' => 'Desc',
+            'handling_method' => 'assign',
+            'creator_id' => $this->admin->id,
+            'status' => 'in_progress',
+        ]);
+
+        $branch = \App\Models\TaskBranch::create([
+            'task_id' => $task->id,
+            'title' => 'Subtask',
+            'owner_id' => $this->employee1->id,
+            'status' => 'in_progress',
+        ]);
+
+        // Employee 2 is not admin, creator, or assigner -> 403 Forbidden!
+        $this->actingAs($this->employee2)->postJson("/api/task-branches/{$branch->id}/transfer", [
+            'new_owner_id' => $this->employee1->id,
+        ])->assertStatus(403);
+
+        $this->actingAs($this->employee2)->postJson("/api/task-branches/{$branch->id}/cancel-assignment", [
+            'reason' => 'Malicious cancel',
+        ])->assertStatus(403);
+    }
 }
