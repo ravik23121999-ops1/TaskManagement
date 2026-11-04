@@ -16,10 +16,26 @@ class AttachmentController extends Controller
     public function upload(Request $request): JsonResponse
     {
         $request->validate([
-            'file' => 'required|file|max:10240', // Max 10MB
+            'file' => 'required|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar,7z,jpg,jpeg,png,gif,webp,svg,mp4,webm',
             'task_id' => 'required|exists:tasks,id',
             'task_branch_id' => 'nullable|exists:task_branches,id',
         ]);
+
+        $user = $request->user();
+        $task = Task::findOrFail($request->task_id);
+
+        $isAdmin = $user->role === 'admin' || $user->role === 'sub_admin';
+        $isParticipant = (int)$task->creator_id === (int)$user->id
+            || $task->branches()->where('owner_id', $user->id)->exists()
+            || $task->branches()->whereHas('assignments', fn($a) => $a->where('assigned_to_id', $user->id)->orWhere('assigned_by_id', $user->id))->exists()
+            || $task->branches()->whereHas('collaborators', fn($c) => $c->where('user_id', $user->id)->orWhere('invited_by_id', $user->id))->exists()
+            || $task->submissions()->whereHas('reviews', fn($r) => $r->where('reviewer_id', $user->id))->exists();
+
+        if (!$isAdmin && !$isParticipant) {
+            return response()->json([
+                'message' => 'Unauthorized: You are not assigned to or collaborating on this task, and cannot upload attachments.'
+            ], 403);
+        }
 
         $file = $request->file('file');
         $path = $file->store('attachments', 'public');
@@ -27,15 +43,14 @@ class AttachmentController extends Controller
         $attachment = TaskAttachment::create([
             'task_id' => $request->task_id,
             'task_branch_id' => $request->task_branch_id,
-            'uploaded_by_id' => $request->user()->id,
+            'uploaded_by_id' => $user->id,
             'file_name' => $file->getClientOriginalName(),
             'file_path' => $path,
             'file_size' => $file->getSize(),
             'file_type' => $file->getMimeType(),
         ]);
 
-        $task = Task::find($request->task_id);
-        ActivityLogger::log('attachment_uploaded', "Uploaded attachment '{$file->getClientOriginalName()}' on task: " . ($task?->title ?? $request->task_id), $request->task_id);
+        ActivityLogger::log('attachment_uploaded', "Uploaded attachment '{$file->getClientOriginalName()}' on task: {$task->title}", $task->id);
 
         return response()->json(['data' => $attachment], 201);
     }

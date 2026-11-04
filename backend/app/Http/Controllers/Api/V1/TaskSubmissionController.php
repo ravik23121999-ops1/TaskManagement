@@ -24,8 +24,8 @@ class TaskSubmissionController extends Controller
             'description' => 'required|string|min:3',
             'task_branch_id' => 'nullable|exists:task_branches,id',
             'attachments' => 'nullable|array',
-            'attachments.*' => 'nullable|file|max:20480',
-            'file' => 'nullable|file|max:20480',
+            'attachments.*' => 'nullable|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar,7z,jpg,jpeg,png,gif,webp,svg,mp4,webm',
+            'file' => 'nullable|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar,7z,jpg,jpeg,png,gif,webp,svg,mp4,webm',
         ]);
 
         $user = $request->user();
@@ -214,8 +214,8 @@ class TaskSubmissionController extends Controller
         $request->validate([
             'description' => 'nullable|string',
             'attachments' => 'nullable|array',
-            'attachments.*' => 'nullable|file|max:20480',
-            'file' => 'nullable|file|max:20480',
+            'attachments.*' => 'nullable|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar,7z,jpg,jpeg,png,gif,webp,svg,mp4,webm',
+            'file' => 'nullable|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar,7z,jpg,jpeg,png,gif,webp,svg,mp4,webm',
         ]);
 
         $user = $request->user();

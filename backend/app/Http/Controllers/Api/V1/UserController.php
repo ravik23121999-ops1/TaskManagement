@@ -138,6 +138,7 @@ class UserController extends Controller
             ], 422);
         }
 
+        $user->tokens()->delete();
         $user->delete();
 
         ActivityLogger::log('user_deleted', "Deleted user: {$user->name}", null, $currentUser->id);
@@ -176,6 +177,7 @@ class UserController extends Controller
         }
 
         $user->update(['is_active' => false]);
+        $user->tokens()->delete();
 
         ActivityLogger::log('user_deactivated', "Deactivated user: {$user->name}", null, $currentUser->id);
 

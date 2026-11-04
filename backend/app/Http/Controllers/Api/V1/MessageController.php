@@ -838,7 +838,7 @@ class MessageController extends Controller
         $user = $request->user();
 
         $request->validate([
-            'file' => 'required|file|max:20480', // Max 20MB
+            'file' => 'required|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar,7z,jpg,jpeg,png,gif,webp,svg,mp4,webm',
             'task_branch_id' => 'required',
             'task_id' => 'nullable',
         ]);

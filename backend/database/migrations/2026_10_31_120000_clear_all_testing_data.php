@@ -7,7 +7,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        TestingDataCleaner::clean();
+        // Guard against wiping data if run in a production environment
+        if (!app()->isProduction()) {
+            TestingDataCleaner::clean();
+        }
     }
 
     public function down(): void
