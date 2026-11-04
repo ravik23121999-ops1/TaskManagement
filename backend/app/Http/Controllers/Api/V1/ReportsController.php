@@ -187,8 +187,11 @@ class ReportsController extends Controller
             ->whereIn('status', ['pending', 'in_progress'])
             ->count();
 
-            // 4. My Created count
-            $myCreatedCount = Task::where('creator_id', $user->id)->count();
+            // 4. My Initiated / Delegated count (Active tasks created & delegated to others, currently tracked)
+            $myCreatedCount = Task::where('creator_id', $user->id)
+                ->where('handling_method', '!=', 'work_alone')
+                ->whereNotIn('status', ['completed', 'cancelled'])
+                ->count();
 
             // 5. My Collaborations count
             $myCollaborationsCount = Task::where('handling_method', 'collaborate')
