@@ -331,8 +331,8 @@ export const UsersPage: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-500 font-bold uppercase tracking-wider">
-                <th className="py-3.5 px-6 w-16">#</th>
+              <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-500 font-bold uppercase tracking-wider whitespace-nowrap">
+                <th className="py-3.5 px-6 whitespace-nowrap">User ID</th>
                 <th className="py-3.5 px-6">Name</th>
                 <th className="py-3.5 px-6">Email</th>
                 <th className="py-3.5 px-6">Role</th>

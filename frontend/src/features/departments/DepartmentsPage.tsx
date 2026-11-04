@@ -248,8 +248,8 @@ export const DepartmentsPage: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-500 font-bold uppercase tracking-wider">
-                <th className="py-3.5 px-6 w-16">#</th>
+              <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-500 font-bold uppercase tracking-wider whitespace-nowrap">
+                <th className="py-3.5 px-6 whitespace-nowrap">Dept ID</th>
                 <th className="py-3.5 px-6">Department</th>
                 <th className="py-3.5 px-6">Members</th>
                 <th className="py-3.5 px-6">Status</th>

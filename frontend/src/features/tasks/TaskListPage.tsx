@@ -269,8 +269,8 @@ export const TaskListPage: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 font-bold uppercase tracking-wider">
-                <th className="py-3.5 px-6 w-24">Task Code</th>
+              <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 font-bold uppercase tracking-wider whitespace-nowrap">
+                <th className="py-3.5 px-6 whitespace-nowrap">Task Code</th>
                 <th className="py-3.5 px-6">Task Title & Department</th>
                 <th className="py-3.5 px-6">Status</th>
                 <th className="py-3.5 px-6">Priority</th>
