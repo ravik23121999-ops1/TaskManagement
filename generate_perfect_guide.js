@@ -1,0 +1,954 @@
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
+
+console.log('Building human-grade comprehensive system flowchart & user guide...');
+
+const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>QuickLifeNow Task Management System - Complete User Operations & Flowchart Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+
+  @page {
+    size: A4 landscape;
+    margin: 8mm 10mm;
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body {
+    font-family: 'Segoe UI', 'Inter', -apple-system, sans-serif;
+    color: #1e293b;
+    background: #ffffff;
+    margin: 0;
+    padding: 0;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  /* Critical fix: NEVER allow SVG paths to have black fill */
+  svg path {
+    fill: none !important;
+  }
+
+  .page {
+    width: 100%;
+    height: 100vh;
+    max-height: 194mm;
+    padding: 14px 18px;
+    page-break-after: always;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: #ffffff;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .page:last-child {
+    page-break-after: avoid;
+  }
+
+  /* Document Header */
+  .page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #0f172a;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-box {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 14px;
+  }
+
+  .header-title-box h1 {
+    font-size: 15px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1.1;
+  }
+
+  .header-title-box p {
+    font-size: 9.5px;
+    color: #64748b;
+    margin: 2px 0 0 0;
+    font-weight: 600;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 9.5px;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  .badge-pill {
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-weight: 700;
+    font-size: 8.5px;
+    text-transform: uppercase;
+  }
+
+  .badge-blue {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+  }
+
+  /* Split View: Flowchart Left (60%), Instructions Right (40%) */
+  .split-container {
+    display: flex;
+    gap: 14px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .flowchart-panel {
+    flex: 60;
+    background: #f8fafc;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .flowchart-panel svg {
+    width: 100%;
+    height: 100%;
+    max-height: 162mm;
+  }
+
+  .instruction-panel {
+    flex: 40;
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .section-headline {
+    font-size: 12px;
+    font-weight: 800;
+    color: #0f172a;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #e2e8f0;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .human-step {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .step-number {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: #0f172a;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 10.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    shrink: 0;
+    margin-top: 1px;
+  }
+
+  .step-body h3 {
+    font-size: 11px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 2px 0;
+  }
+
+  .step-body p {
+    font-size: 9.5px;
+    color: #475569;
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .highlight-box {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-top: 6px;
+  }
+
+  .highlight-title {
+    font-size: 9.5px;
+    font-weight: 800;
+    color: #1e40af;
+    margin-bottom: 2px;
+  }
+
+  .highlight-desc {
+    font-size: 9px;
+    color: #1e3a8a;
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  /* Shape Legend */
+  .diagram-legend {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 9px;
+    font-weight: 600;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .shape-oval {
+    width: 18px;
+    height: 10px;
+    border-radius: 5px;
+    background: #ffe4e6;
+    border: 1.2px solid #e11d48;
+  }
+
+  .shape-para {
+    width: 16px;
+    height: 10px;
+    background: #e0f2fe;
+    border: 1.2px solid #0284c7;
+    transform: skewX(-15deg);
+  }
+
+  .shape-rect {
+    width: 16px;
+    height: 10px;
+    background: #fef9c3;
+    border: 1.2px solid #ca8a04;
+    border-radius: 2px;
+  }
+
+  .shape-dia {
+    width: 10px;
+    height: 10px;
+    background: #ffedd5;
+    border: 1.2px solid #ea580c;
+    transform: rotate(45deg);
+  }
+
+  /* Footer */
+  .page-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #cbd5e1;
+    padding-top: 5px;
+    margin-top: 8px;
+    font-size: 8.5px;
+    color: #64748b;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<!-- =================================================================== -->
+<!-- PAGE 1: TASK CREATION & MULTI-LEVEL DELEGATION                       -->
+<!-- =================================================================== -->
+<div class="page">
+  <div class="page-header">
+    <div class="header-left">
+      <div class="logo-box">Q</div>
+      <div class="header-title-box">
+        <h1>QuickLifeNow — Task Creation & Multi-Level Delegation Flowchart</h1>
+        <p>How managers initiate tasks, select multiple assignees, and delegate sub-tasks down to team members</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="badge-pill badge-blue">Core Workflow 1</span>
+      <span>Page 1 of 4</span>
+    </div>
+  </div>
+
+  <div class="split-container">
+    <!-- Clean Vector Flowchart (ZERO black fill) -->
+    <div class="flowchart-panel">
+      <svg viewBox="0 0 640 460" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#1e293b" style="fill: #1e293b !important;"/>
+          </marker>
+        </defs>
+
+        <!-- Start (Oval) -->
+        <rect x="260" y="10" width="120" height="32" rx="16" fill="#ffe4e6" stroke="#e11d48" stroke-width="1.8"/>
+        <text x="320" y="30" font-size="11" font-weight="700" fill="#9f1239" text-anchor="middle">Start Task Creation</text>
+
+        <!-- Arrow down -->
+        <path d="M 320 42 L 320 62" stroke="#1e293b" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+
+        <!-- Action: Click New Task (Parallelogram) -->
+        <polygon points="220,62 440,62 410,98 190,98" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+        <text x="315" y="78" font-size="10.5" font-weight="600" fill="#0369a1" text-anchor="middle">Click '+ New Task' Button</text>
+        <text x="315" y="90" font-size="9" fill="#0284c7" text-anchor="middle">(In Header Bar or Sidebar)</text>
+
+        <!-- Arrow down -->
+        <path d="M 315 98 L 315 118" stroke="#1e293b" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+
+        <!-- Action: Enter Details (Parallelogram) -->
+        <polygon points="190,118 460,118 430,158 160,158" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+        <text x="310" y="134" font-size="10.5" font-weight="600" fill="#0369a1" text-anchor="middle">Enter Title, Description, Department,</text>
+        <text x="310" y="147" font-size="10" font-weight="600" fill="#0369a1" text-anchor="middle">Priority & Due Date (Attach files if needed)</text>
+
+        <!-- Arrow down -->
+        <path d="M 310 158 L 310 178" stroke="#1e293b" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+
+        <!-- Action: Select Assignees (Parallelogram) -->
+        <polygon points="180,178 460,178 430,218 150,218" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+        <text x="305" y="195" font-size="10.5" font-weight="600" fill="#0369a1" text-anchor="middle">Select 1 or More Assignees (1-to-Many)</text>
+        <text x="305" y="208" font-size="9.5" fill="#0284c7" text-anchor="middle">(e.g. Lead 1: Checker, Lead 2: Reviewer)</text>
+
+        <!-- Arrow down -->
+        <path d="M 305 218 L 305 238" stroke="#1e293b" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+
+        <!-- Process: System Creates Task Code & Branches (Rectangle) -->
+        <rect x="180" y="238" width="250" height="42" rx="4" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.8"/>
+        <text x="305" y="254" font-size="10.5" font-weight="700" fill="#854d0e" text-anchor="middle">System Generates Task Code (e.g. T-010)</text>
+        <text x="305" y="267" font-size="9.5" font-weight="600" fill="#b45309" text-anchor="middle">& Sub-Branches (1.1, 1.2) for each assignee</text>
+
+        <!-- Arrow down -->
+        <path d="M 305 280 L 305 300" stroke="#1e293b" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+
+        <!-- Decision: Need to delegate further? (Diamond) -->
+        <polygon points="305,300 405,335 305,370 205,335" fill="#ffedd5" stroke="#ea580c" stroke-width="1.8"/>
+        <text x="305" y="331" font-size="10" font-weight="700" fill="#9a3412" text-anchor="middle">Lead delegates to</text>
+        <text x="305" y="343" font-size="10" font-weight="700" fill="#9a3412" text-anchor="middle">junior members?</text>
+
+        <!-- Decision: YES (Right branch) -->
+        <path d="M 405 335 L 460 335" stroke="#16a34a" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+        <text x="425" y="327" font-size="10" font-weight="800" fill="#16a34a">Yes</text>
+
+        <!-- Action: Delegate Work (Parallelogram) -->
+        <polygon points="460,315 620,315 595,355 435,355" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+        <text x="525" y="331" font-size="9.5" font-weight="600" fill="#0369a1" text-anchor="middle">Click 'Delegate Work'</text>
+        <text x="525" y="343" font-size="9" fill="#0284c7" text-anchor="middle">Creates 1.1.1, 1.1.2...</text>
+
+        <!-- Loop from delegation down to execution -->
+        <path d="M 525 355 L 525 390 L 390 390" stroke="#1e293b" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+
+        <!-- Decision: NO (Down) -->
+        <path d="M 305 370 L 305 400" stroke="#1e293b" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+        <text x="312" y="388" font-size="10" font-weight="800" fill="#dc2626">No</text>
+
+        <!-- Process: Task in My Action (Rectangle) -->
+        <rect x="200" y="400" width="210" height="40" rx="4" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.8"/>
+        <text x="305" y="416" font-size="10" font-weight="700" fill="#854d0e" text-anchor="middle">Task Enters Assignee's Queue</text>
+        <text x="305" y="429" font-size="9" fill="#a16207" text-anchor="middle">('My Action Required' Ready for Work)</text>
+
+      </svg>
+    </div>
+
+    <!-- Step-by-Step Human Instructions -->
+    <div class="instruction-panel">
+      <div>
+        <div class="section-headline">
+          <span>📝</span> How To Create & Delegate (Step-by-Step)
+        </div>
+
+        <div class="human-step">
+          <div class="step-number">1</div>
+          <div class="step-body">
+            <h3>Click '+ New Task'</h3>
+            <p>From any page, click the blue <strong>+ New Task</strong> button in the top navigation bar or left sidebar.</p>
+          </div>
+        </div>
+
+        <div class="human-step">
+          <div class="step-number">2</div>
+          <div class="step-body">
+            <h3>Enter Task Details</h3>
+            <p>Fill in the <strong>Task Title</strong> (e.g. <em>Payment of Vinay Handloom</em>), pick the <strong>Department</strong> (e.g. Finance), set the <strong>Due Date</strong>, and choose a Priority (Low, Medium, High, Urgent).</p>
+          </div>
+        </div>
+
+        <div class="human-step">
+          <div class="step-number">3</div>
+          <div class="step-body">
+            <h3>Select Assignees (1-to-Many Delegation)</h3>
+            <p>Search and select the employees who will execute the task. You can select multiple people; the system automatically creates independent branches (e.g. <code>1.1</code> and <code>1.2</code>) so each person has their own isolated checklist.</p>
+          </div>
+        </div>
+
+        <div class="human-step">
+          <div class="step-number">4</div>
+          <div class="step-body">
+            <h3>Further Delegation by Team Leads</h3>
+            <p>If a team lead needs to break the task down for junior staff, they open their branch and click <strong>Delegate Work</strong>. This creates sub-tasks (e.g. <code>1.1.1</code> and <code>1.1.2</code>) cleanly scaling up to 6 levels.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="highlight-box">
+        <div class="highlight-title">📌 Golden Rule of Delegation:</div>
+        <p class="highlight-desc">
+          Team members only see their assigned branch. Lead A never sees or interferes with Lead B's work, ensuring focus, security, and clear accountability.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>QuickLifeNow Enterprise Operations Guide</span>
+    <span>Workflow 1: Task Creation & Delegation</span>
+    <span>Page 1 of 4</span>
+  </div>
+</div>
+
+<!-- =================================================================== -->
+<!-- PAGE 2: EXECUTION & "REQUEST MISSING DETAILS" LOOP                   -->
+<!-- =================================================================== -->
+<div class="page">
+  <div class="page-header">
+    <div class="header-left">
+      <div class="logo-box">Q</div>
+      <div class="header-title-box">
+        <h1>QuickLifeNow — Work Execution & Question Clarification Flowchart</h1>
+        <p>How assignees execute deliverables, ask questions when info is missing, and submit proof of work</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="badge-pill badge-blue">Core Workflow 2</span>
+      <span>Page 2 of 4</span>
+    </div>
+  </div>
+
+  <div class="split-container">
+    <!-- Clean Vector Flowchart (ZERO black fill) -->
+    <div class="flowchart-panel">
+      <svg viewBox="0 0 640 460" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrow2" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#1e293b" style="fill: #1e293b !important;"/>
+          </marker>
+        </defs>
+
+        <!-- Start (Oval) -->
+        <rect x="260" y="10" width="120" height="32" rx="16" fill="#ffe4e6" stroke="#e11d48" stroke-width="1.8"/>
+        <text x="320" y="30" font-size="11" font-weight="700" fill="#9f1239" text-anchor="middle">Start Execution</text>
+
+        <!-- Arrow down -->
+        <path d="M 320 42 L 320 65" stroke="#1e293b" stroke-width="1.8" fill="none" marker-end="url(#arrow2)"/>
+
+        <!-- Action: Open My Action Required (Parallelogram) -->
+        <polygon points="210,65 450,65 420,105 180,105" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+        <text x="315" y="82" font-size="10.5" font-weight="600" fill="#0369a1" text-anchor="middle">Open 'My Action Required' Tab</text>
+        <text x="315" y="95" font-size="9" fill="#0284c7" text-anchor="middle">Locate Task by Code (e.g. T-010)</text>
+
+        <!-- Arrow down -->
+        <path d="M 315 105 L 315 125" stroke="#1e293b" stroke-width="1.8" fill="none" marker-end="url(#arrow2)"/>
+
+        <!-- Process: Read Goals (Rectangle) -->
+        <rect x="200" y="125" width="230" height="38" rx="4" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.8"/>
+        <text x="315" y="141" font-size="10" font-weight="600" fill="#854d0e" text-anchor="middle">Review Goals, Due Date,</text>
+        <text x="315" y="153" font-size="9" fill="#a16207" text-anchor="middle">Requirements & Download Reference Files</text>
+
+        <!-- Arrow down -->
+        <path d="M 315 163 L 315 185" stroke="#1e293b" stroke-width="1.8" fill="none" marker-end="url(#arrow2)"/>
+
+        <!-- Decision: Are instructions 100% clear? (Diamond) -->
+        <polygon points="315,185 415,220 315,255 215,220" fill="#ffedd5" stroke="#ea580c" stroke-width="1.8"/>
+        <text x="315" y="216" font-size="10" font-weight="700" fill="#9a3412" text-anchor="middle">Are Instructions</text>
+        <text x="315" y="228" font-size="10" font-weight="700" fill="#9a3412" text-anchor="middle">100% Clear?</text>
+
+        <!-- Decision: NO (Left question loop) -->
+        <path d="M 215 220 L 140 220" stroke="#dc2626" stroke-width="1.8" fill="none" marker-end="url(#arrow2)"/>
+        <text x="175" y="212" font-size="10" font-weight="800" fill="#dc2626">No</text>
+
+        <!-- Action: Request Missing Details (Parallelogram) -->
+        <polygon points="30,205 140,205 120,245 10,245" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+        <text x="75" y="221" font-size="9" font-weight="600" fill="#0369a1" text-anchor="middle">Click 'Request Details'</text>
+        <text x="75" y="233" font-size="8" fill="#0284c7" text-anchor="middle">Type specific question</text>
+
+        <!-- Arrow down to Assigner answer -->
+        <path d="M 75 245 L 75 270" stroke="#1e293b" stroke-width="1.8" fill="none" marker-end="url(#arrow2)"/>
+
+        <!-- Process: Assigner Responds (Rectangle) -->
+        <rect x="10" y="270" width="130" height="38" rx="4" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.8"/>
+        <text x="75" y="286" font-size="9" font-weight="600" fill="#854d0e" text-anchor="middle">Assigner Provides</text>
+        <text x="75" y="298" font-size="8" fill="#a16207" text-anchor="middle">Clarification & Files</text>
+
+        <!-- Loop back from question to review -->
+        <path d="M 75 308 L 75 330 L 170 330 L 170 144 L 200 144" stroke="#16a34a" stroke-width="1.8" fill="none" marker-end="url(#arrow2)"/>
+        <text x="110" y="325" font-size="8.5" font-weight="700" fill="#16a34a">Task Resumes</text>
+
+        <!-- Decision: YES (Down to Active Work) -->
+        <path d="M 315 255 L 315 280" stroke="#16a34a" stroke-width="1.8" fill="none" marker-end="url(#arrow2)"/>
+        <text x="322" y="270" font-size="10" font-weight="800" fill="#16a34a">Yes</text>
+
+        <!-- Process: Perform Work (Rectangle) -->
+        <rect x="215" y="280" width="200" height="40" rx="4" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.8"/>
+        <text x="315" y="296" font-size="10" font-weight="600" fill="#854d0e" text-anchor="middle">Employee Executes Work &</text>
+        <text x="315" y="309" font-size="9" fill="#a16207" text-anchor="middle">Prepares Deliverable Documents</text>
+
+        <!-- Arrow down -->
+        <path d="M 315 320 L 315 345" stroke="#1e293b" stroke-width="1.8" fill="none" marker-end="url(#arrow2)"/>
+
+        <!-- Action: Submit Deliverables (Parallelogram) -->
+        <polygon points="190,345 460,345 430,390 160,390" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+        <text x="310" y="362" font-size="10.5" font-weight="600" fill="#0369a1" text-anchor="middle">Attach Deliverables (PDF, ZIP, DOCX)</text>
+        <text x="310" y="375" font-size="9.5" font-weight="700" fill="#0369a1" text-anchor="middle">& Click 'Submit Work for Review'</text>
+
+        <!-- Arrow down to Queue Transfer -->
+        <path d="M 310 390 L 310 415" stroke="#1e293b" stroke-width="1.8" fill="none" marker-end="url(#arrow2)"/>
+
+        <!-- Terminal: Handover to Review (Oval) -->
+        <rect x="230" y="415" width="160" height="32" rx="16" fill="#ffe4e6" stroke="#e11d48" stroke-width="1.8"/>
+        <text x="310" y="435" font-size="10.5" font-weight="700" fill="#9f1239" text-anchor="middle">Enters Review Queue ➔</text>
+
+      </svg>
+    </div>
+
+    <!-- Step-by-Step Human Instructions -->
+    <div class="instruction-panel">
+      <div>
+        <div class="section-headline">
+          <span>⚙️</span> How An Assignee Works (Step-by-Step)
+        </div>
+
+        <div class="human-step">
+          <div class="step-number">1</div>
+          <div class="step-body">
+            <h3>Open 'My Action Required'</h3>
+            <p>Every time you log in, check <strong>My Action Required</strong> in the sidebar. This shows tasks waiting directly for your action.</p>
+          </div>
+        </div>
+
+        <div class="human-step">
+          <div class="step-number">2</div>
+          <div class="step-body">
+            <h3>Inspect Requirements</h3>
+            <p>Open the task and read the objectives, expected result, and any files attached by your manager.</p>
+          </div>
+        </div>
+
+        <div class="human-step">
+          <div class="step-number">3</div>
+          <div class="step-body">
+            <h3>Missing Info? Never Guess — Ask Instantly</h3>
+            <p>If you need a login, invoice, or clarification, click <strong>Request Missing Details</strong>. Type your question. The task status moves to <em>Waiting on Assigner</em> without hurting your completion metrics.</p>
+          </div>
+        </div>
+
+        <div class="human-step">
+          <div class="step-number">4</div>
+          <div class="step-body">
+            <h3>Submit Work for Review</h3>
+            <p>When your deliverables are ready, click <strong>Submit Work for Review</strong>. Attach your finished files (PDF, ZIP, Excel, images) and write a short summary note.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="highlight-box">
+        <div class="highlight-title">💡 Why Request Missing Details?</div>
+        <p class="highlight-desc">
+          Guessing leads to rework. Using <strong>Request Missing Details</strong> officially pauses SLA pressure, sends an immediate notification to the assigner, and creates a clear audit trail.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>QuickLifeNow Enterprise Operations Guide</span>
+    <span>Workflow 2: Execution & Clarification Loop</span>
+    <span>Page 2 of 4</span>
+  </div>
+</div>
+
+<!-- =================================================================== -->
+<!-- PAGE 3: REVIEW, REVISION & CREATOR FINAL SIGN-OFF                   -->
+<!-- =================================================================== -->
+<div class="page">
+  <div class="page-header">
+    <div class="header-left">
+      <div class="logo-box">Q</div>
+      <div class="header-title-box">
+        <h1>QuickLifeNow — Review, Revision & Final Sign-Off Flowchart</h1>
+        <p>How submissions are inspected, returned with notes if flawed, approved, and given final sign-off</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="badge-pill badge-blue">Core Workflow 3</span>
+      <span>Page 3 of 4</span>
+    </div>
+  </div>
+
+  <div class="split-container">
+    <!-- Clean Vector Flowchart (ZERO black fill) -->
+    <div class="flowchart-panel">
+      <svg viewBox="0 0 640 460" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrow3" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#1e293b" style="fill: #1e293b !important;"/>
+          </marker>
+        </defs>
+
+        <!-- Start (Oval) -->
+        <rect x="250" y="10" width="140" height="32" rx="16" fill="#ffe4e6" stroke="#e11d48" stroke-width="1.8"/>
+        <text x="320" y="30" font-size="11" font-weight="700" fill="#9f1239" text-anchor="middle">Start Quality Review</text>
+
+        <!-- Arrow down -->
+        <path d="M 320 42 L 320 65" stroke="#1e293b" stroke-width="1.8" fill="none" marker-end="url(#arrow3)"/>
+
+        <!-- Action: Open Review Queue (Parallelogram) -->
+        <polygon points="210,65 450,65 420,105 180,105" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+        <text x="315" y="82" font-size="10.5" font-weight="600" fill="#0369a1" text-anchor="middle">Reviewer opens 'Review Queue'</text>
+        <text x="315" y="95" font-size="9" fill="#0284c7" text-anchor="middle">Inspects Submissions Awaiting Approval</text>
+
+        <!-- Arrow down -->
+        <path d="M 315 105 L 315 125" stroke="#1e293b" stroke-width="1.8" fill="none" marker-end="url(#arrow3)"/>
+
+        <!-- Process: Inspect Deliverables (Rectangle) -->
+        <rect x="200" y="125" width="230" height="38" rx="4" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.8"/>
+        <text x="315" y="141" font-size="10" font-weight="600" fill="#854d0e" text-anchor="middle">Downloads Attached Files &</text>
+        <text x="315" y="153" font-size="9" fill="#a16207" text-anchor="middle">Compares Deliverable to Task Goals</text>
+
+        <!-- Arrow down -->
+        <path d="M 315 163 L 315 185" stroke="#1e293b" stroke-width="1.8" fill="none" marker-end="url(#arrow3)"/>
+
+        <!-- Decision: Passes Quality Standards? (Diamond) -->
+        <polygon points="315,185 415,220 315,255 215,220" fill="#ffedd5" stroke="#ea580c" stroke-width="1.8"/>
+        <text x="315" y="216" font-size="10" font-weight="700" fill="#9a3412" text-anchor="middle">Meets Quality</text>
+        <text x="315" y="228" font-size="10" font-weight="700" fill="#9a3412" text-anchor="middle">Standards?</text>
+
+        <!-- Decision: NO (Left revision loop) -->
+        <path d="M 215 220 L 140 220" stroke="#dc2626" stroke-width="1.8" fill="none" marker-end="url(#arrow3)"/>
+        <text x="175" y="212" font-size="10" font-weight="800" fill="#dc2626">No</text>
+
+        <!-- Action: Return for Revision (Parallelogram) -->
+        <polygon points="30,205 140,205 120,245 10,245" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+        <text x="75" y="221" font-size="9" font-weight="600" fill="#0369a1" text-anchor="middle">Click 'Return Revision'</text>
+        <text x="75" y="233" font-size="8" fill="#0284c7" text-anchor="middle">Write specific fix notes</text>
+
+        <!-- Process: Task returns to Assignee -->
+        <path d="M 75 245 L 75 275" stroke="#dc2626" stroke-width="1.8" fill="none" marker-end="url(#arrow3)"/>
+        <rect x="10" y="275" width="130" height="38" rx="4" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.8"/>
+        <text x="75" y="291" font-size="9" font-weight="600" fill="#854d0e" text-anchor="middle">Returns to Assignee</text>
+        <text x="75" y="303" font-size="8" fill="#a16207" text-anchor="middle">Status: Needs Correction</text>
+
+        <!-- Loop back up to review -->
+        <path d="M 140 294 L 170 294 L 170 144 L 200 144" stroke="#1e293b" stroke-width="1.8" fill="none" marker-end="url(#arrow3)"/>
+        <text x="175" y="260" font-size="8.5" font-weight="700" fill="#64748b" transform="rotate(90 175 260)">Fixes & Re-submits</text>
+
+        <!-- Decision: YES (Down to Branch Approved) -->
+        <path d="M 315 255 L 315 280" stroke="#16a34a" stroke-width="1.8" fill="none" marker-end="url(#arrow3)"/>
+        <text x="322" y="270" font-size="10" font-weight="800" fill="#16a34a">Yes</text>
+
+        <!-- Action: Approve Submission (Parallelogram) -->
+        <polygon points="210,280 430,280 410,315 190,315" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+        <text x="310" y="295" font-size="10" font-weight="700" fill="#0369a1" text-anchor="middle">Click 'Approve Submission'</text>
+        <text x="310" y="307" font-size="9" fill="#0284c7" text-anchor="middle">Branch Marked as Approved ✔</text>
+
+        <!-- Arrow down -->
+        <path d="M 310 315 L 310 335" stroke="#1e293b" stroke-width="1.8" fill="none" marker-end="url(#arrow3)"/>
+
+        <!-- Decision: All sibling branches approved? (Diamond) -->
+        <polygon points="310,335 410,368 310,400 210,368" fill="#ffedd5" stroke="#ea580c" stroke-width="1.8"/>
+        <text x="310" y="364" font-size="9.5" font-weight="700" fill="#9a3412" text-anchor="middle">All Sibling Branches</text>
+        <text x="310" y="375" font-size="9.5" font-weight="700" fill="#9a3412" text-anchor="middle">Fully Approved?</text>
+
+        <!-- Sibling: NO (Right wait) -->
+        <path d="M 410 368 L 470 368 L 470 300 L 430 300" stroke="#1e293b" stroke-width="1.8" fill="none" marker-end="url(#arrow3)"/>
+        <text x="425" y="360" font-size="9.5" font-weight="800" fill="#dc2626">No</text>
+        <text x="480" y="335" font-size="8" fill="#64748b" transform="rotate(90 480 335)">Waiting for Others</text>
+
+        <!-- Sibling: YES (Down to Final Sign-off) -->
+        <path d="M 310 400 L 310 420" stroke="#16a34a" stroke-width="1.8" fill="none" marker-end="url(#arrow3)"/>
+        <text x="318" y="412" font-size="9.5" font-weight="800" fill="#16a34a">Yes</text>
+
+        <!-- Action: Final Creator Sign-off (Parallelogram) -->
+        <polygon points="190,420 440,420 420,455 170,455" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.8"/>
+        <text x="305" y="435" font-size="10" font-weight="700" fill="#0369a1" text-anchor="middle">Creator Gives 'Final Sign-Off'</text>
+        <text x="305" y="447" font-size="9" fill="#0284c7" text-anchor="middle">Task Moves to 'Completed' & Archived ✔</text>
+
+      </svg>
+    </div>
+
+    <!-- Step-by-Step Human Instructions -->
+    <div class="instruction-panel">
+      <div>
+        <div class="section-headline">
+          <span>🔍</span> Quality Review & Final Approval
+        </div>
+
+        <div class="human-step">
+          <div class="step-number">1</div>
+          <div class="step-body">
+            <h3>Review Queue Alert</h3>
+            <p>Reviewers receive an alert in the <strong>Review Queue</strong> showing the task code, assignee name, and submitted deliverables.</p>
+          </div>
+        </div>
+
+        <div class="human-step">
+          <div class="step-number">2</div>
+          <div class="step-body">
+            <h3>Download & Inspect Files</h3>
+            <p>Download the files directly to inspect quality against the original acceptance criteria.</p>
+          </div>
+        </div>
+
+        <div class="human-step">
+          <div class="step-number">3</div>
+          <div class="step-body">
+            <h3>Returning for Revision</h3>
+            <p>If changes are needed, click <strong>Return for Revision</strong> and write clear feedback. The assignee fixes the work and submits again.</p>
+          </div>
+        </div>
+
+        <div class="human-step">
+          <div class="step-number">4</div>
+          <div class="step-body">
+            <h3>Creator Final Sign-Off</h3>
+            <p>Branch approval approves the member's piece. When all branches pass, the original task creator verifies the overall result and clicks <strong>Final Sign-Off</strong>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="highlight-box">
+        <div class="highlight-title">🔒 The Two-Tier Quality Seal:</div>
+        <p class="highlight-desc">
+          Team leads approve sub-branches, but only the <strong>Original Task Creator</strong> has the authority to issue the Final Sign-off that moves a task into Completed.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>QuickLifeNow Enterprise Operations Guide</span>
+    <span>Workflow 3: Review, Revision & Final Sign-Off</span>
+    <span>Page 3 of 4</span>
+  </div>
+</div>
+
+<!-- =================================================================== -->
+<!-- PAGE 4: PRACTICAL USER MANUAL (ROLES & MASTER CHECKLIST)            -->
+<!-- =================================================================== -->
+<div class="page">
+  <div class="page-header">
+    <div class="header-left">
+      <div class="logo-box">Q</div>
+      <div class="header-title-box">
+        <h1>QuickLifeNow Task Management — Operational User Manual</h1>
+        <p>Complete role reference guides, master search guide, and audit transparency</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="badge-pill badge-blue">Reference Manual</span>
+      <span>Page 4 of 4</span>
+    </div>
+  </div>
+
+  <div style="flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; min-height: 0;">
+
+    <!-- Card 1: Task Creator / Manager -->
+    <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #2563eb; padding-bottom: 8px; margin-bottom: 10px;">
+          <div style="width: 24px; height: 24px; border-radius: 6px; background: #2563eb; color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px;">1</div>
+          <div>
+            <div style="font-size: 13px; font-weight: 800; color: #0f172a;">Task Creator / Manager</div>
+            <div style="font-size: 9.5px; color: #64748b; font-weight: 600;">Project Initiation & Sign-off</div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 9.5px;">
+          <div>
+            <strong style="color: #0f172a;">1. Click '+ New Task'</strong>
+            <p style="margin: 2px 0 0 0; color: #475569;">Enter task title, select department, priority, and completion deadline.</p>
+          </div>
+
+          <div>
+            <strong style="color: #0f172a;">2. Select Multiple Assignees</strong>
+            <p style="margin: 2px 0 0 0; color: #475569;">Pick all team leads who will share responsibility. Each lead receives an isolated branch (1.1, 1.2).</p>
+          </div>
+
+          <div>
+            <strong style="color: #0f172a;">3. Answer Clarification Questions</strong>
+            <p style="margin: 2px 0 0 0; color: #475569;">If an assignee requests missing details, provide the answers and files promptly.</p>
+          </div>
+
+          <div>
+            <strong style="color: #0f172a;">4. Give Final Sign-off</strong>
+            <p style="margin: 2px 0 0 0; color: #475569;">Once all branches are approved, verify the combined deliverable and click <strong>Final Sign-Off</strong>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 8px 10px; font-size: 9px; color: #1e40af;">
+        <strong>Core Principle:</strong> You own the final seal. Team members cannot mark tasks complete until you verify deliverables.
+      </div>
+    </div>
+
+    <!-- Card 2: Team Member / Assignee -->
+    <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #059669; padding-bottom: 8px; margin-bottom: 10px;">
+          <div style="width: 24px; height: 24px; border-radius: 6px; background: #059669; color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px;">2</div>
+          <div>
+            <div style="font-size: 13px; font-weight: 800; color: #0f172a;">Team Assignee</div>
+            <div style="font-size: 9.5px; color: #64748b; font-weight: 600;">Work Execution & Sub-tasks</div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 9.5px;">
+          <div>
+            <strong style="color: #0f172a;">1. Monitor 'My Action Required'</strong>
+            <p style="margin: 2px 0 0 0; color: #475569;">All tasks requiring your active work appear here. Inspect requirements and deadlines.</p>
+          </div>
+
+          <div>
+            <strong style="color: #0f172a;">2. Request Missing Details</strong>
+            <p style="margin: 2px 0 0 0; color: #475569;">Never work on guesswork. Click <strong>Request Missing Details</strong> to ask for missing assets.</p>
+          </div>
+
+          <div>
+            <strong style="color: #0f172a;">3. Delegate to Sub-Leads</strong>
+            <p style="margin: 2px 0 0 0; color: #475569;">If needed, click <strong>Delegate Work</strong> to split work across junior members (1.1.1, 1.1.2).</p>
+          </div>
+
+          <div>
+            <strong style="color: #0f172a;">4. Submit Finished Deliverables</strong>
+            <p style="margin: 2px 0 0 0; color: #475569;">Attach deliverable files (PDF, ZIP, DOCX) and click <strong>Submit Work for Review</strong>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 8px 10px; font-size: 9px; color: #166534;">
+        <strong>Assignee Principle:</strong> Always attach proof of work directly through the submission modal for fast approval.
+      </div>
+    </div>
+
+    <!-- Card 3: Quality Reviewer -->
+    <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #7c3aed; padding-bottom: 8px; margin-bottom: 10px;">
+          <div style="width: 24px; height: 24px; border-radius: 6px; background: #7c3aed; color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px;">3</div>
+          <div>
+            <div style="font-size: 13px; font-weight: 800; color: #0f172a;">Quality Reviewer</div>
+            <div style="font-size: 9.5px; color: #64748b; font-weight: 600;">Quality Control & Verification</div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 9.5px;">
+          <div>
+            <strong style="color: #0f172a;">1. Monitor 'Review Queue'</strong>
+            <p style="margin: 2px 0 0 0; color: #475569;">All submissions awaiting verification appear here with submitter name and timestamp.</p>
+          </div>
+
+          <div>
+            <strong style="color: #0f172a;">2. Download & Verify Files</strong>
+            <p style="margin: 2px 0 0 0; color: #475569;">Inspect files against original requirements. Check for completeness and accuracy.</p>
+          </div>
+
+          <div>
+            <strong style="color: #0f172a;">3. Return for Revision If Flawed</strong>
+            <p style="margin: 2px 0 0 0; color: #475569;">Click <strong>Return for Revision</strong> and write clear notes explaining what needs fixing.</p>
+          </div>
+
+          <div>
+            <strong style="color: #0f172a;">4. Approve Satisfactory Work</strong>
+            <p style="margin: 2px 0 0 0; color: #475569;">Click <strong>Approve Submission</strong> once deliverables meet all requirements.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 6px; padding: 8px 10px; font-size: 9px; color: #6b21a8;">
+        <strong>Reviewer Principle:</strong> Constructive revision notes ensure team members make exact fixes on the first attempt.
+      </div>
+    </div>
+
+  </div>
+
+  <div class="page-footer">
+    <span>QuickLifeNow Enterprise Operations Guide</span>
+    <span>Role Operations Reference Manual</span>
+    <span>Page 4 of 4</span>
+  </div>
+</div>
+
+</body>
+</html>
+`;
+
+// Save HTML to disk
+const htmlPath = path.resolve('QuickLifeNow_Complete_System_Flowcharts.html');
+fs.writeFileSync(htmlPath, html, 'utf8');
+console.log('HTML Guide written successfully:', htmlPath);
+
+// Generate PDF using Chrome Headless
+const pdfPath = path.resolve('QuickLifeNow_Complete_System_Flowcharts.pdf');
+const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+
+console.log('Rendering vector PDF via Google Chrome Headless Engine...');
+const cmd = '"' + chromePath + '" --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf="' + pdfPath + '" "file:///' + htmlPath.replace(/\\/g, '/') + '"';
+
+try {
+  execSync(cmd, { stdio: 'inherit' });
+
+  if (fs.existsSync(pdfPath)) {
+    const stats = fs.statSync(pdfPath);
+    console.log('=====================================================');
+    console.log('SUCCESS! Real Engineering Flowchart PDF Generated:');
+    console.log('Path:', pdfPath);
+    console.log('Size:', (stats.size / 1024).toFixed(1), 'KB');
+    console.log('=====================================================');
+  } else {
+    console.error('ERROR: PDF file was not created.');
+  }
+} catch (err) {
+  console.error('PDF Generation Failed:', err.message);
+}
