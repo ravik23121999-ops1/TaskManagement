@@ -172,12 +172,8 @@ export const Dashboard: React.FC = () => {
             </div>
 
             <div className="flex items-baseline justify-between mt-2.5">
-              <div className="text-3xl font-extrabold text-sky-600 tracking-tight flex items-center gap-2">
-                <span>{inProgressTasks}</span>
-                <span className="relative flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-sky-500" />
-                </span>
+              <div className="text-3xl font-extrabold text-sky-600 tracking-tight">
+                {inProgressTasks}
               </div>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200/60">
                 In Execution
@@ -616,7 +612,6 @@ export const Dashboard: React.FC = () => {
                 {myActionCount}
               </div>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200/60">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-ping" />
                 Active Now
               </span>
             </div>

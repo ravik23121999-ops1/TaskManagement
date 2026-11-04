@@ -29,10 +29,9 @@ const MessagesPage = React.lazy(() => import('./features/messages/MessagesPage')
 const PageLoader: React.FC = () => (
   <div className="flex-1 flex flex-col items-center justify-center p-12 min-h-[350px]">
     <div className="relative flex items-center justify-center mb-3">
-      <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center shadow-[0_0_20px_rgba(37,99,235,0.4)] animate-pulse">
+      <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center shadow-md">
         <span className="font-black text-sm text-white">Q</span>
       </div>
-      <div className="absolute -inset-1 rounded-2xl border border-cyan-400/30 animate-ping pointer-events-none" />
     </div>
     <p className="text-xs font-semibold text-slate-500">Loading view...</p>
   </div>
@@ -44,10 +43,9 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#070b18] text-white">
         <div className="relative flex items-center justify-center mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center shadow-[0_0_25px_rgba(37,99,235,0.5)]">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg">
             <span className="font-black text-lg">Q</span>
           </div>
-          <div className="absolute -inset-1.5 rounded-2xl border border-cyan-400/30 animate-ping pointer-events-none" />
         </div>
         <p className="text-sm font-bold tracking-tight text-white">QuickLifeNow</p>
         <p className="text-[11px] text-slate-400 mt-0.5">Enterprise Management</p>

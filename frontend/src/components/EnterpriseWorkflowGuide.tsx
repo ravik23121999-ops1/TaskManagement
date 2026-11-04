@@ -112,7 +112,7 @@ export const EnterpriseWorkflowGuide: React.FC<EnterpriseWorkflowGuideProps> = (
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
         <div>
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_8px_#2563eb]" />
+            <span className="w-2 h-2 rounded-full bg-blue-600" />
             <h2 className="text-xs font-black tracking-wider text-slate-800 uppercase">
               How Work Flows in QuickLifeNow
             </h2>

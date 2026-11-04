@@ -346,12 +346,9 @@ export const LoginPage: React.FC = () => {
         <div className="pointer-events-none absolute -bottom-20 -left-20 w-[400px] h-[400px] bg-cyan-500/15 rounded-full blur-3xl" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.03),transparent_70%)]" />
 
-        {/* Top Operational Pill */}
+        {/* Top Header */}
         <div className="w-full flex items-center justify-between relative z-10">
-          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/[0.06] border border-white/10 backdrop-blur-md shadow-lg">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399] animate-pulse" />
-            <span className="text-xs font-bold text-slate-200">Enterprise Engine Active</span>
-          </div>
+          <span className="text-xs font-bold text-slate-300">QuickLifeNow Platform</span>
 
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-400">
             <span>SOC-2 Compliant</span>

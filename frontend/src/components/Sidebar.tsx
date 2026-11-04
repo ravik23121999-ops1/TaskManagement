@@ -19,9 +19,6 @@ import {
   LogOut,
   Layers,
   ClipboardList,
-  Crown,
-  Shield,
-  Sparkles,
   ChevronRight,
   ChevronLeft,
   MessageSquare,
@@ -138,10 +135,9 @@ const Sidebar: React.FC<SidebarProps> = ({
               onClick={() => handleNav('/')}
               title="QuickLifeNow"
             >
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-[0_0_20px_rgba(37,99,235,0.45)] border border-white/20 hover:scale-105 transition-transform duration-200">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-md border border-white/20 hover:scale-105 transition-transform duration-200">
                 <Layers className="w-5 h-5 drop-shadow" />
               </div>
-              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#080d1e] shadow-[0_0_8px_#34d399] animate-pulse" />
 
               {/* Floating Tooltip in Collapsed Mode */}
               <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl border border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity z-50">
@@ -152,19 +148,15 @@ const Sidebar: React.FC<SidebarProps> = ({
             <>
               <div className="flex items-center gap-3">
                 <div className="relative group cursor-pointer" onClick={() => handleNav('/')}>
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-[0_0_20px_rgba(37,99,235,0.45)] border border-white/20 group-hover:scale-105 transition-transform duration-200">
+                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-md border border-white/20 group-hover:scale-105 transition-transform duration-200">
                     <Layers className="w-5 h-5 drop-shadow" />
                   </div>
-                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-400 border-2 border-[#080d1e] shadow-[0_0_8px_#34d399] animate-pulse" />
                 </div>
                 <div className="cursor-pointer" onClick={() => handleNav('/')}>
                   <h1 className="text-base font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
                     QuickLifeNow
                   </h1>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399]" />
-                    <p className="text-[10px] text-slate-400 font-medium tracking-tight">Internal Enterprise Management</p>
-                  </div>
+                  <p className="text-[10px] text-slate-400 font-medium tracking-tight mt-0.5">Internal Enterprise Management</p>
                 </div>
               </div>
 
@@ -213,17 +205,14 @@ const Sidebar: React.FC<SidebarProps> = ({
           ) : (
             <button
               onClick={() => handleNav('/tasks/create')}
-              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+              className={`w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
                 location.pathname === '/tasks/create'
                   ? 'bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-500 text-white shadow-lg shadow-blue-500/35 border border-cyan-300/40'
-                  : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-md shadow-blue-600/25 hover:shadow-lg hover:shadow-blue-500/35 border border-blue-400/30 hover:-translate-y-0.5'
+                  : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-md shadow-blue-600/25 hover:shadow-lg hover:shadow-blue-500/35 border border-blue-400/30'
               }`}
             >
-              <div className="flex items-center gap-2.5">
-                <PlusCircle className="w-4 h-4 text-cyan-200" />
-                <span>Create New Task</span>
-              </div>
-              <Sparkles className="w-3.5 h-3.5 text-cyan-200 animate-pulse" />
+              <PlusCircle className="w-4 h-4 text-cyan-100" />
+              <span>Create New Task</span>
             </button>
           )}
         </div>
@@ -434,13 +423,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                     {user?.name?.charAt(0).toUpperCase() || 'U'}
                   </span>
                 </div>
-                {isAdmin ? (
-                  <Crown className="w-3.5 h-3.5 text-amber-400 absolute -top-1.5 -right-1.5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
-                ) : isSubAdmin ? (
-                  <Shield className="w-3.5 h-3.5 text-purple-400 absolute -top-1.5 -right-1.5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
-                ) : (
-                  <Zap className="w-3.5 h-3.5 text-emerald-400 absolute -top-1.5 -right-1.5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
-                )}
 
                 {/* Floating Tooltip in Collapsed Mode */}
                 <div className="pointer-events-none absolute left-full bottom-0 ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl border border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity z-50">
@@ -489,13 +471,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                     {user?.name?.charAt(0).toUpperCase() || 'U'}
                   </span>
                 </div>
-                {isAdmin ? (
-                  <Crown className="w-3.5 h-3.5 text-amber-400 absolute -top-1.5 -right-1.5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
-                ) : isSubAdmin ? (
-                  <Shield className="w-3.5 h-3.5 text-purple-400 absolute -top-1.5 -right-1.5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
-                ) : (
-                  <Zap className="w-3.5 h-3.5 text-emerald-400 absolute -top-1.5 -right-1.5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
-                )}
               </div>
 
               {/* User Details */}
@@ -507,16 +482,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <p className="text-xs font-bold text-white truncate leading-tight group-hover:text-blue-300 transition-colors">
                   {user?.name || 'Authorized User'}
                 </p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34d399] animate-pulse shrink-0" />
-                  <span className="text-[10px] text-slate-400 capitalize font-medium truncate">
-                    {isAdmin
-                      ? 'Administrator'
-                      : isSubAdmin
-                      ? 'Operations Lead'
-                      : 'Team Contributor'}
-                  </span>
-                </div>
+                <p className="text-[10px] text-slate-400 capitalize font-medium truncate mt-0.5">
+                  {isAdmin
+                    ? 'Administrator'
+                    : isSubAdmin
+                    ? 'Operations Lead'
+                    : 'Team Contributor'}
+                </p>
               </div>
 
               {/* Compact Sign Out Button */}

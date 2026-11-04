@@ -149,7 +149,7 @@ export const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ user, metrics }) =
       className={`relative overflow-hidden rounded-3xl bg-gradient-to-r ${current.gradientBg} p-6 sm:p-8 text-white shadow-2xl border border-white/10 select-none transition-all duration-300`}
     >
       {/* Background Animated Ambient Mesh and Glow Orbs */}
-      <div className={`pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full ${current.glowColor} blur-3xl animate-pulse`} />
+      <div className={`pointer-events-none absolute -right-16 -top-16 h-72 w-72 rounded-full ${current.glowColor} blur-3xl`} />
       <div className="pointer-events-none absolute -left-12 -bottom-12 h-64 w-64 rounded-full bg-blue-600/10 blur-3xl" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.08),transparent_50%)]" />
 
@@ -165,7 +165,7 @@ export const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ user, metrics }) =
       <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
         {/* Left Column: Greeting, Role Tag, Tagline, Action Buttons */}
         <div className="flex-1 max-w-2xl space-y-4">
-          {/* Top Tag & Live Status Pill */}
+          {/* Top Tag */}
           <div className="flex items-center gap-3 flex-wrap">
             <span
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-gradient-to-r ${current.tagColor} shadow-md`}
@@ -173,18 +173,12 @@ export const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ user, metrics }) =
               <RoleIcon className="w-3.5 h-3.5 shrink-0" />
               <span>{current.tag}</span>
             </span>
-
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-white/10 border border-white/10 text-slate-200 backdrop-blur-md">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping inline-block" />
-              <span>System Operational</span>
-            </span>
           </div>
 
           {/* Headline Greeting with Name */}
           <div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white flex items-center gap-3 flex-wrap">
-              <span>{greeting}, {user?.name || 'Commander'}!</span>
-              <span className="text-2xl animate-bounce">👋</span>
+              <span>{greeting}, {user?.name || 'there'}!</span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-300/90 mt-1 font-medium leading-relaxed">
               {current.tagline}
@@ -237,9 +231,9 @@ export const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ user, metrics }) =
             <div
               className={`absolute inset-0 rounded-full border border-dashed border-white/20 animate-[spin_25s_linear_infinite]`}
             />
-            {/* Middle Pulsing Ring */}
+            {/* Middle Ring */}
             <div
-              className={`absolute inset-3 rounded-full border border-white/10 ${current.glowColor} animate-ping opacity-25`}
+              className={`absolute inset-3 rounded-full border border-white/10 ${current.glowColor} opacity-25`}
             />
             {/* Inner Glass Orb Backdrop with Change Avatar Trigger */}
             <div

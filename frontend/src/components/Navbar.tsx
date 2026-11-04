@@ -21,6 +21,7 @@ import {
   ArrowLeft,
   Sparkles,
   Building2,
+  X,
 } from 'lucide-react';
 import { messagesApi } from '../api/messages';
 
@@ -289,7 +290,7 @@ const Navbar: React.FC<NavbarProps> = ({
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* Search Input with Instant Dropdown & Ctrl + K discoverability badge */}
+        {/* Search Input with Instant Dropdown */}
         <div ref={searchContainerRef} className="relative flex-1">
           <form onSubmit={handleSearchSubmit} className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -304,16 +305,24 @@ const Navbar: React.FC<NavbarProps> = ({
                 }
               }}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-14 py-2 bg-slate-50/80 border border-slate-200/80 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
+              className="w-full pl-9 pr-9 py-2 bg-slate-50/80 border border-slate-200/80 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-2xs"
             />
             {isSearching ? (
               <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin absolute right-3 top-1/2 -translate-y-1/2" />
-            ) : (
-              <div className="hidden sm:flex items-center gap-0.5 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none">
-                <kbd className="px-1.5 py-0.5 text-[9px] font-bold text-slate-400 bg-white border border-slate-200 rounded shadow-2xs">Ctrl</kbd>
-                <kbd className="px-1.5 py-0.5 text-[9px] font-bold text-slate-400 bg-white border border-slate-200 rounded shadow-2xs">K</kbd>
-              </div>
-            )}
+            ) : searchQuery ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSearchResults([]);
+                  setShowSearchResults(false);
+                }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200 transition"
+                title="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            ) : null}
           </form>
 
           {/* Instant Search Results Dropdown */}
@@ -393,12 +402,6 @@ const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
         </div>
-      </div>
-
-      {/* Center Operational Status Pill */}
-      <div className="hidden xl:flex items-center gap-2 px-3 py-1 rounded-full bg-slate-50/90 border border-slate-200/60 text-[11px] text-slate-600 font-medium shadow-2xs">
-        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_6px_#10b981]" />
-        <span>Enterprise Engine Live</span>
       </div>
 
       {/* Right Actions */}
