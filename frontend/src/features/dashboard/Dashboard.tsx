@@ -645,7 +645,7 @@ export const Dashboard: React.FC = () => {
 
           {/* Card 2: Assigned to Me */}
           <div
-            onClick={() => navigate('/tasks')}
+            onClick={() => navigate('/tasks?view=assigned_to_me')}
             className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-luxe hover:shadow-luxe-hover hover:-translate-y-1 hover:border-cyan-400/60 transition-all duration-300 cursor-pointer relative overflow-hidden group"
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-400" />

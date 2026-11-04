@@ -240,6 +240,22 @@ class TaskController extends Controller
                 $query->where('status', 'completed');
             } elseif ($view === 'on_hold') {
                 $query->where('status', 'on_hold');
+            } elseif ($view === 'assigned_to_me' || $view === 'assigned') {
+                $query->whereNotIn('status', ['completed', 'cancelled']);
+                $query->where(function ($q) use ($user) {
+                    $q->where(function ($w) use ($user) {
+                        $w->where('handling_method', 'work_alone')
+                          ->where('creator_id', $user->id);
+                    })
+                    ->orWhereHas('branches', function ($b) use ($user) {
+                        $b->where('owner_id', $user->id)
+                          ->whereNotIn('status', ['completed', 'cancelled']);
+                    })
+                    ->orWhereHas('branches.assignments', function ($a) use ($user) {
+                        $a->where('assigned_to_id', $user->id)
+                          ->where('is_current', true);
+                    });
+                });
             } elseif ($view === 'all_open' || $view === 'open') {
                 $hasSearch = $request->has('search') && trim((string)$request->search) !== '';
                 if (!$hasSearch) {

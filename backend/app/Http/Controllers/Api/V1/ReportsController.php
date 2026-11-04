@@ -174,6 +174,7 @@ class ReportsController extends Controller
                 $b->where('owner_id', $user->id)
                   ->orWhereHas('assignments', fn($a) => $a->where('assigned_to_id', $user->id)->where('is_current', true));
             })
+            ->whereHas('task', fn($t) => $t->whereNotIn('status', ['completed', 'cancelled']))
             ->whereNotIn('status', ['completed', 'cancelled'])
             ->count();
 
@@ -182,6 +183,7 @@ class ReportsController extends Controller
                 $b->where('owner_id', $user->id)
                   ->orWhereHas('assignments', fn($a) => $a->where('assigned_to_id', $user->id)->where('is_current', true));
             })
+            ->whereHas('task', fn($t) => $t->whereNotIn('status', ['completed', 'cancelled']))
             ->whereIn('status', ['pending', 'in_progress'])
             ->count();
 
@@ -213,14 +215,23 @@ class ReportsController extends Controller
                   ->orWhereHas('assignments', fn($a) => $a->where('assigned_to_id', $user->id)->where('is_current', true));
             })->where('status', 'completed')->count();
 
-            // My Upcoming Tasks
+            // My Upcoming Tasks (Active milestones scheduled for this user to deliver)
             $upcomingTasks = Task::select('id', 'title', 'status', 'priority', 'due_date')
                 ->where(function ($q) use ($user) {
-                    $q->where('creator_id', $user->id)
-                      ->orWhereHas('branches', fn($b) => $b->where('owner_id', $user->id))
-                      ->orWhereHas('branches.assignments', fn($a) => $a->where('assigned_to_id', $user->id)->where('is_current', true));
+                    $q->where(function ($w) use ($user) {
+                        $w->where('creator_id', $user->id)
+                          ->where('handling_method', 'work_alone');
+                    })
+                    ->orWhereHas('branches', function ($b) use ($user) {
+                        $b->where('owner_id', $user->id)
+                          ->whereNotIn('status', ['completed', 'cancelled']);
+                    })
+                    ->orWhereHas('branches.assignments', function ($a) use ($user) {
+                        $a->where('assigned_to_id', $user->id)
+                          ->where('is_current', true);
+                    });
                 })
-                ->whereNotIn('status', ['cancelled'])
+                ->whereNotIn('status', ['completed', 'cancelled'])
                 ->orderBy('due_date', 'asc')
                 ->take(6)
                 ->get()

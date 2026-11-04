@@ -52,6 +52,7 @@ export const TaskListPage: React.FC = () => {
         search: currentSearch.trim() || undefined,
         status: status !== 'all' ? status : undefined,
         priority: priority !== 'all' ? priority : undefined,
+        view: searchParams.get('view') || undefined,
         page,
         per_page: 10,
       });
@@ -113,16 +114,31 @@ export const TaskListPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 flex-wrap">
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-              {search.trim() ? 'Search Results' : 'All Open Tasks'}
+              {searchParams.get('view') === 'assigned_to_me'
+                ? 'Tasks Assigned to Me'
+                : search.trim()
+                ? 'Search Results'
+                : 'All Open Tasks'}
             </h1>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
-              {total} {search.trim() ? 'found' : 'active open'}
+              {total} {searchParams.get('view') === 'assigned_to_me' ? 'assigned' : search.trim() ? 'found' : 'active open'}
             </span>
+            {searchParams.get('view') === 'assigned_to_me' && (
+              <button
+                type="button"
+                onClick={() => navigate('/tasks')}
+                className="text-xs text-blue-600 hover:text-blue-800 font-semibold underline cursor-pointer ml-1"
+              >
+                (View All Tasks)
+              </button>
+            )}
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            {search.trim()
+            {searchParams.get('view') === 'assigned_to_me'
+              ? 'Deliverables and subtasks specifically allocated to you for execution.'
+              : search.trim()
               ? `Showing results matching "${search.trim()}" across all task phases (active open, completed, on hold, archived).`
               : 'Active organizational tasks across operational workflows. Completed tasks automatically move to the Completed phase.'}
           </p>

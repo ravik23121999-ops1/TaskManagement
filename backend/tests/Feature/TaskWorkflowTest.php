@@ -1024,4 +1024,62 @@ class TaskWorkflowTest extends TestCase
                 && str_contains($mail->note, 'All milestones approved with excellence');
         });
     }
+
+    public function test_delegated_task_is_not_in_creator_upcoming_tasks_or_assigned_to_me(): void
+    {
+        // Employee 1 creates a task and delegates it to Employee 2
+        $task = Task::create([
+            'title' => 'Delegated Payment Task',
+            'description' => 'Payment processing',
+            'status' => 'in_progress',
+            'handling_method' => 'assign',
+            'creator_id' => $this->employee1->id,
+            'due_date' => now()->addDays(3),
+        ]);
+
+        $branch = $task->branches()->create([
+            'title' => 'Process Payment',
+            'owner_id' => $this->employee2->id,
+            'status' => 'in_progress',
+            'due_date' => now()->addDays(3),
+        ]);
+        $branch->assignments()->create([
+            'task_id' => $task->id,
+            'assigned_by_id' => $this->employee1->id,
+            'assigned_to_id' => $this->employee2->id,
+            'assigned_at' => now(),
+            'is_current' => true,
+        ]);
+
+        // Employee 1 checks dashboard:
+        // 1. Assigned to me should be 0 (since task was delegated to Employee 2)
+        // 2. Upcoming tasks should be empty (Employee 1 has no milestone to deliver)
+        // 3. My Initiated tasks should be 1
+        $dashRes = $this->actingAs($this->employee1)->getJson('/api/dashboard/employee');
+        $dashRes->assertStatus(200);
+
+        $this->assertEquals(0, $dashRes->json('data.assigned_to_me'));
+        $this->assertEquals(0, count($dashRes->json('data.upcoming_tasks')));
+        $this->assertEquals(1, $dashRes->json('data.my_created'));
+
+        // Employee 2 checks dashboard:
+        // Assigned to me should be 1, and Upcoming tasks should contain the task!
+        $dashRes2 = $this->actingAs($this->employee2)->getJson('/api/dashboard/employee');
+        $dashRes2->assertStatus(200);
+
+        $this->assertEquals(1, $dashRes2->json('data.assigned_to_me'));
+        $this->assertEquals(1, count($dashRes2->json('data.upcoming_tasks')));
+        $this->assertEquals('Delegated Payment Task', $dashRes2->json('data.upcoming_tasks.0.title'));
+
+        // Tasks API with view=assigned_to_me:
+        // Employee 1 has 0
+        $emp1Tasks = $this->actingAs($this->employee1)->getJson('/api/tasks?view=assigned_to_me');
+        $emp1Tasks->assertStatus(200);
+        $this->assertEquals(0, count($emp1Tasks->json('data')));
+
+        // Employee 2 has 1
+        $emp2Tasks = $this->actingAs($this->employee2)->getJson('/api/tasks?view=assigned_to_me');
+        $emp2Tasks->assertStatus(200);
+        $this->assertEquals(1, count($emp2Tasks->json('data')));
+    }
 }
