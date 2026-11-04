@@ -142,7 +142,7 @@ export const Dashboard: React.FC = () => {
             {/* Micro Progress Bar */}
             <div className="mt-4 space-y-1.5">
               <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
-                <span>System Throughput</span>
+                <span>System Pipeline</span>
                 <span className="font-bold text-slate-700">100% Active</span>
               </div>
               <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -187,7 +187,7 @@ export const Dashboard: React.FC = () => {
             {/* Micro Progress Bar */}
             <div className="mt-4 space-y-1.5">
               <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
-                <span>Workload Share</span>
+                <span>Active Workload</span>
                 <span className="font-bold text-sky-600">{inProgressPct}% of total</span>
               </div>
               <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -231,7 +231,7 @@ export const Dashboard: React.FC = () => {
             {/* Micro Progress Bar */}
             <div className="mt-4 space-y-1.5">
               <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
-                <span>Verification Queue</span>
+                <span>Review Queue</span>
                 <span className="font-bold text-purple-600">{pendingReviewTasks} to approve</span>
               </div>
               <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -276,7 +276,7 @@ export const Dashboard: React.FC = () => {
             {/* Micro Progress Bar */}
             <div className="mt-4 space-y-1.5">
               <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
-                <span>Completion Velocity</span>
+                <span>Completion Rate</span>
                 <span className="font-bold text-emerald-600">{completedPct}% success</span>
               </div>
               <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -624,8 +624,8 @@ export const Dashboard: React.FC = () => {
             {/* Micro Progress Bar */}
             <div className="mt-4 space-y-1.5">
               <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
-                <span>Priority Share</span>
-                <span className="font-bold text-blue-600">{myActionPct}% of queue</span>
+                <span>Action Queue Share</span>
+                <span className="font-bold text-blue-600">{myActionPct}% of active tasks</span>
               </div>
               <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                 <div
@@ -668,8 +668,8 @@ export const Dashboard: React.FC = () => {
             {/* Micro Progress Bar */}
             <div className="mt-4 space-y-1.5">
               <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
-                <span>Personal Allocation</span>
-                <span className="font-bold text-cyan-600">{assignedPct}% load</span>
+                <span>Direct Workload</span>
+                <span className="font-bold text-cyan-600">{assignedPct}% of total work</span>
               </div>
               <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                 <div
@@ -712,8 +712,8 @@ export const Dashboard: React.FC = () => {
             {/* Micro Progress Bar */}
             <div className="mt-4 space-y-1.5">
               <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
-                <span>Approval Pipeline</span>
-                <span className="font-bold text-amber-600">{awaitingReviewCount} submitted</span>
+                <span>Review Queue</span>
+                <span className="font-bold text-amber-600">{awaitingReviewCount} awaiting approval</span>
               </div>
               <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                 <div
@@ -749,15 +749,15 @@ export const Dashboard: React.FC = () => {
                 {collaborationsCount}
               </div>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200/60">
-                Cross-Branch
+                Team Support
               </span>
             </div>
 
             {/* Micro Progress Bar */}
             <div className="mt-4 space-y-1.5">
               <div className="flex items-center justify-between text-[10px] font-medium text-slate-400">
-                <span>Synergy Velocity</span>
-                <span className="font-bold text-purple-600">{collabPct}% joint work</span>
+                <span>Collaboration Share</span>
+                <span className="font-bold text-purple-600">{collabPct}% team workload</span>
               </div>
               <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                 <div
@@ -809,7 +809,7 @@ export const Dashboard: React.FC = () => {
               </div>
               <div>
                 <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">My Initiated Tasks</p>
-                <p className="text-xs text-slate-400">Tasks created and delegated by you</p>
+                <p className="text-xs text-slate-400">Tasks you created or delegated to others (click to monitor)</p>
               </div>
             </div>
             <div className="flex items-center gap-3">

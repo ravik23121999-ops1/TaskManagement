@@ -1095,7 +1095,7 @@ export const CreateTaskPage: React.FC = () => {
                                 <h4 className="font-bold text-slate-900 text-xs flex items-center gap-2">
                                   <span>{u.name}</span>
                                   <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">
-                                    Subtask #{idx + 1}
+                                    Subtask 1.{idx + 1}
                                   </span>
                                 </h4>
                                 <p className="text-[11px] text-slate-500">
@@ -1479,7 +1479,7 @@ export const CreateTaskPage: React.FC = () => {
               </div>
 
               <div className="space-y-3">
-                {selectedUsers.map((u) => {
+                {selectedUsers.map((u, idx) => {
                   const work = assigneeWork[u.id] || initAssignmentForUser(u);
 
                   return (
@@ -1493,8 +1493,13 @@ export const CreateTaskPage: React.FC = () => {
                             {u.name.charAt(0)}
                           </div>
                           <div>
-                            <span className="font-bold text-slate-900">{u.name}</span>
-                            <span className="text-[11px] text-slate-400 ml-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-900">{u.name}</span>
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">
+                                Subtask 1.{idx + 1}
+                              </span>
+                            </div>
+                            <span className="text-[11px] text-slate-400">
                               {u.department ? u.department.name : ''} • {u.role?.replace('_', ' ')}
                             </span>
                           </div>
@@ -1510,7 +1515,7 @@ export const CreateTaskPage: React.FC = () => {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div>
-                          <span className="font-bold text-slate-500">Subtask:</span>
+                          <span className="font-bold text-slate-500">Subtask 1.{idx + 1}:</span>
                           <span className="font-bold text-slate-800 ml-1.5">{work.title}</span>
                         </div>
                         <div>

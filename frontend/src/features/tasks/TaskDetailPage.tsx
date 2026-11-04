@@ -2176,7 +2176,7 @@ export const TaskDetailPage: React.FC = () => {
 
             {task.branches && task.branches.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {task.branches.map((b) => {
+                {task.branches.map((b, idx) => {
                   const pendingSub = b.submissions?.find((s) => !s.reviews || s.reviews.length === 0);
                   const canReassignBranch =
                     (currentUser?.role === 'admin' ||
@@ -2201,7 +2201,7 @@ export const TaskDetailPage: React.FC = () => {
                             <div>
                               <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                                 <span className="px-2 py-0.5 rounded-md text-[10px] font-bold font-mono bg-blue-50 text-blue-700 border border-blue-200">
-                                  Subtask {b.dot_code || b.hierarchical_code || `1.${b.id}`}
+                                  Subtask {b.dot_code || b.hierarchical_code || `1.${idx + 1}`}
                                 </span>
                               </div>
                               <h4 className="font-bold text-slate-900 text-xs">{b.owner?.name || 'Unassigned'}</h4>
@@ -2356,7 +2356,7 @@ export const TaskDetailPage: React.FC = () => {
                       {b.can_assign_further && task.status !== 'completed' && task.status !== 'cancelled' && (
                         <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
                           <span className="text-[10px] text-slate-400 font-mono">
-                            {b.dot_code || '1.1'}
+                            {b.dot_code || `1.${idx + 1}`}
                           </span>
                           {(currentUser?.id === b.owner?.id || currentUser?.role === 'admin' || task.creator?.id === currentUser?.id) && (
                             <button
