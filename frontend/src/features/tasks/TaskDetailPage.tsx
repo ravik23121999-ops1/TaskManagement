@@ -870,10 +870,10 @@ export const TaskDetailPage: React.FC = () => {
                 showToast('Task details refreshed', 'info');
               }}
               disabled={isRefreshing}
-              className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-800 border-2 border-slate-200 rounded-xl text-xs font-bold shadow-2xs hover:shadow-xs transition flex items-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-50"
               title="Refresh task data"
             >
-              <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${isRefreshing ? 'animate-spin text-blue-600' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 text-slate-600 ${isRefreshing ? 'animate-spin text-blue-600' : ''}`} />
               <span className="hidden sm:inline">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
             </button>
 
@@ -881,10 +881,10 @@ export const TaskDetailPage: React.FC = () => {
             {task.status !== 'completed' && task.status !== 'cancelled' && (
               <button
                 onClick={() => openAssignModal('assign')}
-                className="px-3.5 py-2 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-sm transition flex items-center gap-1.5 cursor-pointer active:scale-95"
                 title="Assign one or more employees to this task"
               >
-                <UserPlus className="w-3.5 h-3.5 text-sky-600" />
+                <UserPlus className="w-3.5 h-3.5 text-white" />
                 <span>+ Assign (1 or More)</span>
               </button>
             )}
@@ -893,10 +893,10 @@ export const TaskDetailPage: React.FC = () => {
             {task.status !== 'completed' && task.status !== 'cancelled' && (
               <button
                 onClick={() => openAssignModal('collaborate')}
-                className="px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-sm transition flex items-center gap-1.5 cursor-pointer active:scale-95"
                 title="Invite one or more team members to collaborate"
               >
-                <Users className="w-3.5 h-3.5 text-purple-600" />
+                <Users className="w-3.5 h-3.5 text-white" />
                 <span>+ Collaborate (1 or More)</span>
               </button>
             )}
@@ -981,10 +981,10 @@ export const TaskDetailPage: React.FC = () => {
             {task.permissions.can_hold && (
               <button
                 onClick={handleOpenHoldModal}
-                className="px-3.5 py-2 border border-amber-300 text-amber-700 hover:bg-amber-50 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 bg-white hover:bg-amber-50 text-amber-800 border-2 border-amber-300 rounded-xl text-xs font-bold shadow-2xs hover:shadow-xs transition flex items-center gap-1.5 cursor-pointer active:scale-95"
                 title="Place task temporarily on hold with an explanation note"
               >
-                <PauseCircle className="w-3.5 h-3.5" />
+                <PauseCircle className="w-3.5 h-3.5 text-amber-600" />
                 <span>Pause Task</span>
               </button>
             )}
@@ -992,7 +992,7 @@ export const TaskDetailPage: React.FC = () => {
             {task.permissions.can_resume && (
               <button
                 onClick={handleResume}
-                className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-semibold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer active:scale-95"
               >
                 <PlayCircle className="w-3.5 h-3.5" />
                 <span>Resume</span>
@@ -1003,10 +1003,10 @@ export const TaskDetailPage: React.FC = () => {
             {task.permissions.can_cancel && (
               <button
                 onClick={handleOpenCancelModal}
-                className="px-3.5 py-2 border border-rose-200 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 bg-white hover:bg-rose-50 text-rose-700 border-2 border-rose-300 rounded-xl text-xs font-bold shadow-2xs hover:shadow-xs transition flex items-center gap-1.5 cursor-pointer active:scale-95"
                 title="Cancel this task with a mandatory reason note"
               >
-                <Ban className="w-3.5 h-3.5" />
+                <Ban className="w-3.5 h-3.5 text-rose-600" />
                 <span>Cancel Task</span>
               </button>
             )}
@@ -1015,10 +1015,10 @@ export const TaskDetailPage: React.FC = () => {
             {task.permissions?.can_delete && (
               <button
                 onClick={() => { setDeleteError(''); setIsDeleteModalOpen(true); }}
-                className="px-3.5 py-2 border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-sm transition flex items-center gap-1.5 cursor-pointer active:scale-95"
                 title="Permanently delete this task record"
               >
-                <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                <Trash2 className="w-3.5 h-3.5 text-white" />
                 <span>Delete Task</span>
               </button>
             )}
@@ -1179,8 +1179,8 @@ export const TaskDetailPage: React.FC = () => {
           <div className="flex items-center gap-2.5">
             <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse shadow-[0_0_8px_#2563eb] shrink-0" />
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-bold text-slate-800">Current Responsibility:</span>
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white border border-slate-200 text-slate-700 shadow-2xs">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Current Responsibility:</span>
+              <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-200/70 text-slate-900 border-0">
                 {isCompleted
                   ? 'Completed & Archived'
                   : isReadyForFinalSignOff
@@ -1416,22 +1416,41 @@ export const TaskDetailPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <span className="font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
-                    Active Assignments: {task.progress_summary.total}
-                  </span>
-                  <span className="font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">
-                    Completed: {task.progress_summary.completed}
-                  </span>
-                  <span className="font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-lg">
-                    In Progress: {task.progress_summary.in_progress}
-                  </span>
-                  <span className="font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
-                    Pending Review: {task.progress_summary.pending_review}
-                  </span>
+                  {/* Indicator: Active Assignments */}
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-slate-100 text-slate-700 text-xs select-none">
+                    <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
+                    <span className="text-slate-500 font-medium">Active:</span>
+                    <span className="font-black text-slate-900">{task.progress_summary.total}</span>
+                  </div>
+
+                  {/* Indicator: Completed */}
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-50 text-emerald-900 text-xs select-none">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                    <span className="text-emerald-700 font-medium">Completed:</span>
+                    <span className="font-black text-emerald-800">{task.progress_summary.completed}</span>
+                  </div>
+
+                  {/* Indicator: In Progress */}
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-blue-50 text-blue-900 text-xs select-none">
+                    <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
+                    <span className="text-blue-700 font-medium">In Progress:</span>
+                    <span className="font-black text-blue-800">{task.progress_summary.in_progress}</span>
+                  </div>
+
+                  {/* Indicator: Pending Review */}
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-50 text-amber-900 text-xs select-none">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                    <span className="text-amber-700 font-medium">Pending Review:</span>
+                    <span className="font-black text-amber-800">{task.progress_summary.pending_review}</span>
+                  </div>
+
+                  {/* Indicator: Revoked */}
                   {task.progress_summary.cancelled !== undefined && task.progress_summary.cancelled > 0 && (
-                    <span className="font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg">
-                      Revoked: {task.progress_summary.cancelled}
-                    </span>
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-50 text-rose-900 text-xs select-none">
+                      <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                      <span className="text-rose-700 font-medium">Revoked:</span>
+                      <span className="font-black text-rose-800">{task.progress_summary.cancelled}</span>
+                    </div>
                   )}
                 </div>
               </div>
@@ -2084,7 +2103,7 @@ export const TaskDetailPage: React.FC = () => {
               {task.status !== 'completed' && task.status !== 'cancelled' && (
                 <button
                   onClick={() => openAssignModal('assign')}
-                  className="px-3.5 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer shrink-0"
+                  className="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-sm transition inline-flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Assign More (1 or Many)</span>
@@ -2290,7 +2309,7 @@ export const TaskDetailPage: React.FC = () => {
               {task.status !== 'completed' && task.status !== 'cancelled' && (
                 <button
                   onClick={() => openAssignModal('collaborate')}
-                  className="px-3.5 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-xl text-xs font-semibold transition inline-flex items-center gap-1.5 cursor-pointer shrink-0"
+                  className="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-sm transition inline-flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Invite Collaborators (1 or Many)</span>

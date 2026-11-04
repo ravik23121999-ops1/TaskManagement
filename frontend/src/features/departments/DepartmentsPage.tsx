@@ -603,15 +603,17 @@ export const DepartmentsPage: React.FC = () => {
                         <div className="flex items-center gap-1.5 text-[11px]">
                           <span
                             title="Active ongoing branch tasks"
-                            className="px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200/80 font-bold"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-50 text-blue-800 text-[11px] font-bold select-none"
                           >
-                            {member.active_tasks_count} active
+                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                            <span>{member.active_tasks_count} active</span>
                           </span>
                           <span
                             title="Completed branch tasks"
-                            className="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200/80 font-bold"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 text-[11px] font-bold select-none"
                           >
-                            {member.completed_tasks_count} done
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+                            <span>{member.completed_tasks_count} done</span>
                           </span>
                         </div>
 
@@ -619,10 +621,10 @@ export const DepartmentsPage: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleLoginAs(member)}
-                            className="h-7 px-2.5 rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer shadow-2xs hover:shadow-xs"
+                            className="h-7 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs hover:shadow transition text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer active:scale-95"
                             title={`Log in as ${member.name}`}
                           >
-                            <LogIn className="w-3 h-3 text-emerald-600" />
+                            <LogIn className="w-3 h-3 text-white" />
                             <span>Login As</span>
                           </button>
                         )}
@@ -634,10 +636,10 @@ export const DepartmentsPage: React.FC = () => {
                               setIsMembersModalOpen(false);
                               navigate('/messages');
                             }}
-                            className="h-7 px-2.5 rounded-lg border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 text-slate-600 transition text-[11px] font-semibold inline-flex items-center gap-1 cursor-pointer"
+                            className="h-7 px-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-xs hover:shadow transition text-[11px] font-bold inline-flex items-center gap-1 cursor-pointer active:scale-95"
                             title="Open Work Messages"
                           >
-                            <MessageSquare className="w-3 h-3 text-blue-600" />
+                            <MessageSquare className="w-3 h-3 text-white" />
                             <span>Chat</span>
                           </button>
                         )}
