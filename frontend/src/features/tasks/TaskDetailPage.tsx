@@ -3549,8 +3549,18 @@ export const TaskDetailPage: React.FC = () => {
                     placeholder="Filter by name, department, email, or role..."
                     value={modalSearch}
                     onChange={(e) => setModalSearch(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
+                    className="w-full pl-9 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                   />
+                  {modalSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setModalSearch('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200 transition cursor-pointer"
+                      title="Clear search"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
 
                 {/* Quick Actions & Counter */}
@@ -4004,8 +4014,18 @@ export const TaskDetailPage: React.FC = () => {
                         value={reassignSearch}
                         onChange={(e) => setReassignSearch(e.target.value)}
                         placeholder="Search replacement by name, email, or department..."
-                        className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                        className="w-full pl-9 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                       />
+                      {reassignSearch && (
+                        <button
+                          type="button"
+                          onClick={() => setReassignSearch('')}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200 transition cursor-pointer"
+                          title="Clear search"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
 
                     <div className="border border-slate-200/80 rounded-xl p-1.5 max-h-48 overflow-y-auto divide-y divide-slate-100 space-y-1">

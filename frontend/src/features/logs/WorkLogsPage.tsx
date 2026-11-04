@@ -74,6 +74,7 @@ export const WorkLogsPage: React.FC = () => {
     searchParams.get('user_id') ? Number(searchParams.get('user_id')) : undefined
   );
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchParams.get('search') || '');
 
   // Single Dossier inspect state
   const [dossierTaskId, setDossierTaskId] = useState<number | null>(
@@ -110,13 +111,23 @@ export const WorkLogsPage: React.FC = () => {
     loadInitialData();
   }, []);
 
+  // Fluent instant live search debounced by 250ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+      setJourneysPage(1);
+      setStreamPage(1);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   useEffect(() => {
     if (viewMode === 'journeys') {
       loadTaskJourneys();
     } else if (viewMode === 'stream') {
       loadLogs();
     }
-  }, [viewMode, journeysPage, streamPage, selectedTaskId, selectedUserId, statusFilter, typeFilter]);
+  }, [viewMode, journeysPage, streamPage, selectedTaskId, selectedUserId, statusFilter, typeFilter, debouncedSearchQuery]);
 
   useEffect(() => {
     if (dossierTaskId && viewMode === 'dossier') {
@@ -154,7 +165,7 @@ export const WorkLogsPage: React.FC = () => {
         task_id: selectedTaskId,
         user_id: selectedUserId,
         status: statusFilter !== 'all' ? statusFilter : undefined,
-        search: searchQuery.trim() || undefined,
+        search: debouncedSearchQuery.trim() || undefined,
         page: journeysPage,
         per_page: 6,
       });
@@ -180,7 +191,7 @@ export const WorkLogsPage: React.FC = () => {
         type: typeFilter !== 'all' ? typeFilter : undefined,
         task_id: selectedTaskId,
         user_id: selectedUserId,
-        search: searchQuery.trim() || undefined,
+        search: debouncedSearchQuery.trim() || undefined,
         page: streamPage,
         per_page: 15,
       });
@@ -444,8 +455,18 @@ export const WorkLogsPage: React.FC = () => {
               placeholder="Search by task title, ID (e.g. T-016), actor, remarks..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="w-full pl-9 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200 transition cursor-pointer"
+                title="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
           {/* Task Dropdown */}

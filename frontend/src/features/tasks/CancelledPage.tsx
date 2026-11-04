@@ -26,6 +26,7 @@ export const CancelledPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -34,16 +35,25 @@ export const CancelledPage: React.FC = () => {
   const [deleting, setDeleting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Fluent instant live search debounced by 250ms
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   useEffect(() => {
     loadCancelledTasks();
-  }, [page]);
+  }, [page, debouncedSearch]);
 
   const loadCancelledTasks = async () => {
     setLoading(true);
     try {
       const response = await tasksApi.list({
         status: 'cancelled',
-        search: search.trim() || undefined,
+        search: debouncedSearch.trim() || undefined,
         page,
         per_page: 10,
       });
@@ -125,8 +135,18 @@ export const CancelledPage: React.FC = () => {
               placeholder="Search cancelled tasks by code, title, creator, or cancellation reason..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
+              className="w-full pl-9 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
             />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full hover:bg-slate-200 transition cursor-pointer"
+                title="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
           <button
             type="submit"

@@ -299,13 +299,16 @@ class TaskController extends Controller
             $query->where('department_id', $request->department_id);
         }
 
-        // Search
+        // Fluent Multi-field Search
         if ($request->has('search') && $request->search) {
             $search = trim($request->search);
             $numericId = preg_replace('/[^0-9]/', '', $search);
             $query->where(function ($q) use ($search, $numericId) {
                 $q->where('title', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('department', fn($d) => $d->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('creator', fn($u) => $u->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('branches.owner', fn($u) => $u->where('name', 'like', "%{$search}%"));
                 if ($numericId !== '') {
                     $q->orWhere('id', (int) $numericId);
                 }
