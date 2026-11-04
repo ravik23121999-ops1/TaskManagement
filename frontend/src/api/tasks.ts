@@ -350,8 +350,7 @@ export const tasksApi = {
 
   getAttachmentDownloadUrl: (attachmentId: number) => {
     const token = localStorage.getItem('token');
-    const rawBaseUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/+$/, '');
-    const apiBase = rawBaseUrl.endsWith('/api') ? rawBaseUrl : `${rawBaseUrl}/api`;
+    const apiBase = apiClient.defaults.baseURL ? apiClient.defaults.baseURL.replace(/\/+$/, '') : '/api';
     return `${apiBase}/attachments/${attachmentId}/download?token=${token || ''}`;
   },
 
