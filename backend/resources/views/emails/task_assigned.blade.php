@@ -172,6 +172,10 @@
         <p class="intro">
           @if(($type ?? 'new_assignment') === 'transferred')
             The following subtask assignment has been transferred to you by <strong>{{ $assigner->name }}</strong>. Please review the scope and deliverables below:
+          @elseif(($type ?? 'new_assignment') === 'returned_for_correction')
+            Your submitted work on <strong>{{ $branchTitle }}</strong> has been reviewed by <strong>{{ $assigner->name }}</strong> and requires revisions. Please review the feedback comments below and resubmit once updated:
+          @elseif(($type ?? 'new_assignment') === 'task_completed')
+            Great news! Task <strong>{{ $task->title }}</strong> has received final verification and sign-off and is now officially marked as <strong>Completed</strong> by <strong>{{ $assigner->name }}</strong>. Thank you for your contributions!
           @else
             You have been assigned to work on the following task by <strong>{{ $assigner->name }}</strong> ({{ ucwords(str_replace('_', ' ', $assigner->role ?? 'Assigner')) }}).
           @endif
@@ -218,9 +222,11 @@
         @endif
 
         @if(!empty($note))
-        <div class="instructions-box" style="background-color: #fefce8; border-left-color: #eab308;">
-          <div class="instructions-title" style="color: #854d0e;">Assigner Note</div>
-          <div class="instructions-content" style="color: #713f12;">{{ $note }}</div>
+        <div class="instructions-box" style="background-color: {{ ($type ?? '') === 'returned_for_correction' ? '#fff1f2' : (($type ?? '') === 'task_completed' ? '#f0fdf4' : '#fefce8') }}; border-left-color: {{ ($type ?? '') === 'returned_for_correction' ? '#f43f5e' : (($type ?? '') === 'task_completed' ? '#22c55e' : '#eab308') }};">
+          <div class="instructions-title" style="color: {{ ($type ?? '') === 'returned_for_correction' ? '#be123c' : (($type ?? '') === 'task_completed' ? '#15803d' : '#854d0e') }};">
+            {{ ($type ?? '') === 'returned_for_correction' ? 'Reviewer Correction Feedback' : (($type ?? '') === 'task_completed' ? 'Final Approval Notes' : 'Assigner Note') }}
+          </div>
+          <div class="instructions-content" style="color: {{ ($type ?? '') === 'returned_for_correction' ? '#881337' : (($type ?? '') === 'task_completed' ? '#14532d' : '#713f12') }};">{{ $note }}</div>
         </div>
         @endif
 

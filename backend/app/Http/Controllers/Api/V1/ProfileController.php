@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\UserResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
@@ -49,6 +50,7 @@ class ProfileController extends Controller
 
         $user->update([
             'password' => Hash::make($request->password),
+            'encrypted_password' => Crypt::encryptString($request->password),
         ]);
 
         return response()->json([

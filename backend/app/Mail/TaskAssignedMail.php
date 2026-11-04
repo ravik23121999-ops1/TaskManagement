@@ -33,11 +33,15 @@ class TaskAssignedMail extends Mailable
 
         $subjectTitle = match ($this->type) {
             'transferred' => "[{$taskCode}] Task Assignment Transferred: {$branchTitle}",
+            'returned_for_correction' => "[{$taskCode}] Work Returned for Correction: {$branchTitle}",
+            'task_completed' => "[{$taskCode}] Task Fully Completed: {$this->task->title}",
             default => "[{$taskCode}] New Task Assigned: {$branchTitle}",
         };
 
         $emailHeading = match ($this->type) {
             'transferred' => "Task Assignment Transferred",
+            'returned_for_correction' => "Work Returned for Correction",
+            'task_completed' => "Task Completed & Approved",
             default => "New Task Assigned to You",
         };
 

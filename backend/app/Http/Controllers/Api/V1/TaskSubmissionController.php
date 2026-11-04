@@ -10,6 +10,8 @@ use App\Models\TaskStatusHistory;
 use App\Models\TaskAttachment;
 use App\Services\ActivityLogger;
 use App\Jobs\SendTaskNotification;
+use App\Mail\TaskAssignedMail;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -318,6 +320,19 @@ class TaskSubmissionController extends Controller
                     "Task '{$task->title}' has been verified and fully completed by creator",
                     $task->id,
                     'Task Completed'
+                );
+            }
+
+            // Send automated completion email notification to all active assignees & collaborators
+            $recipientUsers = User::whereIn('id', $recipientIds)->get();
+            foreach ($recipientUsers as $recipientUser) {
+                TaskAssignedMail::safeSend(
+                    $task,
+                    $recipientUser,
+                    $user,
+                    null,
+                    $finalDescription,
+                    'task_completed'
                 );
             }
 

@@ -1054,10 +1054,25 @@ class TaskController extends Controller
             'cancelled_by_id' => null,
         ]);
 
-        // Reopen branches if they were cancelled
-        $task->branches()->whereIn('status', ['cancelled'])->update([
-            'status' => 'in_progress',
-        ]);
+        // Reopen branches appropriately:
+        // When reopening from 'completed', reactivate completed branches back to 'in_progress'
+        // Revoked branches (status = 'cancelled') must remain cancelled.
+        if ($oldStatus === 'completed') {
+            $task->branches()->whereIn('status', ['completed'])->update([
+                'status' => 'in_progress',
+                'completed_at' => null,
+            ]);
+        } elseif ($oldStatus === 'cancelled') {
+            // When reopening a cancelled task, only restore branches that were not revoked (still have current assignment)
+            $task->branches()
+                ->whereIn('status', ['cancelled'])
+                ->whereHas('assignments', function ($q) {
+                    $q->where('is_current', true);
+                })
+                ->update([
+                    'status' => 'in_progress',
+                ]);
+        }
 
         TaskStatusHistory::create([
             'task_id' => $task->id,

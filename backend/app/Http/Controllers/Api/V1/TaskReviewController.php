@@ -10,6 +10,8 @@ use App\Models\TaskSubmission;
 use App\Models\TaskStatusHistory;
 use App\Services\ActivityLogger;
 use App\Jobs\SendTaskNotification;
+use App\Mail\TaskAssignedMail;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -175,6 +177,18 @@ class TaskReviewController extends Controller
                     'Work Returned for Correction',
                     $branch?->id
                 );
+
+                $returnToUser = User::find($returnToUserId);
+                if ($returnToUser) {
+                    TaskAssignedMail::safeSend(
+                        $task,
+                        $returnToUser,
+                        $user,
+                        $branch,
+                        $comments,
+                        'returned_for_correction'
+                    );
+                }
 
                 return response()->json([
                     'message' => 'Submission rejected and returned to submitter for correction',

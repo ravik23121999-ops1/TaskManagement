@@ -112,4 +112,23 @@ class ImpersonationAndUserPasswordTest extends TestCase
             $this->assertArrayNotHasKey('plain_password', $u);
         }
     }
+
+    public function test_employee_password_change_syncs_encrypted_password_for_admin_view(): void
+    {
+        // Employee changes their own password via profile API
+        $response = $this->actingAs($this->employee)->putJson('/api/profile/password', [
+            'current_password' => 'password', // Default factory password is 'password'
+            'password' => 'BrandNewPassword123!',
+            'password_confirmation' => 'BrandNewPassword123!',
+        ]);
+
+        $response->assertStatus(200);
+
+        // Admin checks user list and sees the updated decrypted password
+        $res = $this->actingAs($this->admin)->getJson('/api/users');
+        $res->assertStatus(200);
+
+        $empItem = collect($res->json('data'))->firstWhere('id', $this->employee->id);
+        $this->assertEquals('BrandNewPassword123!', $empItem['plain_password']);
+    }
 }

@@ -640,14 +640,41 @@ class TaskWorkflowTest extends TestCase
 
     public function test_task_reopen_restores_active_workflow(): void
     {
-        // Create and complete task
+        // Create and complete task with one completed branch and one revoked/cancelled branch
         $task = \App\Models\Task::create([
             'title' => 'Task to Reopen',
             'description' => 'Testing reopening',
             'status' => 'completed',
-            'handling_method' => 'work_alone',
+            'handling_method' => 'delegate',
             'creator_id' => $this->admin->id,
             'completed_at' => now(),
+        ]);
+
+        $completedBranch = $task->branches()->create([
+            'title' => 'Completed Branch',
+            'owner_id' => $this->employee1->id,
+            'status' => 'completed',
+            'completed_at' => now(),
+        ]);
+        $completedBranch->assignments()->create([
+            'task_id' => $task->id,
+            'assigned_by_id' => $this->admin->id,
+            'assigned_to_id' => $this->employee1->id,
+            'assigned_at' => now(),
+            'is_current' => true,
+        ]);
+
+        $revokedBranch = $task->branches()->create([
+            'title' => 'Revoked Branch',
+            'owner_id' => $this->employee2->id,
+            'status' => 'cancelled',
+        ]);
+        $revokedBranch->assignments()->create([
+            'task_id' => $task->id,
+            'assigned_by_id' => $this->admin->id,
+            'assigned_to_id' => $this->employee2->id,
+            'assigned_at' => now(),
+            'is_current' => false, // revoked
         ]);
 
         // Non-admin non-creator cannot reopen
@@ -661,6 +688,13 @@ class TaskWorkflowTest extends TestCase
         $reopenRes->assertStatus(200);
         $this->assertEquals('in_progress', $reopenRes->json('data.status'));
         $this->assertNull($reopenRes->json('data.completed_at'));
+
+        // Completed branch should now be in_progress
+        $this->assertEquals('in_progress', $completedBranch->fresh()->status);
+        $this->assertNull($completedBranch->fresh()->completed_at);
+
+        // Revoked branch should REMAIN cancelled!
+        $this->assertEquals('cancelled', $revokedBranch->fresh()->status);
     }
 
     public function test_status_guards_prevent_submissions_on_completed_or_held_tasks(): void
@@ -913,5 +947,81 @@ class TaskWorkflowTest extends TestCase
         $b2->refresh();
         $this->assertEquals($this->employee1->id, $b2->owner_id);
         $this->assertEquals('in_progress', $b2->status);
+    }
+
+    public function test_return_for_correction_sends_email_notification(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+
+        $task = Task::create([
+            'title' => 'Email Correction Test',
+            'description' => 'Test returning deliverable email',
+            'status' => 'in_progress',
+            'handling_method' => 'delegate',
+            'creator_id' => $this->admin->id,
+        ]);
+
+        $branch = $task->branches()->create([
+            'title' => 'Feature Implementation',
+            'owner_id' => $this->employee1->id,
+            'status' => 'review',
+        ]);
+        $branch->assignments()->create([
+            'task_id' => $task->id,
+            'assigned_by_id' => $this->admin->id,
+            'assigned_to_id' => $this->employee1->id,
+            'assigned_at' => now(),
+            'is_current' => true,
+        ]);
+
+        $submission = $task->submissions()->create([
+            'task_branch_id' => $branch->id,
+            'submitted_by_id' => $this->employee1->id,
+            'description' => 'First attempt deliverable',
+            'submitted_at' => now(),
+        ]);
+
+        $response = $this->actingAs($this->admin)->postJson("/api/submissions/{$submission->id}/review", [
+            'decision' => 'returned',
+            'comments' => 'Please add unit test coverage and resubmit.',
+        ]);
+        $response->assertStatus(201);
+
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\TaskAssignedMail::class, function ($mail) {
+            return $mail->type === 'returned_for_correction'
+                && $mail->assignee->id === $this->employee1->id
+                && str_contains($mail->note, 'Please add unit test coverage');
+        });
+    }
+
+    public function test_task_final_completion_sends_email_notification(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+
+        $task = Task::create([
+            'title' => 'Task For Final Complete Mail',
+            'description' => 'Testing completion email',
+            'status' => 'review',
+            'handling_method' => 'work_alone',
+            'creator_id' => $this->admin->id,
+        ]);
+
+        $branch = $task->branches()->create([
+            'title' => 'Main Scope',
+            'owner_id' => $this->employee1->id,
+            'status' => 'completed',
+            'completed_at' => now(),
+        ]);
+
+        $res = $this->actingAs($this->admin)->postJson("/api/tasks/{$task->id}/final-submit", [
+            'description' => 'All milestones approved with excellence.',
+        ]);
+        $res->assertStatus(200);
+
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\TaskAssignedMail::class, function ($mail) {
+            return $mail->type === 'task_completed'
+                && $mail->assignee->id === $this->employee1->id
+                && str_contains($mail->note, 'All milestones approved with excellence');
+        });
     }
 }
