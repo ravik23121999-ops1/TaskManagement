@@ -179,6 +179,7 @@ export const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ user, metrics }) =
           <div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white flex items-center gap-3 flex-wrap">
               <span>{greeting}, {user?.name || 'there'}!</span>
+              <span className="text-2xl select-none">👋</span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-300/90 mt-1 font-medium leading-relaxed">
               {current.tagline}
