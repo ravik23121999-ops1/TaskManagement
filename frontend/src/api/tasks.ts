@@ -11,6 +11,7 @@ export interface TaskBranch {
   id: number;
   level?: number;
   level_name?: string;
+  dot_code?: string;
   hierarchical_code?: string;
   parent_branch_id?: number | null;
   parent_assignment_id?: number | null;
@@ -121,6 +122,10 @@ export interface Task {
   shared_attachments?: TaskAttachment[];
   my_branch?: {
     id: number;
+    level?: number;
+    dot_code?: string;
+    hierarchical_code?: string;
+    parent_branch_id?: number | null;
     title: string;
     description: string | null;
     expected_result?: string | null;

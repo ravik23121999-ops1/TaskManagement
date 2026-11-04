@@ -27,7 +27,6 @@ import {
   AlertCircle,
   X,
 } from 'lucide-react';
-import { TaskHierarchyFlow } from '../tasks/TaskHierarchyFlow';
 
 export const WorkLogsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -35,7 +34,6 @@ export const WorkLogsPage: React.FC = () => {
 
   // Mode: 'journeys' (Primary: separated task journeys creation to end) | 'stream' (flat raw audit feed) | 'dossier' (single task inspect)
   const [viewMode, setViewMode] = useState<'journeys' | 'stream' | 'dossier'>('journeys');
-  const [hierarchyModalTask, setHierarchyModalTask] = useState<any | null>(null);
 
   // Stats
   const [stats, setStats] = useState<any>({
@@ -655,16 +653,6 @@ export const WorkLogsPage: React.FC = () => {
                             />
                           </div>
                         </div>
-
-                        {/* 4-Level Task Assignment Flow */}
-                        <button
-                          onClick={() => setHierarchyModalTask(task)}
-                          className="px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl text-xs font-semibold border border-purple-200 transition flex items-center gap-1.5 cursor-pointer shrink-0"
-                          title="View 4-Level Task Assignment Flow"
-                        >
-                          <GitBranch className="w-3.5 h-3.5 text-purple-600" />
-                          <span>4-Level Flow</span>
-                        </button>
 
                         {/* Open Task in Workspace */}
                         <button
@@ -1533,29 +1521,6 @@ export const WorkLogsPage: React.FC = () => {
           >
             <X className="w-3.5 h-3.5" />
           </button>
-        </div>
-      )}
-      {/* 4-Level Task Assignment Flow Modal */}
-      {hierarchyModalTask && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="relative w-full max-w-6xl my-8 bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
-            <button
-              type="button"
-              onClick={() => setHierarchyModalTask(null)}
-              className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer shadow-xs"
-              title="Close Flowchart"
-            >
-              <X className="w-4 h-4" />
-            </button>
-            <div className="max-h-[85vh] overflow-y-auto">
-              <TaskHierarchyFlow
-                task={hierarchyModalTask}
-                onSelectBranch={() => {
-                  navigate(`/tasks/${hierarchyModalTask.id}`);
-                }}
-              />
-            </div>
-          </div>
         </div>
       )}
 </div>

@@ -43,10 +43,7 @@ import {
   RefreshCw,
   MoreHorizontal,
   ChevronDown,
-  Layers,
-  Box,
 } from 'lucide-react';
-import { TaskHierarchyFlow } from './TaskHierarchyFlow';
 
 export const TaskDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -57,7 +54,6 @@ export const TaskDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'workflow' | 'assignments' | 'comments' | 'attachments' | 'history'>('overview');
-  const [workflowSubView, setWorkflowSubView] = useState<'hierarchy' | 'timeline'>('hierarchy');
 
   // Interactive Action states
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
@@ -1407,12 +1403,7 @@ export const TaskDetailPage: React.FC = () => {
             }`}
           >
             <GitBranch className="w-3.5 h-3.5" />
-            <span>Workflow & 4-Level Flow</span>
-            {task.branches && task.branches.length > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-purple-100 text-purple-700">
-                4-Level
-              </span>
-            )}
+            <span>Workflow & History</span>
           </button>
 
           <button
@@ -1550,34 +1541,6 @@ export const TaskDetailPage: React.FC = () => {
                   }}
                   title={`In Progress: ${task.progress_summary.in_progress}`}
                 />
-              </div>
-
-              {/* 4-Level Task Assignment Flow Ribbon */}
-              <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="px-2 py-0.5 rounded-md text-[11px] font-mono font-bold bg-purple-50 text-purple-700 border border-purple-200">
-                    {task.hierarchical_code || `QL-${String(task.id).padStart(4, '0')}`}
-                  </span>
-                  <span className="text-xs text-slate-700 font-bold">
-                    Hierarchical 4-Level Delegation Flow
-                  </span>
-                  {task.hierarchy_summary && (
-                    <span className="text-[11px] text-slate-400 font-mono">
-                      (L1: {task.hierarchy_summary.level_1_count} • L2: {task.hierarchy_summary.level_2_count} • L3: {task.hierarchy_summary.level_3_count} • L4: {task.hierarchy_summary.level_4_count})
-                    </span>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab('workflow');
-                    setWorkflowSubView('hierarchy');
-                  }}
-                  className="px-3 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200/90 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer self-start sm:self-auto shrink-0 shadow-2xs hover:shadow-xs"
-                >
-                  <GitBranch className="w-3.5 h-3.5 text-purple-600" />
-                  <span>View 4-Level Tree →</span>
-                </button>
               </div>
             </div>
           )}
@@ -2122,121 +2085,64 @@ export const TaskDetailPage: React.FC = () => {
       )}
 
       {/* ======================================================== */}
-      {/* SCREEN 8: WORKFLOW, 4-LEVEL FLOW & TIMELINE               */}
+      {/* SCREEN 8: WORKFLOW & HISTORY TIMELINE                     */}
       {/* ======================================================== */}
       {activeTab === 'workflow' && (
-        <div className="space-y-6">
-          {/* Sub-view switcher banner */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs">
-            <div>
-              <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <GitBranch className="w-4 h-4 text-purple-600" />
-                <span>Task Assignment Journey & Delegation Architecture</span>
-              </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Explore the complete 4-level delegation tree (1 → 2 → 4 → 8) or inspect the chronological workflow timeline.
-              </p>
-            </div>
-
-            <div className="flex items-center bg-slate-100 p-1 rounded-xl self-start sm:self-auto border border-slate-200/60">
-              <button
-                type="button"
-                onClick={() => setWorkflowSubView('hierarchy')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                  workflowSubView === 'hierarchy'
-                    ? 'bg-white text-purple-700 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Layers className="w-3.5 h-3.5 text-purple-600" />
-                <span>4-Level Assignment Flow</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setWorkflowSubView('timeline')}
-                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
-                  workflowSubView === 'timeline'
-                    ? 'bg-white text-blue-700 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Clock className="w-3.5 h-3.5 text-blue-600" />
-                <span>Chronological Timeline</span>
-              </button>
-            </div>
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs">
+          <div className="mb-6">
+            <h2 className="text-sm font-bold text-slate-900">Task Journey / Chronological Workflow</h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Visual history of assignments, submissions, review decisions, returns, and stage handovers.
+            </p>
           </div>
 
-          {/* VIEW A: 4-Level Task Assignment Flow */}
-          {workflowSubView === 'hierarchy' && (
-            <TaskHierarchyFlow
-              task={task}
-              currentUser={currentUser}
-              onSelectBranch={(_bId) => {
-                setActiveTab('assignments');
-              }}
-              onOpenAssignModal={() => openAssignModal('assign')}
-            />
-          )}
+          <div className="relative pl-6 sm:pl-8 border-l-2 border-slate-100 space-y-8 my-4 ml-3">
+            {task.status_history && task.status_history.length > 0 ? (
+              task.status_history.map((item, idx) => {
+                const isLast = idx === task.status_history.length - 1;
+                let dotColor = 'bg-blue-600';
+                if (item.to_status === 'completed') dotColor = 'bg-emerald-500';
+                else if (item.to_status === 'review') dotColor = 'bg-amber-500';
+                else if (item.to_status === 'post_comment') dotColor = 'bg-rose-500';
+                else if (item.to_status === 'on_hold') dotColor = 'bg-orange-500';
 
-          {/* VIEW B: Chronological Workflow Timeline */}
-          {workflowSubView === 'timeline' && (
-            <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs">
-              <div className="mb-6">
-                <h2 className="text-sm font-bold text-slate-900">Task Journey / Chronological Workflow</h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Visual history of assignments, submissions, review decisions, returns, and stage handovers.
-                </p>
-              </div>
+                return (
+                  <div key={item.id} className="relative group">
+                    {/* Timeline Node Dot */}
+                    <div
+                      className={`absolute -left-[31px] sm:-left-[39px] top-0 w-4 h-4 rounded-full border-2 border-white ${dotColor} shadow-xs ring-4 ring-slate-50`}
+                    />
 
-              <div className="relative pl-6 sm:pl-8 border-l-2 border-slate-100 space-y-8 my-4 ml-3">
-                {task.status_history && task.status_history.length > 0 ? (
-                  task.status_history.map((item, idx) => {
-                    const isLast = idx === task.status_history.length - 1;
-                    let dotColor = 'bg-blue-600';
-                    if (item.to_status === 'completed') dotColor = 'bg-emerald-500';
-                    else if (item.to_status === 'review') dotColor = 'bg-amber-500';
-                    else if (item.to_status === 'post_comment') dotColor = 'bg-rose-500';
-                    else if (item.to_status === 'on_hold') dotColor = 'bg-orange-500';
-
-                    return (
-                      <div key={item.id} className="relative group">
-                        {/* Timeline Node Dot */}
-                        <div
-                          className={`absolute -left-[31px] sm:-left-[39px] top-0 w-4 h-4 rounded-full border-2 border-white ${dotColor} shadow-xs ring-4 ring-slate-50`}
-                        />
-
-                        <div className="bg-slate-50/60 p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition">
-                          <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-bold text-slate-800">
-                                {item.reason || `Transitioned to ${item.to_status.replace('_', ' ')}`}
-                              </span>
-                              {isLast && task.status !== 'completed' && (
-                                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
-                                  Current Stage
-                                </span>
-                              )}
-                            </div>
-                            <span className="text-[11px] font-medium text-slate-400">
-                              {new Date(item.changed_at).toLocaleString()}
+                    <div className="bg-slate-50/60 p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-800">
+                            {item.reason || `Transitioned to ${item.to_status.replace('_', ' ')}`}
+                          </span>
+                          {isLast && task.status !== 'completed' && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
+                              Current Stage
                             </span>
-                          </div>
-
-                          <div className="flex items-center gap-2 text-xs text-slate-500">
-                            <span>Action by:</span>
-                            <span className="font-semibold text-slate-700">{item.changed_by?.name || 'System'}</span>
-                            <span className="text-[10px] text-slate-400 capitalize">({item.changed_by?.role?.replace('_', ' ') || 'User'})</span>
-                          </div>
+                          )}
                         </div>
+                        <span className="text-[11px] font-medium text-slate-400">
+                          {new Date(item.changed_at).toLocaleString()}
+                        </span>
                       </div>
-                    );
-                  })
-                ) : (
-                  <p className="text-xs text-slate-400 italic">No workflow history records yet.</p>
-                )}
-              </div>
-            </div>
-          )}
+
+                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <span>Action by:</span>
+                        <span className="font-semibold text-slate-700">{item.changed_by?.name || 'System'}</span>
+                        <span className="text-[10px] text-slate-400 capitalize">({item.changed_by?.role?.replace('_', ' ') || 'User'})</span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-xs text-slate-400 italic">No workflow history records yet.</p>
+            )}
+          </div>
         </div>
       )}
 
@@ -2294,21 +2200,8 @@ export const TaskDetailPage: React.FC = () => {
                             </div>
                             <div>
                               <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold font-mono bg-slate-100 text-slate-800 border border-slate-200">
-                                  {b.hierarchical_code || `QL-${String(task.id).padStart(4, '0')}.${b.id}`}
-                                </span>
-                                <span
-                                  className={`px-1.5 py-0.5 rounded-full text-[9px] font-black text-white shadow-2xs ${
-                                    (b.level ?? 2) === 2
-                                      ? 'bg-sky-600'
-                                      : b.level === 3
-                                      ? 'bg-emerald-600'
-                                      : b.level === 4
-                                      ? 'bg-amber-600'
-                                      : 'bg-slate-600'
-                                  }`}
-                                >
-                                  Level {b.level || 2}: {b.level_name || ((b.level ?? 2) === 2 ? 'Team Lead' : b.level === 3 ? 'Sub Lead' : 'Executor')}
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold font-mono bg-blue-50 text-blue-700 border border-blue-200">
+                                  Subtask {b.dot_code || b.hierarchical_code || `1.${b.id}`}
                                 </span>
                               </div>
                               <h4 className="font-bold text-slate-900 text-xs">{b.owner?.name || 'Unassigned'}</h4>
@@ -2459,30 +2352,24 @@ export const TaskDetailPage: React.FC = () => {
                         )}
                       </div>
 
-                      {/* Delegation status / Level indicator */}
-                      {b.level === 4 ? (
+                      {/* Delegation action */}
+                      {b.can_assign_further && task.status !== 'completed' && task.status !== 'cancelled' && (
                         <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                          <span className="text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md font-bold border border-amber-200 inline-flex items-center gap-1">
-                            <Box className="w-3 h-3 text-amber-600" /> Level 4 Executor (Final Execution Stage)
-                          </span>
-                        </div>
-                      ) : b.can_assign_further && task.status !== 'completed' && task.status !== 'cancelled' ? (
-                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                          <span className="text-[10px] text-slate-500 font-medium">
-                            Can delegate to: Level {(b.level || 2) + 1} ({b.level === 2 ? 'Sub Leads' : 'Executors'})
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {b.dot_code || '1.1'}
                           </span>
                           {(currentUser?.id === b.owner?.id || currentUser?.role === 'admin' || task.creator?.id === currentUser?.id) && (
                             <button
                               type="button"
                               onClick={() => openAssignModal('assign')}
-                              className="px-2 py-0.5 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 rounded-md text-[10px] font-bold transition flex items-center gap-1 cursor-pointer"
+                              className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-[10px] font-bold transition flex items-center gap-1 cursor-pointer"
                             >
-                              <Plus className="w-2.5 h-2.5" />
-                              <span>Delegate to Level {(b.level || 2) + 1}</span>
+                              <Plus className="w-3 h-3" />
+                              <span>Delegate Further</span>
                             </button>
                           )}
                         </div>
-                      ) : null}
+                      )}
                     </div>
                   );
                 })}

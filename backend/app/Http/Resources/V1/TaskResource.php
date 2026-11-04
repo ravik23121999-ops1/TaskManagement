@@ -334,14 +334,14 @@ class TaskResource extends JsonResource
             }
         }
 
-        // Build 4-level hierarchical delegation structure & codes (QL-0001, QL-0001.1, QL-0001.1.1, QL-0001.1.1.1)
-        $hierarchyData = \App\Services\TaskHierarchyService::buildHierarchy($this->resource, $allBranches);
+        // Build hierarchical subtask structure & codes (1.1, 1.2, 1.1.1, etc.)
+        $hierarchyData = \App\Services\TaskHierarchyService::buildHierarchy($this->resource, $allBranches, 'T');
         $branchMeta = $hierarchyData['branch_meta'];
 
         return [
             'id' => $this->id,
             'task_code' => sprintf('T-%03d', $this->id),
-            'hierarchical_code' => sprintf('QL-%04d', $this->id),
+            'hierarchical_code' => sprintf('T-%03d', $this->id),
             'hierarchy_summary' => $hierarchyData['summary'],
             'hierarchy_tree' => $hierarchyData['tree'],
             'title' => $this->title,
@@ -383,8 +383,9 @@ class TaskResource extends JsonResource
             'my_branch' => $userActiveBranch ? [
                 'id' => $userActiveBranch->id,
                 'level' => $branchMeta[$userActiveBranch->id]['level'] ?? 2,
-                'level_name' => $branchMeta[$userActiveBranch->id]['level_name'] ?? 'Team Lead',
-                'hierarchical_code' => $branchMeta[$userActiveBranch->id]['hierarchical_code'] ?? sprintf('QL-%04d.1', $this->id),
+                'level_name' => $branchMeta[$userActiveBranch->id]['level_name'] ?? 'Subtask',
+                'dot_code' => $branchMeta[$userActiveBranch->id]['dot_code'] ?? '1.1',
+                'hierarchical_code' => $branchMeta[$userActiveBranch->id]['hierarchical_code'] ?? sprintf('T-%03d.1', $this->id),
                 'parent_branch_id' => $branchMeta[$userActiveBranch->id]['parent_branch_id'] ?? null,
                 'title' => $userActiveBranch->title,
                 'description' => $userActiveBranch->description,
@@ -458,6 +459,7 @@ class TaskResource extends JsonResource
                     'id' => $branch->id,
                     'level' => $meta['level'],
                     'level_name' => $meta['level_name'],
+                    'dot_code' => $meta['dot_code'] ?? "1.{$branch->id}",
                     'hierarchical_code' => $meta['hierarchical_code'],
                     'parent_branch_id' => $meta['parent_branch_id'],
                     'parent_assignment_id' => $branch->parent_assignment_id,

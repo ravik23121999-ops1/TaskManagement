@@ -63,7 +63,7 @@ class TaskHierarchyFlowTest extends TestCase
 
         $response->assertStatus(201);
         $taskId = $response->json('data.id');
-        $baseCode = sprintf('QL-%04d', $taskId);
+        $baseCode = sprintf('T-%03d', $taskId);
 
         // Fetch task details
         $taskRes = $this->actingAs($this->creator)->getJson("/api/tasks/{$taskId}");
@@ -72,8 +72,10 @@ class TaskHierarchyFlowTest extends TestCase
         $branches = $taskRes->json('data.branches');
         $this->assertCount(2, $branches);
         $this->assertEquals("{$baseCode}.1", $branches[0]['hierarchical_code']);
+        $this->assertEquals('1.1', $branches[0]['dot_code']);
         $this->assertEquals(2, $branches[0]['level']);
         $this->assertEquals("{$baseCode}.2", $branches[1]['hierarchical_code']);
+        $this->assertEquals('1.2', $branches[1]['dot_code']);
         $this->assertEquals(2, $branches[1]['level']);
 
         $summary = $taskRes->json('data.hierarchy_summary');
@@ -107,6 +109,7 @@ class TaskHierarchyFlowTest extends TestCase
 
         $subLead1Branch = collect($branches2)->firstWhere('owner.id', $this->subLead1->id);
         $this->assertEquals("{$baseCode}.1.1", $subLead1Branch['hierarchical_code']);
+        $this->assertEquals('1.1.1', $subLead1Branch['dot_code']);
         $this->assertEquals(3, $subLead1Branch['level']);
         $this->assertTrue($subLead1Branch['can_assign_further']);
 
@@ -135,11 +138,13 @@ class TaskHierarchyFlowTest extends TestCase
 
         $exec1Branch = collect($branches3)->firstWhere('owner.id', $this->executor1->id);
         $this->assertEquals("{$baseCode}.1.1.1", $exec1Branch['hierarchical_code']);
+        $this->assertEquals('1.1.1.1', $exec1Branch['dot_code']);
         $this->assertEquals(4, $exec1Branch['level']);
         $this->assertFalse($exec1Branch['can_assign_further']); // Capped at Level 4!
 
         $exec2Branch = collect($branches3)->firstWhere('owner.id', $this->executor2->id);
         $this->assertEquals("{$baseCode}.1.1.2", $exec2Branch['hierarchical_code']);
+        $this->assertEquals('1.1.1.2', $exec2Branch['dot_code']);
         $this->assertEquals(4, $exec2Branch['level']);
         $this->assertFalse($exec2Branch['can_assign_further']);
 

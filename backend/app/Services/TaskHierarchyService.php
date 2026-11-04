@@ -9,18 +9,17 @@ use Illuminate\Support\Collection;
 class TaskHierarchyService
 {
     /**
-     * Compute hierarchical metadata (levels, codes, summary, and tree structure) for a task.
+     * Compute hierarchical metadata (levels, dot_code like 1.1, 1.2, 1.1.1, and task/subtask codes) for a task.
      *
-     * Level 1: Creator / Owner (Main Task) -> QL-0001
-     * Level 2: Team Leads (Direct Assignees) -> QL-0001.1, QL-0001.2
-     * Level 3: Sub Leads (Delegated by Level 2) -> QL-0001.1.1, QL-0001.1.2
-     * Level 4: Executors (Delegated by Level 3) -> QL-0001.1.1.1, QL-0001.1.1.2
-     * Capped at Level 4.
+     * Task: T-010
+     * Subtasks: 1.1, 1.2 (T-010.1, T-010.2)
+     * Child Subtasks: 1.1.1, 1.1.2 (T-010.1.1, T-010.1.2)
+     * Further Subtasks: 1.1.1.1, etc.
      */
-    public static function buildHierarchy(Task $task, ?Collection $branches = null, string $prefix = 'QL'): array
+    public static function buildHierarchy(Task $task, ?Collection $branches = null, string $prefix = 'T'): array
     {
         $allBranches = ($branches ?? $task->branches)->sortBy('id')->values();
-        $baseCode = sprintf('%s-%04d', $prefix, $task->id);
+        $baseCode = sprintf('%s-%03d', $prefix, $task->id);
 
         if ($allBranches->isEmpty()) {
             return [
@@ -37,8 +36,9 @@ class TaskHierarchyService
                 'tree' => [
                     'id' => $task->id,
                     'level' => 1,
-                    'level_name' => 'Creator / Owner (Main Task)',
+                    'level_name' => 'Main Task',
                     'code' => $baseCode,
+                    'dot_code' => '1',
                     'title' => $task->title,
                     'status' => $task->status,
                     'owner' => $task->creator ? [
@@ -59,7 +59,6 @@ class TaskHierarchyService
         foreach ($allBranches as $branch) {
             $parentAssignmentId = $branch->parent_assignment_id;
             if ($parentAssignmentId) {
-                // Check if parentAssignment relation is already loaded or fetch from DB
                 $parentAssignment = $branch->relationLoaded('parentAssignment')
                     ? $branch->parentAssignment
                     : $branch->parentAssignment()->first();
@@ -70,8 +69,7 @@ class TaskHierarchyService
             }
         }
 
-        // Group into levels
-        // Level 2: Branches with no valid parent branch in this task
+        // Level 2: Subtasks directly under the task
         $level2Branches = $allBranches->filter(fn($b) => !isset($parentBranchMap[$b->id]))->values();
 
         $branchMeta = [];
@@ -82,53 +80,60 @@ class TaskHierarchyService
         $l4Count = 0;
 
         foreach ($level2Branches as $l2Idx => $l2Branch) {
+            $dotCode = sprintf('1.%d', $l2Idx + 1);
             $l2Code = sprintf('%s.%d', $baseCode, $l2Idx + 1);
             $l2Meta = [
                 'level' => 2,
-                'level_name' => 'Team Lead',
+                'level_name' => 'Subtask',
+                'dot_code' => $dotCode,
                 'hierarchical_code' => $l2Code,
                 'parent_branch_id' => null,
                 'can_assign_further' => (bool)($l2Branch->can_assign_further ?? true),
             ];
             $branchMeta[$l2Branch->id] = $l2Meta;
 
-            // Find Level 3 children
+            // Find Level 3 children (child subtasks)
             $l3Children = $allBranches->filter(fn($b) => ($parentBranchMap[$b->id] ?? null) === $l2Branch->id)->values();
             $treeLevel3 = [];
             $l3Count += $l3Children->count();
 
             foreach ($l3Children as $l3Idx => $l3Branch) {
+                $dotCode3 = sprintf('%s.%d', $dotCode, $l3Idx + 1);
                 $l3Code = sprintf('%s.%d', $l2Code, $l3Idx + 1);
                 $l3Meta = [
                     'level' => 3,
-                    'level_name' => 'Sub Lead',
+                    'level_name' => 'Subtask',
+                    'dot_code' => $dotCode3,
                     'hierarchical_code' => $l3Code,
                     'parent_branch_id' => $l2Branch->id,
                     'can_assign_further' => (bool)($l3Branch->can_assign_further ?? true),
                 ];
                 $branchMeta[$l3Branch->id] = $l3Meta;
 
-                // Find Level 4 children
+                // Find Level 4 children (further subtasks)
                 $l4Children = $allBranches->filter(fn($b) => ($parentBranchMap[$b->id] ?? null) === $l3Branch->id)->values();
                 $treeLevel4 = [];
                 $l4Count += $l4Children->count();
 
                 foreach ($l4Children as $l4Idx => $l4Branch) {
+                    $dotCode4 = sprintf('%s.%d', $dotCode3, $l4Idx + 1);
                     $l4Code = sprintf('%s.%d', $l3Code, $l4Idx + 1);
                     $l4Meta = [
                         'level' => 4,
-                        'level_name' => 'Executor',
+                        'level_name' => 'Subtask',
+                        'dot_code' => $dotCode4,
                         'hierarchical_code' => $l4Code,
                         'parent_branch_id' => $l3Branch->id,
-                        'can_assign_further' => false, // Capped at Level 4
+                        'can_assign_further' => false,
                     ];
                     $branchMeta[$l4Branch->id] = $l4Meta;
 
                     $treeLevel4[] = [
                         'id' => $l4Branch->id,
                         'level' => 4,
-                        'level_name' => 'Executor',
+                        'level_name' => 'Subtask',
                         'code' => $l4Code,
+                        'dot_code' => $dotCode4,
                         'title' => $l4Branch->title,
                         'description' => $l4Branch->description,
                         'status' => $l4Branch->status,
@@ -148,8 +153,9 @@ class TaskHierarchyService
                 $treeLevel3[] = [
                     'id' => $l3Branch->id,
                     'level' => 3,
-                    'level_name' => 'Sub Lead',
+                    'level_name' => 'Subtask',
                     'code' => $l3Code,
+                    'dot_code' => $dotCode3,
                     'title' => $l3Branch->title,
                     'description' => $l3Branch->description,
                     'status' => $l3Branch->status,
@@ -169,8 +175,9 @@ class TaskHierarchyService
             $treeLevel2[] = [
                 'id' => $l2Branch->id,
                 'level' => 2,
-                'level_name' => 'Team Lead',
+                'level_name' => 'Subtask',
                 'code' => $l2Code,
+                'dot_code' => $dotCode,
                 'title' => $l2Branch->title,
                 'description' => $l2Branch->description,
                 'status' => $l2Branch->status,
@@ -187,14 +194,16 @@ class TaskHierarchyService
             ];
         }
 
-        // Catch any orphaned branches (e.g., if parent was somehow deleted) and place at Level 2
+        // Handle any orphan branches gracefully
         foreach ($allBranches as $branch) {
             if (!isset($branchMeta[$branch->id])) {
                 $orphanIdx = count($treeLevel2) + 1;
+                $dotCode = sprintf('1.%d', $orphanIdx);
                 $orphanCode = sprintf('%s.%d', $baseCode, $orphanIdx);
                 $branchMeta[$branch->id] = [
                     'level' => 2,
-                    'level_name' => 'Team Lead',
+                    'level_name' => 'Subtask',
+                    'dot_code' => $dotCode,
                     'hierarchical_code' => $orphanCode,
                     'parent_branch_id' => null,
                     'can_assign_further' => (bool)($branch->can_assign_further ?? true),
@@ -202,8 +211,9 @@ class TaskHierarchyService
                 $treeLevel2[] = [
                     'id' => $branch->id,
                     'level' => 2,
-                    'level_name' => 'Team Lead',
+                    'level_name' => 'Subtask',
                     'code' => $orphanCode,
+                    'dot_code' => $dotCode,
                     'title' => $branch->title,
                     'description' => $branch->description,
                     'status' => $branch->status,
@@ -241,8 +251,9 @@ class TaskHierarchyService
             'tree' => [
                 'id' => $task->id,
                 'level' => 1,
-                'level_name' => 'Creator / Owner (Main Task)',
+                'level_name' => 'Main Task',
                 'code' => $baseCode,
+                'dot_code' => '1',
                 'title' => $task->title,
                 'description' => $task->description,
                 'status' => $task->status,
