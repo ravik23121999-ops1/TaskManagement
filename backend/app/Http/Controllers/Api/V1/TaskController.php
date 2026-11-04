@@ -1190,6 +1190,13 @@ class TaskController extends Controller
         $userBranch = $task->branches()->where('owner_id', $user->id)->first();
         $isDirectDelegation = $request->input('delegation_mode') === 'direct';
 
+        // 4-Level Task Assignment Flow: Level 4 (Executors) is the final delegation stage
+        if ($userBranch && \App\Services\TaskHierarchyService::getBranchLevel($userBranch) >= 4) {
+            return response()->json([
+                'message' => 'Delegation is capped at Level 4 (Executors). Tasks cannot be assigned further beyond Level 4.'
+            ], 422);
+        }
+
         foreach ($targetUserIds as $idx => $assigneeId) {
             $bData = collect($branchesData)->firstWhere('owner_id', $assigneeId) ?: ($branchesData[$idx] ?? []);
             $mode = $bData['mode'] ?? $request->input('mode', 'new_subtask');
@@ -1197,6 +1204,11 @@ class TaskController extends Controller
             // When creating subtasks, the subtask recipient only gets their subtask note and files.
             $sharePrevious = $isDirectDelegation;
             $canAssignFurther = filter_var($bData['can_assign_further'] ?? true, FILTER_VALIDATE_BOOLEAN);
+            $parentLevel = $userBranch ? \App\Services\TaskHierarchyService::getBranchLevel($userBranch) : 1;
+            if ($parentLevel >= 3) {
+                // Child branch is Level 4 (Executor), capping delegation at Level 4
+                $canAssignFurther = false;
+            }
 
             // Avoid duplicate active branch with identical title for the same user
             if ($mode === 'new_subtask' && !empty($bData['title'])) {

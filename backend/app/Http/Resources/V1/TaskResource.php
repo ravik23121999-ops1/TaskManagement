@@ -334,9 +334,16 @@ class TaskResource extends JsonResource
             }
         }
 
+        // Build 4-level hierarchical delegation structure & codes (QL-0001, QL-0001.1, QL-0001.1.1, QL-0001.1.1.1)
+        $hierarchyData = \App\Services\TaskHierarchyService::buildHierarchy($this->resource, $allBranches);
+        $branchMeta = $hierarchyData['branch_meta'];
+
         return [
             'id' => $this->id,
             'task_code' => sprintf('T-%03d', $this->id),
+            'hierarchical_code' => sprintf('QL-%04d', $this->id),
+            'hierarchy_summary' => $hierarchyData['summary'],
+            'hierarchy_tree' => $hierarchyData['tree'],
             'title' => $this->title,
             'description' => $this->description,
             'expected_result' => $this->expected_result,
@@ -375,6 +382,10 @@ class TaskResource extends JsonResource
             'is_peer_isolated' => !$canOverseeAll,
             'my_branch' => $userActiveBranch ? [
                 'id' => $userActiveBranch->id,
+                'level' => $branchMeta[$userActiveBranch->id]['level'] ?? 2,
+                'level_name' => $branchMeta[$userActiveBranch->id]['level_name'] ?? 'Team Lead',
+                'hierarchical_code' => $branchMeta[$userActiveBranch->id]['hierarchical_code'] ?? sprintf('QL-%04d.1', $this->id),
+                'parent_branch_id' => $branchMeta[$userActiveBranch->id]['parent_branch_id'] ?? null,
                 'title' => $userActiveBranch->title,
                 'description' => $userActiveBranch->description,
                 'expected_result' => $userActiveBranch->expected_result,
@@ -389,7 +400,7 @@ class TaskResource extends JsonResource
                     'role' => $userActiveBranch->assignments->firstWhere('is_current', true)->assignedBy->role,
                 ] : null,
                 'share_parent_details' => $userActiveBranch->share_parent_details ?? true,
-                'can_assign_further' => $userActiveBranch->can_assign_further ?? true,
+                'can_assign_further' => ($branchMeta[$userActiveBranch->id]['level'] ?? 2) < 4 && ($userActiveBranch->can_assign_further ?? true),
                 'attachments' => $this->attachments->where('task_branch_id', $userActiveBranch->id)->values()->map(fn($att) => $this->formatAttachment($att)),
                 'submissions' => $this->submissions->where('task_branch_id', $userActiveBranch->id)->sortByDesc('submitted_at')->values()->map(fn($sub) => [
                     'id' => $sub->id,
@@ -412,7 +423,13 @@ class TaskResource extends JsonResource
                     ]),
                 ]),
             ] : null,
-            'branches' => $visibleBranches->map(function ($branch) {
+            'branches' => $visibleBranches->map(function ($branch) use ($branchMeta) {
+                $meta = $branchMeta[$branch->id] ?? [
+                    'level' => 2,
+                    'level_name' => 'Team Lead',
+                    'hierarchical_code' => sprintf('QL-%04d.%d', $this->id, $branch->id),
+                    'parent_branch_id' => null,
+                ];
                 $currentAssignment = $branch->assignments->firstWhere('is_current', true);
                 $assignedBy = $currentAssignment?->assignedBy;
                 $branchAttachments = $this->attachments->where('task_branch_id', $branch->id)->values()->map(fn($att) => $this->formatAttachment($att));
@@ -439,6 +456,11 @@ class TaskResource extends JsonResource
 
                 return [
                     'id' => $branch->id,
+                    'level' => $meta['level'],
+                    'level_name' => $meta['level_name'],
+                    'hierarchical_code' => $meta['hierarchical_code'],
+                    'parent_branch_id' => $meta['parent_branch_id'],
+                    'parent_assignment_id' => $branch->parent_assignment_id,
                     'title' => $branch->title,
                     'description' => $branch->description,
                     'expected_result' => $branch->expected_result,
@@ -462,7 +484,7 @@ class TaskResource extends JsonResource
                     'attachments' => $branchAttachments,
                     'submissions' => $branchSubmissions,
                     'share_parent_details' => $branch->share_parent_details ?? true,
-                    'can_assign_further' => $branch->can_assign_further ?? true,
+                    'can_assign_further' => $meta['level'] < 4 && ($branch->can_assign_further ?? true),
                 ];
             }),
             'collaborators' => $visibleBranches->flatMap->collaborators->map(fn($c) => [

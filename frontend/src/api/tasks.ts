@@ -9,6 +9,11 @@ export interface UserSummary {
 
 export interface TaskBranch {
   id: number;
+  level?: number;
+  level_name?: string;
+  hierarchical_code?: string;
+  parent_branch_id?: number | null;
+  parent_assignment_id?: number | null;
   title: string;
   description: string | null;
   expected_result?: string | null;
@@ -75,6 +80,16 @@ export interface TaskStatusHistoryItem {
 export interface Task {
   id: number;
   task_code: string;
+  hierarchical_code?: string;
+  hierarchy_summary?: {
+    level_1_count: number;
+    level_2_count: number;
+    level_3_count: number;
+    level_4_count: number;
+    total_assignments: number;
+    max_level: number;
+  };
+  hierarchy_tree?: any;
   title: string;
   description: string;
   expected_result: string | null;

@@ -49,6 +49,19 @@ class TaskBranch extends Model
         return $this->belongsTo(TaskAssignment::class, 'parent_assignment_id');
     }
 
+    public function getParentBranch(): ?TaskBranch
+    {
+        if (!$this->parent_assignment_id) {
+            return null;
+        }
+        return $this->parentAssignment?->branch;
+    }
+
+    public function getLevel(): int
+    {
+        return \App\Services\TaskHierarchyService::getBranchLevel($this);
+    }
+
     public function assignments(): HasMany
     {
         return $this->hasMany(TaskAssignment::class);
