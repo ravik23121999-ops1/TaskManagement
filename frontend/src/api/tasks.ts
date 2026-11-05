@@ -29,6 +29,9 @@ export interface TaskBranch {
   submissions?: TaskSubmission[];
   share_parent_details?: boolean;
   can_assign_further?: boolean;
+  is_locked_by_children?: boolean;
+  pending_children_count?: number;
+  lock_reason?: string | null;
 }
 
 export interface TaskComment {
@@ -139,6 +142,9 @@ export interface Task {
     submissions?: TaskSubmission[];
     share_parent_details?: boolean;
     can_assign_further?: boolean;
+    is_locked_by_children?: boolean;
+    pending_children_count?: number;
+    lock_reason?: string | null;
   } | null;
   branches: TaskBranch[];
   collaborators: UserSummary[];
@@ -163,8 +169,10 @@ export interface Task {
   permissions: {
     can_edit: boolean;
     can_submit: boolean;
+    submit_lock_reason?: string | null;
     can_review: boolean;
     can_final_submit: boolean;
+    final_submit_lock_reason?: string | null;
     can_request_details?: boolean;
     can_provide_details?: boolean;
     can_hold: boolean;
