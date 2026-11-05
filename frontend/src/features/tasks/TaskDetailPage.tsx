@@ -8,11 +8,9 @@ import { StatusBadge, PriorityBadge } from '../../components/StatusBadge';
 import { ReviewModal } from '../../components/ReviewModal';
 import {
   FileText,
-  GitBranch,
   Users,
   MessageSquare,
   Paperclip,
-  History,
   CheckCircle2,
   AlertCircle,
   PauseCircle,
@@ -33,7 +31,6 @@ import {
   ArrowLeft,
   Download,
   HelpCircle,
-  Zap,
   Sparkles,
   Ban,
   Trash2,
@@ -884,7 +881,7 @@ export const TaskDetailPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Action Buttons */}
+          {/* 1-Button Rule & Action Header */}
           <div className="flex items-center gap-2 flex-wrap">
             {/* Quick Refresh Button */}
             <button
@@ -897,97 +894,51 @@ export const TaskDetailPage: React.FC = () => {
                 showToast('Task details refreshed', 'info');
               }}
               disabled={isRefreshing}
-              className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-800 border-2 border-slate-200 rounded-xl text-xs font-bold shadow-2xs hover:shadow-xs transition flex items-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-50"
+              className="p-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer active:scale-95 disabled:opacity-50 shadow-2xs"
               title="Refresh task data"
             >
               <RefreshCw className={`w-3.5 h-3.5 text-slate-600 ${isRefreshing ? 'animate-spin text-blue-600' : ''}`} />
-              <span className="hidden sm:inline">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
             </button>
 
-            {/* Assign (1 or More) */}
-            {task.status !== 'completed' && task.status !== 'cancelled' && (
+            {/* THE ONE PRIMARY ACTION BUTTON */}
+            {task.permissions.can_provide_details ? (
               <button
-                onClick={() => openAssignModal('assign')}
-                className="px-3.5 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-sm transition flex items-center gap-1.5 cursor-pointer active:scale-95"
-                title="Assign one or more employees to this task"
-              >
-                <UserPlus className="w-3.5 h-3.5 text-white" />
-                <span>+ Assign (1 or More)</span>
-              </button>
-            )}
-
-            {/* Collaborate (1 or More) */}
-            {task.status !== 'completed' && task.status !== 'cancelled' && (
-              <button
-                onClick={() => openAssignModal('collaborate')}
-                className="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-sm transition flex items-center gap-1.5 cursor-pointer active:scale-95"
-                title="Invite one or more team members to collaborate"
-              >
-                <Users className="w-3.5 h-3.5 text-white" />
-                <span>+ Collaborate (1 or More)</span>
-              </button>
-            )}
-
-            {/* Submit Work button - only for delegated/collaborative work where reviewer needs to evaluate */}
-            {task.permissions.can_submit && !isWorkAlone && (
-              <button
-                onClick={() => setIsSubmitModalOpen(true)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer hover:shadow-md"
-              >
-                <Send className="w-3.5 h-3.5" />
-                <span>Submit Completed Work</span>
-              </button>
-            )}
-
-            {/* Request Missing Details (Assignee -> Assigner) */}
-            {task.permissions.can_request_details && (
-              <button
-                onClick={() => {
-                  setRequestDetailsQuestion('');
-                  setRequestDetailsFiles([]);
-                  setIsRequestDetailsModalOpen(true);
-                }}
-                className="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
-                title="Ask assigner for missing details, instructions, or credentials"
-              >
-                <HelpCircle className="w-3.5 h-3.5 text-amber-600" />
-                <span>Ask Question / Need Details</span>
-              </button>
-            )}
-
-            {/* Provide Missing Details (Assigner -> Assignee) */}
-            {task.permissions.can_provide_details && (
-              <button
+                type="button"
                 onClick={() => {
                   setProvideDetailsResponse('');
                   setProvideDetailsFiles([]);
                   setIsProvideDetailsModalOpen(true);
                 }}
-                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer hover:shadow-md active:scale-95"
                 title="Answer assignee question and resume work"
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>Answer Question</span>
               </button>
-            )}
-
-            {/* Review Action button (if task is in review and user can review) */}
-            {task.permissions.can_review && latestPendingSubmission && (
+            ) : task.permissions.can_submit && !isWorkAlone ? (
               <button
+                type="button"
+                onClick={() => setIsSubmitModalOpen(true)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer hover:shadow-md active:scale-95"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>Submit Completed Work</span>
+              </button>
+            ) : task.permissions.can_review && latestPendingSubmission ? (
+              <button
+                type="button"
                 onClick={() => {
                   setSelectedSubmission(latestPendingSubmission);
                   setIsReviewModalOpen(true);
                 }}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer hover:shadow-md"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer hover:shadow-md active:scale-95"
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Check & Review Work</span>
               </button>
-            )}
-
-            {/* Final Submit button (Creator Final Approval & Complete) */}
-            {(task.permissions.can_final_submit || isReadyForFinalSignOff) && (currentUser?.role === 'admin' || currentUser?.role === 'sub_admin' || task.creator?.id === currentUser?.id) && (
+            ) : (task.permissions.can_final_submit || isReadyForFinalSignOff) && (currentUser?.role === 'admin' || currentUser?.role === 'sub_admin' || task.creator?.id === currentUser?.id) ? (
               <button
+                type="button"
                 onClick={() => {
                   setFinalCompleteDesc(
                     isWorkAlone
@@ -997,29 +948,90 @@ export const TaskDetailPage: React.FC = () => {
                   setFinalCompleteFiles([]);
                   setIsFinalCompleteModalOpen(true);
                 }}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer hover:shadow-md"
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer hover:shadow-md active:scale-95"
               >
                 <Check className="w-3.5 h-3.5" />
                 <span>Final Sign-off & Complete Task</span>
               </button>
-            )}
+            ) : (task.status === 'completed' || task.status === 'cancelled') &&
+              (currentUser?.role === 'admin' || currentUser?.role === 'sub_admin' || currentUser?.id === task.creator?.id) ? (
+              <button
+                type="button"
+                onClick={() => { setReopenReason(''); setReopenError(''); setIsReopenModalOpen(true); }}
+                className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer active:scale-95"
+                title="Re-open this task back to active in-progress workflow"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Re-open Task</span>
+              </button>
+            ) : null}
 
-            {/* Task Controls & Management Dropdown (Pause, Resume, Cancel, Delete) */}
-            {(task.permissions.can_hold || task.permissions.can_resume || task.permissions.can_cancel || task.permissions?.can_delete) && (
+            {/* Secondary Actions & Task Controls Dropdown */}
+            {(
+              (task.status !== 'completed' && task.status !== 'cancelled' && (task.permissions?.can_assign || currentUser?.role === 'admin' || currentUser?.id === task.creator?.id)) ||
+              (task.status !== 'completed' && task.status !== 'cancelled' && (task.permissions?.can_collaborate || currentUser?.role === 'admin' || currentUser?.id === task.creator?.id)) ||
+              task.permissions.can_request_details ||
+              task.permissions.can_hold ||
+              task.permissions.can_resume ||
+              task.permissions.can_cancel ||
+              task.permissions?.can_delete
+            ) && (
               <div className="relative" ref={actionsMenuRef}>
                 <button
                   type="button"
                   onClick={() => setIsActionsMenuOpen(!isActionsMenuOpen)}
-                  className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-200 hover:border-slate-300 rounded-xl text-xs font-bold shadow-2xs hover:shadow-xs transition flex items-center gap-1.5 cursor-pointer active:scale-95"
-                  title="More task controls and options"
+                  className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300 rounded-xl text-xs font-semibold shadow-2xs hover:shadow-xs transition flex items-center gap-1.5 cursor-pointer active:scale-95"
+                  title="More actions and task controls"
                 >
                   <MoreHorizontal className="w-3.5 h-3.5 text-slate-600" />
-                  <span>Manage</span>
+                  <span>More Options</span>
                   <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${isActionsMenuOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {isActionsMenuOpen && (
-                  <div className="absolute right-0 mt-1.5 w-48 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 animate-in fade-in slide-in-from-top-1">
+                  <div className="absolute right-0 mt-1.5 w-52 bg-white rounded-xl shadow-xl border border-slate-200 py-1.5 z-50 animate-in fade-in slide-in-from-top-1 text-xs">
+                    {/* Assign More */}
+                    {task.status !== 'completed' && task.status !== 'cancelled' && (
+                      <button
+                        type="button"
+                        onClick={() => { setIsActionsMenuOpen(false); openAssignModal('assign'); }}
+                        className="w-full text-left px-3.5 py-2 text-slate-700 hover:bg-sky-50 hover:text-sky-700 flex items-center gap-2 transition cursor-pointer"
+                      >
+                        <UserPlus className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                        <span>Assign More Members</span>
+                      </button>
+                    )}
+
+                    {/* Collaborate */}
+                    {task.status !== 'completed' && task.status !== 'cancelled' && (
+                      <button
+                        type="button"
+                        onClick={() => { setIsActionsMenuOpen(false); openAssignModal('collaborate'); }}
+                        className="w-full text-left px-3.5 py-2 text-slate-700 hover:bg-purple-50 hover:text-purple-700 flex items-center gap-2 transition cursor-pointer"
+                      >
+                        <Users className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                        <span>Invite Collaborators</span>
+                      </button>
+                    )}
+
+                    {/* Ask Question / Need Details */}
+                    {task.permissions.can_request_details && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsActionsMenuOpen(false);
+                          setRequestDetailsQuestion('');
+                          setRequestDetailsFiles([]);
+                          setIsRequestDetailsModalOpen(true);
+                        }}
+                        className="w-full text-left px-3.5 py-2 text-amber-800 hover:bg-amber-50 flex items-center gap-2 transition cursor-pointer"
+                      >
+                        <HelpCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span>Ask Question / Need Details</span>
+                      </button>
+                    )}
+
+                    {/* Pause / Hold */}
                     {task.permissions.can_hold && (
                       <button
                         type="button"
@@ -1027,13 +1039,14 @@ export const TaskDetailPage: React.FC = () => {
                           setIsActionsMenuOpen(false);
                           handleOpenHoldModal();
                         }}
-                        className="w-full text-left px-3.5 py-2 text-xs font-semibold text-amber-700 hover:bg-amber-50 flex items-center gap-2 transition cursor-pointer"
+                        className="w-full text-left px-3.5 py-2 text-amber-700 hover:bg-amber-50 flex items-center gap-2 transition cursor-pointer"
                       >
                         <PauseCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                         <span>Pause Task</span>
                       </button>
                     )}
 
+                    {/* Resume */}
                     {task.permissions.can_resume && (
                       <button
                         type="button"
@@ -1041,32 +1054,35 @@ export const TaskDetailPage: React.FC = () => {
                           setIsActionsMenuOpen(false);
                           handleResume();
                         }}
-                        className="w-full text-left px-3.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition cursor-pointer"
+                        className="w-full text-left px-3.5 py-2 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 transition cursor-pointer"
                       >
                         <PlayCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                         <span>Resume Task</span>
                       </button>
                     )}
 
+                    {/* Cancel Task */}
                     {task.permissions.can_cancel && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsActionsMenuOpen(false);
-                          handleOpenCancelModal();
-                        }}
-                        className="w-full text-left px-3.5 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 flex items-center gap-2 transition cursor-pointer"
-                      >
-                        <Ban className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                        <span>Cancel Task</span>
-                      </button>
+                      <>
+                        <div className="border-t border-slate-100 my-1" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsActionsMenuOpen(false);
+                            handleOpenCancelModal();
+                          }}
+                          className="w-full text-left px-3.5 py-2 text-rose-700 hover:bg-rose-50 flex items-center gap-2 transition cursor-pointer"
+                        >
+                          <Ban className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                          <span>Cancel Task</span>
+                        </button>
+                      </>
                     )}
 
+                    {/* Delete Task */}
                     {task.permissions?.can_delete && (
                       <>
-                        {(task.permissions.can_hold || task.permissions.can_resume || task.permissions.can_cancel) && (
-                          <div className="border-t border-slate-100 my-1" />
-                        )}
+                        <div className="border-t border-slate-100 my-1" />
                         <button
                           type="button"
                           onClick={() => {
@@ -1074,7 +1090,7 @@ export const TaskDetailPage: React.FC = () => {
                             setDeleteError('');
                             setIsDeleteModalOpen(true);
                           }}
-                          className="w-full text-left px-3.5 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 flex items-center gap-2 transition cursor-pointer"
+                          className="w-full text-left px-3.5 py-2 text-red-700 hover:bg-red-50 flex items-center gap-2 transition cursor-pointer font-semibold"
                         >
                           <Trash2 className="w-3.5 h-3.5 text-red-600 shrink-0" />
                           <span>Delete Task</span>
@@ -1085,69 +1101,38 @@ export const TaskDetailPage: React.FC = () => {
                 )}
               </div>
             )}
-
-            {/* Reopen Task (Admin, Sub-Admin, or Creator on Completed / Cancelled tasks) */}
-            {(task.status === 'completed' || task.status === 'cancelled') &&
-              (currentUser?.role === 'admin' || currentUser?.role === 'sub_admin' || currentUser?.id === task.creator?.id) && (
-              <button
-                onClick={() => { setReopenReason(''); setReopenError(''); setIsReopenModalOpen(true); }}
-                className="px-3.5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
-                title="Re-open this task back to active in-progress workflow"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Re-open Task</span>
-              </button>
-            )}
           </div>
         </div>
 
-        {/* Cancelled Task Banner */}
-        {task.status === 'cancelled' && (
-          <div className="mt-4 p-4 bg-gradient-to-r from-rose-50 via-red-50 to-rose-50 border border-rose-200/90 rounded-2xl flex flex-col gap-3 text-xs shadow-xs animate-in fade-in">
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-rose-100 border border-rose-300 text-rose-700 flex items-center justify-center shrink-0">
-                <Ban className="w-5 h-5" />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-extrabold text-rose-950 text-sm">Task Cancelled</span>
-                  {task.cancelled_at && (
-                    <span className="text-[10px] text-rose-600 bg-rose-100/70 border border-rose-200 px-2.5 py-0.5 rounded-full font-semibold">
-                      Cancelled on {new Date(task.cancelled_at).toLocaleString()}
-                    </span>
-                  )}
-                </div>
-                <p className="text-rose-900 mt-1 font-medium">
-                  Cancelled by <span className="font-bold">{task.cancelled_by?.name || task.creator?.name || 'Authorized User'}</span>
-                </p>
-                {task.cancellation_reason && (
-                  <div className="mt-2.5 p-3 bg-white/80 border border-rose-200/90 rounded-xl text-rose-900">
-                    <span className="text-[10px] uppercase font-bold text-rose-600 block mb-0.5">Cancellation Reason Note:</span>
-                    <p className="text-xs italic whitespace-pre-wrap font-medium leading-relaxed">
-                      "{task.cancellation_reason}"
-                    </p>
-                  </div>
+        {/* Focused Single Contextual Alert Banner (Only when active blocker exists) */}
+        {task.status === 'cancelled' ? (
+          <div className="mt-4 p-4 bg-rose-50/80 border border-rose-200 rounded-xl flex items-start gap-3 text-xs shadow-2xs">
+            <Ban className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="font-bold text-rose-950">Task Cancelled</span>
+                {task.cancelled_at && (
+                  <span className="text-[10px] text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full font-semibold">
+                    {new Date(task.cancelled_at).toLocaleDateString()}
+                  </span>
                 )}
               </div>
+              <p className="text-rose-800 mt-0.5">
+                Cancelled by {task.cancelled_by?.name || task.creator?.name || 'Authorized User'}.
+                {task.cancellation_reason ? ` Note: "${task.cancellation_reason}"` : ''}
+              </p>
             </div>
           </div>
-        )}
-
-        {/* Contextual Workflow Action Banners */}
-        {/* 1. Missing Details Requested Banner */}
-        {task.latest_clarification && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment')) && (
-          <div className="mt-4 p-4 bg-amber-50/90 border border-amber-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs animate-in fade-in">
+        ) : task.latest_clarification && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment')) ? (
+          <div className="mt-4 p-4 bg-amber-50/90 border border-amber-200 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs">
             <div className="flex items-start gap-2.5">
               <HelpCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
               <div>
                 <p className="font-bold text-amber-950">
-                  Missing Details Requested by {task.latest_clarification.requested_by?.name || 'Assignee'}
+                  Question from {task.latest_clarification.requested_by?.name || 'Assignee'}
                 </p>
                 <p className="text-amber-800 mt-0.5 whitespace-pre-wrap">
                   "{task.latest_clarification.comment.replace(/^❓\s*Missing Details Requested by [^:]*:\s*/, '')}"
-                </p>
-                <p className="text-[10px] text-amber-600 mt-1">
-                  Requested on {new Date(task.latest_clarification.requested_at).toLocaleString()} • Task is pending assigner input.
                 </p>
               </div>
             </div>
@@ -1159,20 +1144,17 @@ export const TaskDetailPage: React.FC = () => {
                   setProvideDetailsFiles([]);
                   setIsProvideDetailsModalOpen(true);
                 }}
-                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
+                className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Provide Missing Details</span>
+                <span>Answer Question</span>
               </button>
             )}
           </div>
-        )}
-
-        {/* 2. Returned for Correction Banner */}
-        {task.latest_return && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment')) && !task.latest_clarification && (
-          <div className="mt-4 p-4 bg-red-50/90 border border-red-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs animate-in fade-in">
+        ) : task.latest_return && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment')) ? (
+          <div className="mt-4 p-4 bg-rose-50/90 border border-rose-200 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs">
             <div className="flex items-start gap-2.5">
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
               <div>
                 <p className="font-bold text-red-950">
                   Changes Requested by {task.latest_return.reviewer?.name || 'Reviewer'}
@@ -1180,207 +1162,91 @@ export const TaskDetailPage: React.FC = () => {
                 <p className="text-red-800 mt-0.5 whitespace-pre-wrap">
                   "{task.latest_return.comments}"
                 </p>
-                <p className="text-[10px] text-red-600 mt-1">
-                  Reviewed on {new Date(task.latest_return.reviewed_at).toLocaleString()} • {task.permissions.can_submit ? 'Please review the feedback, update your work, and resubmit.' : `Awaiting ${task.current_owners && task.current_owners.length > 1 ? task.current_owners.map((o) => o.name).join(' & ') : (task.current_owner?.name || 'assignee')} to review feedback, update deliverables, and resubmit.`}
-                </p>
               </div>
             </div>
             {task.permissions.can_submit && (
               <button
                 type="button"
                 onClick={() => setIsSubmitModalOpen(true)}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
+                className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Resubmit Work for Review</span>
+                <span>Submit Fixes</span>
               </button>
             )}
           </div>
-        )}
-
-        {/* 3. Creator Ready to Complete Banner */}
-        {task.permissions.can_final_submit && !isWorkAlone && (
-          <div className="mt-4 p-4 bg-emerald-50/90 border border-emerald-200 rounded-2xl flex items-center gap-3 text-xs shadow-2xs animate-in fade-in">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-            <div>
-              <p className="font-bold text-emerald-950">All Deliverables Approved & Ready for Completion</p>
-              <p className="text-emerald-800 mt-0.5">
-                All assigned parts of this task have been completed and approved. Click "Approve & Complete Task" in the action buttons above to close the project with final remarks.
-              </p>
+        ) : task.status === 'on_hold' && task.hold_record ? (
+          <div className="mt-4 p-4 bg-amber-50/90 border border-amber-200 rounded-xl flex items-center justify-between text-xs text-amber-900 shadow-2xs">
+            <div className="flex items-center gap-2">
+              <PauseCircle className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>
+                <strong>Task is paused:</strong> {task.hold_record.reason} (by {task.hold_record.held_by})
+              </span>
             </div>
+            {task.permissions.can_resume && (
+              <button
+                onClick={handleResume}
+                className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold transition cursor-pointer text-xs"
+              >
+                Resume Now
+              </button>
+            )}
           </div>
-        )}
-
-        {/* 4. For Team Members / Assignees when task is in Final Sign-off */}
-        {!task.permissions.can_final_submit && isReadyForFinalSignOff && !isCompleted && (
-          <div className="mt-4 p-4 bg-purple-50/90 border border-purple-200 rounded-2xl flex items-center gap-3 text-xs shadow-2xs animate-in fade-in">
+        ) : !task.permissions.can_final_submit && isReadyForFinalSignOff && !isCompleted ? (
+          <div className="mt-4 p-4 bg-purple-50/90 border border-purple-200 rounded-xl flex items-center gap-3 text-xs shadow-2xs">
             <CheckCircle2 className="w-5 h-5 text-purple-600 shrink-0" />
             <div>
               <p className="font-bold text-purple-950">All Deliverables Approved — Awaiting Final Sign-off</p>
               <p className="text-purple-800 mt-0.5">
-                All branch assignments have been successfully reviewed and approved. The task is currently with the Task Creator ({task.creator?.name || 'Creator'}) for final project sign-off and completion.
+                All assigned deliverables have been approved. Waiting for {task.creator?.name || 'Task Creator'} for final sign-off.
               </p>
             </div>
           </div>
-        )}
+        ) : null}
 
-        {/* 5. For Assignee whose branch is completed, while upper workflow is in progress */}
-        {isMyWorkDone && !isReadyForFinalSignOff && !isCompleted && task.status === 'in_progress' && (
-          <div className="mt-4 p-4 bg-emerald-50/90 border border-emerald-200 rounded-2xl flex items-center gap-3 text-xs shadow-2xs animate-in fade-in">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-            <div>
-              <p className="font-bold text-emerald-950">Your Assigned Work is Approved & Completed</p>
-              <p className="text-emerald-800 mt-0.5">
-                Your submitted deliverables have been approved. The task is progressing through the upper workflow with {task.current_owner?.name && task.current_owner.id !== currentUser?.id ? task.current_owner.name : (task.my_branch?.assigned_by?.name || 'the assigner')}.
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Modern Compact Lifecycle Stepper */}
+        <div className="mt-5 pt-4 border-t border-slate-100">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 text-xs">
+            {lifecycleStages.map((stg, sIdx) => {
+              const state = getLifecycleStageState(stg.key);
+              const isCompleted = state === 'completed';
+              const isCurrent = state === 'current';
+              const isPaused = state === 'paused';
 
-        {/* Real-time Turn & Responsibility Tracker */}
-        <div className="mt-4 p-3.5 rounded-xl bg-slate-50/90 border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2.5">
-            <span className="w-2 h-2 rounded-full bg-blue-600 shrink-0" />
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Current Responsibility:</span>
-              <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-200/70 text-slate-900 border-0">
-                {isCompleted
-                  ? 'Completed & Archived'
-                  : isReadyForFinalSignOff
-                  ? `Task Creator: ${task.creator?.name || 'Creator'} (Final Sign-off)`
-                  : isUnderReview
-                  ? `Reviewer (Checking deliverables from ${latestPendingSubmission?.submitted_by?.name || 'Assignee'})`
-                  : task.latest_clarification && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment'))
-                  ? `Task Assigner: ${task.creator?.name || 'Assigner'} (Question to Answer)`
-                  : task.latest_return && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment'))
-                  ? `Assignee: ${task.current_owners && task.current_owners.length > 1 ? task.current_owners.map((o) => o.name).join(', ') : (task.current_owner?.name || 'Assignee')} (Revising Deliverables)`
-                  : isMyWorkDone
-                  ? `Assignee: ${task.current_owner?.name && task.current_owner.id !== currentUser?.id ? task.current_owner.name : (task.my_branch?.assigned_by?.name || 'Upper Assignee')} (Upper Workflow)`
-                  : task.current_owners && task.current_owners.length > 1
-                  ? `Assignees: ${task.current_owners.map((o) => o.name).join(', ')}`
-                  : `Assignee: ${task.current_owner?.name || 'In Progress'}`}
-              </span>
-            </div>
-          </div>
-
-          {(task.permissions.can_submit || task.permissions.can_review || task.permissions.can_final_submit || task.permissions.can_provide_details) && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs self-start sm:self-auto">
-              <Zap className="w-3.5 h-3.5 text-cyan-200 animate-bounce" />
-              <span>Ball is in YOUR court</span>
-            </div>
-          )}
-        </div>
-
-        {/* Interactive Lifecycle Workflow Stepper */}
-        <div className="mt-6 pt-6 border-t border-slate-100">
-          <div className="relative">
-            {/* Step progress line behind icons */}
-            <div className="hidden sm:block absolute top-1/2 left-6 right-6 -translate-y-1/2 h-0.5 bg-slate-100 -z-0" />
-
-            <div className={`grid grid-cols-1 ${isWorkAlone ? 'sm:grid-cols-3' : 'sm:grid-cols-5'} gap-3 relative z-10`}>
-              {lifecycleStages.map((stg) => {
-                const state = getLifecycleStageState(stg.key);
-                const isCompleted = state === 'completed';
-                const isCurrent = state === 'current';
-                const isPaused = state === 'paused';
-
-                return (
+              return (
+                <React.Fragment key={stg.key}>
+                  {sIdx > 0 && (
+                    <div className={`w-4 sm:w-6 h-0.5 shrink-0 ${isCompleted ? 'bg-emerald-400' : 'bg-slate-200'}`} />
+                  )}
                   <div
-                    key={stg.key}
-                    className={`flex sm:flex-col items-center gap-3 p-2.5 sm:p-2 rounded-xl transition-all ${
+                    className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
                       isCurrent
-                        ? 'bg-blue-50/80 border border-blue-200 shadow-2xs'
-                        : isPaused
-                        ? 'bg-amber-50/80 border border-amber-200'
+                        ? 'bg-blue-600 text-white shadow-xs'
                         : isCompleted
-                        ? 'bg-white'
-                        : 'bg-white opacity-50'
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                        : isPaused
+                        ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                        : 'bg-slate-100 text-slate-400'
                     }`}
                   >
-                    <div
-                      className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-transform ${
-                        isCompleted
-                          ? 'bg-emerald-600 text-white shadow-2xs'
-                          : isCurrent
-                          ? 'bg-blue-600 text-white ring-4 ring-blue-100 shadow-xs'
-                          : isPaused
-                          ? 'bg-amber-500 text-white ring-4 ring-amber-100'
-                          : 'bg-slate-100 text-slate-400'
-                      }`}
-                    >
-                      {isCompleted ? (
-                        <Check className="w-4 h-4 stroke-[2.5]" />
-                      ) : isPaused ? (
-                        <PauseCircle className="w-4 h-4" />
-                      ) : isCurrent ? (
-                        <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                      ) : (
-                        <span className="w-2 h-2 rounded-full bg-slate-300" />
-                      )}
-                    </div>
-                    <div className="text-left sm:text-center min-w-0">
-                      <p className={`text-[11px] font-bold truncate ${isCurrent ? 'text-blue-900' : isCompleted ? 'text-slate-800' : 'text-slate-400'}`}>
-                        {stg.label}
-                      </p>
-                      <p className={`text-[10px] truncate ${isCurrent ? 'text-blue-600 font-semibold' : 'text-slate-400'}`}>
-                        {stg.desc}
-                      </p>
-                    </div>
+                    {isCompleted ? (
+                      <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />
+                    ) : isCurrent ? (
+                      <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                    ) : isPaused ? (
+                      <PauseCircle className="w-3 h-3 text-amber-600" />
+                    ) : (
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                    )}
+                    <span>{stg.label}</span>
                   </div>
-                );
-              })}
-            </div>
+                </React.Fragment>
+              );
+            })}
           </div>
-
-          {/* Stepper Status Alert Banners */}
-          {task.status === 'on_hold' && task.hold_record && (
-            <div className="mt-4 p-3 bg-amber-50/90 border border-amber-200 rounded-xl flex items-center justify-between text-xs text-amber-900">
-              <div className="flex items-center gap-2">
-                <PauseCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                <span>
-                  <strong>Task is currently On Hold:</strong> {task.hold_record.reason} (Held by {task.hold_record.held_by})
-                </span>
-              </div>
-              {task.permissions.can_resume && (
-                <button
-                  onClick={handleResume}
-                  className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold transition cursor-pointer text-xs"
-                >
-                  Resume Now
-                </button>
-              )}
-            </div>
-          )}
-
-          {task.status === 'post_comment' && task.latest_return && (
-            <div className="mt-4 p-3 bg-rose-50/90 border border-rose-200 rounded-xl flex items-center justify-between text-xs text-rose-900">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-                <span>
-                  {task.permissions.can_submit ? (
-                    <>
-                      <strong>Action Required: Returned For Revision.</strong> The reviewer requested corrections on deliverables. Check notes below.
-                    </>
-                  ) : (
-                    <>
-                      <strong>Returned For Revision.</strong> Waiting for {task.current_owners && task.current_owners.length > 1 ? task.current_owners.map((o) => o.name).join(' & ') : (task.current_owner?.name || 'assignee')} to address requested corrections.
-                    </>
-                  )}
-                </span>
-              </div>
-              {task.permissions.can_submit && (
-                <button
-                  onClick={() => setIsSubmitModalOpen(true)}
-                  className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-semibold transition cursor-pointer text-xs shrink-0 ml-2"
-                >
-                  Submit Fixes
-                </button>
-              )}
-            </div>
-          )}
         </div>
 
-        {/* Navigation Tabs matching Mockup Screen 7 & 8 */}
+        {/* Clean 4 Navigation Tabs */}
         <div className="flex gap-4 border-b border-slate-100 mt-6 -mb-6 px-1 text-xs font-semibold overflow-x-auto">
           <button
             onClick={() => setActiveTab('overview')}
@@ -1395,18 +1261,6 @@ export const TaskDetailPage: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setActiveTab('workflow')}
-            className={`py-3.5 border-b-2 flex items-center gap-1.5 transition whitespace-nowrap cursor-pointer ${
-              activeTab === 'workflow'
-                ? 'border-blue-600 text-blue-600 font-bold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <GitBranch className="w-3.5 h-3.5" />
-            <span>Workflow & History</span>
-          </button>
-
-          <button
             onClick={() => setActiveTab('assignments')}
             className={`py-3.5 border-b-2 flex items-center gap-1.5 transition whitespace-nowrap cursor-pointer ${
               activeTab === 'assignments'
@@ -1415,19 +1269,7 @@ export const TaskDetailPage: React.FC = () => {
             }`}
           >
             <Users className="w-3.5 h-3.5" />
-            <span>Assignments & Collaborations ({((task.branches?.length || 0) + (task.collaborators?.length || 0))})</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('comments')}
-            className={`py-3.5 border-b-2 flex items-center gap-1.5 transition whitespace-nowrap cursor-pointer ${
-              activeTab === 'comments'
-                ? 'border-blue-600 text-blue-600 font-bold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <MessageSquare className="w-3.5 h-3.5" />
-            <span>Comments ({task.comments?.length || 0})</span>
+            <span>Subtasks & Team ({task.branches?.length || 0})</span>
           </button>
 
           <button
@@ -1439,19 +1281,19 @@ export const TaskDetailPage: React.FC = () => {
             }`}
           >
             <Paperclip className="w-3.5 h-3.5" />
-            <span>Attachments ({task.attachments?.length || 0})</span>
+            <span>Files & Deliverables ({task.attachments?.length || 0})</span>
           </button>
 
           <button
-            onClick={() => setActiveTab('history')}
+            onClick={() => setActiveTab('comments')}
             className={`py-3.5 border-b-2 flex items-center gap-1.5 transition whitespace-nowrap cursor-pointer ${
-              activeTab === 'history'
+              activeTab === 'comments'
                 ? 'border-blue-600 text-blue-600 font-bold'
                 : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <History className="w-3.5 h-3.5" />
-            <span>Audit Log</span>
+            <MessageSquare className="w-3.5 h-3.5" />
+            <span>Activity & Discussion ({(task.comments?.length || 0) + (task.status_history?.length || 0)})</span>
           </button>
         </div>
       </div>
@@ -1895,105 +1737,37 @@ export const TaskDetailPage: React.FC = () => {
                     </div>
                   </div>
                 ) : task.branches && task.branches.length > 0 ? (
-                  task.branches.map((b) => {
-                    const ownerName = b.owner?.name || b.title;
-                    const reviewerName = b.assigned_by?.name || task.creator?.name || 'Assigner';
+                  <div className="space-y-3 pt-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-600 font-medium">Subtasks Completion</span>
+                      <span className="font-bold text-slate-900">
+                        {task.branches.filter((b) => b.status === 'completed').length} of {task.branches.filter((b) => b.status !== 'cancelled').length} Done
+                      </span>
+                    </div>
 
-                    let statusLabel: string | undefined = undefined;
-                    if (b.status === 'review') {
-                      statusLabel = `Under Review: ${reviewerName}`;
-                    } else if (b.status === 'post_comment') {
-                      statusLabel = 'Needs Correction';
-                    } else if (b.status === 'completed') {
-                      statusLabel = 'Completed';
-                    } else if (b.status === 'in_progress') {
-                      statusLabel = 'In Progress';
-                    } else if (b.status === 'cancelled') {
-                      statusLabel = 'Cancelled';
-                    }
+                    <div className="flex items-center justify-between gap-1 text-[11px] text-slate-500 pt-1">
+                      <span>{task.branches.filter((b) => b.status === 'in_progress').length} In Progress</span>
+                      <span>•</span>
+                      <span>{task.branches.filter((b) => b.status === 'review').length} In Review</span>
+                      <span>•</span>
+                      <span>{task.branches.filter((b) => b.status === 'completed').length} Approved</span>
+                    </div>
 
-                    const isCancelled = b.status === 'cancelled';
-
-                    return (
-                      <div
-                        key={b.id}
-                        className={`p-2.5 rounded-xl border transition-colors space-y-1.5 ${
-                          isCancelled
-                            ? 'border-slate-100 bg-slate-50/40 opacity-75'
-                            : 'border-slate-100 bg-slate-50/60 hover:bg-slate-50'
-                        }`}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span
-                              className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
-                                b.status === 'completed'
-                                  ? 'bg-emerald-100 text-emerald-600'
-                                  : b.status === 'review'
-                                  ? 'bg-amber-100 text-amber-600 animate-pulse'
-                                  : b.status === 'post_comment'
-                                  ? 'bg-rose-100 text-rose-600'
-                                  : isCancelled
-                                  ? 'bg-rose-100 text-rose-500'
-                                  : 'bg-blue-100 text-blue-600'
-                              }`}
-                            >
-                              {b.status === 'completed' ? (
-                                <Check className="w-2.5 h-2.5" />
-                              ) : isCancelled ? (
-                                <X className="w-2.5 h-2.5" />
-                              ) : (
-                                <div className="w-1.5 h-1.5 rounded-full bg-current" />
-                              )}
-                            </span>
-                            <div className="min-w-0">
-                              <span
-                                className={`font-semibold text-xs block truncate ${
-                                  isCancelled ? 'text-slate-400 line-through' : 'text-slate-800'
-                                }`}
-                              >
-                                {ownerName}
-                              </span>
-                              {b.assigned_by && b.owner && b.assigned_by.id !== b.owner.id && (
-                                <span className="text-[10px] text-slate-400 block truncate">
-                                  {isCancelled ? `Cancelled by ${b.assigned_by.name}` : `Assigned by ${b.assigned_by.name}`}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <span className="shrink-0">
-                            <StatusBadge status={b.status} size="sm" customLabel={statusLabel} />
-                          </span>
-                        </div>
-                        {b.status === 'review' && (
-                          <div className="mt-1 pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
-                            <span className="text-slate-500">Under Review by:</span>
-                            <span className="font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
-                              {reviewerName}
-                            </span>
-                          </div>
-                        )}
-                        {b.status === 'post_comment' && (
-                          <div className="mt-1 pt-1.5 border-t border-rose-100 flex items-center justify-between text-[11px]">
-                            <span className="text-rose-600 font-medium">Returned for Correction</span>
-                            <span className="text-[10px] text-slate-500">Awaiting revision</span>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('assignments')}
+                      className="w-full py-2 px-3 mt-2 bg-blue-50/60 hover:bg-blue-50 text-blue-700 rounded-xl text-xs font-semibold transition flex items-center justify-between border border-blue-200/80 cursor-pointer"
+                    >
+                      <span>View All Subtasks ({task.branches.length})</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-blue-600" />
+                    </button>
+                  </div>
                 ) : (
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Check className="w-3.5 h-3.5 text-emerald-600" />
-                      <span className="font-semibold text-slate-800">Work in Progress</span>
+                      <span className="font-semibold text-slate-800">Direct Execution</span>
                     </div>
-                    {task.status === 'completed' && (
-                      <div className="flex items-center gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        <span className="font-semibold text-emerald-600">Final Verification Complete</span>
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
@@ -2084,67 +1858,6 @@ export const TaskDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* ======================================================== */}
-      {/* SCREEN 8: WORKFLOW & HISTORY TIMELINE                     */}
-      {/* ======================================================== */}
-      {activeTab === 'workflow' && (
-        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs">
-          <div className="mb-6">
-            <h2 className="text-sm font-bold text-slate-900">Task Journey / Chronological Workflow</h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Visual history of assignments, submissions, review decisions, returns, and stage handovers.
-            </p>
-          </div>
-
-          <div className="relative pl-6 sm:pl-8 border-l-2 border-slate-100 space-y-8 my-4 ml-3">
-            {task.status_history && task.status_history.length > 0 ? (
-              task.status_history.map((item, idx) => {
-                const isLast = idx === task.status_history.length - 1;
-                let dotColor = 'bg-blue-600';
-                if (item.to_status === 'completed') dotColor = 'bg-emerald-500';
-                else if (item.to_status === 'review') dotColor = 'bg-amber-500';
-                else if (item.to_status === 'post_comment') dotColor = 'bg-rose-500';
-                else if (item.to_status === 'on_hold') dotColor = 'bg-orange-500';
-
-                return (
-                  <div key={item.id} className="relative group">
-                    {/* Timeline Node Dot */}
-                    <div
-                      className={`absolute -left-[31px] sm:-left-[39px] top-0 w-4 h-4 rounded-full border-2 border-white ${dotColor} shadow-xs ring-4 ring-slate-50`}
-                    />
-
-                    <div className="bg-slate-50/60 p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition">
-                      <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-slate-800">
-                            {item.reason || `Transitioned to ${item.to_status.replace('_', ' ')}`}
-                          </span>
-                          {isLast && task.status !== 'completed' && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
-                              Current Stage
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-[11px] font-medium text-slate-400">
-                          {new Date(item.changed_at).toLocaleString()}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2 text-xs text-slate-500">
-                        <span>Action by:</span>
-                        <span className="font-semibold text-slate-700">{item.changed_by?.name || 'System'}</span>
-                        <span className="text-[10px] text-slate-400 capitalize">({item.changed_by?.role?.replace('_', ' ') || 'User'})</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            ) : (
-              <p className="text-xs text-slate-400 italic">No workflow history records yet.</p>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* ======================================================== */}
       {/* ASSIGNMENTS & COLLABORATIONS TAB                         */}
@@ -2489,6 +2202,65 @@ export const TaskDetailPage: React.FC = () => {
               <p className="text-xs text-slate-400 italic text-center py-6">No comments posted yet.</p>
             )}
           </div>
+
+          {/* Chronological Audit & Activity Timeline */}
+          <div className="pt-6 border-t border-slate-100">
+            <div className="mb-4">
+              <h3 className="text-sm font-bold text-slate-900">Task Activity Journey & Audit History</h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Full chronological record of stage handovers, submissions, review decisions, and state updates.
+              </p>
+            </div>
+
+            <div className="relative pl-6 sm:pl-8 border-l-2 border-slate-100 space-y-6 my-4 ml-3">
+              {task.status_history && task.status_history.length > 0 ? (
+                task.status_history.map((item, idx) => {
+                  const isLast = idx === task.status_history.length - 1;
+                  let dotColor = 'bg-blue-600';
+                  if (item.to_status === 'completed') dotColor = 'bg-emerald-500';
+                  else if (item.to_status === 'review') dotColor = 'bg-amber-500';
+                  else if (item.to_status === 'post_comment') dotColor = 'bg-rose-500';
+                  else if (item.to_status === 'on_hold') dotColor = 'bg-orange-500';
+
+                  return (
+                    <div key={item.id} className="relative group">
+                      <div
+                        className={`absolute -left-[31px] sm:-left-[39px] top-0 w-4 h-4 rounded-full border-2 border-white ${dotColor} shadow-xs ring-4 ring-slate-50`}
+                      />
+
+                      <div className="bg-slate-50/60 p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition">
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-800">
+                              {item.reason || `Transitioned to ${item.to_status.replace('_', ' ')}`}
+                            </span>
+                            {isLast && task.status !== 'completed' && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
+                                Current Stage
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[11px] font-medium text-slate-400">
+                            {new Date(item.changed_at).toLocaleString()}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 text-xs text-slate-500">
+                          <span>Action by:</span>
+                          <span className="font-semibold text-slate-700">{item.changed_by?.name || 'System'}</span>
+                          <span className="text-[10px] text-slate-400 capitalize">
+                            ({item.changed_by?.role?.replace('_', ' ') || 'User'})
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className="text-xs text-slate-400 italic">No workflow history records yet.</p>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -2612,43 +2384,6 @@ export const TaskDetailPage: React.FC = () => {
         </div>
       )}
 
-      {/* ======================================================== */}
-      {/* AUDIT LOG TAB                                            */}
-      {/* ======================================================== */}
-      {activeTab === 'history' && (
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
-          <h2 className="text-sm font-bold text-slate-900 mb-2">Immutable Audit Trail</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-500 font-bold uppercase tracking-wider">
-                  <th className="py-3 px-4">Date & Time</th>
-                  <th className="py-3 px-4">Actor</th>
-                  <th className="py-3 px-4">Status Change</th>
-                  <th className="py-3 px-4">Reason / Notes</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {task.status_history?.map((h) => (
-                  <tr key={h.id} className="hover:bg-slate-50/50">
-                    <td className="py-3 px-4 text-slate-500 whitespace-nowrap">
-                      {new Date(h.changed_at).toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4 font-semibold text-slate-800 whitespace-nowrap">
-                      {h.changed_by?.name || 'System'}
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <span className="text-slate-400 mr-1.5">{h.from_status || 'Initial'}</span>
-                      <span className="text-blue-600 font-bold">→ {h.to_status}</span>
-                    </td>
-                    <td className="py-3 px-4 text-slate-600">{h.reason || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
 
       {/* SUBMISSION MODAL (Intermediate Submit for Review) */}
       {isSubmitModalOpen && (
