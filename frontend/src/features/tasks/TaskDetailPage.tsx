@@ -1507,11 +1507,11 @@ export const TaskDetailPage: React.FC = () => {
                     <span className="font-black text-amber-800">{task.progress_summary.pending_review}</span>
                   </div>
 
-                  {/* Indicator: Revoked */}
+                  {/* Indicator: Cancelled */}
                   {task.progress_summary.cancelled !== undefined && task.progress_summary.cancelled > 0 && (
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-rose-50 text-rose-900 text-xs select-none">
                       <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
-                      <span className="text-rose-700 font-medium">Revoked:</span>
+                      <span className="text-rose-700 font-medium">Cancelled:</span>
                       <span className="font-black text-rose-800">{task.progress_summary.cancelled}</span>
                     </div>
                   )}
@@ -1909,7 +1909,7 @@ export const TaskDetailPage: React.FC = () => {
                     } else if (b.status === 'in_progress') {
                       statusLabel = 'In Progress';
                     } else if (b.status === 'cancelled') {
-                      statusLabel = 'Revoked';
+                      statusLabel = 'Cancelled';
                     }
 
                     const isCancelled = b.status === 'cancelled';
@@ -1956,7 +1956,7 @@ export const TaskDetailPage: React.FC = () => {
                               </span>
                               {b.assigned_by && b.owner && b.assigned_by.id !== b.owner.id && (
                                 <span className="text-[10px] text-slate-400 block truncate">
-                                  {isCancelled ? `Revoked by ${b.assigned_by.name}` : `Assigned by ${b.assigned_by.name}`}
+                                  {isCancelled ? `Cancelled by ${b.assigned_by.name}` : `Assigned by ${b.assigned_by.name}`}
                                 </span>
                               )}
                             </div>
@@ -2351,25 +2351,6 @@ export const TaskDetailPage: React.FC = () => {
                           <span className="text-emerald-600 font-semibold">Done: {new Date(b.completed_at).toLocaleDateString()}</span>
                         )}
                       </div>
-
-                      {/* Delegation action */}
-                      {b.can_assign_further && task.status !== 'completed' && task.status !== 'cancelled' && (
-                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                          <span className="text-[10px] text-slate-400 font-mono">
-                            {b.dot_code || `1.${idx + 1}`}
-                          </span>
-                          {(currentUser?.id === b.owner?.id || currentUser?.role === 'admin' || task.creator?.id === currentUser?.id) && (
-                            <button
-                              type="button"
-                              onClick={() => openAssignModal('assign')}
-                              className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-[10px] font-bold transition flex items-center gap-1 cursor-pointer"
-                            >
-                              <Plus className="w-3 h-3" />
-                              <span>Delegate Further</span>
-                            </button>
-                          )}
-                        </div>
-                      )}
                     </div>
                   );
                 })}
