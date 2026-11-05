@@ -296,7 +296,7 @@ export const CreateTaskPage: React.FC = () => {
         return;
       }
       if (!description.trim()) {
-        setError('Main Task Description is required.');
+        setError('Task Description is required.');
         return;
       }
       setCurrentStep(2);
@@ -443,7 +443,7 @@ export const CreateTaskPage: React.FC = () => {
         </div>
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Create Task</h1>
         <p className="text-xs text-slate-500 mt-0.5">
-          Assign one main task to multiple employees with distinct work, private attachments, and individual deliverables.
+          Assign one task to multiple employees with distinct work, private attachments, and individual deliverables.
         </p>
       </div>
 
@@ -555,10 +555,10 @@ export const CreateTaskPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1.5">Main Task Description *</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1.5">Task Description *</label>
             <textarea
               rows={4}
-              placeholder="Provide a comprehensive overview of this project or main task..."
+              placeholder="Provide a comprehensive overview of this task or project..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full p-3.5 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
@@ -582,7 +582,7 @@ export const CreateTaskPage: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Main Due Date</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">Due Date</label>
               <input
                 type="date"
                 value={dueDate}
@@ -782,7 +782,7 @@ export const CreateTaskPage: React.FC = () => {
                     <span>{handlingMethod === 'assign' ? 'Select Assignee(s)' : 'Select Collaborator(s)'}</span>
                   </h3>
                   <p className="text-[11px] text-slate-500 mt-0.5">
-                    Select the employees who will be assigned distinct scopes under this main task.
+                    Select the employees who will be assigned distinct scopes under this task.
                   </p>
                 </div>
 
@@ -1012,7 +1012,7 @@ export const CreateTaskPage: React.FC = () => {
                             )}
                           </p>
                           <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
-                            Do not create subtasks. Directly pass the main task and all shared documents as-is to the selected employee{selectedUsers.length !== 1 ? 's' : ''}.
+                            Do not create subtasks. Directly pass the task and all shared documents as-is to the selected employee{selectedUsers.length !== 1 ? 's' : ''}.
                           </p>
                         </div>
                       </div>
@@ -1029,7 +1029,7 @@ export const CreateTaskPage: React.FC = () => {
                         </h4>
                       </div>
                       <p className="text-xs text-slate-600 leading-relaxed">
-                        The main task <strong>"{title || 'Untitled Task'}"</strong> and all shared documents will be delegated directly to the selected employee{selectedUsers.length !== 1 ? 's' : ''}:
+                        The task <strong>"{title || 'Untitled Task'}"</strong> and all shared documents will be delegated directly to the selected employee{selectedUsers.length !== 1 ? 's' : ''}:
                       </p>
                       <div className="flex flex-wrap gap-2 pt-1">
                         {selectedUsers.map((u) => (
@@ -1078,7 +1078,7 @@ export const CreateTaskPage: React.FC = () => {
                               selectedUsers.forEach((u) => handleCopySharedInstructions(u.id));
                             }}
                             className="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer"
-                            title="Copy main task description & criteria to all"
+                            title="Copy task description & criteria to all"
                           >
                             Copy Shared to All
                           </button>
@@ -1120,7 +1120,7 @@ export const CreateTaskPage: React.FC = () => {
                                 type="button"
                                 onClick={() => handleCopySharedInstructions(u.id)}
                                 className="px-2.5 py-1 text-[11px] font-medium text-blue-700 hover:bg-blue-50 rounded-lg transition cursor-pointer flex items-center gap-1"
-                                title="Copy main task description, expected result, and criteria"
+                                title="Copy task description, expected result, and criteria"
                               >
                                 <Copy className="w-3 h-3" />
                                 <span className="hidden sm:inline">Copy Shared Instructions</span>
@@ -1327,7 +1327,7 @@ export const CreateTaskPage: React.FC = () => {
             <div>
               <h2 className="text-sm font-bold text-slate-900">Review & Submit</h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Verify the main task details and individual subtask allocations before creating the task.
+                Verify the task details and individual subtask allocations before creating the task.
               </p>
             </div>
             <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
@@ -1335,11 +1335,11 @@ export const CreateTaskPage: React.FC = () => {
             </span>
           </div>
 
-          {/* Main Task Summary */}
+          {/* Task Summary */}
           <div className="bg-slate-50 p-5 rounded-2xl border border-slate-200/80 space-y-4 text-xs">
             <div className="flex items-center justify-between pb-2 border-b border-slate-200/70">
               <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                Main Task Summary
+                Task Summary
               </h3>
               <button
                 type="button"
@@ -1347,7 +1347,7 @@ export const CreateTaskPage: React.FC = () => {
                 className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <Edit3 className="w-3.5 h-3.5" />
-                <span>Edit Main Task</span>
+                <span>Edit Task</span>
               </button>
             </div>
 
@@ -1389,7 +1389,7 @@ export const CreateTaskPage: React.FC = () => {
             </div>
 
             <div>
-              <span className="font-bold text-slate-500 block mb-1">Main Task Description:</span>
+              <span className="font-bold text-slate-500 block mb-1">Task Description:</span>
               <p className="text-slate-700 whitespace-pre-wrap bg-white p-3 rounded-xl border border-slate-200">
                 {description}
               </p>
@@ -1425,7 +1425,7 @@ export const CreateTaskPage: React.FC = () => {
                       <span>Direct Task Delegation ({selectedUsers.length} Assignee{selectedUsers.length !== 1 ? 's' : ''})</span>
                     </h3>
                     <p className="text-[11px] text-slate-500 mt-0.5">
-                      The main task scope and all shared documents will be delegated directly to the selected employee{selectedUsers.length !== 1 ? 's' : ''} without creating subtasks.
+                      The task scope and all shared documents will be delegated directly to the selected employee{selectedUsers.length !== 1 ? 's' : ''} without creating subtasks.
                     </p>
                   </div>
                   <button
