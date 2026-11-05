@@ -53,7 +53,21 @@ class TaskHierarchyService
         }
 
         // Map parent assignments to parent branch IDs
-        $parentBranchMap = self::getParentBranchMap($allBranches);
+        $branchesById = $allBranches->keyBy('id');
+        $parentBranchMap = []; // child_branch_id => parent_branch_id
+
+        foreach ($allBranches as $branch) {
+            $parentAssignmentId = $branch->parent_assignment_id;
+            if ($parentAssignmentId) {
+                $parentAssignment = $branch->relationLoaded('parentAssignment')
+                    ? $branch->parentAssignment
+                    : $branch->parentAssignment()->first();
+
+                if ($parentAssignment && isset($branchesById[$parentAssignment->task_branch_id])) {
+                    $parentBranchMap[$branch->id] = $parentAssignment->task_branch_id;
+                }
+            }
+        }
 
         // Level 2: Subtasks directly under the task
         $level2Branches = $allBranches->filter(fn($b) => !isset($parentBranchMap[$b->id]))->values();
@@ -279,117 +293,5 @@ class TaskHierarchyService
         }
 
         return 4;
-    }
-
-    /**
-     * Map child branches to their parent branch IDs for a collection of branches.
-     *
-     * @param Collection<TaskBranch> $allBranches
-     * @return array<int, int> Map of child_branch_id => parent_branch_id
-     */
-    public static function getParentBranchMap(Collection $allBranches): array
-    {
-        $branchesById = $allBranches->keyBy('id');
-        $parentBranchMap = [];
-
-        foreach ($allBranches as $branch) {
-            $parentAssignmentId = $branch->parent_assignment_id;
-            if ($parentAssignmentId) {
-                $parentAssignment = $branch->relationLoaded('parentAssignment')
-                    ? $branch->parentAssignment
-                    : $branch->parentAssignment()->first();
-
-                if ($parentAssignment && isset($branchesById[$parentAssignment->task_branch_id])) {
-                    $parentBranchMap[$branch->id] = $parentAssignment->task_branch_id;
-                }
-            }
-        }
-
-        return $parentBranchMap;
-    }
-
-    /**
-     * Get all descendant branches (children, grandchildren, etc.) for a specific branch.
-     *
-     * @param TaskBranch $branch
-     * @param Collection|null $allBranches
-     * @return Collection<TaskBranch>
-     */
-    public static function getDescendantBranches(TaskBranch $branch, ?Collection $allBranches = null): Collection
-    {
-        if (!$allBranches) {
-            $allBranches = TaskBranch::where('task_id', $branch->task_id)
-                ->whereNull('deleted_at')
-                ->with(['owner', 'parentAssignment'])
-                ->get();
-        }
-
-        $parentBranchMap = self::getParentBranchMap($allBranches);
-        $descendantIds = [];
-        $toCheck = [$branch->id];
-
-        while (!empty($toCheck)) {
-            $currentParentId = array_shift($toCheck);
-            foreach ($parentBranchMap as $childId => $parentId) {
-                if ($parentId === $currentParentId && !in_array($childId, $descendantIds, true)) {
-                    $descendantIds[] = $childId;
-                    $toCheck[] = $childId;
-                }
-            }
-        }
-
-        return $allBranches->filter(fn($b) => in_array($b->id, $descendantIds, true))->values();
-    }
-
-    /**
-     * Get all active unapproved descendant branches for a branch.
-     * Active unapproved means: not completed and not cancelled.
-     *
-     * @param TaskBranch $branch
-     * @param Collection|null $allBranches
-     * @return Collection<TaskBranch>
-     */
-    public static function getUnapprovedDescendants(TaskBranch $branch, ?Collection $allBranches = null): Collection
-    {
-        $descendants = self::getDescendantBranches($branch, $allBranches);
-        return $descendants->filter(fn($b) => !in_array($b->status, ['completed', 'cancelled'], true))->values();
-    }
-
-    /**
-     * Check if a branch is locked from submission because of uncompleted child subtasks.
-     *
-     * @param TaskBranch $branch
-     * @param Collection|null $allBranches
-     * @return array{is_locked: bool, reason: ?string, pending_count: int, pending_branches: array}
-     */
-    public static function getBranchSubmissionLock(TaskBranch $branch, ?Collection $allBranches = null): array
-    {
-        $unapproved = self::getUnapprovedDescendants($branch, $allBranches);
-        if ($unapproved->isEmpty()) {
-            return [
-                'is_locked' => false,
-                'reason' => null,
-                'pending_count' => 0,
-                'pending_branches' => [],
-            ];
-        }
-
-        $pendingList = $unapproved->map(fn($b) => [
-            'id' => $b->id,
-            'title' => $b->title,
-            'status' => $b->status,
-            'owner_name' => $b->owner?->name ?? 'Unassigned',
-        ])->values()->all();
-
-        $count = $unapproved->count();
-        $sample = $unapproved->take(2)->map(fn($b) => "'{$b->title}'")->implode(', ');
-        $reason = "Locked: {$count} subtask(s) delegated below ({$sample}) must be submitted and approved first.";
-
-        return [
-            'is_locked' => true,
-            'reason' => $reason,
-            'pending_count' => $count,
-            'pending_branches' => $pendingList,
-        ];
     }
 }

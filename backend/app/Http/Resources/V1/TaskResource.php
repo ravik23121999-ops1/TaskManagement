@@ -202,17 +202,11 @@ class TaskResource extends JsonResource
         }
 
         $canSubmit = false;
-        $submitLock = null;
         if ($this->status !== 'completed' && $this->status !== 'cancelled' && $this->status !== 'on_hold') {
             if ($this->handling_method === 'work_alone') {
                 $canSubmit = false; // Work alone directly uses Final Approval & Complete
             } else {
-                if ($isBranchOwner && $userActiveBranch) {
-                    $submitLock = \App\Services\TaskHierarchyService::getBranchSubmissionLock($userActiveBranch, $this->branches);
-                    $canSubmit = in_array($userActiveBranch->status, ['pending', 'in_progress', 'post_comment'])
-                        && !$isClarificationActive
-                        && !$submitLock['is_locked'];
-                }
+                $canSubmit = $isBranchOwner && $userActiveBranch && in_array($userActiveBranch->status, ['pending', 'in_progress', 'post_comment']) && !$isClarificationActive;
             }
         }
 
@@ -284,9 +278,8 @@ class TaskResource extends JsonResource
             }
         }
 
-        // Final check / completion permission (Subtask Blocking Rule)
+        // Final check / completion permission
         $canFinalSubmit = false;
-        $finalSubmitLockReason = null;
         if (($isCreator || $isAdmin) && $this->status !== 'completed' && $this->status !== 'cancelled') {
             if ($this->handling_method === 'work_alone') {
                 $canFinalSubmit = true;
@@ -296,9 +289,6 @@ class TaskResource extends JsonResource
                 $completedBranches = $activeBranches->where('status', 'completed')->count();
                 if ($totalBranches > 0 && $completedBranches === $totalBranches) {
                     $canFinalSubmit = true;
-                } else {
-                    $pendingCount = $totalBranches - $completedBranches;
-                    $finalSubmitLockReason = "Final sign-off locked: {$pendingCount} of {$totalBranches} subtasks/branches are pending completion.";
                 }
             }
         }
@@ -412,9 +402,6 @@ class TaskResource extends JsonResource
                 ] : null,
                 'share_parent_details' => $userActiveBranch->share_parent_details ?? true,
                 'can_assign_further' => ($branchMeta[$userActiveBranch->id]['level'] ?? 2) < 4 && ($userActiveBranch->can_assign_further ?? true),
-                'is_locked_by_children' => $submitLock['is_locked'] ?? false,
-                'pending_children_count' => $submitLock['pending_count'] ?? 0,
-                'lock_reason' => $submitLock['reason'] ?? null,
                 'attachments' => $this->attachments->where('task_branch_id', $userActiveBranch->id)->values()->map(fn($att) => $this->formatAttachment($att)),
                 'submissions' => $this->submissions->where('task_branch_id', $userActiveBranch->id)->sortByDesc('submitted_at')->values()->map(fn($sub) => [
                     'id' => $sub->id,
@@ -500,9 +487,6 @@ class TaskResource extends JsonResource
                     'submissions' => $branchSubmissions,
                     'share_parent_details' => $branch->share_parent_details ?? true,
                     'can_assign_further' => $meta['level'] < 4 && ($branch->can_assign_further ?? true),
-                    'is_locked_by_children' => \App\Services\TaskHierarchyService::getBranchSubmissionLock($branch, $this->branches)['is_locked'],
-                    'pending_children_count' => \App\Services\TaskHierarchyService::getBranchSubmissionLock($branch, $this->branches)['pending_count'],
-                    'lock_reason' => \App\Services\TaskHierarchyService::getBranchSubmissionLock($branch, $this->branches)['reason'],
                 ];
             }),
             'collaborators' => $visibleBranches->flatMap->collaborators->map(fn($c) => [
@@ -602,10 +586,8 @@ class TaskResource extends JsonResource
             'permissions' => [
                 'can_edit' => $canEdit,
                 'can_submit' => $canSubmit,
-                'submit_lock_reason' => ($submitLock && $submitLock['is_locked']) ? $submitLock['reason'] : null,
                 'can_review' => $canReview,
                 'can_final_submit' => $canFinalSubmit,
-                'final_submit_lock_reason' => $finalSubmitLockReason,
                 'can_request_details' => $canRequestDetails,
                 'can_provide_details' => $canProvideDetails,
                 'can_hold' => $canHold,

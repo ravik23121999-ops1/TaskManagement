@@ -27,7 +27,6 @@ import {
   Plus,
   Target,
   Clock,
-  Lock,
   CheckSquare,
   AlertTriangle,
   ArrowRight,
@@ -940,17 +939,6 @@ export const TaskDetailPage: React.FC = () => {
               </button>
             )}
 
-            {/* When Submit is locked because of child subtasks below */}
-            {!task.permissions.can_submit && task.permissions.submit_lock_reason && !isWorkAlone && !isCompleted && (
-              <div
-                className="px-3.5 py-2 bg-amber-50 text-amber-800 border border-amber-300 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-not-allowed select-none shadow-2xs"
-                title={task.permissions.submit_lock_reason}
-              >
-                <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                <span>Submit Locked: Subtasks Pending</span>
-              </div>
-            )}
-
             {/* Request Missing Details (Assignee -> Assigner) */}
             {task.permissions.can_request_details && (
               <button
@@ -998,7 +986,7 @@ export const TaskDetailPage: React.FC = () => {
             )}
 
             {/* Final Submit button (Creator Final Approval & Complete) */}
-            {task.permissions.can_final_submit && (currentUser?.role === 'admin' || currentUser?.role === 'sub_admin' || task.creator?.id === currentUser?.id) && (
+            {(task.permissions.can_final_submit || isReadyForFinalSignOff) && (currentUser?.role === 'admin' || currentUser?.role === 'sub_admin' || task.creator?.id === currentUser?.id) && (
               <button
                 onClick={() => {
                   setFinalCompleteDesc(
@@ -1014,17 +1002,6 @@ export const TaskDetailPage: React.FC = () => {
                 <Check className="w-3.5 h-3.5" />
                 <span>Final Sign-off & Complete Task</span>
               </button>
-            )}
-
-            {/* Creator / Admin Final Sign-off Locked Banner */}
-            {!task.permissions.can_final_submit && task.permissions.final_submit_lock_reason && !isCompleted && !isWorkAlone && (currentUser?.role === 'admin' || currentUser?.role === 'sub_admin' || task.creator?.id === currentUser?.id) && (
-              <div
-                className="px-3 py-2 bg-slate-100 text-slate-600 border border-slate-300/80 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-not-allowed select-none shadow-2xs"
-                title={task.permissions.final_submit_lock_reason}
-              >
-                <Lock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                <span>Final Sign-off Locked ({task.progress_summary?.completed || 0}/{task.progress_summary?.total || 0} Done)</span>
-              </div>
             )}
 
             {/* Task Controls & Management Dropdown (Pause, Resume, Cancel, Delete) */}
@@ -1738,15 +1715,6 @@ export const TaskDetailPage: React.FC = () => {
                           <span>Submit Work Deliverables</span>
                         </button>
                       )}
-                      {!task.permissions.can_submit && (task.my_branch?.is_locked_by_children || task.permissions.submit_lock_reason) && task.my_branch?.status !== 'completed' && (
-                        <div
-                          className="px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-300 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-not-allowed select-none shadow-2xs"
-                          title={task.my_branch?.lock_reason || task.permissions.submit_lock_reason || 'Locked until delegated subtasks below are approved'}
-                        >
-                          <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                          <span>Submit Locked: {task.my_branch?.pending_children_count || 1} Subtask(s) Pending</span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -2235,15 +2203,6 @@ export const TaskDetailPage: React.FC = () => {
                                 <span className="px-2 py-0.5 rounded-md text-[10px] font-bold font-mono bg-blue-50 text-blue-700 border border-blue-200">
                                   Subtask {b.dot_code || b.hierarchical_code || `1.${idx + 1}`}
                                 </span>
-                                {b.is_locked_by_children && (
-                                  <span
-                                    className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1 shadow-2xs"
-                                    title={b.lock_reason || 'Subtask locked: child subtasks delegated below must be approved first'}
-                                  >
-                                    <Lock className="w-2.5 h-2.5 text-amber-600" />
-                                    <span>Locked ({b.pending_children_count} pending below)</span>
-                                  </span>
-                                )}
                               </div>
                               <h4 className="font-bold text-slate-900 text-xs">{b.owner?.name || 'Unassigned'}</h4>
                               <p className="text-[10px] text-slate-400 capitalize">

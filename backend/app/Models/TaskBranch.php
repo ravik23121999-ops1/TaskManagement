@@ -62,26 +62,6 @@ class TaskBranch extends Model
         return \App\Services\TaskHierarchyService::getBranchLevel($this);
     }
 
-    public function getDescendantBranches(): \Illuminate\Support\Collection
-    {
-        return \App\Services\TaskHierarchyService::getDescendantBranches($this);
-    }
-
-    public function getUnapprovedDescendants(): \Illuminate\Support\Collection
-    {
-        return \App\Services\TaskHierarchyService::getUnapprovedDescendants($this);
-    }
-
-    public function getSubmissionLock(): array
-    {
-        return \App\Services\TaskHierarchyService::getBranchSubmissionLock($this);
-    }
-
-    public function hasUnapprovedDescendants(): bool
-    {
-        return $this->getUnapprovedDescendants()->isNotEmpty();
-    }
-
     public function assignments(): HasMany
     {
         return $this->hasMany(TaskAssignment::class);

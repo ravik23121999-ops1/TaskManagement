@@ -21,14 +21,11 @@ class TaskSubmissionController extends Controller
     public function submit(Request $request, Task $task): JsonResponse
     {
         $request->validate([
-            'description' => 'required|string|min:5',
+            'description' => 'required|string|min:3',
             'task_branch_id' => 'nullable|exists:task_branches,id',
             'attachments' => 'nullable|array',
             'attachments.*' => 'nullable|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar,7z,jpg,jpeg,png,gif,webp,svg,mp4,webm',
             'file' => 'nullable|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar,7z,jpg,jpeg,png,gif,webp,svg,mp4,webm',
-        ], [
-            'description.required' => 'Please provide work notes or a deliverables summary before submitting.',
-            'description.min' => 'Work notes description must be at least 5 characters long.',
         ]);
 
         $user = $request->user();
@@ -115,30 +112,17 @@ class TaskSubmissionController extends Controller
                 if ($branchId) {
                     $branch = TaskBranch::where('task_id', $task->id)->where('id', $branchId)->first();
                 } else {
-                    // Strictly find the branch assigned to the current authenticated user
-                    $branch = $task->branches()->where('owner_id', $user->id)->whereNotIn('status', ['completed', 'cancelled'])->first()
-                        ?? $task->branches()->where('owner_id', $user->id)->first();
+                    // Try to find the user's active branch for this task
+                    $branch = $task->branches()->where('owner_id', $user->id)->first() ?? $task->branches()->first();
                 }
 
                 if (!$branch) {
-                    return response()->json(['message' => 'No active assignment found for you on this task.'], 404);
+                    return response()->json(['message' => 'No relevant task branch found'], 404);
                 }
 
-                // Strict Maker-Checker Rule: Only the assigned owner can submit deliverables for their branch
-                if ((int)$branch->owner_id !== (int)$user->id) {
-                    $ownerName = $branch->owner ? $branch->owner->name : 'the assigned employee';
-                    return response()->json([
-                        'message' => "Unauthorized: Only {$ownerName} can submit work for this assignment. An assigner, manager, or administrator cannot submit deliverables on behalf of another employee.",
-                    ], 403);
-                }
-
-                // Subtask Blocking Rule (PMI/Jira standard): Lock parent if any child subtasks delegated below are unapproved
-                $submissionLock = \App\Services\TaskHierarchyService::getBranchSubmissionLock($branch);
-                if ($submissionLock['is_locked']) {
-                    return response()->json([
-                        'message' => 'Cannot submit work: ' . $submissionLock['reason'],
-                        'lock_details' => $submissionLock,
-                    ], 422);
+                // Verify user is branch owner, task creator, or admin
+                if ($branch->owner_id !== $user->id && $task->creator_id !== $user->id && !$isAdmin) {
+                    return response()->json(['message' => 'Unauthorized: Only the assigned owner can submit this work'], 403);
                 }
 
                 $submission = TaskSubmission::create([
@@ -228,12 +212,10 @@ class TaskSubmissionController extends Controller
     public function finalSubmit(Request $request, Task $task): JsonResponse
     {
         $request->validate([
-            'description' => 'required|string|min:3',
+            'description' => 'nullable|string',
             'attachments' => 'nullable|array',
             'attachments.*' => 'nullable|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar,7z,jpg,jpeg,png,gif,webp,svg,mp4,webm',
             'file' => 'nullable|file|max:20480|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar,7z,jpg,jpeg,png,gif,webp,svg,mp4,webm',
-        ], [
-            'description.required' => 'Closing remarks or deliverables summary note is required for final sign-off.',
         ]);
 
         $user = $request->user();
@@ -251,23 +233,14 @@ class TaskSubmissionController extends Controller
             return response()->json(['message' => 'Unauthorized: Only the original creator (or Admin) can give final completion approval'], 403);
         }
 
-        // Subtask Blocking Rule (Jira / Enterprise standard): All active (non-cancelled) branches must be submitted & approved
+        // Validate parent task completion rule: All active (non-cancelled) branches must be completed
         if ($task->handling_method !== 'work_alone') {
-            $activeBranches = $task->branches()->where('status', '!=', 'cancelled')->get();
-            $totalActive = $activeBranches->count();
-            $completedActive = $activeBranches->where('status', 'completed')->count();
+            $totalActive = $task->branches()->where('status', '!=', 'cancelled')->count();
+            $completedActive = $task->branches()->where('status', 'completed')->count();
 
-            if ($totalActive === 0) {
+            if ($totalActive > 0 && $completedActive < $totalActive) {
                 return response()->json([
-                    'message' => 'Cannot complete task: No assignments found for this task.',
-                ], 422);
-            }
-
-            if ($completedActive < $totalActive) {
-                $pendingCount = $totalActive - $completedActive;
-                $samplePending = $activeBranches->where('status', '!=', 'completed')->take(3)->map(fn($b) => "'{$b->title}' ({$b->status})")->implode(', ');
-                return response()->json([
-                    'message' => "Cannot complete task: All subtasks and branches must be submitted and approved first ({$pendingCount} of {$totalActive} pending: {$samplePending}).",
+                    'message' => "Cannot complete task: All active branches must be approved first ({$completedActive} of {$totalActive} approved)",
                 ], 422);
             }
         }
@@ -279,8 +252,11 @@ class TaskSubmissionController extends Controller
                 'completed_at' => now(),
             ]);
 
-            // Note: Auto-complete shortcut removed per Maker-Checker / Subtask Blocking compliance.
-            // Every branch has already been legitimately submitted and approved above.
+            // Ensure all non-cancelled branches are marked completed
+            $task->branches()->whereNotIn('status', ['completed', 'cancelled'])->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+            ]);
 
             // Process uploaded final attachments if provided
             $uploadedFiles = [];
