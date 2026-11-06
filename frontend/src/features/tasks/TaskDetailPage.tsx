@@ -38,7 +38,6 @@ import {
   ArrowRightLeft,
   UserMinus,
   RefreshCw,
-  Lock,
   MoreHorizontal,
   ChevronDown,
 } from 'lucide-react';
@@ -915,25 +914,6 @@ export const TaskDetailPage: React.FC = () => {
                 <Send className="w-3.5 h-3.5" />
                 <span>Answer Question</span>
               </button>
-            ) : task.permissions.can_submit && !isWorkAlone ? (
-              <button
-                type="button"
-                onClick={() => setIsSubmitModalOpen(true)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer hover:shadow-md active:scale-95"
-              >
-                <Send className="w-3.5 h-3.5" />
-                <span>Submit Completed Work</span>
-              </button>
-            ) : task.delegation_prerequisites?.has_uncompleted_subtasks && task.my_branch && task.my_branch.status !== 'completed' && !latestPendingSubmission ? (
-              <div
-                className="px-3.5 py-2 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl text-xs font-semibold flex items-center gap-1.5 shadow-2xs"
-                title={task.permissions?.cannot_submit_reason || "Cannot submit yet: You must review and approve all delegated subtasks before submitting your work upward."}
-              >
-                <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                <span>
-                  Submission Locked ({task.delegation_prerequisites.uncompleted_count} Subtask{task.delegation_prerequisites.uncompleted_count > 1 ? 's' : ''} Pending)
-                </span>
-              </div>
             ) : task.permissions.can_review && latestPendingSubmission ? (
               <button
                 type="button"
@@ -945,6 +925,15 @@ export const TaskDetailPage: React.FC = () => {
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Check & Review Work</span>
+              </button>
+            ) : task.permissions.can_submit && !isWorkAlone ? (
+              <button
+                type="button"
+                onClick={() => setIsSubmitModalOpen(true)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer hover:shadow-md active:scale-95"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>Submit Completed Work</span>
               </button>
             ) : (task.permissions.can_final_submit || isReadyForFinalSignOff) && (currentUser?.role === 'admin' || currentUser?.role === 'sub_admin' || task.creator?.id === currentUser?.id) ? (
               <button
@@ -1236,18 +1225,6 @@ export const TaskDetailPage: React.FC = () => {
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>Check & Review Work</span>
             </button>
-          </div>
-        ) : task.delegation_prerequisites?.has_uncompleted_subtasks && task.my_branch && task.my_branch.status !== 'completed' && !latestPendingSubmission ? (
-          <div className="mt-4 p-4 bg-amber-50/90 border border-amber-200 rounded-xl flex items-center gap-3 text-xs shadow-2xs">
-            <Lock className="w-5 h-5 text-amber-600 shrink-0" />
-            <div>
-              <p className="font-bold text-amber-950">
-                Delegated Subtasks in Progress ({task.delegation_prerequisites.uncompleted_count} pending)
-              </p>
-              <p className="text-amber-800 mt-0.5">
-                You have delegated work to team members below you. Under company workflow policy, you must review and approve all subordinate deliverables before you can submit your own work upward to your assigner.
-              </p>
-            </div>
           </div>
         ) : task.my_branch?.status === 'review' ? (
           <div className="mt-4 p-4 bg-blue-50/90 border border-blue-200 rounded-xl flex items-center gap-3 text-xs shadow-2xs">
@@ -1625,17 +1602,6 @@ export const TaskDetailPage: React.FC = () => {
                           <Upload className="w-3.5 h-3.5" />
                           <span>Submit Work Deliverables</span>
                         </button>
-                      )}
-                      {task.delegation_prerequisites?.has_uncompleted_subtasks && task.my_branch.status !== 'completed' && (
-                        <div
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-medium shadow-2xs"
-                          title={task.permissions?.cannot_submit_reason || "Cannot submit yet: You have delegated subtasks that must be reviewed and approved first."}
-                        >
-                          <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                          <span>
-                            Submission Locked · {task.delegation_prerequisites.uncompleted_count} delegated subtask{task.delegation_prerequisites.uncompleted_count > 1 ? 's' : ''} pending approval
-                          </span>
-                        </div>
                       )}
                     </div>
                   </div>
