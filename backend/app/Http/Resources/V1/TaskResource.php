@@ -519,18 +519,59 @@ class TaskResource extends JsonResource
                 }
                 return in_array($att->task_branch_id, $visibleBranchIds);
             })->values()->map(fn($att) => $this->formatAttachment($att)),
-            'status_history' => $this->statusHistory->sortBy('changed_at')->values()->map(fn($history) => [
-                'id' => $history->id,
-                'from_status' => $history->from_status,
-                'to_status' => $history->to_status,
-                'reason' => $history->reason,
-                'changed_at' => $history->changed_at?->toISOString(),
-                'changed_by' => $history->changedBy ? [
-                    'id' => $history->changedBy->id,
-                    'name' => $history->changedBy->name,
-                    'role' => $history->changedBy->role,
-                ] : null,
-            ]),
+            'status_history' => (function () {
+                $historyItems = $this->statusHistory->map(function ($h) {
+                    return [
+                        'id' => $h->id,
+                        'from_status' => $h->from_status,
+                        'to_status' => $h->to_status,
+                        'reason' => $h->reason,
+                        'changed_at' => $h->changed_at ? (is_string($h->changed_at) ? $h->changed_at : $h->changed_at->toISOString()) : null,
+                        'changed_by' => $h->changedBy ? [
+                            'id' => $h->changedBy->id,
+                            'name' => $h->changedBy->name,
+                            'role' => $h->changedBy->role,
+                        ] : null,
+                    ];
+                });
+
+                // Include subtask assignment events if not already present
+                if ($this->relationLoaded('branches')) {
+                    foreach ($this->branches as $b) {
+                        if ($b->owner) {
+                            $alreadyLogged = $historyItems->contains(function ($item) use ($b) {
+                                return str_contains(strtolower($item['reason'] ?? ''), 'assigned')
+                                    && str_contains(strtolower($item['reason'] ?? ''), strtolower($b->owner->name ?? ''));
+                            });
+
+                            if (!$alreadyLogged) {
+                                $assigner = $this->creator;
+                                if ($b->relationLoaded('assignments')) {
+                                    $firstAssign = $b->assignments->sortBy('assigned_at')->first();
+                                    if ($firstAssign && $firstAssign->relationLoaded('assignedBy') && $firstAssign->assignedBy) {
+                                        $assigner = $firstAssign->assignedBy;
+                                    }
+                                }
+
+                                $historyItems->push([
+                                    'id' => 'assign_' . $b->id,
+                                    'from_status' => null,
+                                    'to_status' => 'in_progress',
+                                    'reason' => "Subtask '{$b->title}' assigned to {$b->owner->name}",
+                                    'changed_at' => $b->created_at ? (is_string($b->created_at) ? $b->created_at : $b->created_at->toISOString()) : $this->created_at?->toISOString(),
+                                    'changed_by' => $assigner ? [
+                                        'id' => $assigner->id,
+                                        'name' => $assigner->name,
+                                        'role' => $assigner->role,
+                                    ] : null,
+                                ]);
+                            }
+                        }
+                    }
+                }
+
+                return $historyItems->sortBy('changed_at')->values()->all();
+            })(),
             'submissions' => $this->submissions
                 ->when(!$canOverseeAll, function ($q) use ($visibleBranches, $user) {
                     $visibleBranchIds = $visibleBranches->pluck('id')->all();

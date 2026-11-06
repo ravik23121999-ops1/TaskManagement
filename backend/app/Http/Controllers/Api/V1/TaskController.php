@@ -454,6 +454,17 @@ class TaskController extends Controller
                             'assigned_at' => now(),
                         ]);
 
+                        $assigneeModel = User::find($assigneeId);
+                        TaskStatusHistory::create([
+                            'task_id' => $task->id,
+                            'task_branch_id' => $branch->id,
+                            'from_status' => null,
+                            'to_status' => 'in_progress',
+                            'changed_by_id' => $user->id,
+                            'reason' => "Subtask '{$branch->title}' assigned to " . ($assigneeModel?->name ?? 'team member'),
+                            'changed_at' => now(),
+                        ]);
+
                         // Handle individual files attached to this specific branch/subtask
                         $branchFiles = $request->file("branches.{$bIndex}.files")
                             ?? $request->file("branch_files.{$assigneeId}")
@@ -532,6 +543,17 @@ class TaskController extends Controller
                             'assigned_by_id' => $user->id,
                             'is_current' => true,
                             'assigned_at' => now(),
+                        ]);
+
+                        $assigneeModel = User::find($assigneeId);
+                        TaskStatusHistory::create([
+                            'task_id' => $task->id,
+                            'task_branch_id' => $branch->id,
+                            'from_status' => null,
+                            'to_status' => 'in_progress',
+                            'changed_by_id' => $user->id,
+                            'reason' => "Subtask '{$branch->title}' assigned to " . ($assigneeModel?->name ?? 'team member'),
+                            'changed_at' => now(),
                         ]);
 
                         if ($assigneeId !== $user->id) {
@@ -668,6 +690,17 @@ class TaskController extends Controller
                             'assigned_by_id' => $user->id,
                             'is_current' => true,
                             'assigned_at' => now(),
+                        ]);
+
+                        $assigneeModel = User::find($assigneeId);
+                        TaskStatusHistory::create([
+                            'task_id' => $task->id,
+                            'task_branch_id' => $branch->id,
+                            'from_status' => null,
+                            'to_status' => 'in_progress',
+                            'changed_by_id' => $user->id,
+                            'reason' => "Subtask '{$branch->title}' assigned to " . ($assigneeModel?->name ?? 'team member'),
+                            'changed_at' => now(),
                         ]);
 
                         // Attach collaborators to this branch

@@ -2226,6 +2226,7 @@ export const TaskDetailPage: React.FC = () => {
                   else if (item.to_status === 'review') dotColor = 'bg-amber-500';
                   else if (item.to_status === 'post_comment') dotColor = 'bg-rose-500';
                   else if (item.to_status === 'on_hold') dotColor = 'bg-orange-500';
+                  else if (item.reason?.toLowerCase().includes('assigned')) dotColor = 'bg-sky-500';
 
                   return (
                     <div key={item.id} className="relative group">
@@ -2246,7 +2247,7 @@ export const TaskDetailPage: React.FC = () => {
                             )}
                           </div>
                           <span className="text-[11px] font-medium text-slate-400">
-                            {new Date(item.changed_at).toLocaleString()}
+                            {item.changed_at ? new Date(item.changed_at).toLocaleString() : ''}
                           </span>
                         </div>
 
