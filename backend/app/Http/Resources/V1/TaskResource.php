@@ -210,6 +210,37 @@ class TaskResource extends JsonResource
             }
         }
 
+        // Bottom-Up Hierarchy Dependency:
+        // An intermediate assigner who has delegated subtasks to team members below them
+        // CANNOT submit their own work deliverables upward until all delegated subtasks are completed and approved!
+        $userBranchIds = $userActiveBranch ? [$userActiveBranch->id] : ($user ? $this->branches->where('owner_id', $user->id)->pluck('id')->all() : []);
+
+        $delegatedChildBranches = $this->branches->filter(function ($b) use ($user, $userBranchIds) {
+            if (!$user) return false;
+            if ((int)$b->owner_id === (int)$user->id) return false;
+            if ($b->status === 'cancelled') return false;
+
+            if ($b->parent_assignment_id && $b->parentAssignment && in_array($b->parentAssignment->task_branch_id, $userBranchIds)) {
+                return true;
+            }
+
+            $curAssign = $b->assignments->firstWhere('is_current', true);
+            if ($curAssign && (int)$curAssign->assigned_by_id === (int)$user->id) {
+                return true;
+            }
+
+            return false;
+        });
+
+        $uncompletedChildBranches = $delegatedChildBranches->filter(fn($b) => $b->status !== 'completed');
+        $hasUncompletedDelegatedBranches = $uncompletedChildBranches->isNotEmpty();
+
+        $cannotSubmitReason = null;
+        if ($canSubmit && $hasUncompletedDelegatedBranches) {
+            $canSubmit = false;
+            $cannotSubmitReason = "You have {$uncompletedChildBranches->count()} delegated subtask(s) still in progress or awaiting your review. Under workflow policy, you must review and approve all subordinate deliverables before submitting to your assigner.";
+        }
+
         // Review permissions:
         // A user can review IF there is an active review needed, AND:
         // - Submitter CANNOT review their own submission!
@@ -402,6 +433,8 @@ class TaskResource extends JsonResource
                 ] : null,
                 'share_parent_details' => $userActiveBranch->share_parent_details ?? true,
                 'can_assign_further' => ($branchMeta[$userActiveBranch->id]['level'] ?? 2) < 4 && ($userActiveBranch->can_assign_further ?? true),
+                'has_uncompleted_delegated_subtasks' => $hasUncompletedDelegatedBranches,
+                'uncompleted_delegated_subtasks_count' => $uncompletedChildBranches->count(),
                 'attachments' => $this->attachments->where('task_branch_id', $userActiveBranch->id)->values()->map(fn($att) => $this->formatAttachment($att)),
                 'submissions' => $this->submissions->where('task_branch_id', $userActiveBranch->id)->sortByDesc('submitted_at')->values()->map(fn($sub) => [
                     'id' => $sub->id,
@@ -424,6 +457,19 @@ class TaskResource extends JsonResource
                     ]),
                 ]),
             ] : null,
+            'delegation_prerequisites' => [
+                'has_delegated_subtasks' => $delegatedChildBranches->isNotEmpty(),
+                'has_uncompleted_subtasks' => $hasUncompletedDelegatedBranches,
+                'uncompleted_count' => $uncompletedChildBranches->count(),
+                'pending_review_count' => $uncompletedChildBranches->where('status', 'review')->count(),
+                'in_progress_count' => $uncompletedChildBranches->whereIn('status', ['pending', 'in_progress', 'post_comment'])->count(),
+                'subtasks' => $uncompletedChildBranches->map(fn($b) => [
+                    'id' => $b->id,
+                    'title' => $b->title,
+                    'owner_name' => $b->owner?->name ?? 'Teammate',
+                    'status' => $b->status,
+                ])->values()->all(),
+            ],
             'branches' => $visibleBranches->map(function ($branch) use ($branchMeta) {
                 $meta = $branchMeta[$branch->id] ?? [
                     'level' => 2,
@@ -627,6 +673,7 @@ class TaskResource extends JsonResource
             'permissions' => [
                 'can_edit' => $canEdit,
                 'can_submit' => $canSubmit,
+                'cannot_submit_reason' => $cannotSubmitReason,
                 'can_review' => $canReview,
                 'can_final_submit' => $canFinalSubmit,
                 'can_request_details' => $canRequestDetails,

@@ -139,7 +139,22 @@ export interface Task {
     submissions?: TaskSubmission[];
     share_parent_details?: boolean;
     can_assign_further?: boolean;
+    has_uncompleted_delegated_subtasks?: boolean;
+    uncompleted_delegated_subtasks_count?: number;
   } | null;
+  delegation_prerequisites?: {
+    has_delegated_subtasks: boolean;
+    has_uncompleted_subtasks: boolean;
+    uncompleted_count: number;
+    pending_review_count: number;
+    in_progress_count: number;
+    subtasks: Array<{
+      id: number;
+      title: string;
+      owner_name: string;
+      status: string;
+    }>;
+  };
   branches: TaskBranch[];
   collaborators: UserSummary[];
   comments: TaskComment[];
@@ -163,6 +178,7 @@ export interface Task {
   permissions: {
     can_edit: boolean;
     can_submit: boolean;
+    cannot_submit_reason?: string | null;
     can_review: boolean;
     can_final_submit: boolean;
     can_request_details?: boolean;

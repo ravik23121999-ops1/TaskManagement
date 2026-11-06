@@ -845,6 +845,7 @@ class TaskController extends Controller
                 'department',
                 'branches.owner',
                 'branches.assignments.assignedBy',
+                'branches.parentAssignment.branch',
                 'branches.collaborators.user',
                 'branches.collaborators.invitedBy',
                 'comments.user',

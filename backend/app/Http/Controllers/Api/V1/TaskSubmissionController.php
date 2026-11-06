@@ -125,6 +125,47 @@ class TaskSubmissionController extends Controller
                     return response()->json(['message' => 'Unauthorized: Only the assigned owner can submit this work'], 403);
                 }
 
+                // Industry Working Rule (Bottom-Up Hierarchy Dependency):
+                // An intermediate assigner CANNOT submit their own branch work upwards to their assigner
+                // until all subtasks delegated by them to team members below them are completed and approved!
+                $userBranchIds = [$branch->id];
+                $allBranches = $task->branches()->with(['parentAssignment', 'assignments', 'owner'])->get();
+
+                $uncompletedChildBranches = $allBranches->filter(function ($b) use ($user, $userBranchIds) {
+                    if ((int)$b->owner_id === (int)$user->id) return false;
+                    if ($b->status === 'cancelled' || $b->status === 'completed') return false;
+
+                    // Direct parent assignment link
+                    if ($b->parent_assignment_id && $b->parentAssignment && in_array($b->parentAssignment->task_branch_id, $userBranchIds)) {
+                        return true;
+                    }
+
+                    // Assigned by this user
+                    $curAssign = $b->assignments->firstWhere('is_current', true);
+                    if ($curAssign && (int)$curAssign->assigned_by_id === (int)$user->id) {
+                        return true;
+                    }
+
+                    return false;
+                });
+
+                if ($uncompletedChildBranches->isNotEmpty()) {
+                    $pendingSummary = $uncompletedChildBranches->map(function ($b) {
+                        $state = $b->status === 'review' ? 'Awaiting Your Review' : ($b->status === 'post_comment' ? 'Needs Revision' : 'In Progress');
+                        return "'{$b->title}' (" . ($b->owner?->name ?? 'Assignee') . " - {$state})";
+                    })->implode(', ');
+
+                    return response()->json([
+                        'message' => "Cannot submit work deliverables: You have delegated subtask(s) that are not yet completed or approved: [{$pendingSummary}]. Under workflow policy, you must review and approve all subordinate deliverables before submitting your work upward.",
+                        'pending_subtasks' => $uncompletedChildBranches->map(fn($b) => [
+                            'id' => $b->id,
+                            'title' => $b->title,
+                            'owner' => $b->owner?->name,
+                            'status' => $b->status,
+                        ])->values()->all(),
+                    ], 422);
+                }
+
                 $submission = TaskSubmission::create([
                     'task_id' => $task->id,
                     'task_branch_id' => $branch->id,
