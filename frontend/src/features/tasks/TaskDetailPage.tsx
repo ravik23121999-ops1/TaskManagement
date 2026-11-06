@@ -1201,6 +1201,41 @@ export const TaskDetailPage: React.FC = () => {
               </p>
             </div>
           </div>
+        ) : task.permissions.can_review && latestPendingSubmission ? (
+          <div className="mt-4 p-4 bg-purple-50/90 border border-purple-200 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs">
+            <div className="flex items-start gap-2.5">
+              <CheckCircle2 className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold text-purple-950">
+                  Deliverable Submitted — Ready for Your Review
+                </p>
+                <p className="text-purple-800 mt-0.5">
+                  {latestPendingSubmission.submitted_by?.name || 'Assignee'} submitted deliverables for review. Please review and approve to advance the task.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedSubmission(latestPendingSubmission);
+                setIsReviewModalOpen(true);
+              }}
+              className="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Check & Review Work</span>
+            </button>
+          </div>
+        ) : task.my_branch?.status === 'review' ? (
+          <div className="mt-4 p-4 bg-blue-50/90 border border-blue-200 rounded-xl flex items-center gap-3 text-xs shadow-2xs">
+            <Clock className="w-5 h-5 text-blue-600 shrink-0 animate-pulse" />
+            <div>
+              <p className="font-bold text-blue-950">Work Submitted — Awaiting Review</p>
+              <p className="text-blue-800 mt-0.5">
+                You have submitted your deliverables. This subtask is now waiting for <strong>{task.my_branch.assigned_by?.name || 'your assigner'}</strong> to review and approve.
+              </p>
+            </div>
+          </div>
         ) : null}
 
         {/* Modern Compact Lifecycle Stepper (Centered & Evenly Spaced) */}
@@ -1540,6 +1575,12 @@ export const TaskDetailPage: React.FC = () => {
                         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold shadow-2xs">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                           <span>Deliverables Approved & Completed</span>
+                        </div>
+                      )}
+                      {task.my_branch.status === 'review' && (
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-semibold shadow-2xs">
+                          <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+                          <span>Work Submitted · Awaiting Review by {task.my_branch.assigned_by?.name || 'Assigner'}</span>
                         </div>
                       )}
                       {task.status !== 'completed' && task.status !== 'cancelled' && task.my_branch.status !== 'completed' && (
@@ -1939,7 +1980,11 @@ export const TaskDetailPage: React.FC = () => {
                               size="sm"
                               customLabel={
                                 b.status === 'review'
-                                  ? `Under Review: ${b.assigned_by?.name || task.creator?.name || 'Assigner'}`
+                                  ? (currentUser?.id === b.assigned_by?.id
+                                      ? 'Awaiting Your Review'
+                                      : currentUser?.id === b.owner?.id
+                                      ? `Submitted · Awaiting Review by ${b.assigned_by?.name || 'Assigner'}`
+                                      : `Awaiting Review by ${b.assigned_by?.name || task.creator?.name || 'Assigner'}`)
                                   : b.status === 'post_comment'
                                   ? 'Needs Correction'
                                   : undefined
@@ -2145,7 +2190,7 @@ export const TaskDetailPage: React.FC = () => {
       {/* ======================================================== */}
       {activeTab === 'comments' && (
         <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
-          <h2 className="text-sm font-bold text-slate-900">Task Discussion & Review Notes</h2>
+          <h2 className="text-sm font-bold text-slate-900">Task Discussion & Team Notes</h2>
 
           {/* Assigner / Delegator Direct Communication Banner */}
           {(() => {
@@ -2158,7 +2203,7 @@ export const TaskDetailPage: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-sky-600 shrink-0" />
                   <span>
-                    Need clarification or something missing? Post a comment to discuss directly with your assigner (<strong>{assigner.name}</strong>).
+                    Need clarification or questions? Post comments here to discuss directly with <strong>{assigner.name}</strong>. (To formally approve deliverables, use the Review button).
                   </span>
                 </div>
               </div>
