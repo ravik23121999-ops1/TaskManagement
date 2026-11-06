@@ -36,16 +36,34 @@ class StoreTaskRequest extends FormRequest
             'branches.*.start_date' => ['nullable', 'date'],
             'branches.*.due_date' => ['nullable', 'date'],
             'branches.*.files' => ['nullable', 'array'],
-            'branches.*.files.*' => ['file', 'max:10240', 'mimes:pdf,doc,docx,xls,xlsx,png,jpg,jpeg'],
+            'branches.*.files.*' => ['file', 'max:25600', 'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar,7z,jpg,jpeg,png,gif,webp,svg,mp4,webm'],
             'branches.*.copied_shared_attachment_ids' => ['nullable', 'array'],
             'branches.*.copied_shared_attachment_ids.*' => ['integer'],
             'branch_files' => ['nullable', 'array'],
             'branch_files.*' => ['nullable', 'array'],
-            'branch_files.*.*' => ['file', 'max:10240', 'mimes:pdf,doc,docx,xls,xlsx,png,jpg,jpeg'],
+            'branch_files.*.*' => ['file', 'max:25600', 'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar,7z,jpg,jpeg,png,gif,webp,svg,mp4,webm'],
             'files' => ['nullable', 'array'],
-            'files.*' => ['file', 'max:10240', 'mimes:pdf,doc,docx,xls,xlsx,png,jpg,jpeg'],
+            'files.*' => ['file', 'max:25600', 'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar,7z,jpg,jpeg,png,gif,webp,svg,mp4,webm'],
             'shared_files' => ['nullable', 'array'],
-            'shared_files.*' => ['file', 'max:10240', 'mimes:pdf,doc,docx,xls,xlsx,png,jpg,jpeg'],
+            'shared_files.*' => ['file', 'max:25600', 'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar,7z,jpg,jpeg,png,gif,webp,svg,mp4,webm'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'branches.*.files.*.max' => 'Subtask attachment exceeds the maximum allowed size (25MB).',
+            'branches.*.files.*.uploaded' => 'A subtask attachment failed to upload. Please ensure the file size is under 25MB.',
+            'branches.*.files.*.mimes' => 'Subtask attachment must be a supported document, image, or archive file.',
+            'branch_files.*.*.max' => 'Subtask attachment exceeds the maximum allowed size (25MB).',
+            'branch_files.*.*.uploaded' => 'A subtask attachment failed to upload. Please ensure the file size is under 25MB.',
+            'branch_files.*.*.mimes' => 'Subtask attachment must be a supported document, image, or archive file.',
+            'shared_files.*.max' => 'Shared attachment exceeds the maximum allowed size (25MB).',
+            'shared_files.*.uploaded' => 'Shared attachment failed to upload. Please ensure the file size is under 25MB.',
+            'shared_files.*.mimes' => 'Shared attachment must be a supported document, image, or archive file.',
+            'files.*.max' => 'Task attachment exceeds the maximum allowed size (25MB).',
+            'files.*.uploaded' => 'Task attachment failed to upload. Please ensure the file size is under 25MB.',
+            'files.*.mimes' => 'Task attachment must be a supported document, image, or archive file.',
         ];
     }
 

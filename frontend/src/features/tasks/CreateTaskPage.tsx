@@ -36,8 +36,12 @@ interface IndividualAssignment {
   can_assign_further: boolean;
 }
 
-const ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg'];
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_EXTENSIONS = [
+  '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
+  '.png', '.jpg', '.jpeg', '.webp', '.svg',
+  '.txt', '.csv', '.zip', '.rar', '.7z'
+];
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 
 export const CreateTaskPage: React.FC = () => {
   const navigate = useNavigate();
@@ -125,10 +129,10 @@ export const CreateTaskPage: React.FC = () => {
   const validateFile = (file: File): string | null => {
     const ext = '.' + file.name.split('.').pop()?.toLowerCase();
     if (!ALLOWED_EXTENSIONS.includes(ext)) {
-      return `File type ${ext} is not supported. Supported types: PDF, DOC, DOCX, XLS, XLSX, PNG, JPG, JPEG.`;
+      return `File type ${ext} is not supported. Supported types: PDF, Word, Excel, PowerPoint, Images, ZIP archives, Text.`;
     }
     if (file.size > MAX_FILE_SIZE) {
-      return `File ${file.name} exceeds the maximum size of 10MB.`;
+      return `File ${file.name} exceeds the maximum size of 25MB.`;
     }
     return null;
   };
@@ -404,7 +408,6 @@ export const CreateTaskPage: React.FC = () => {
             if (work.files && work.files.length > 0) {
               work.files.forEach((bf) => {
                 formData.append(`branches[${idx}][files][]`, bf);
-                formData.append(`branch_files[${u.id}][]`, bf);
               });
             }
           });

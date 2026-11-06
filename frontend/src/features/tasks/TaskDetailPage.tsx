@@ -412,7 +412,6 @@ export const TaskDetailPage: React.FC = () => {
             if (work.files && work.files.length > 0) {
               work.files.forEach((file) => {
                 formData.append(`branches[${idx}][files][]`, file);
-                formData.append(`branch_files[${uid}][]`, file);
               });
             }
           });
