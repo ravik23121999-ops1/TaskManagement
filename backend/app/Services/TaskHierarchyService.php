@@ -294,4 +294,105 @@ class TaskHierarchyService
 
         return 4;
     }
+
+    /**
+     * Determine active current owners according to industry bottom-up delegation rules:
+     * 1. Work alone, completed task, or empty branches: Task Creator is the current owner.
+     * 2. All branches completed: Task Creator is the current owner (ready for final sign-off).
+     * 3. When subtasks are delegated:
+     *    - An assignee who has NOT assigned further is an active current owner (holding the work).
+     *    - An assigner who DID assign further is NOT a current owner while their subordinate assignees are working.
+     *    - When the assigner has reviewed and approved all subordinate assignees' tasks,
+     *      then AFTER approval, the assigner BECOMES the current owner (ready to submit their deliverable upward).
+     */
+    public static function determineCurrentOwners(Task $task, ?Collection $branches = null): array
+    {
+        $allBranches = ($branches ?? $task->branches)->filter(fn($b) => $b->status !== 'cancelled');
+
+        if ($task->handling_method === 'work_alone' || $task->status === 'completed' || $allBranches->isEmpty()) {
+            return $task->creator ? [$task->creator] : [];
+        }
+
+        // If all active branches of the entire task are completed & approved, ownership returns to Creator for final sign-off
+        $uncompletedBranches = $allBranches->filter(fn($b) => $b->status !== 'completed');
+        if ($uncompletedBranches->isEmpty()) {
+            return $task->creator ? [$task->creator] : [];
+        }
+
+        // Map parent assignments to parent branch IDs
+        $branchesById = $allBranches->keyBy('id');
+        $parentBranchMap = [];
+
+        foreach ($allBranches as $branch) {
+            $parentAssignmentId = $branch->parent_assignment_id;
+            if ($parentAssignmentId) {
+                $parentAssignment = $branch->relationLoaded('parentAssignment')
+                    ? $branch->parentAssignment
+                    : $branch->parentAssignment()->first();
+
+                if ($parentAssignment && isset($branchesById[$parentAssignment->task_branch_id])) {
+                    $parentBranchMap[$branch->id] = $parentAssignment->task_branch_id;
+                }
+            }
+        }
+
+        // Recursive helper to get all descendant branches under a given branch
+        $getDescendants = function ($parentId) use (&$getDescendants, $allBranches, $parentBranchMap) {
+            $directChildren = $allBranches->filter(function ($b) use ($parentId, $parentBranchMap) {
+                if (($parentBranchMap[$b->id] ?? null) === $parentId) {
+                    return true;
+                }
+                if ($b->parent_assignment_id && $b->parentAssignment && (int)$b->parentAssignment->task_branch_id === (int)$parentId) {
+                    return true;
+                }
+                return false;
+            });
+
+            $descendants = collect();
+            foreach ($directChildren as $child) {
+                $descendants->push($child);
+                $descendants = $descendants->merge($getDescendants($child->id));
+            }
+            return $descendants->unique('id');
+        };
+
+        $currentOwners = collect();
+
+        foreach ($allBranches as $branch) {
+            // Completed branches have already delivered their work; their owners are no longer active
+            if ($branch->status === 'completed' || $branch->status === 'cancelled') {
+                continue;
+            }
+
+            if (!$branch->owner) {
+                continue;
+            }
+
+            $descendants = $getDescendants($branch->id);
+
+            if ($descendants->isEmpty()) {
+                // Leaf assignment: Assignee who has NOT assigned further is an active current owner
+                $currentOwners->push($branch->owner);
+            } else {
+                // Has delegated to subordinates:
+                // Assigner is NOT current owner while subordinate assignees are working.
+                // Assigner BECOMES current owner ONLY AFTER reviewing and approving all subordinate deliverables.
+                $uncompletedDescendants = $descendants->filter(fn($c) => $c->status !== 'completed' && $c->status !== 'cancelled');
+
+                if ($uncompletedDescendants->isEmpty()) {
+                    // All subordinates below this assigner are approved & completed!
+                    // This assigner now holds the work to submit upward.
+                    $currentOwners->push($branch->owner);
+                }
+            }
+        }
+
+        $uniqueOwners = $currentOwners->unique('id')->values()->all();
+
+        if (empty($uniqueOwners) && $task->creator) {
+            return [$task->creator];
+        }
+
+        return $uniqueOwners;
+    }
 }

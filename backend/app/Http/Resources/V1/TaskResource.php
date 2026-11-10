@@ -42,80 +42,24 @@ class TaskResource extends JsonResource
         $completedBranchCount = $activeBranches->filter(fn($b) => $b->status === 'completed')->count();
         $allBranchesCompleted = ($totalBranchCount > 0 && $completedBranchCount === $totalBranchCount);
 
-        // Calculate current owner / responsibility
-        $currentOwner = null;
-        $currentOwners = [];
+        // Calculate current owner / responsibility based on industry bottom-up delegation rules:
+        // 1. Assignee is owner if they have not assigned further.
+        // 2. Assigner is owner if they have not assigned further.
+        // 3. Assigner who delegated further is NOT owner while subordinates are working.
+        // 4. Assigner BECOMES owner after reviewing and approving subordinate assignees' tasks.
+        // 5. Creator is owner when all branches are completed or handling method is work_alone.
+        $rawOwners = \App\Services\TaskHierarchyService::determineCurrentOwners($this->resource, $allBranches);
 
-        if ($this->handling_method === 'work_alone' || $this->status === 'completed' || $allBranchesCompleted) {
-            $creatorData = $this->creator ? [
-                'id' => $this->creator->id,
-                'name' => $this->creator->name,
-                'email' => $this->creator->email,
-                'role' => $this->creator->role,
-            ] : null;
-            $currentOwner = $creatorData;
-            $currentOwners = $creatorData ? [$creatorData] : [];
-        } else {
-            // If the viewer has an active branch they are actively working on:
-            if (!$canOverseeAll && $userActiveBranch && in_array($userActiveBranch->status, ['pending', 'in_progress', 'post_comment']) && $userActiveBranch->owner) {
-                $currentOwner = [
-                    'id' => $userActiveBranch->owner->id,
-                    'name' => $userActiveBranch->owner->name,
-                    'email' => $userActiveBranch->owner->email,
-                    'role' => $userActiveBranch->owner->role,
-                ];
-                $currentOwners = [$currentOwner];
-            } elseif (!$canOverseeAll && $userActiveBranch && $userActiveBranch->status === 'review') {
-                // Assignee submitted work, currently awaiting review from assigner
-                $assigner = $userActiveBranch->assignments->firstWhere('is_current', true)?->assignedBy ?? $this->creator;
-                if ($assigner) {
-                    $currentOwner = [
-                        'id' => $assigner->id,
-                        'name' => $assigner->name,
-                        'email' => $assigner->email,
-                        'role' => $assigner->role,
-                    ];
-                    $currentOwners = [$currentOwner];
-                }
-            } else {
-                // Assignee's branch is completed, OR user can oversee all branches:
-                // Find all active / non-completed branches
-                $activeBranches = $visibleBranches->filter(function ($b) {
-                    return !in_array($b->status, ['completed', 'cancelled']);
-                });
+        $currentOwners = array_values(array_map(function ($u) {
+            return [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'role' => $u->role,
+            ];
+        }, $rawOwners));
 
-                if ($activeBranches->isEmpty()) {
-                    $activeBranches = $allBranches->filter(function ($b) {
-                        return !in_array($b->status, ['completed', 'cancelled']);
-                    });
-                }
-
-                $seenOwnerIds = [];
-                foreach ($activeBranches as $branch) {
-                    if ($branch->owner && !isset($seenOwnerIds[$branch->owner->id])) {
-                        $seenOwnerIds[$branch->owner->id] = true;
-                        $currentOwners[] = [
-                            'id' => $branch->owner->id,
-                            'name' => $branch->owner->name,
-                            'email' => $branch->owner->email,
-                            'role' => $branch->owner->role,
-                        ];
-                    }
-                }
-
-                if (!empty($currentOwners)) {
-                    $currentOwner = $currentOwners[0];
-                } elseif ($this->creator) {
-                    $currentOwner = [
-                        'id' => $this->creator->id,
-                        'name' => $this->creator->name,
-                        'email' => $this->creator->email,
-                        'role' => $this->creator->role,
-                    ];
-                    $currentOwners = [$currentOwner];
-                }
-            }
-        }
+        $currentOwner = $currentOwners[0] ?? null;
 
         // Calculate progress percentage
         $progress = 0;

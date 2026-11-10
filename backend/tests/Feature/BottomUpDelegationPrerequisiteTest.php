@@ -58,6 +58,15 @@ class BottomUpDelegationPrerequisiteTest extends TestCase
             'assigned_at' => now(),
         ]);
 
+        // Verify Current Owner after delegation:
+        // Lead delegated further to executor, so Lead is NOT current owner while executor is working.
+        // Current owner is strictly the active assignee (Executor Neha).
+        $taskResAfterDelegation = $this->actingAs($creator)->getJson("/api/tasks/{$task->id}");
+        $taskResAfterDelegation->assertStatus(200);
+        $this->assertEquals($executor->id, $taskResAfterDelegation->json('data.current_owner.id'));
+        $this->assertCount(1, $taskResAfterDelegation->json('data.current_owners'));
+        $this->assertEquals($executor->id, $taskResAfterDelegation->json('data.current_owners.0.id'));
+
         // 3. Lead attempts to submit work deliverables while child branch is still in_progress
         $leadAttempt1 = $this->actingAs($lead)->postJson("/api/tasks/{$task->id}/submit", [
             'description' => 'Lead trying to submit prematurely',
@@ -96,6 +105,15 @@ class BottomUpDelegationPrerequisiteTest extends TestCase
         ]);
         $reviewResponse->assertStatus(201);
         $this->assertEquals('completed', $childBranch->fresh()->status);
+
+        // Verify Current Owner after Lead approves Executor's work:
+        // Executor's task is completed & approved.
+        // Lead now holds the deliverable to submit upward, so Lead BECOMES the current owner!
+        $taskResAfterApproval = $this->actingAs($creator)->getJson("/api/tasks/{$task->id}");
+        $taskResAfterApproval->assertStatus(200);
+        $this->assertEquals($lead->id, $taskResAfterApproval->json('data.current_owner.id'));
+        $this->assertCount(1, $taskResAfterApproval->json('data.current_owners'));
+        $this->assertEquals($lead->id, $taskResAfterApproval->json('data.current_owners.0.id'));
 
         // 7. Now that child branch is approved & completed, Lead submits deliverables upward -> SUCCESS!
         $leadAttempt3 = $this->actingAs($lead)->postJson("/api/tasks/{$task->id}/submit", [

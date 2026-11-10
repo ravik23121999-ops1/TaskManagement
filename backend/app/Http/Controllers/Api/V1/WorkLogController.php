@@ -362,7 +362,8 @@ class WorkLogController extends Controller
         $paginated = $query->latest('id')->paginate($perPage, ['*'], 'page', $page);
 
         $data = collect($paginated->items())->map(function ($task) {
-            $currentOwner = $task->branches->first()?->owner ?? $task->creator;
+            $owners = \App\Services\TaskHierarchyService::determineCurrentOwners($task);
+            $currentOwner = $owners[0] ?? $task->creator;
             return [
                 'task' => [
                     'id' => $task->id,
@@ -679,7 +680,8 @@ class WorkLogController extends Controller
             'holdRecords.putOnHoldBy',
         ]);
 
-        $currentOwner = $task->branches->first()?->owner ?? $task->creator;
+        $owners = \App\Services\TaskHierarchyService::determineCurrentOwners($task);
+        $currentOwner = $owners[0] ?? $task->creator;
 
         // 1. All Communications (Comments)
         $comments = TaskComment::where('task_id', $task->id)
