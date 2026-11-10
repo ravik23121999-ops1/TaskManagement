@@ -19,10 +19,10 @@ class TaskResource extends JsonResource
         $userActiveBranch = $user ? ($this->branches->firstWhere('owner_id', $user->id)
             ?? $this->branches->first(fn($b) => $b->assignments->contains('assigned_to_id', $user->id) || $b->collaborators->contains('user_id', $user->id))) : null;
 
-        // When a user is assigned to a specific branch/subtask as an assignee,
-        // they strictly act as an assignee on this task (even if their account has sub_admin/admin role).
-        $isAssignee = $userActiveBranch && !$isCreator;
-        $canOverseeAll = $isCreator || ($isAdmin && !$isAssignee);
+        // An employee assigned to a branch acts as an isolated assignee.
+        // Administrators and Sub-Administrators, like the Task Creator, retain organizational oversight.
+        $isAssignee = $userActiveBranch && !$isCreator && !$isAdmin;
+        $canOverseeAll = $isCreator || $isAdmin;
 
         // Strict Peer Isolation:
         // A peer assignee or collaborator must NEVER see another peer's branch work, instructions, or deliverables!

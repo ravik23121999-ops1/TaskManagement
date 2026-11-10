@@ -1335,6 +1335,16 @@ class TaskController extends Controller
                 );
 
                 $assigneeModel = User::find($assigneeId);
+                TaskStatusHistory::create([
+                    'task_id' => $task->id,
+                    'task_branch_id' => $userBranch->id,
+                    'from_status' => $userBranch->status,
+                    'to_status' => 'in_progress',
+                    'changed_by_id' => $user->id,
+                    'reason' => "Subtask '{$userBranch->title}' reassigned to " . ($assigneeModel?->name ?? 'team member'),
+                    'changed_at' => now(),
+                ]);
+
                 if ($assigneeModel) {
                     TaskAssignedMail::safeSend($task, $assigneeModel, $user, $userBranch, null, 'new_assignment');
                 }
@@ -1449,6 +1459,17 @@ class TaskController extends Controller
                 }
             }
 
+            $assigneeModel = User::find($assigneeId);
+            TaskStatusHistory::create([
+                'task_id' => $task->id,
+                'task_branch_id' => $branch->id,
+                'from_status' => null,
+                'to_status' => 'in_progress',
+                'changed_by_id' => $user->id,
+                'reason' => "Subtask '{$branch->title}' assigned to " . ($assigneeModel?->name ?? 'team member'),
+                'changed_at' => now(),
+            ]);
+
             SendTaskNotification::dispatch(
                 $assigneeId,
                 'task_assigned',
@@ -1458,7 +1479,6 @@ class TaskController extends Controller
                 $branch->id
             );
 
-            $assigneeModel = User::find($assigneeId);
             if ($assigneeModel) {
                 TaskAssignedMail::safeSend($task, $assigneeModel, $user, $branch, null, 'new_assignment');
             }

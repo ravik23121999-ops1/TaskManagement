@@ -2549,6 +2549,100 @@ export const TaskDetailPage: React.FC = () => {
               </span>
             </div>
 
+            {/* Active Parallel Stages Banner: Side-by-Side tracks for concurrent assignees (e.g. Checker & Reviewer) */}
+            {(() => {
+              const activeBranches = (task.branches || []).filter(
+                (b) => b.status !== 'cancelled'
+              );
+              if (activeBranches.length <= 1 || task.status === 'completed' || task.status === 'cancelled') {
+                return null;
+              }
+
+              return (
+                <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-blue-50/90 via-indigo-50/60 to-purple-50/80 border border-blue-100 shadow-xs">
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-2 w-2 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+                      </span>
+                      <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                        Active Parallel Workflow Stages ({activeBranches.filter((b) => b.status !== 'completed').length} Concurrent Tracks)
+                      </h4>
+                    </div>
+                    <span className="text-[10px] font-bold text-blue-700 bg-blue-100/80 px-2.5 py-0.5 rounded-full border border-blue-200">
+                      Side-by-Side Execution
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {activeBranches.map((branch, bIdx) => {
+                      const isBranchDone = branch.status === 'completed';
+                      const isBranchReview = branch.status === 'review';
+                      const isBranchReturned = branch.status === 'post_comment';
+
+                      return (
+                        <div
+                          key={branch.id}
+                          className={`p-3.5 rounded-xl border transition-all ${
+                            isBranchDone
+                              ? 'bg-emerald-50/70 border-emerald-200 shadow-2xs'
+                              : isBranchReview
+                              ? 'bg-amber-50/70 border-amber-200 ring-1 ring-amber-300/50 shadow-2xs'
+                              : 'bg-white border-blue-200 shadow-xs ring-1 ring-blue-100/70'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2 mb-1.5">
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-2xs">
+                                {branch.owner?.name?.charAt(0) || `T${bIdx + 1}`}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-xs font-bold text-slate-900 truncate">
+                                  {branch.owner?.name || 'Unassigned'}
+                                </div>
+                                <div className="text-[10px] text-slate-500 truncate font-medium">
+                                  Track {bIdx + 1}: {branch.title}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="shrink-0">
+                              {isBranchDone ? (
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1">
+                                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                                  Completed
+                                </span>
+                              ) : isBranchReview ? (
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 inline-flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                                  Under Review
+                                </span>
+                              ) : isBranchReturned ? (
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-200 inline-flex items-center gap-1">
+                                  <RotateCcw className="w-2.5 h-2.5" />
+                                  Needs Revision
+                                </span>
+                              ) : (
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200 inline-flex items-center gap-1">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                                  Current Stage
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="text-[11px] text-slate-600 line-clamp-1 mt-1 pl-9">
+                            {branch.description || branch.expected_result || 'Subtask assigned & currently in progress.'}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
             <div className="relative pl-6 sm:pl-9 border-l-2 border-slate-200/90 space-y-5 my-4 ml-3 sm:ml-4">
               {(() => {
                 const historyList = (task.status_history || []).slice().sort((a, b) => {
@@ -2619,7 +2713,25 @@ export const TaskDetailPage: React.FC = () => {
                     NodeIcon = PauseCircle;
                   }
 
-                  const isCurrentActiveStage = isLast && task.status !== 'completed' && task.status !== 'cancelled';
+                  // Check if this milestone corresponds to an active parallel subtask branch
+                  const matchingActiveBranch = (task.branches || []).find((b) => {
+                    if (b.status === 'completed' || b.status === 'cancelled') return false;
+                    const bOwnerName = b.owner?.name?.toLowerCase() || '';
+                    const bTitle = b.title?.toLowerCase() || '';
+                    return (
+                      (bOwnerName && rLower.includes(bOwnerName)) ||
+                      (bTitle && rLower.includes(bTitle))
+                    );
+                  });
+
+                  // If task is still open:
+                  // 1. Any milestone belonging to an uncompleted active subtask is an active Current Stage.
+                  // 2. In single-branch or work-alone mode, the last chronological milestone is the Current Stage.
+                  const isCurrentActiveStage =
+                    task.status !== 'completed' &&
+                    task.status !== 'cancelled' &&
+                    (Boolean(matchingActiveBranch) || (isLast && (!task.branches || task.branches.length <= 1)));
+
                   const isTaskCompleted = isLast && task.status === 'completed';
 
                   return (
