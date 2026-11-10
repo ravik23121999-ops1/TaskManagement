@@ -21,7 +21,7 @@ class StoreTaskRequest extends FormRequest
             'handling_method' => ['required', 'in:work_alone,assign,collaborate'],
             'priority' => ['nullable', 'in:low,medium,high,urgent'],
             'start_date' => ['nullable', 'date'],
-            'due_date' => ['nullable', 'date'],
+            'due_date' => ['required', 'date'],
             'department_id' => ['nullable', 'exists:departments,id'],
             'assignees' => ['nullable', 'array'],
             'assignees.*' => ['exists:users,id'],
@@ -86,16 +86,21 @@ class StoreTaskRequest extends FormRequest
                 }
             }
 
-            // Enforce rule: Subtask due date cannot exceed parent task due date
+            // Enforce rule: Subtask due date is mandatory and cannot exceed parent task due date
             $parentDueDate = $this->input('due_date');
-            if ($parentDueDate) {
-                $parentTimestamp = strtotime($parentDueDate);
-                $branches = (array) $this->input('branches', []);
+            $branches = (array) $this->input('branches', []);
+            if (!empty($branches)) {
+                $parentTimestamp = $parentDueDate ? strtotime($parentDueDate) : null;
                 foreach ($branches as $index => $branch) {
-                    if (!empty($branch['due_date'])) {
+                    $branchTitle = $branch['title'] ?? 'Subtask #' . ($index + 1);
+                    if (empty($branch['due_date'])) {
+                        $validator->errors()->add(
+                            "branches.{$index}.due_date",
+                            "The due date is mandatory for \"{$branchTitle}\"."
+                        );
+                    } elseif ($parentTimestamp) {
                         $branchTimestamp = strtotime($branch['due_date']);
                         if ($branchTimestamp > $parentTimestamp) {
-                            $branchTitle = $branch['title'] ?? 'Subtask #' . ($index + 1);
                             $validator->errors()->add(
                                 "branches.{$index}.due_date",
                                 "The subtask \"{$branchTitle}\" due date cannot be later than the parent task due date."

@@ -20,7 +20,7 @@ class UpdateTaskRequest extends FormRequest
             'acceptance_criteria' => ['sometimes', 'nullable', 'string'],
             'priority' => ['sometimes', 'in:low,medium,high,urgent'],
             'start_date' => ['sometimes', 'nullable', 'date'],
-            'due_date' => ['sometimes', 'nullable', 'date'],
+            'due_date' => ['sometimes', 'required', 'date'],
             'department_id' => ['sometimes', 'nullable', 'exists:departments,id'],
         ];
     }

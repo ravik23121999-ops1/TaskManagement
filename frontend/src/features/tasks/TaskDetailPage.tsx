@@ -388,6 +388,17 @@ export const TaskDetailPage: React.FC = () => {
               setSubmittingModal(false);
               return;
             }
+            if (!work?.due_date) {
+              setModalError(`Individual Due Date is mandatory for ${u?.name || 'employee'}.`);
+              setSubmittingModal(false);
+              return;
+            }
+            if (task.due_date && work.due_date && new Date(work.due_date) > new Date(task.due_date)) {
+              const maxDate = task.due_date.split('T')[0];
+              setModalError(`Individual Due Date for ${u?.name || 'employee'} cannot be later than the task due date (${maxDate}).`);
+              setSubmittingModal(false);
+              return;
+            }
           }
 
           selectedModalUserIds.forEach((uid, idx) => {
@@ -3228,10 +3239,12 @@ export const TaskDetailPage: React.FC = () => {
                               <div className="space-y-1">
                                 <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
                                   <span>Due Date</span>
+                                  <span className="text-rose-500">*</span>
                                 </label>
                                 <input
                                   type="date"
                                   value={work.due_date}
+                                  max={task?.due_date ? task.due_date.split('T')[0] : undefined}
                                   onChange={(e) => updateModalWork(uid, { due_date: e.target.value })}
                                   className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                                 />

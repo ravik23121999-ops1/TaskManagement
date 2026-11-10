@@ -73,6 +73,7 @@ class TaskWorkflowTest extends TestCase
             'description' => 'Write API documentation alone',
             'handling_method' => 'work_alone',
             'priority' => 'medium',
+            'due_date' => now()->addDays(7)->toDateString(),
         ]);
         $response->assertStatus(201);
         $taskId = $response->json('data.id');
@@ -100,6 +101,7 @@ class TaskWorkflowTest extends TestCase
             'description' => 'Please code feature A',
             'handling_method' => 'assign',
             'priority' => 'high',
+            'due_date' => now()->addDays(7)->toDateString(),
             'assignees' => [$this->employee2->id],
         ]);
         $response->assertStatus(201);
@@ -169,9 +171,10 @@ class TaskWorkflowTest extends TestCase
             'description' => 'Coordinate frontend and backend',
             'handling_method' => 'collaborate',
             'priority' => 'high',
+            'due_date' => now()->addDays(7)->toDateString(),
             'branches' => [
-                ['title' => 'Backend API', 'owner_id' => $this->employee1->id],
-                ['title' => 'Frontend UI', 'owner_id' => $this->employee2->id],
+                ['title' => 'Backend API', 'owner_id' => $this->employee1->id, 'due_date' => now()->addDays(7)->toDateString()],
+                ['title' => 'Frontend UI', 'owner_id' => $this->employee2->id, 'due_date' => now()->addDays(7)->toDateString()],
             ],
         ]);
         $response->assertStatus(201);
@@ -302,6 +305,7 @@ class TaskWorkflowTest extends TestCase
             'handling_method' => 'assign',
             'assignees' => [$this->employee2->id],
             'priority' => 'high',
+            'due_date' => now()->addDays(7)->toDateString(),
         ]);
         $createRes->assertStatus(201);
         $taskId = $createRes->json('data.id');
@@ -411,6 +415,7 @@ class TaskWorkflowTest extends TestCase
             'handling_method' => 'assign',
             'assignees' => [$this->employee1->id, $this->employee2->id],
             'priority' => 'high',
+            'due_date' => now()->addDays(7)->toDateString(),
         ]);
         $createRes->assertStatus(201);
         $taskId = $createRes->json('data.id');
@@ -448,6 +453,7 @@ class TaskWorkflowTest extends TestCase
             'title' => 'Self Assign Should Fail',
             'description' => 'Admin cannot assign to self under assign handling method',
             'handling_method' => 'assign',
+            'due_date' => now()->addDays(7)->toDateString(),
             'assignees' => [$this->admin->id],
         ]);
         $selfAssignRes->assertStatus(422)
@@ -458,6 +464,7 @@ class TaskWorkflowTest extends TestCase
             'title' => 'Assign Single Employee Task',
             'description' => 'Admin assigning to single employee',
             'handling_method' => 'assign',
+            'due_date' => now()->addDays(7)->toDateString(),
             'assignees' => [$this->employee1->id],
         ]);
         $singleAssignRes->assertStatus(201);
@@ -472,6 +479,7 @@ class TaskWorkflowTest extends TestCase
             'title' => 'Assign Multiple Employees Task',
             'description' => 'Admin assigning to multiple employees',
             'handling_method' => 'assign',
+            'due_date' => now()->addDays(7)->toDateString(),
             'assignees' => [$this->employee1->id, $this->employee2->id],
         ]);
         $multiAssignRes->assertStatus(201);
@@ -491,6 +499,7 @@ class TaskWorkflowTest extends TestCase
             'title' => 'Clarification vs Return Test',
             'description' => 'Test clarification supersession by return',
             'handling_method' => 'assign',
+            'due_date' => now()->addDays(7)->toDateString(),
             'assignees' => [$this->employee1->id],
         ]);
         $createRes->assertStatus(201);
@@ -568,6 +577,7 @@ class TaskWorkflowTest extends TestCase
             'title' => 'Alpha Active Project',
             'description' => 'Active task in progress',
             'handling_method' => 'work_alone',
+            'due_date' => now()->addDays(7)->toDateString(),
         ])->json('data');
 
         // Create a completed task
@@ -576,6 +586,7 @@ class TaskWorkflowTest extends TestCase
             'description' => 'Completed construction initiative',
             'status' => 'completed',
             'handling_method' => 'work_alone',
+            'due_date' => now()->addDays(7)->toDateString(),
             'creator_id' => $this->admin->id,
             'completed_at' => now(),
         ]);
@@ -605,6 +616,7 @@ class TaskWorkflowTest extends TestCase
             'title' => 'Multi Branch Cancel Test',
             'description' => 'Test completion when one branch is cancelled',
             'handling_method' => 'assign',
+            'due_date' => now()->addDays(7)->toDateString(),
             'assignees' => [$this->employee1->id, $this->employee2->id],
         ]);
         $createRes->assertStatus(201);
@@ -1081,5 +1093,52 @@ class TaskWorkflowTest extends TestCase
         $emp2Tasks = $this->actingAs($this->employee2)->getJson('/api/tasks?view=assigned_to_me');
         $emp2Tasks->assertStatus(200);
         $this->assertEquals(1, count($emp2Tasks->json('data')));
+    }
+
+    public function test_due_date_is_strictly_mandatory_for_parent_and_all_subtasks(): void
+    {
+        // 1. Creating task without due_date must fail with 422
+        $resWithoutDue = $this->actingAs($this->admin)->postJson('/api/tasks', [
+            'title' => 'Missing Due Date Task',
+            'description' => 'Should be rejected',
+            'handling_method' => 'work_alone',
+        ]);
+        $resWithoutDue->assertStatus(422)
+            ->assertJsonValidationErrors(['due_date']);
+
+        // 2. Creating subtasks without due_date must fail with 422
+        $resSubtaskWithoutDue = $this->actingAs($this->admin)->postJson('/api/tasks', [
+            'title' => 'Task With Subtasks',
+            'description' => 'Subtask missing due date',
+            'handling_method' => 'assign',
+            'due_date' => now()->addDays(5)->toDateString(),
+            'branches' => [
+                [
+                    'owner_id' => $this->employee1->id,
+                    'title' => 'Subtask 1',
+                    'description' => 'Missing branch due date',
+                ],
+            ],
+        ]);
+        $resSubtaskWithoutDue->assertStatus(422)
+            ->assertJsonValidationErrors(['branches.0.due_date']);
+
+        // 3. Subtask due_date later than parent due_date must fail with 422
+        $resSubtaskExceedsDue = $this->actingAs($this->admin)->postJson('/api/tasks', [
+            'title' => 'Task With Exceeded Subtask Deadline',
+            'description' => 'Subtask due date exceeds parent',
+            'handling_method' => 'assign',
+            'due_date' => now()->addDays(3)->toDateString(),
+            'branches' => [
+                [
+                    'owner_id' => $this->employee1->id,
+                    'title' => 'Subtask 1',
+                    'description' => 'Due date too late',
+                    'due_date' => now()->addDays(10)->toDateString(),
+                ],
+            ],
+        ]);
+        $resSubtaskExceedsDue->assertStatus(422)
+            ->assertJsonValidationErrors(['branches.0.due_date']);
     }
 }

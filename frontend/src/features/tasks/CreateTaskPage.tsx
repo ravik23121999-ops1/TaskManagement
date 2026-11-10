@@ -303,6 +303,10 @@ export const CreateTaskPage: React.FC = () => {
         setError('Task Description is required.');
         return;
       }
+      if (!dueDate) {
+        setError('Due Date is mandatory. Please select a valid task deadline.');
+        return;
+      }
       setCurrentStep(2);
     } else if (currentStep === 2) {
       if (handlingMethod === 'assign') {
@@ -326,8 +330,8 @@ export const CreateTaskPage: React.FC = () => {
               setError(`Individual Description is required for ${u.name}.`);
               return;
             }
-            if (!work.due_date && !dueDate) {
-              setError(`Due Date is required for ${u.name}.`);
+            if (!work.due_date) {
+              setError(`Individual Due Date is mandatory for ${u.name}.`);
               return;
             }
             if (dueDate && work.due_date && new Date(work.due_date) > new Date(dueDate)) {
@@ -346,6 +350,18 @@ export const CreateTaskPage: React.FC = () => {
             const work = assigneeWork[u.id];
             if (!work || !work.title.trim()) {
               setError(`Subtask Title is required for ${u.name}.`);
+              return;
+            }
+            if (!work.description?.trim()) {
+              setError(`Individual Description is required for ${u.name}.`);
+              return;
+            }
+            if (!work.due_date) {
+              setError(`Individual Due Date is mandatory for ${u.name}.`);
+              return;
+            }
+            if (dueDate && work.due_date && new Date(work.due_date) > new Date(dueDate)) {
+              setError(`Individual Due Date for ${u.name} cannot be later than the overall task due date (${dueDate}).`);
               return;
             }
           }
@@ -585,7 +601,9 @@ export const CreateTaskPage: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">Due Date</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                Due Date <span className="text-red-500">*</span>
+              </label>
               <input
                 type="date"
                 value={dueDate}

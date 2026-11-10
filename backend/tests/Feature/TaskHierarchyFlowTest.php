@@ -46,17 +46,20 @@ class TaskHierarchyFlowTest extends TestCase
             'description' => 'Main Task Description',
             'handling_method' => 'assign',
             'priority' => 'high',
+            'due_date' => now()->addDays(10)->toDateString(),
             'department_id' => $this->department->id,
             'branches' => [
                 [
                     'owner_id' => $this->leadA->id,
                     'title' => 'Frontend Module',
                     'description' => 'Aman Lead Frontend',
+                    'due_date' => now()->addDays(10)->toDateString(),
                 ],
                 [
                     'owner_id' => $this->leadB->id,
                     'title' => 'Backend Module',
                     'description' => 'Pooja Lead Backend',
+                    'due_date' => now()->addDays(10)->toDateString(),
                 ],
             ],
         ]);
@@ -92,11 +95,13 @@ class TaskHierarchyFlowTest extends TestCase
                     'owner_id' => $this->subLead1->id,
                     'title' => 'UI Development',
                     'description' => 'Rohit subtask',
+                    'due_date' => now()->addDays(5)->toDateString(),
                 ],
                 [
                     'owner_id' => $this->subLead2->id,
                     'title' => 'Integration & API',
                     'description' => 'Neha subtask',
+                    'due_date' => now()->addDays(5)->toDateString(),
                 ],
             ],
         ]);
@@ -121,11 +126,13 @@ class TaskHierarchyFlowTest extends TestCase
                     'owner_id' => $this->executor1->id,
                     'title' => 'UI Pages',
                     'description' => 'Karan execute UI pages',
+                    'due_date' => now()->addDays(3)->toDateString(),
                 ],
                 [
                     'owner_id' => $this->executor2->id,
                     'title' => 'Components',
                     'description' => 'Anjali execute components',
+                    'due_date' => now()->addDays(3)->toDateString(),
                 ],
             ],
         ]);
