@@ -4,6 +4,7 @@ namespace App\Http\Resources\V1;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Carbon\Carbon;
 
 class TaskResource extends JsonResource
 {
@@ -566,20 +567,49 @@ class TaskResource extends JsonResource
                 return in_array($att->task_branch_id, $visibleBranchIds);
             })->values()->map(fn($att) => $this->formatAttachment($att)),
             'status_history' => (function () {
-                $historyItems = $this->statusHistory->map(function ($h) {
+                $taskCreatedAt = $this->created_at ? (is_string($this->created_at) ? Carbon::parse($this->created_at) : $this->created_at) : now();
+
+                $historyItems = $this->statusHistory->map(function ($h) use ($taskCreatedAt) {
+                    $isTaskCreated = str_contains(strtolower($h->reason ?? ''), 'task created');
+                    $changedAt = $h->changed_at ? (is_string($h->changed_at) ? Carbon::parse($h->changed_at) : $h->changed_at) : $taskCreatedAt;
+
+                    // Ensure "Task created" uses task created_at so it is strictly anchored as Milestone #1
+                    if ($isTaskCreated && $taskCreatedAt) {
+                        $changedAt = $taskCreatedAt;
+                    }
+
                     return [
                         'id' => $h->id,
                         'from_status' => $h->from_status,
                         'to_status' => $h->to_status,
                         'reason' => $h->reason,
-                        'changed_at' => $h->changed_at ? (is_string($h->changed_at) ? $h->changed_at : $h->changed_at->toISOString()) : null,
+                        'changed_at' => $changedAt ? $changedAt->toISOString() : null,
                         'changed_by' => $h->changedBy ? [
                             'id' => $h->changedBy->id,
                             'name' => $h->changedBy->name,
                             'role' => $h->changedBy->role,
                         ] : null,
+                        '_is_task_created' => $isTaskCreated,
                     ];
                 });
+
+                // Guarantee "Task created" entry always exists
+                $hasTaskCreated = $historyItems->contains(fn($item) => !empty($item['_is_task_created']));
+                if (!$hasTaskCreated) {
+                    $historyItems->prepend([
+                        'id' => 'created_' . $this->id,
+                        'from_status' => null,
+                        'to_status' => 'in_progress',
+                        'reason' => 'Task created',
+                        'changed_at' => $taskCreatedAt ? $taskCreatedAt->toISOString() : null,
+                        'changed_by' => $this->creator ? [
+                            'id' => $this->creator->id,
+                            'name' => $this->creator->name,
+                            'role' => $this->creator->role,
+                        ] : null,
+                        '_is_task_created' => true,
+                    ]);
+                }
 
                 // Include subtask assignment events if not already present
                 if ($this->relationLoaded('branches')) {
@@ -599,24 +629,59 @@ class TaskResource extends JsonResource
                                     }
                                 }
 
+                                $bCreatedAt = $b->created_at ? (is_string($b->created_at) ? Carbon::parse($b->created_at) : $b->created_at) : $taskCreatedAt;
+
+                                // If branch created timestamp is identical or earlier than task creation,
+                                // adjust to 1 second after task creation to guarantee true chronological ordering
+                                if ($taskCreatedAt && $bCreatedAt && $bCreatedAt->timestamp <= $taskCreatedAt->timestamp) {
+                                    $bCreatedAt = $taskCreatedAt->copy()->addSecond();
+                                }
+
                                 $historyItems->push([
                                     'id' => 'assign_' . $b->id,
                                     'from_status' => null,
                                     'to_status' => 'in_progress',
                                     'reason' => "Subtask '{$b->title}' assigned to {$b->owner->name}",
-                                    'changed_at' => $b->created_at ? (is_string($b->created_at) ? $b->created_at : $b->created_at->toISOString()) : $this->created_at?->toISOString(),
+                                    'changed_at' => $bCreatedAt ? $bCreatedAt->toISOString() : null,
                                     'changed_by' => $assigner ? [
                                         'id' => $assigner->id,
                                         'name' => $assigner->name,
                                         'role' => $assigner->role,
                                     ] : null,
+                                    '_is_task_created' => false,
                                 ]);
                             }
                         }
                     }
                 }
 
-                return $historyItems->sortBy('changed_at')->values()->all();
+                // Sort strictly in ascending chronological order:
+                // 1. "Task created" is ALWAYS first
+                // 2. All subsequent events sorted by changed_at ascending
+                // 3. For ties at same second, subtask assignments precede subsequent submissions/reviews
+                return $historyItems->sort(function ($a, $b) {
+                    $aIsCreated = !empty($a['_is_task_created']);
+                    $bIsCreated = !empty($b['_is_task_created']);
+
+                    if ($aIsCreated && !$bIsCreated) return -1;
+                    if (!$aIsCreated && $bIsCreated) return 1;
+
+                    $tA = !empty($a['changed_at']) ? strtotime($a['changed_at']) : 0;
+                    $tB = !empty($b['changed_at']) ? strtotime($b['changed_at']) : 0;
+
+                    if ($tA === $tB) {
+                        $aIsAssign = str_contains(strtolower($a['reason'] ?? ''), 'assigned');
+                        $bIsAssign = str_contains(strtolower($b['reason'] ?? ''), 'assigned');
+                        if ($aIsAssign && !$bIsAssign) return -1;
+                        if (!$aIsAssign && $bIsAssign) return 1;
+                        return 0;
+                    }
+
+                    return $tA <=> $tB;
+                })->values()->map(function ($item) {
+                    unset($item['_is_task_created']);
+                    return $item;
+                })->all();
             })(),
             'submissions' => $this->submissions
                 ->when(!$canOverseeAll, function ($q) use ($visibleBranches, $user) {

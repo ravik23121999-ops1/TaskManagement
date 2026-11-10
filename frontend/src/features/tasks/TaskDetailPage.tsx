@@ -2263,15 +2263,46 @@ export const TaskDetailPage: React.FC = () => {
             </div>
 
             <div className="relative pl-6 sm:pl-8 border-l-2 border-slate-100 space-y-6 my-4 ml-3">
-              {task.status_history && task.status_history.length > 0 ? (
-                task.status_history.map((item, idx) => {
-                  const isLast = idx === task.status_history.length - 1;
+              {(() => {
+                const historyList = (task.status_history || []).slice().sort((a, b) => {
+                  const aIsCreated = a.reason?.toLowerCase().includes('task created');
+                  const bIsCreated = b.reason?.toLowerCase().includes('task created');
+                  if (aIsCreated && !bIsCreated) return -1;
+                  if (!aIsCreated && bIsCreated) return 1;
+
+                  const tA = a.changed_at ? new Date(a.changed_at).getTime() : 0;
+                  const tB = b.changed_at ? new Date(b.changed_at).getTime() : 0;
+                  if (tA === tB) {
+                    const aIsAssign = a.reason?.toLowerCase().includes('assigned');
+                    const bIsAssign = b.reason?.toLowerCase().includes('assigned');
+                    if (aIsAssign && !bIsAssign) return -1;
+                    if (!aIsAssign && bIsAssign) return 1;
+                    return 0;
+                  }
+                  return tA - tB;
+                });
+
+                if (historyList.length === 0) {
+                  return <p className="text-xs text-slate-400 italic">No workflow history records yet.</p>;
+                }
+
+                return historyList.map((item, idx) => {
+                  const isLast = idx === historyList.length - 1;
                   let dotColor = 'bg-blue-600';
-                  if (item.to_status === 'completed') dotColor = 'bg-emerald-500';
-                  else if (item.to_status === 'review') dotColor = 'bg-amber-500';
-                  else if (item.to_status === 'post_comment') dotColor = 'bg-rose-500';
-                  else if (item.to_status === 'on_hold') dotColor = 'bg-orange-500';
-                  else if (item.reason?.toLowerCase().includes('assigned')) dotColor = 'bg-sky-500';
+                  const rLower = (item.reason || '').toLowerCase();
+                  if (item.to_status === 'completed' || rLower.includes('completed') || rLower.includes('approval and completion')) {
+                    dotColor = 'bg-emerald-500';
+                  } else if (item.to_status === 'review' || rLower.includes('review') || rLower.includes('submitted')) {
+                    dotColor = 'bg-amber-500';
+                  } else if (item.to_status === 'post_comment' || rLower.includes('returned') || rLower.includes('correction')) {
+                    dotColor = 'bg-rose-500';
+                  } else if (item.to_status === 'on_hold') {
+                    dotColor = 'bg-orange-500';
+                  } else if (rLower.includes('assigned')) {
+                    dotColor = 'bg-sky-500';
+                  } else if (rLower.includes('task created')) {
+                    dotColor = 'bg-indigo-600';
+                  }
 
                   return (
                     <div key={item.id} className="relative group">
@@ -2290,6 +2321,11 @@ export const TaskDetailPage: React.FC = () => {
                                 Current Stage
                               </span>
                             )}
+                            {isLast && task.status === 'completed' && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 flex items-center gap-1">
+                                ✓ Completed & Closed
+                              </span>
+                            )}
                           </div>
                           <span className="text-[11px] font-medium text-slate-400">
                             {item.changed_at ? new Date(item.changed_at).toLocaleString() : ''}
@@ -2306,10 +2342,8 @@ export const TaskDetailPage: React.FC = () => {
                       </div>
                     </div>
                   );
-                })
-              ) : (
-                <p className="text-xs text-slate-400 italic">No workflow history records yet.</p>
-              )}
+                });
+              })()}
             </div>
           </div>
         </div>

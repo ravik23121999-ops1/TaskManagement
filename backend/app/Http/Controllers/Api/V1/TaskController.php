@@ -359,7 +359,17 @@ class TaskController extends Controller
                 'creator_id' => $user->id,
             ]);
 
-            // 1. Process Shared File Attachments (uploaded in Step 1)
+            // 1. Log task creation status history immediately as Milestone #1
+            TaskStatusHistory::create([
+                'task_id' => $task->id,
+                'from_status' => null,
+                'to_status' => 'in_progress',
+                'changed_by_id' => $user->id,
+                'reason' => 'Task created',
+                'changed_at' => $task->created_at ?? now(),
+            ]);
+
+            // 2. Process Shared File Attachments (uploaded in Step 1)
             $createdSharedAttachments = [];
             $sharedFiles = $request->file('shared_files') ?? $request->file('files') ?? [];
             if (!empty($sharedFiles)) {
@@ -790,16 +800,6 @@ class TaskController extends Controller
                     }
                 }
             }
-
-            // Log status history
-            TaskStatusHistory::create([
-                'task_id' => $task->id,
-                'from_status' => null,
-                'to_status' => 'in_progress',
-                'changed_by_id' => $user->id,
-                'reason' => 'Task created',
-                'changed_at' => now(),
-            ]);
 
             ActivityLogger::log('task_created', "Created task: {$task->title}", $task->id);
 
