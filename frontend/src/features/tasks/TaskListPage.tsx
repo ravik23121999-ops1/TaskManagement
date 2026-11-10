@@ -6,7 +6,7 @@ import type { Task } from '../../api/tasks';
 import { StatusBadge, PriorityBadge } from '../../components/StatusBadge';
 import { Pagination } from '../../components/Pagination';
 import { TableSkeleton } from '../../components/TableSkeleton';
-import { Search, Plus, AlertCircle, Eye, Building2, Calendar, CheckCircle2, Ban, Trash2, X } from 'lucide-react';
+import { Search, Plus, AlertCircle, Eye, Building2, Calendar, CheckCircle2, Ban, Trash2, X, Zap, Clock } from 'lucide-react';
 
 export const TaskListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -301,7 +301,7 @@ export const TaskListPage: React.FC = () => {
                 <th className="py-3.5 px-6">Task Title & Department</th>
                 <th className="py-3.5 px-6">Status</th>
                 <th className="py-3.5 px-6">Priority</th>
-                <th className="py-3.5 px-6">Current Owner</th>
+                <th className="py-3.5 px-6">Action Needed By</th>
                 <th className="py-3.5 px-6">Due Date</th>
                 <th className="py-3.5 px-6 text-right">Action</th>
               </tr>
@@ -330,10 +330,110 @@ export const TaskListPage: React.FC = () => {
                       </span>
                     </td>
                     <td className="py-4 px-6">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-bold text-slate-800 group-hover:text-blue-600 transition text-xs">
-                          {task.title}
-                        </span>
+                      <div className="flex flex-col gap-1.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-slate-800 group-hover:text-blue-600 transition text-xs">
+                            {task.title}
+                          </span>
+                          {/* Personal Status / Action Needed Badge */}
+                          {(() => {
+                            if (!currentUser) return null;
+                            const isCreator = task.creator?.id === currentUser.id;
+                            const isOwner = (task.current_owners?.some((o) => o.id === currentUser.id)) || (task.current_owner?.id === currentUser.id);
+                            const myBranch = task.my_branch;
+                            const isReadyForFinal = Boolean((task as any).is_ready_for_final_signoff) || Boolean((task as any).all_branches_completed);
+
+                            if (task.status === 'completed') {
+                              return (
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 inline-flex items-center gap-1">
+                                  <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                                  Completed
+                                </span>
+                              );
+                            }
+
+                            if (task.status === 'cancelled') {
+                              return (
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200/80 inline-flex items-center gap-1">
+                                  <Ban className="w-2.5 h-2.5 text-rose-600" />
+                                  Cancelled
+                                </span>
+                              );
+                            }
+
+                            if (task.permissions?.can_review) {
+                              return (
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300 inline-flex items-center gap-1 shadow-2xs">
+                                  <Zap className="w-2.5 h-2.5 text-amber-600 fill-amber-500" />
+                                  Action: Review Needed
+                                </span>
+                              );
+                            }
+
+                            if (isCreator && isReadyForFinal) {
+                              return (
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-300 inline-flex items-center gap-1 shadow-2xs">
+                                  <Zap className="w-2.5 h-2.5 text-teal-600 fill-teal-500" />
+                                  Action: Final Sign-off
+                                </span>
+                              );
+                            }
+
+                            if (myBranch) {
+                              if (myBranch.status === 'review') {
+                                return (
+                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 inline-flex items-center gap-1">
+                                    <Clock className="w-2.5 h-2.5 text-purple-600" />
+                                    Submitted · In Review
+                                  </span>
+                                );
+                              }
+                              if (myBranch.status === 'post_comment') {
+                                return (
+                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 inline-flex items-center gap-1 animate-pulse">
+                                    <AlertCircle className="w-2.5 h-2.5 text-rose-600" />
+                                    Action: Fix Deliverable
+                                  </span>
+                                );
+                              }
+                              if (myBranch.status === 'completed') {
+                                return (
+                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
+                                    <CheckCircle2 className="w-2.5 h-2.5 text-emerald-600" />
+                                    Your Part Done
+                                  </span>
+                                );
+                              }
+                              return (
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-sky-50 text-sky-800 border border-sky-300 inline-flex items-center gap-1 shadow-2xs">
+                                  <Zap className="w-2.5 h-2.5 text-sky-600 fill-sky-500" />
+                                  Action: Your Deliverable Due
+                                </span>
+                              );
+                            }
+
+                            if (isCreator) {
+                              const ownerName = task.current_owner?.name || (task.current_owners && task.current_owners.length > 0 ? task.current_owners[0].name : 'Assignees');
+                              return (
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200 inline-flex items-center gap-1">
+                                  <Clock className="w-2.5 h-2.5 text-slate-400" />
+                                  Waiting on {ownerName}
+                                </span>
+                              );
+                            }
+
+                            if (isOwner) {
+                              return (
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-800 border border-blue-200 inline-flex items-center gap-1">
+                                  <Zap className="w-2.5 h-2.5 text-blue-600 fill-blue-500" />
+                                  Action Needed By You
+                                </span>
+                              );
+                            }
+
+                            return null;
+                          })()}
+                        </div>
                         {task.department && (
                           <span className="text-[10px] text-slate-400 flex items-center gap-1 font-medium">
                             <Building2 className="w-3 h-3 text-slate-400" />
@@ -390,11 +490,22 @@ export const TaskListPage: React.FC = () => {
                               {task.current_owner?.name || task.creator?.name || 'Unassigned'}
                             </span>
                             <span className="text-[10px] text-slate-400">
-                              {task.status === 'review' || task.branches?.some((b) => b.status === 'review')
-                                ? 'Under Review'
-                                : task.permissions?.can_final_submit && task.handling_method !== 'work_alone'
-                                ? 'Awaiting Sign-off'
-                                : 'Active Assignee'}
+                              {(() => {
+                                const owner = task.current_owner || task.creator;
+                                if (!owner) return 'Unassigned';
+                                const ownerBranch = task.branches?.find((b) => b.owner?.id === owner.id);
+                                if (ownerBranch) {
+                                  if (ownerBranch.status === 'review') return 'Submitted (In Review)';
+                                  if (ownerBranch.status === 'post_comment') return 'Corrections Needed';
+                                  if (ownerBranch.status === 'completed') return 'Deliverable Approved';
+                                  return 'Working on Deliverable';
+                                }
+                                if (task.creator?.id === owner.id) {
+                                  if (Boolean((task as any).is_ready_for_final_signoff)) return 'Final Sign-off Required';
+                                  return 'Task Assigner / Creator';
+                                }
+                                return 'Active Assignee';
+                              })()}
                             </span>
                           </div>
                         </div>

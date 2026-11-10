@@ -40,6 +40,10 @@ import {
   RefreshCw,
   MoreHorizontal,
   ChevronDown,
+  Zap,
+  Activity,
+  FolderGit2,
+  Rocket,
 } from 'lucide-react';
 
 export const TaskDetailPage: React.FC = () => {
@@ -252,6 +256,7 @@ export const TaskDetailPage: React.FC = () => {
   const [assignModalStep, setAssignModalStep] = useState<1 | 2>(1);
   const [modalDelegationOption, setModalDelegationOption] = useState<'subtasks' | 'direct'>('subtasks');
   const [modalAssigneeWork, setModalAssigneeWork] = useState<Record<number, ModalWorkData>>({});
+  const [showParentContext, setShowParentContext] = useState(false);
 
   const initModalWork = (u: any): ModalWorkData => ({
     mode: 'new_subtask',
@@ -798,6 +803,8 @@ export const TaskDetailPage: React.FC = () => {
     (task.status === 'review' || task.branches?.some((b) => b.status === 'review'));
 
   const isMyWorkDone = Boolean(task.my_branch && task.my_branch.status === 'completed');
+  const isCreator = Boolean(task?.creator?.id === currentUser?.id);
+  const isSubtaskAssignee = !isCreator && Boolean(task?.my_branch);
 
   const getLifecycleStageState = (stageKey: string) => {
     if (stageKey === 'created') return 'completed';
@@ -1117,35 +1124,42 @@ export const TaskDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Focused Single Contextual Alert Banner (Only when active blocker exists) */}
+        {/* ======================================================== */}
+        {/* THE 3-SECOND RULE: WORKFLOW STATUS & NEXT STEP HERO CARD   */}
+        {/* ======================================================== */}
         {task.status === 'cancelled' ? (
-          <div className="mt-4 p-4 bg-rose-50/80 border border-rose-200 rounded-xl flex items-start gap-3 text-xs shadow-2xs">
-            <Ban className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+          <div className="mt-4 p-4 bg-rose-50/90 border border-rose-200 rounded-2xl flex items-start gap-3 text-xs shadow-2xs">
+            <div className="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <Ban className="w-5 h-5" />
+            </div>
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-bold text-rose-950">Task Cancelled</span>
+                <span className="font-bold text-rose-950 text-sm">Task Cancelled & Archived</span>
                 {task.cancelled_at && (
-                  <span className="text-[10px] text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full font-semibold">
+                  <span className="text-[10px] text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full font-semibold">
                     {new Date(task.cancelled_at).toLocaleDateString()}
                   </span>
                 )}
               </div>
-              <p className="text-rose-800 mt-0.5">
+              <p className="text-rose-800 mt-1">
                 Cancelled by {task.cancelled_by?.name || task.creator?.name || 'Authorized User'}.
-                {task.cancellation_reason ? ` Note: "${task.cancellation_reason}"` : ''}
+                {task.cancellation_reason ? ` Reason: "${task.cancellation_reason}"` : ''}
               </p>
             </div>
           </div>
         ) : task.latest_clarification && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment')) ? (
-          <div className="mt-4 p-4 bg-amber-50/90 border border-amber-200 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs">
-            <div className="flex items-start gap-2.5">
-              <HelpCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="mt-4 p-4 bg-amber-50/95 border border-amber-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <HelpCircle className="w-5 h-5" />
+              </div>
               <div>
-                <p className="font-bold text-amber-950">
-                  Question from {task.latest_clarification.requested_by?.name || 'Assignee'}
-                </p>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-amber-950 text-sm">Action Required: Question Needs Answering</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">Pending Response</span>
+                </div>
                 <p className="text-amber-800 mt-0.5 whitespace-pre-wrap">
-                  "{task.latest_clarification.comment.replace(/^❓\s*Missing Details Requested by [^:]*:\s*/, '')}"
+                  {task.latest_clarification.requested_by?.name || 'Assignee'} asked: "{task.latest_clarification.comment.replace(/^❓\s*Missing Details Requested by [^:]*:\s*/, '')}"
                 </p>
               </div>
             </div>
@@ -1157,7 +1171,7 @@ export const TaskDetailPage: React.FC = () => {
                   setProvideDetailsFiles([]);
                   setIsProvideDetailsModalOpen(true);
                 }}
-                className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
               >
                 <Send className="w-3.5 h-3.5" />
                 <span>Answer Question</span>
@@ -1165,15 +1179,18 @@ export const TaskDetailPage: React.FC = () => {
             )}
           </div>
         ) : task.latest_return && (task.status === 'post_comment' || task.branches?.some((b) => b.status === 'post_comment')) ? (
-          <div className="mt-4 p-4 bg-rose-50/90 border border-rose-200 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs">
-            <div className="flex items-start gap-2.5">
-              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+          <div className="mt-4 p-4 bg-rose-50/95 border border-rose-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <AlertCircle className="w-5 h-5" />
+              </div>
               <div>
-                <p className="font-bold text-red-950">
-                  Changes Requested by {task.latest_return.reviewer?.name || 'Reviewer'}
-                </p>
-                <p className="text-red-800 mt-0.5 whitespace-pre-wrap">
-                  "{task.latest_return.comments}"
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-rose-950 text-sm">Action Required: Changes Requested by Reviewer</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">Revision Needed</span>
+                </div>
+                <p className="text-rose-800 mt-0.5 whitespace-pre-wrap">
+                  Reviewer note from {task.latest_return.reviewer?.name || 'Reviewer'}: "{task.latest_return.comments}"
                 </p>
               </div>
             </div>
@@ -1181,50 +1198,46 @@ export const TaskDetailPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsSubmitModalOpen(true)}
-                className="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Submit Fixes</span>
+                <span>Submit Deliverable Fixes</span>
               </button>
             )}
           </div>
         ) : task.status === 'on_hold' && task.hold_record ? (
-          <div className="mt-4 p-4 bg-amber-50/90 border border-amber-200 rounded-xl flex items-center justify-between text-xs text-amber-900 shadow-2xs">
-            <div className="flex items-center gap-2">
-              <PauseCircle className="w-4 h-4 text-amber-600 shrink-0" />
-              <span>
-                <strong>Task is paused:</strong> {task.hold_record.reason} (by {task.hold_record.held_by})
-              </span>
+          <div className="mt-4 p-4 bg-amber-50/95 border border-amber-200 rounded-2xl flex items-center justify-between text-xs text-amber-900 shadow-2xs">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <PauseCircle className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="font-bold text-amber-950 text-sm block">Task Paused (On Hold)</span>
+                <span className="text-amber-800 text-xs">Reason: {task.hold_record.reason} (by {task.hold_record.held_by})</span>
+              </div>
             </div>
             {task.permissions.can_resume && (
               <button
                 onClick={handleResume}
-                className="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold transition cursor-pointer text-xs"
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold transition cursor-pointer text-xs active:scale-95 shadow-xs"
               >
-                Resume Now
+                Resume Task Now
               </button>
             )}
           </div>
-        ) : !task.permissions.can_final_submit && isReadyForFinalSignOff && !isCompleted ? (
-          <div className="mt-4 p-4 bg-purple-50/90 border border-purple-200 rounded-xl flex items-center gap-3 text-xs shadow-2xs">
-            <CheckCircle2 className="w-5 h-5 text-purple-600 shrink-0" />
-            <div>
-              <p className="font-bold text-purple-950">All Deliverables Approved — Awaiting Final Sign-off</p>
-              <p className="text-purple-800 mt-0.5">
-                All assigned deliverables have been approved. Waiting for {task.creator?.name || 'Task Creator'} for final sign-off.
-              </p>
-            </div>
-          </div>
         ) : task.permissions.can_review && latestPendingSubmission ? (
-          <div className="mt-4 p-4 bg-purple-50/90 border border-purple-200 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs">
-            <div className="flex items-start gap-2.5">
-              <CheckCircle2 className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
+          <div className="mt-4 p-4 bg-purple-50/95 border border-purple-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
               <div>
-                <p className="font-bold text-purple-950">
-                  Deliverable Submitted — Ready for Your Review
-                </p>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-purple-950 text-sm">Action Required: Subtask Deliverable Ready for Your Review</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800">Pending Your Sign-off</span>
+                </div>
                 <p className="text-purple-800 mt-0.5">
-                  {latestPendingSubmission.submitted_by?.name || 'Assignee'} submitted deliverables for review. Please review and approve to advance the task.
+                  <strong>{latestPendingSubmission.submitted_by?.name || 'Assignee'}</strong> submitted completed work. Please review and approve to advance the task.
                 </p>
               </div>
             </div>
@@ -1234,20 +1247,121 @@ export const TaskDetailPage: React.FC = () => {
                 setSelectedSubmission(latestPendingSubmission);
                 setIsReviewModalOpen(true);
               }}
-              className="px-3.5 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>Check & Review Work</span>
             </button>
           </div>
         ) : task.my_branch?.status === 'review' ? (
-          <div className="mt-4 p-4 bg-blue-50/90 border border-blue-200 rounded-xl flex items-center gap-3 text-xs shadow-2xs">
-            <Clock className="w-5 h-5 text-blue-600 shrink-0 animate-pulse" />
+          <div className="mt-4 p-4 bg-sky-50/90 border border-sky-200 rounded-2xl flex items-center gap-3 text-xs shadow-2xs">
+            <div className="w-9 h-9 rounded-xl bg-sky-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <Clock className="w-5 h-5 animate-pulse" />
+            </div>
             <div>
-              <p className="font-bold text-blue-950">Work Submitted — Awaiting Review</p>
-              <p className="text-blue-800 mt-0.5">
-                You have submitted your deliverables. This subtask is now waiting for <strong>{task.my_branch.assigned_by?.name || 'your assigner'}</strong> to review and approve.
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-sky-950 text-sm">Work Submitted — Awaiting Assigner Review</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-100 text-sky-800">In Review</span>
+              </div>
+              <p className="text-sky-800 mt-0.5">
+                You have submitted your deliverables. This subtask is waiting for <strong>{task.my_branch.assigned_by?.name || 'your assigner'}</strong> to verify and approve.
               </p>
+            </div>
+          </div>
+        ) : isReadyForFinalSignOff && !isCompleted ? (
+          <div className="mt-4 p-4 bg-emerald-50/95 border border-emerald-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <Check className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-emerald-950 text-sm">All Subtasks Approved — Ready for Final Sign-off</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Stage 4 of 5</span>
+                </div>
+                <p className="text-emerald-800 mt-0.5">
+                  All assigned subordinate deliverables have been verified and approved. Final executive completion sign-off is required.
+                </p>
+              </div>
+            </div>
+            {(task.permissions.can_final_submit || isReadyForFinalSignOff) && (currentUser?.role === 'admin' || currentUser?.role === 'sub_admin' || task.creator?.id === currentUser?.id) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setFinalCompleteDesc(
+                    isWorkAlone
+                      ? 'Work completed and all deliverables verified.'
+                      : 'Final deliverables verified and approved for project completion.'
+                  );
+                  setFinalCompleteFiles([]);
+                  setIsFinalCompleteModalOpen(true);
+                }}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0"
+              >
+                <Check className="w-3.5 h-3.5" />
+                <span>Final Sign-off & Complete Task</span>
+              </button>
+            )}
+          </div>
+        ) : task.status === 'completed' ? (
+          <div className="mt-4 p-4 bg-emerald-50/90 border border-emerald-200 rounded-2xl flex items-center gap-3 text-xs shadow-2xs">
+            <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-emerald-950 text-sm">Task Completed & Fully Signed Off</span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Completed</span>
+              </div>
+              <p className="text-emerald-800 mt-0.5">
+                All milestones and deliverables have been successfully verified and accepted.
+              </p>
+            </div>
+          </div>
+        ) : task.permissions.can_submit ? (
+          <div className="mt-4 p-4 bg-gradient-to-r from-blue-50/95 via-sky-50/70 to-blue-50/95 border border-blue-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <Zap className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-blue-950 text-sm">Action Required: Your Subtask Deliverables are Due</span>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${slaBadge.color}`}>
+                    {slaBadge.text}
+                  </span>
+                </div>
+                <p className="text-blue-800 mt-0.5">
+                  You are actively working on <strong>"{task.my_branch?.title || task.title}"</strong>. When finished, submit your deliverables for review by {task.my_branch?.assigned_by?.name || task.creator?.name || 'Assigner'}.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsSubmitModalOpen(true)}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer active:scale-95"
+              >
+                <Upload className="w-3.5 h-3.5" />
+                <span>Submit Deliverables</span>
+              </button>
+            </div>
+          </div>
+        ) : (task.my_branch?.has_uncompleted_delegated_subtasks || (isCreator && task.branches?.some((b) => b.status !== 'completed' && b.status !== 'cancelled'))) ? (
+          <div className="mt-4 p-4 bg-slate-50/90 border border-slate-200 rounded-2xl flex items-center justify-between gap-3 text-xs shadow-2xs">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center shrink-0">
+                <Clock className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-slate-900 text-sm">Waiting on Teammates</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-200 text-slate-700">Work in Progress</span>
+                </div>
+                <p className="text-slate-600 mt-0.5">
+                  Subordinate deliverables are currently being executed by assigned team members. You will be notified once they submit for your review.
+                </p>
+              </div>
             </div>
           </div>
         ) : null}
@@ -1610,10 +1724,10 @@ export const TaskDetailPage: React.FC = () => {
                           type="button"
                           onClick={() => openAssignModal('assign')}
                           className="px-3.5 py-2 bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
-                          title="Assign further / delegate with independent subtasks and attachments"
+                          title="Delegate subtasks to team members under your supervision"
                         >
                           <UserPlus className="w-3.5 h-3.5" />
-                          <span>+ Assign Further</span>
+                          <span>Delegate to Teammate</span>
                         </button>
                       )}
                       {task.permissions.can_submit && (
@@ -1622,7 +1736,7 @@ export const TaskDetailPage: React.FC = () => {
                           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
                         >
                           <Upload className="w-3.5 h-3.5" />
-                          <span>Submit Work Deliverables</span>
+                          <span>Submit Deliverables</span>
                         </button>
                       )}
                     </div>
@@ -1635,71 +1749,144 @@ export const TaskDetailPage: React.FC = () => {
                 </div>
               </div>
             )}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-blue-600" />
-                <span>Task Overview & Deliverables</span>
-              </h2>
-              <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
-                ID: {task.task_code}
-              </span>
-            </div>
 
-            <div className="space-y-5 text-xs">
-              <div>
-                <span className="font-bold text-slate-400 uppercase tracking-wider block mb-1">Task Title</span>
-                <p className="text-slate-900 font-bold text-base leading-snug">{task.title}</p>
-              </div>
-
-              <div>
-                <span className="font-bold text-slate-400 uppercase tracking-wider block mb-1">Description</span>
-                <div className="p-4 bg-slate-50/70 border border-slate-100 rounded-xl text-slate-700 leading-relaxed whitespace-pre-wrap">
-                  {task.description}
-                </div>
-              </div>
-
-              {task.expected_result && (
-                <div className="p-4 bg-sky-50/60 border border-sky-100 rounded-xl space-y-1.5">
-                  <div className="flex items-center gap-2 text-sky-900 font-bold text-[11px] uppercase tracking-wider">
-                    <Target className="w-3.5 h-3.5 text-sky-600" />
-                    <span>Expected Result & Outcome</span>
+            {/* Clear Separation: For subtask assignees, show parent context in a tidy collapsible accordion */}
+            {isSubtaskAssignee ? (
+              <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50/60 transition shadow-2xs">
+                <button
+                  type="button"
+                  onClick={() => setShowParentContext(!showParentContext)}
+                  className="w-full p-4 flex items-center justify-between text-xs font-bold text-slate-700 hover:bg-slate-100/80 transition cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <FolderGit2 className="w-4 h-4 text-blue-600" />
+                    <span>Parent Project Overview: {task.title}</span>
                   </div>
-                  <p className="text-slate-700 leading-relaxed whitespace-pre-wrap text-xs pl-5">
-                    {task.expected_result}
-                  </p>
-                </div>
-              )}
-
-              {task.acceptance_criteria && (
-                <div className="p-4 bg-slate-50/80 border border-slate-200/80 rounded-xl space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-2">
-                      <CheckSquare className="w-4 h-4 text-blue-600" />
-                      <span>Acceptance Criteria Checklist</span>
-                    </span>
-                    <span className="text-[10px] text-slate-400">Required quality gates</span>
+                  <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-semibold">
+                    <span>{showParentContext ? 'Hide Project Overview' : 'View Background Context'}</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showParentContext ? 'rotate-180' : ''}`} />
                   </div>
-
-                  <div className="space-y-2">
-                    {task.acceptance_criteria
-                      .split(/\r?\n/)
-                      .filter((line: string) => line.trim().length > 0)
-                      .map((criterion: string, cIdx: number) => (
-                        <div
-                          key={cIdx}
-                          className="flex items-start gap-2.5 text-xs text-slate-800 bg-white p-3 rounded-xl border border-slate-200/60 shadow-2xs hover:border-blue-200 transition"
-                        >
-                          <span className="w-4 h-4 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 border border-blue-200">
-                            <Check className="w-2.5 h-2.5 stroke-[3]" />
-                          </span>
-                          <span className="leading-relaxed font-medium">
-                            {criterion.replace(/^[-*•\d\.\s]+/, '')}
+                </button>
+                {showParentContext && (
+                  <div className="p-5 border-t border-slate-200 bg-white space-y-5 text-xs animate-in fade-in">
+                    <div>
+                      <span className="font-bold text-slate-400 uppercase tracking-wider block mb-1">Parent Project Description</span>
+                      <div className="p-4 bg-slate-50/70 border border-slate-100 rounded-xl text-slate-700 leading-relaxed whitespace-pre-wrap">
+                        {task.description}
+                      </div>
+                    </div>
+                    {task.expected_result && (
+                      <div className="p-4 bg-sky-50/60 border border-sky-100 rounded-xl space-y-1.5">
+                        <div className="flex items-center gap-2 text-sky-900 font-bold text-[11px] uppercase tracking-wider">
+                          <Target className="w-3.5 h-3.5 text-sky-600" />
+                          <span>Expected Result & Outcome</span>
+                        </div>
+                        <p className="text-slate-700 leading-relaxed whitespace-pre-wrap text-xs pl-5">
+                          {task.expected_result}
+                        </p>
+                      </div>
+                    )}
+                    {task.acceptance_criteria && (
+                      <div className="p-4 bg-slate-50/80 border border-slate-200/80 rounded-xl space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-2">
+                            <CheckSquare className="w-4 h-4 text-blue-600" />
+                            <span>Acceptance Criteria Checklist</span>
                           </span>
                         </div>
-                      ))}
+                        <div className="space-y-2">
+                          {task.acceptance_criteria
+                            .split(/\r?\n/)
+                            .filter((line: string) => line.trim().length > 0)
+                            .map((criterion: string, cIdx: number) => (
+                              <div
+                                key={cIdx}
+                                className="flex items-start gap-2.5 text-xs text-slate-800 bg-white p-3 rounded-xl border border-slate-200/60 shadow-2xs"
+                              >
+                                <span className="w-4 h-4 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 border border-blue-200">
+                                  <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                </span>
+                                <span className="leading-relaxed font-medium">
+                                  {criterion.replace(/^[-*•\d\.\s]+/, '')}
+                                </span>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-blue-600" />
+                    <span>Task Overview & Deliverables</span>
+                  </h2>
+                  <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+                    ID: {task.task_code}
+                  </span>
                 </div>
-              )}
+
+                <div className="space-y-5 text-xs">
+                  <div>
+                    <span className="font-bold text-slate-400 uppercase tracking-wider block mb-1">Task Title</span>
+                    <p className="text-slate-900 font-bold text-base leading-snug">{task.title}</p>
+                  </div>
+
+                  <div>
+                    <span className="font-bold text-slate-400 uppercase tracking-wider block mb-1">Description</span>
+                    <div className="p-4 bg-slate-50/70 border border-slate-100 rounded-xl text-slate-700 leading-relaxed whitespace-pre-wrap">
+                      {task.description}
+                    </div>
+                  </div>
+
+                  {task.expected_result && (
+                    <div className="p-4 bg-sky-50/60 border border-sky-100 rounded-xl space-y-1.5">
+                      <div className="flex items-center gap-2 text-sky-900 font-bold text-[11px] uppercase tracking-wider">
+                        <Target className="w-3.5 h-3.5 text-sky-600" />
+                        <span>Expected Result & Outcome</span>
+                      </div>
+                      <p className="text-slate-700 leading-relaxed whitespace-pre-wrap text-xs pl-5">
+                        {task.expected_result}
+                      </p>
+                    </div>
+                  )}
+
+                  {task.acceptance_criteria && (
+                    <div className="p-4 bg-slate-50/80 border border-slate-200/80 rounded-xl space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-2">
+                          <CheckSquare className="w-4 h-4 text-blue-600" />
+                          <span>Acceptance Criteria Checklist</span>
+                        </span>
+                        <span className="text-[10px] text-slate-400">Required quality gates</span>
+                      </div>
+
+                      <div className="space-y-2">
+                        {task.acceptance_criteria
+                          .split(/\r?\n/)
+                          .filter((line: string) => line.trim().length > 0)
+                          .map((criterion: string, cIdx: number) => (
+                            <div
+                              key={cIdx}
+                              className="flex items-start gap-2.5 text-xs text-slate-800 bg-white p-3 rounded-xl border border-slate-200/60 shadow-2xs hover:border-blue-200 transition"
+                            >
+                              <span className="w-4 h-4 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 border border-blue-200">
+                                <Check className="w-2.5 h-2.5 stroke-[3]" />
+                              </span>
+                              <span className="leading-relaxed font-medium">
+                                {criterion.replace(/^[-*•\d\.\s]+/, '')}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
 
               {/* Metadata Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-100">
@@ -1749,7 +1936,6 @@ export const TaskDetailPage: React.FC = () => {
                 )}
               </div>
             </div>
-          </div>
 
           {/* Right Column: Task Progress & Current Owner Card */}
           <div className="space-y-6">
@@ -1841,33 +2027,74 @@ export const TaskDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Current Owner(s) Card matching Mockup */}
+            {/* Current Owner(s) / Action Needed By Card */}
             <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
-                {task.current_owners && task.current_owners.length > 1
-                  ? `Current Owners (${task.current_owners.length})`
-                  : 'Current Owner'}
-              </h3>
+              <div className="mb-3">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5 text-blue-600" />
+                  <span>
+                    {task.current_owners && task.current_owners.length > 1
+                      ? `Action Needed By (${task.current_owners.length})`
+                      : 'Action Needed By'}
+                  </span>
+                </h3>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Team members currently holding the next workflow action
+                </p>
+              </div>
+
               {task.current_owners && task.current_owners.length > 1 ? (
                 <div className="space-y-3">
-                  <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
-                    {task.current_owners.map((owner) => (
-                      <div
-                        key={owner.id}
-                        className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 hover:bg-slate-50 transition-colors"
-                      >
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 text-white font-bold flex items-center justify-center text-xs shadow-xs shrink-0">
-                          {owner.name.charAt(0)}
+                  <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+                    {task.current_owners.map((owner) => {
+                      const ownerBranch = task.branches?.find((b) => b.owner?.id === owner.id);
+                      let roleTag = 'Active Assignee';
+                      let roleColor = 'bg-blue-50 text-blue-700 border-blue-200';
+
+                      if (ownerBranch) {
+                        if (ownerBranch.status === 'review') {
+                          roleTag = 'Submitted (In Review)';
+                          roleColor = 'bg-amber-50 text-amber-700 border-amber-200';
+                        } else if (ownerBranch.status === 'post_comment') {
+                          roleTag = 'Corrections Needed';
+                          roleColor = 'bg-rose-50 text-rose-700 border-rose-200';
+                        } else if (ownerBranch.status === 'completed') {
+                          roleTag = 'Approved & Completed';
+                          roleColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                        } else {
+                          roleTag = 'Working on Deliverable';
+                          roleColor = 'bg-sky-50 text-sky-700 border-sky-200';
+                        }
+                      } else if (task.creator?.id === owner.id) {
+                        if (isReadyForFinalSignOff) {
+                          roleTag = 'Final Sign-off Required';
+                          roleColor = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+                        } else {
+                          roleTag = 'Task Assigner / Creator';
+                          roleColor = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+                        }
+                      }
+
+                      return (
+                        <div
+                          key={owner.id}
+                          className="flex items-center gap-3 p-3 rounded-xl bg-slate-50/70 border border-slate-100 hover:bg-slate-50 transition-colors"
+                        >
+                          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 text-white font-bold flex items-center justify-center text-xs shadow-xs shrink-0">
+                            {owner.name.charAt(0)}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-1 flex-wrap">
+                              <h4 className="text-xs font-bold text-slate-900 truncate">{owner.name}</h4>
+                              <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold border ${roleColor} shrink-0`}>
+                                {roleTag}
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-slate-400 truncate mt-0.5">{owner.email}</p>
+                          </div>
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <h4 className="text-xs font-bold text-slate-900 truncate">{owner.name}</h4>
-                          <p className="text-[11px] text-slate-500 capitalize">
-                            {owner.role?.replace('_', ' ') || 'Assignee'}
-                          </p>
-                          <p className="text-[10px] text-slate-400 truncate">{owner.email}</p>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                   <button
                     onClick={() => setActiveTab('comments')}
@@ -1882,16 +2109,53 @@ export const TaskDetailPage: React.FC = () => {
                 </div>
               ) : task.current_owner ? (
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
-                      {task.current_owner.name.charAt(0)}
-                    </div>
-                    <div className="min-w-0">
-                      <h4 className="text-xs font-bold text-slate-900 truncate">{task.current_owner.name}</h4>
-                      <p className="text-[11px] text-slate-500 capitalize">{task.current_owner.role?.replace('_', ' ') || 'Assignee'}</p>
-                      <p className="text-[10px] text-slate-400 truncate">{task.current_owner.email}</p>
-                    </div>
-                  </div>
+                  {(() => {
+                    const owner = task.current_owner;
+                    const ownerBranch = task.branches?.find((b) => b.owner?.id === owner.id);
+                    let roleTag = 'Active Assignee';
+                    let roleColor = 'bg-blue-50 text-blue-700 border-blue-200';
+
+                    if (ownerBranch) {
+                      if (ownerBranch.status === 'review') {
+                        roleTag = 'Submitted (In Review)';
+                        roleColor = 'bg-amber-50 text-amber-700 border-amber-200';
+                      } else if (ownerBranch.status === 'post_comment') {
+                        roleTag = 'Corrections Needed';
+                        roleColor = 'bg-rose-50 text-rose-700 border-rose-200';
+                      } else if (ownerBranch.status === 'completed') {
+                        roleTag = 'Approved & Completed';
+                        roleColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                      } else {
+                        roleTag = 'Working on Deliverable';
+                        roleColor = 'bg-sky-50 text-sky-700 border-sky-200';
+                      }
+                    } else if (task.creator?.id === owner.id) {
+                      if (isReadyForFinalSignOff) {
+                        roleTag = 'Final Sign-off Required';
+                        roleColor = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+                      } else {
+                        roleTag = 'Task Assigner / Creator';
+                        roleColor = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+                      }
+                    }
+
+                    return (
+                      <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50/70 border border-slate-100">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
+                          {owner.name.charAt(0)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-1 flex-wrap">
+                            <h4 className="text-xs font-bold text-slate-900 truncate">{owner.name}</h4>
+                            <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold border ${roleColor} shrink-0`}>
+                              {roleTag}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-slate-400 truncate mt-0.5">{owner.email}</p>
+                        </div>
+                      </div>
+                    );
+                  })()}
                   <button
                     onClick={() => setActiveTab('comments')}
                     className="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center justify-between border border-slate-200/80 cursor-pointer"
@@ -1950,7 +2214,7 @@ export const TaskDetailPage: React.FC = () => {
                   className="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-sm transition inline-flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Assign More (1 or Many)</span>
+                  <span>Add Another Assignee</span>
                 </button>
               )}
             </div>
@@ -2275,16 +2539,24 @@ export const TaskDetailPage: React.FC = () => {
             )}
           </div>
 
-          {/* Chronological Audit & Activity Timeline */}
+          {/* Visual Activity Journey Timeline & Audit History */}
           <div className="pt-6 border-t border-slate-100">
-            <div className="mb-4">
-              <h3 className="text-sm font-bold text-slate-900">Task Activity Journey & Audit History</h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Full chronological record of stage handovers, submissions, review decisions, and state updates.
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-blue-600" />
+                  <span>Task Activity Journey & Audit History</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Full chronological record of stage handovers, submissions, review decisions, and state updates.
+                </p>
+              </div>
+              <span className="text-xs text-slate-400 font-semibold px-2.5 py-1 bg-slate-100 rounded-full w-fit">
+                {(task.status_history?.length || 0)} Milestone{(task.status_history?.length || 0) !== 1 ? 's' : ''} Recorded
+              </span>
             </div>
 
-            <div className="relative pl-6 sm:pl-8 border-l-2 border-slate-100 space-y-6 my-4 ml-3">
+            <div className="relative pl-6 sm:pl-9 border-l-2 border-slate-200/90 space-y-5 my-4 ml-3 sm:ml-4">
               {(() => {
                 const historyList = (task.status_history || []).slice().sort((a, b) => {
                   const aIsCreated = a.reason?.toLowerCase().includes('task created');
@@ -2305,61 +2577,128 @@ export const TaskDetailPage: React.FC = () => {
                 });
 
                 if (historyList.length === 0) {
-                  return <p className="text-xs text-slate-400 italic">No workflow history records yet.</p>;
+                  return (
+                    <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl">
+                      <p className="text-xs text-slate-400 italic">No workflow history records yet.</p>
+                    </div>
+                  );
                 }
 
                 return historyList.map((item, idx) => {
                   const isLast = idx === historyList.length - 1;
-                  let dotColor = 'bg-blue-600';
                   const rLower = (item.reason || '').toLowerCase();
-                  if (item.to_status === 'completed' || rLower.includes('completed') || rLower.includes('approval and completion')) {
-                    dotColor = 'bg-emerald-500';
+
+                  // Milestone styling & iconography
+                  let nodeBg = 'bg-blue-600 ring-blue-100';
+                  let tagLabel = 'Stage Update';
+                  let tagClass = 'bg-blue-50 text-blue-700 border-blue-200';
+                  let NodeIcon = Activity;
+
+                  if (rLower.includes('task created')) {
+                    nodeBg = 'bg-indigo-600 ring-indigo-100';
+                    tagLabel = 'Task Initiated';
+                    tagClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+                    NodeIcon = Rocket;
+                  } else if (rLower.includes('assigned') || rLower.includes('delegat')) {
+                    nodeBg = 'bg-sky-600 ring-sky-100';
+                    tagLabel = 'Delegation Handover';
+                    tagClass = 'bg-sky-50 text-sky-700 border-sky-200';
+                    NodeIcon = UserPlus;
                   } else if (item.to_status === 'review' || rLower.includes('review') || rLower.includes('submitted')) {
-                    dotColor = 'bg-amber-500';
-                  } else if (item.to_status === 'post_comment' || rLower.includes('returned') || rLower.includes('correction')) {
-                    dotColor = 'bg-rose-500';
-                  } else if (item.to_status === 'on_hold') {
-                    dotColor = 'bg-orange-500';
-                  } else if (rLower.includes('assigned')) {
-                    dotColor = 'bg-sky-500';
-                  } else if (rLower.includes('task created')) {
-                    dotColor = 'bg-indigo-600';
+                    nodeBg = 'bg-amber-500 ring-amber-100';
+                    tagLabel = 'Submitted for Review';
+                    tagClass = 'bg-amber-50 text-amber-800 border-amber-200';
+                    NodeIcon = Send;
+                  } else if (item.to_status === 'completed' || rLower.includes('completed') || rLower.includes('approval') || rLower.includes('approved')) {
+                    nodeBg = 'bg-emerald-600 ring-emerald-100';
+                    tagLabel = 'Approved & Completed';
+                    tagClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                    NodeIcon = CheckCircle2;
+                  } else if (item.to_status === 'post_comment' || rLower.includes('returned') || rLower.includes('correction') || rLower.includes('missing details')) {
+                    nodeBg = 'bg-rose-600 ring-rose-100';
+                    tagLabel = 'Changes Requested';
+                    tagClass = 'bg-rose-50 text-rose-700 border-rose-200';
+                    NodeIcon = RotateCcw;
+                  } else if (item.to_status === 'on_hold' || rLower.includes('hold')) {
+                    nodeBg = 'bg-orange-500 ring-orange-100';
+                    tagLabel = 'Paused / On Hold';
+                    tagClass = 'bg-orange-50 text-orange-700 border-orange-200';
+                    NodeIcon = PauseCircle;
                   }
+
+                  const isCurrentActiveStage = isLast && task.status !== 'completed' && task.status !== 'cancelled';
+                  const isTaskCompleted = isLast && task.status === 'completed';
 
                   return (
                     <div key={item.id} className="relative group">
+                      {/* Rich Milestone Node Icon on the timeline rail */}
                       <div
-                        className={`absolute -left-[31px] sm:-left-[39px] top-0 w-4 h-4 rounded-full border-2 border-white ${dotColor} shadow-xs ring-4 ring-slate-50`}
-                      />
+                        className={`absolute -left-[35px] sm:-left-[47px] top-1.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 border-white ${nodeBg} text-white flex items-center justify-center shadow-xs ring-4 transition-transform group-hover:scale-105`}
+                      >
+                        <NodeIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      </div>
 
-                      <div className="bg-slate-50/60 p-4 rounded-xl border border-slate-100 hover:bg-slate-50 transition">
-                        <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-800">
+                      {/* Milestone Card */}
+                      <div
+                        className={`p-4 rounded-xl border transition-all ${
+                          isCurrentActiveStage
+                            ? 'bg-amber-50/40 border-amber-300/80 shadow-xs ring-1 ring-amber-200/50'
+                            : isTaskCompleted
+                            ? 'bg-emerald-50/40 border-emerald-300/80 shadow-xs ring-1 ring-emerald-200/50'
+                            : 'bg-white border-slate-200/80 hover:bg-slate-50/60 shadow-2xs'
+                        }`}
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${tagClass} inline-flex items-center gap-1`}>
+                              <NodeIcon className="w-2.5 h-2.5" />
+                              <span>{tagLabel}</span>
+                            </span>
+
+                            <span className="text-xs font-bold text-slate-900">
                               {item.reason || `Transitioned to ${item.to_status.replace('_', ' ')}`}
                             </span>
-                            {isLast && task.status !== 'completed' && (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
+
+                            {isCurrentActiveStage && (
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 inline-flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                                 Current Stage
                               </span>
                             )}
-                            {isLast && task.status === 'completed' && (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 flex items-center gap-1">
-                                ✓ Completed & Closed
+
+                            {isTaskCompleted && (
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 inline-flex items-center gap-1">
+                                <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                Completed & Closed
                               </span>
                             )}
                           </div>
-                          <span className="text-[11px] font-medium text-slate-400">
-                            {item.changed_at ? new Date(item.changed_at).toLocaleString() : ''}
+
+                          <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-slate-400 shrink-0" />
+                            {item.changed_at ? new Date(item.changed_at).toLocaleString(undefined, {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit',
+                              second: '2-digit',
+                              hour12: true,
+                            }) : ''}
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <span>Action by:</span>
-                          <span className="font-semibold text-slate-700">{item.changed_by?.name || 'System'}</span>
-                          <span className="text-[10px] text-slate-400 capitalize">
-                            ({item.changed_by?.role?.replace('_', ' ') || 'User'})
-                          </span>
+                        <div className="flex items-center gap-2 text-xs text-slate-500 pt-2 border-t border-slate-100 mt-2">
+                          <div className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 text-[10px] font-bold flex items-center justify-center shrink-0">
+                            {item.changed_by?.name?.charAt(0) || 'S'}
+                          </div>
+                          <span className="text-slate-400">Action by:</span>
+                          <span className="font-semibold text-slate-800">{item.changed_by?.name || 'System'}</span>
+                          {item.changed_by?.role && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 capitalize">
+                              {item.changed_by.role.replace('_', ' ')}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -3047,14 +3386,22 @@ export const TaskDetailPage: React.FC = () => {
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">
                     {assignModalType === 'collaborate'
-                      ? 'Invite Collaborators (1 to Many)'
+                      ? 'Invite Collaborators'
+                      : !isCreator && Boolean(task.my_branch)
+                      ? (assignModalStep === 1
+                        ? 'Delegate Subtask to Teammate - Step 1 of 2'
+                        : `Configure Delegated Subtask - Step 2 of 2`)
                       : assignModalStep === 1
-                      ? 'Assign Team Members (1 to Many) - Step 1 of 2'
+                      ? 'Add Assignees to Task - Step 1 of 2'
                       : `Configure Work Allocation (${selectedModalUserIds.length}) - Step 2 of 2`}
                   </h3>
                   <p className="text-[11px] text-slate-500">
                     {assignModalType === 'collaborate'
                       ? 'Select one or more employees to collaborate together on this task.'
+                      : !isCreator && Boolean(task.my_branch)
+                      ? (assignModalStep === 1
+                        ? 'Select a teammate to delegate this subtask to.'
+                        : 'Set specific instructions, deliverable requirements, and due date for your teammate.')
                       : assignModalStep === 1
                       ? 'Select employees who will receive individual work allocations.'
                       : 'Set individual instructions, attachments, and sharing permissions for each assignee.'}
