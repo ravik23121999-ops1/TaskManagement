@@ -538,4 +538,69 @@ class MainTaskMultiEmployeeAssignmentTest extends TestCase
         $this->assertGreaterThanOrEqual(1, $rohitDashRes->json('data.my_action'), 'Rohit dashboard my_action count must be >= 1');
         $this->assertGreaterThanOrEqual(1, $rohitDashRes->json('data.assigned_to_me'), 'Rohit dashboard assigned_to_me count must be >= 1');
     }
+
+    public function test_assignee_only_receives_subtask_and_subtask_attachments_not_assigner_documents(): void
+    {
+        $sharedAssignerPdf = UploadedFile::fake()->create('QuickLifeNow_Complete_System_Flowcharts.pdf', 163, 'application/pdf');
+        $subtaskPdf = UploadedFile::fake()->create('QuickLifeNow_User_Flowchart_Guide.pdf', 1038, 'application/pdf');
+
+        // 1. Assigner (Manager Priya) creates task with shared attachment and assigns subtask with subtask attachment to Rohit
+        $createRes = $this->actingAs($this->manager, 'sanctum')->post('/api/tasks', [
+            'title' => 'Hello Task',
+            'description' => 'Main task executive overview with system flowcharts.',
+            'handling_method' => 'assign',
+            'priority' => 'medium',
+            'department_id' => $this->department->id,
+            'due_date' => '2026-11-20',
+            'shared_files' => [$sharedAssignerPdf],
+            'assignees' => [$this->rohit->id],
+            'branches' => [
+                [
+                    'owner_id' => $this->rohit->id,
+                    'title' => 'Hello - Rohit',
+                    'description' => 'Subtask assigned to Rohit.',
+                    'due_date' => '2026-11-18',
+                    'files' => [$subtaskPdf],
+                ],
+            ],
+            'branch_files' => [
+                $this->rohit->id => [$subtaskPdf],
+            ],
+        ]);
+        $createRes->assertStatus(201);
+        $taskId = $createRes->json('data.id');
+
+        // 2. Assigner (Manager Priya) views the task: sees both shared assigner doc and subtask doc
+        $assignerView = $this->actingAs($this->manager, 'sanctum')->getJson("/api/tasks/{$taskId}");
+        $assignerView->assertStatus(200);
+        $assignerSharedAtts = collect($assignerView->json('data.shared_attachments'))->pluck('file_name')->all();
+        $assignerAllAtts = collect($assignerView->json('data.attachments'))->pluck('file_name')->all();
+        $this->assertContains('QuickLifeNow_Complete_System_Flowcharts.pdf', $assignerSharedAtts);
+        $this->assertContains('QuickLifeNow_Complete_System_Flowcharts.pdf', $assignerAllAtts);
+        $this->assertContains('QuickLifeNow_User_Flowchart_Guide.pdf', $assignerAllAtts);
+
+        // 3. Assignee (Rohit) views the task: MUST ONLY see the subtask and its attachment, NOT the assigner attachment
+        $assigneeView = $this->actingAs($this->rohit, 'sanctum')->getJson("/api/tasks/{$taskId}");
+        $assigneeView->assertStatus(200);
+
+        // Assignee shared_attachments MUST BE EMPTY
+        $assigneeSharedAtts = $assigneeView->json('data.shared_attachments');
+        $this->assertEmpty($assigneeSharedAtts, 'Assignee must NOT receive assigner shared attachments');
+
+        // Assignee attachments MUST ONLY contain the subtask attachment
+        $assigneeAllAtts = collect($assigneeView->json('data.attachments'))->pluck('file_name')->all();
+        $this->assertNotContains('QuickLifeNow_Complete_System_Flowcharts.pdf', $assigneeAllAtts, 'Assigner attachment doc must NOT be accessible to assignee');
+        $this->assertContains('QuickLifeNow_User_Flowchart_Guide.pdf', $assigneeAllAtts);
+        $this->assertCount(1, $assigneeAllAtts);
+
+        // 4. Assignee attempts to download the assigner attachment directly -> MUST return 403 Forbidden
+        $assignerAttId = collect($assignerView->json('data.attachments'))->firstWhere('file_name', 'QuickLifeNow_Complete_System_Flowcharts.pdf')['id'];
+        $downloadAttempt = $this->actingAs($this->rohit, 'sanctum')->get("/api/attachments/{$assignerAttId}/download");
+        $downloadAttempt->assertStatus(403);
+
+        // 5. Assignee downloads their own subtask attachment -> MUST SUCCEED (200 OK)
+        $subtaskAttId = collect($assigneeView->json('data.attachments'))->firstWhere('file_name', 'QuickLifeNow_User_Flowchart_Guide.pdf')['id'];
+        $subtaskDownload = $this->actingAs($this->rohit, 'sanctum')->get("/api/attachments/{$subtaskAttId}/download");
+        $subtaskDownload->assertStatus(200);
+    }
 }

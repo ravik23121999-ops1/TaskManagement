@@ -678,6 +678,9 @@ export const TaskDetailPage: React.FC = () => {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('task_id', String(task.id));
+    if (task.my_branch?.id && task.creator?.id !== currentUser?.id) {
+      formData.append('task_branch_id', String(task.my_branch.id));
+    }
 
     setUploadingFile(true);
     try {
@@ -1332,7 +1335,14 @@ export const TaskDetailPage: React.FC = () => {
             }`}
           >
             <Paperclip className="w-3.5 h-3.5" />
-            <span>Files & Deliverables ({task.attachments?.length || 0})</span>
+            {(() => {
+              const isTaskCreator = task.creator?.id === currentUser?.id;
+              const isSubtaskAssignee = !isTaskCreator && Boolean(task.my_branch);
+              const count = isSubtaskAssignee
+                ? (task.my_branch?.attachments?.length || task.attachments?.filter((a) => a.task_branch_id === task.my_branch?.id).length || 0)
+                : (task.attachments?.length || 0);
+              return <span>Files & Deliverables ({count})</span>;
+            })()}
           </button>
 
           <button
@@ -1509,10 +1519,11 @@ export const TaskDetailPage: React.FC = () => {
                   {/* Attachments Section for My Assignment */}
                   {(() => {
                     const isTaskCreator = task.creator?.id === currentUser?.id;
-                    const isAdminOrSubAdmin = currentUser?.role === 'admin' || currentUser?.role === 'sub_admin';
-                    const isSubtaskAssignee = !isTaskCreator && !isAdminOrSubAdmin && task.my_branch && task.my_branch.share_parent_details === false;
+                    const isSubtaskAssignee = !isTaskCreator && Boolean(task.my_branch);
                     const sharedAtts = isSubtaskAssignee ? [] : (task.shared_attachments || task.attachments?.filter((a) => !a.task_branch_id) || []);
-                    const branchAtts = task.my_branch?.attachments || task.attachments?.filter((a) => a.task_branch_id === task.my_branch?.id) || [];
+                    const branchAtts = isSubtaskAssignee
+                      ? (task.my_branch?.attachments?.length ? task.my_branch.attachments : (task.attachments?.filter((a) => a.task_branch_id === task.my_branch?.id) || []))
+                      : (task.my_branch?.attachments || task.attachments?.filter((a) => a.task_branch_id === task.my_branch?.id) || []);
                     const allMyAtts = [
                       ...sharedAtts.map((a) => ({ ...a, is_shared: true })),
                       ...branchAtts.map((a) => ({ ...a, is_shared: false })),
@@ -2376,10 +2387,11 @@ export const TaskDetailPage: React.FC = () => {
 
           {(() => {
             const isTaskCreator = task.creator?.id === currentUser?.id;
-            const isAdminOrSubAdmin = currentUser?.role === 'admin' || currentUser?.role === 'sub_admin';
-            const isSubtaskAssignee = !isTaskCreator && !isAdminOrSubAdmin && task.my_branch && task.my_branch.share_parent_details === false;
+            const isSubtaskAssignee = !isTaskCreator && Boolean(task.my_branch);
             const sharedAtts = isSubtaskAssignee ? [] : (task.attachments?.filter((a) => !a.task_branch_id) || []);
-            const branchAtts = task.attachments?.filter((a) => a.task_branch_id) || [];
+            const branchAtts = isSubtaskAssignee
+              ? (task.my_branch?.attachments?.length ? task.my_branch.attachments : (task.attachments?.filter((a) => a.task_branch_id === task.my_branch?.id) || []))
+              : (task.attachments?.filter((a) => a.task_branch_id) || []);
 
             return (
               <div className="space-y-6">

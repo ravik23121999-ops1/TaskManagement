@@ -79,10 +79,21 @@ class AttachmentController extends Controller
             return response()->json(['message' => 'Task not found.'], 404);
         }
 
-        // Role check: Admin and Sub-Admin have unrestricted access
-        if ($user->role !== 'admin' && $user->role !== 'sub_admin') {
-            $isCreator = $task->creator_id === $user->id;
-            $isUploader = $attachment->uploaded_by_id === $user->id;
+        $isCreator = (int)$task->creator_id === (int)$user->id;
+        $userActiveBranch = $task->branches()->where('owner_id', $user->id)
+            ->orWhereHas('assignments', fn($a) => $a->where('assigned_to_id', $user->id))
+            ->first();
+        $isAssignee = $userActiveBranch && !$isCreator;
+
+        // When assigner assigns to assignee, assigner attachment doc (whereNull task_branch_id)
+        // is NOT shared with assignee
+        if ($isAssignee && is_null($attachment->task_branch_id)) {
+            return response()->json(['message' => 'Unauthorized: Assigner attachments are not accessible to subtask assignees.'], 403);
+        }
+
+        // Role check: Global Admin has unrestricted access when not acting as an assignee
+        if ($user->role !== 'admin' || $isAssignee) {
+            $isUploader = (int)$attachment->uploaded_by_id === (int)$user->id;
 
             if ($attachment->task_branch_id) {
                 // Strict branch isolation: Individual attachment belongs to a specific branch/employee

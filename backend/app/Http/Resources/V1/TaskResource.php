@@ -13,12 +13,16 @@ class TaskResource extends JsonResource
         $user = $request->user();
         $isCreator = $user && (int)$this->creator_id === (int)$user->id;
         $isAdmin = $user && ($user->role === 'admin' || $user->role === 'sub_admin');
-        $canOverseeAll = $isCreator || $isAdmin;
 
         // Permissions for current user
         $isBranchOwner = $user && $this->branches->where('owner_id', $user->id)->isNotEmpty();
         $userActiveBranch = $user ? ($this->branches->firstWhere('owner_id', $user->id)
             ?? $this->branches->first(fn($b) => $b->assignments->contains('assigned_to_id', $user->id) || $b->collaborators->contains('user_id', $user->id))) : null;
+
+        // When a user is assigned to a specific branch/subtask as an assignee,
+        // they strictly act as an assignee on this task (even if their account has sub_admin/admin role).
+        $isAssignee = $userActiveBranch && !$isCreator;
+        $canOverseeAll = $isCreator || ($isAdmin && !$isAssignee);
 
         // Strict Peer Isolation:
         // A peer assignee or collaborator must NEVER see another peer's branch work, instructions, or deliverables!
@@ -496,10 +500,21 @@ class TaskResource extends JsonResource
                     'role' => $comment->user->role,
                 ] : null,
             ]),
-            'shared_attachments' => (!$canOverseeAll && $userActiveBranch && $userActiveBranch->share_parent_details === false)
+            'shared_attachments' => $isAssignee
                 ? []
-                : $this->attachments->whereNull('task_branch_id')->values()->map(fn($att) => $this->formatAttachment($att)),
-            'attachments' => $this->attachments->filter(function ($att) use ($canOverseeAll, $visibleBranches, $userActiveBranch) {
+                : ((!$canOverseeAll && $userActiveBranch && $userActiveBranch->share_parent_details === false)
+                    ? []
+                    : $this->attachments->whereNull('task_branch_id')->values()->map(fn($att) => $this->formatAttachment($att))),
+            'attachments' => $this->attachments->filter(function ($att) use ($canOverseeAll, $visibleBranches, $userActiveBranch, $isAssignee) {
+                if ($isAssignee) {
+                    // When assigner assigns to assignee, assignee only receives their subtask attachments
+                    // The assigner's attachment doc (whereNull task_branch_id) is strictly hidden
+                    if (is_null($att->task_branch_id)) {
+                        return false;
+                    }
+                    $visibleBranchIds = $visibleBranches->pluck('id')->all();
+                    return in_array($att->task_branch_id, $visibleBranchIds);
+                }
                 if ($canOverseeAll) return true;
                 $visibleBranchIds = $visibleBranches->pluck('id')->all();
                 if (is_null($att->task_branch_id)) {
