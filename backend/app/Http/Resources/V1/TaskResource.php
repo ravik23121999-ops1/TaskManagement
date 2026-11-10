@@ -52,7 +52,43 @@ class TaskResource extends JsonResource
         // 3. Assigner who delegated further is NOT owner while subordinates are working.
         // 4. Assigner BECOMES owner after reviewing and approving subordinate assignees' tasks.
         // 5. Creator is owner when all branches are completed or handling method is work_alone.
-        $rawOwners = \App\Services\TaskHierarchyService::determineCurrentOwners($this->resource, $allBranches);
+        // STRICT PEER ISOLATION:
+        // When viewing as an assignee (!canOverseeAll), an assignee must NEVER see other peer assignees!
+        // Their ownership scope is strictly restricted to branches visible to them (themselves and any subordinates).
+        $branchesForOwnership = $canOverseeAll ? $allBranches : $visibleBranches;
+        $rawOwners = \App\Services\TaskHierarchyService::determineCurrentOwners($this->resource, $branchesForOwnership);
+
+        $allowedUserIds = null;
+        if (!$canOverseeAll && $user) {
+            $allowedUserIds = collect([
+                (int)$user->id,
+                (int)$this->creator_id,
+            ]);
+
+            if ($userActiveBranch) {
+                $currAssign = $userActiveBranch->assignments->firstWhere('is_current', true);
+                if ($currAssign?->assigned_by_id) {
+                    $allowedUserIds->push((int)$currAssign->assigned_by_id);
+                }
+                foreach ($visibleBranches as $vb) {
+                    if ($vb->owner_id) {
+                        $allowedUserIds->push((int)$vb->owner_id);
+                    }
+                }
+            }
+            $allowedUserIds = $allowedUserIds->filter()->unique()->all();
+
+            $rawOwners = array_values(array_filter($rawOwners, function ($u) use ($allowedUserIds) {
+                return in_array((int)$u->id, $allowedUserIds);
+            }));
+
+            // Fallback: if empty, default to user themselves or creator
+            if (empty($rawOwners)) {
+                $rawOwners = $userActiveBranch && (int)$userActiveBranch->owner_id === (int)$user->id
+                    ? [$user]
+                    : ($this->creator ? [$this->creator] : []);
+            }
+        }
 
         $currentOwners = array_values(array_map(function ($u) {
             return [
@@ -490,16 +526,20 @@ class TaskResource extends JsonResource
                 'email' => $c->user?->email,
                 'role' => $c->user?->role,
             ])->unique('id')->values(),
-            'comments' => $this->comments->map(fn($comment) => [
-                'id' => $comment->id,
-                'comment' => $comment->comment,
-                'created_at' => $comment->created_at?->toISOString(),
-                'user' => $comment->user ? [
-                    'id' => $comment->user->id,
-                    'name' => $comment->user->name,
-                    'role' => $comment->user->role,
-                ] : null,
-            ]),
+            'comments' => $this->comments
+                ->when(!$canOverseeAll && !empty($allowedUserIds), function ($cColl) use ($allowedUserIds) {
+                    return $cColl->filter(fn($c) => in_array((int)$c->user_id, $allowedUserIds));
+                })
+                ->map(fn($comment) => [
+                    'id' => $comment->id,
+                    'comment' => $comment->comment,
+                    'created_at' => $comment->created_at?->toISOString(),
+                    'user' => $comment->user ? [
+                        'id' => $comment->user->id,
+                        'name' => $comment->user->name,
+                        'role' => $comment->user->role,
+                    ] : null,
+                ]),
             'shared_attachments' => $isAssignee
                 ? []
                 : ((!$canOverseeAll && $userActiveBranch && $userActiveBranch->share_parent_details === false)
@@ -525,7 +565,7 @@ class TaskResource extends JsonResource
                 }
                 return in_array($att->task_branch_id, $visibleBranchIds);
             })->values()->map(fn($att) => $this->formatAttachment($att)),
-            'status_history' => (function () {
+            'status_history' => (function () use ($canOverseeAll, $visibleBranches, $allowedUserIds) {
                 $taskCreatedAt = $this->created_at ? (is_string($this->created_at) ? Carbon::parse($this->created_at) : $this->created_at) : now();
 
                 $historyItems = $this->statusHistory->map(function ($h) use ($taskCreatedAt) {
@@ -570,48 +610,65 @@ class TaskResource extends JsonResource
                     ]);
                 }
 
-                // Include subtask assignment events if not already present
-                if ($this->relationLoaded('branches')) {
-                    foreach ($this->branches as $b) {
-                        if ($b->owner) {
-                            $alreadyLogged = $historyItems->contains(function ($item) use ($b) {
-                                return str_contains(strtolower($item['reason'] ?? ''), 'assigned')
-                                    && str_contains(strtolower($item['reason'] ?? ''), strtolower($b->owner->name ?? ''));
-                            });
+                // Include subtask assignment events strictly for visible branches
+                $branchesToLog = $canOverseeAll
+                    ? ($this->relationLoaded('branches') ? $this->branches : collect())
+                    : $visibleBranches;
 
-                            if (!$alreadyLogged) {
-                                $assigner = $this->creator;
-                                if ($b->relationLoaded('assignments')) {
-                                    $firstAssign = $b->assignments->sortBy('assigned_at')->first();
-                                    if ($firstAssign && $firstAssign->relationLoaded('assignedBy') && $firstAssign->assignedBy) {
-                                        $assigner = $firstAssign->assignedBy;
-                                    }
+                foreach ($branchesToLog as $b) {
+                    if ($b->owner) {
+                        $alreadyLogged = $historyItems->contains(function ($item) use ($b) {
+                            return str_contains(strtolower($item['reason'] ?? ''), 'assigned')
+                                && str_contains(strtolower($item['reason'] ?? ''), strtolower($b->owner->name ?? ''));
+                        });
+
+                        if (!$alreadyLogged) {
+                            $assigner = $this->creator;
+                            if ($b->relationLoaded('assignments')) {
+                                $firstAssign = $b->assignments->sortBy('assigned_at')->first();
+                                if ($firstAssign && $firstAssign->relationLoaded('assignedBy') && $firstAssign->assignedBy) {
+                                    $assigner = $firstAssign->assignedBy;
                                 }
-
-                                $bCreatedAt = $b->created_at ? (is_string($b->created_at) ? Carbon::parse($b->created_at) : $b->created_at) : $taskCreatedAt;
-
-                                // If branch created timestamp is identical or earlier than task creation,
-                                // adjust to 1 second after task creation to guarantee true chronological ordering
-                                if ($taskCreatedAt && $bCreatedAt && $bCreatedAt->timestamp <= $taskCreatedAt->timestamp) {
-                                    $bCreatedAt = $taskCreatedAt->copy()->addSecond();
-                                }
-
-                                $historyItems->push([
-                                    'id' => 'assign_' . $b->id,
-                                    'from_status' => null,
-                                    'to_status' => 'in_progress',
-                                    'reason' => "Subtask '{$b->title}' assigned to {$b->owner->name}",
-                                    'changed_at' => $bCreatedAt ? $bCreatedAt->toISOString() : null,
-                                    'changed_by' => $assigner ? [
-                                        'id' => $assigner->id,
-                                        'name' => $assigner->name,
-                                        'role' => $assigner->role,
-                                    ] : null,
-                                    '_is_task_created' => false,
-                                ]);
                             }
+
+                            $bCreatedAt = $b->created_at ? (is_string($b->created_at) ? Carbon::parse($b->created_at) : $b->created_at) : $taskCreatedAt;
+
+                            if ($taskCreatedAt && $bCreatedAt && $bCreatedAt->timestamp <= $taskCreatedAt->timestamp) {
+                                $bCreatedAt = $taskCreatedAt->copy()->addSecond();
+                            }
+
+                            $historyItems->push([
+                                'id' => 'assign_' . $b->id,
+                                'from_status' => null,
+                                'to_status' => 'in_progress',
+                                'reason' => "Subtask '{$b->title}' assigned to {$b->owner->name}",
+                                'changed_at' => $bCreatedAt ? $bCreatedAt->toISOString() : null,
+                                'changed_by' => $assigner ? [
+                                    'id' => $assigner->id,
+                                    'name' => $assigner->name,
+                                    'role' => $assigner->role,
+                                ] : null,
+                                '_is_task_created' => false,
+                            ]);
                         }
                     }
+                }
+
+                // Strict peer isolation for assignees: filter out any history items that reference peer assignees
+                if (!$canOverseeAll && !empty($allowedUserIds)) {
+                    $historyItems = $historyItems->filter(function ($item) use ($visibleBranches, $allowedUserIds) {
+                        if (!empty($item['_is_task_created'])) {
+                            return true;
+                        }
+                        $reason = strtolower($item['reason'] ?? '');
+                        if (str_contains($reason, 'assigned to')) {
+                            return $visibleBranches->contains(function ($b) use ($reason) {
+                                return $b->owner && str_contains($reason, strtolower($b->owner->name ?? ''));
+                            });
+                        }
+                        $actorId = $item['changed_by']['id'] ?? null;
+                        return $actorId && in_array((int)$actorId, $allowedUserIds);
+                    })->values();
                 }
 
                 // Sort strictly in ascending chronological order:

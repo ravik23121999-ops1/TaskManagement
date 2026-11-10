@@ -2033,9 +2033,14 @@ export const TaskDetailPage: React.FC = () => {
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5 text-blue-600" />
                   <span>
-                    {task.current_owners && task.current_owners.length > 1
-                      ? `Action Needed By (${task.current_owners.length})`
-                      : 'Action Needed By'}
+                    {(() => {
+                      if (task.is_peer_isolated || isSubtaskAssignee) {
+                        return 'Action Needed By';
+                      }
+                      return task.current_owners && task.current_owners.length > 1
+                        ? `Action Needed By (${task.current_owners.length})`
+                        : 'Action Needed By';
+                    })()}
                   </span>
                 </h3>
                 <p className="text-[11px] text-slate-400 mt-0.5">
@@ -2043,133 +2048,121 @@ export const TaskDetailPage: React.FC = () => {
                 </p>
               </div>
 
-              {task.current_owners && task.current_owners.length > 1 ? (
-                <div className="space-y-3">
-                  <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
-                    {task.current_owners.map((owner) => {
-                      const ownerBranch = task.branches?.find((b) => b.owner?.id === owner.id);
-                      let roleTag = 'Active Assignee';
-                      let roleColor = 'bg-blue-50 text-blue-700 border-blue-200';
+              {(() => {
+                // STRICT PEER ISOLATION:
+                // An assignee must NEVER see other peer assignees.
+                // Determine visible owners strictly within this user's peer-isolated scope:
+                let ownersList = task.current_owners && task.current_owners.length > 0 ? task.current_owners : (task.current_owner ? [task.current_owner] : []);
 
-                      if (ownerBranch) {
-                        if (ownerBranch.status === 'review') {
-                          roleTag = 'Submitted (In Review)';
-                          roleColor = 'bg-amber-50 text-amber-700 border-amber-200';
-                        } else if (ownerBranch.status === 'post_comment') {
-                          roleTag = 'Corrections Needed';
-                          roleColor = 'bg-rose-50 text-rose-700 border-rose-200';
-                        } else if (ownerBranch.status === 'completed') {
-                          roleTag = 'Approved & Completed';
-                          roleColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
-                        } else {
-                          roleTag = 'Working on Deliverable';
-                          roleColor = 'bg-sky-50 text-sky-700 border-sky-200';
-                        }
-                      } else if (task.creator?.id === owner.id) {
-                        if (isReadyForFinalSignOff) {
-                          roleTag = 'Final Sign-off Required';
-                          roleColor = 'bg-emerald-50 text-emerald-800 border-emerald-200';
-                        } else {
-                          roleTag = 'Task Assigner / Creator';
-                          roleColor = 'bg-indigo-50 text-indigo-700 border-indigo-200';
-                        }
-                      }
+                if (task.is_peer_isolated || isSubtaskAssignee) {
+                  const allowedIds = new Set([
+                    currentUser?.id,
+                    task.creator?.id,
+                    task.my_branch?.assigned_by?.id,
+                    ...(task.branches?.map((b) => b.owner?.id).filter(Boolean) as number[] || []),
+                  ]);
 
-                      return (
-                        <div
-                          key={owner.id}
-                          className="flex items-center gap-3 p-3 rounded-xl bg-slate-50/70 border border-slate-100 hover:bg-slate-50 transition-colors"
-                        >
-                          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 text-white font-bold flex items-center justify-center text-xs shadow-xs shrink-0">
-                            {owner.name.charAt(0)}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-1 flex-wrap">
-                              <h4 className="text-xs font-bold text-slate-900 truncate">{owner.name}</h4>
-                              <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold border ${roleColor} shrink-0`}>
-                                {roleTag}
-                              </span>
-                            </div>
-                            <p className="text-[10px] text-slate-400 truncate mt-0.5">{owner.email}</p>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <button
-                    onClick={() => setActiveTab('comments')}
-                    className="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center justify-between border border-slate-200/80 cursor-pointer"
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <MessageSquare className="w-3.5 h-3.5 text-blue-600" />
-                      <span>Leave Message / Note</span>
-                    </span>
-                    <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-                  </button>
-                </div>
-              ) : task.current_owner ? (
-                <div className="space-y-3">
-                  {(() => {
-                    const owner = task.current_owner;
-                    const ownerBranch = task.branches?.find((b) => b.owner?.id === owner.id);
-                    let roleTag = 'Active Assignee';
-                    let roleColor = 'bg-blue-50 text-blue-700 border-blue-200';
+                  ownersList = ownersList.filter((o) => allowedIds.has(o.id));
 
-                    if (ownerBranch) {
-                      if (ownerBranch.status === 'review') {
-                        roleTag = 'Submitted (In Review)';
-                        roleColor = 'bg-amber-50 text-amber-700 border-amber-200';
-                      } else if (ownerBranch.status === 'post_comment') {
-                        roleTag = 'Corrections Needed';
-                        roleColor = 'bg-rose-50 text-rose-700 border-rose-200';
-                      } else if (ownerBranch.status === 'completed') {
-                        roleTag = 'Approved & Completed';
-                        roleColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
-                      } else {
-                        roleTag = 'Working on Deliverable';
-                        roleColor = 'bg-sky-50 text-sky-700 border-sky-200';
+                  // If empty or filtered out, accurately show the user themselves if their branch is active,
+                  // or their assigner if awaiting review:
+                  if (ownersList.length === 0) {
+                    if (task.my_branch?.status === 'review') {
+                      const reviewerUser = task.my_branch.assigned_by || task.creator;
+                      if (reviewerUser) {
+                        ownersList = [{
+                          id: reviewerUser.id,
+                          name: reviewerUser.name,
+                          email: reviewerUser.email || '',
+                          role: reviewerUser.role || 'Reviewer',
+                        }];
                       }
-                    } else if (task.creator?.id === owner.id) {
-                      if (isReadyForFinalSignOff) {
-                        roleTag = 'Final Sign-off Required';
-                        roleColor = 'bg-emerald-50 text-emerald-800 border-emerald-200';
-                      } else {
-                        roleTag = 'Task Assigner / Creator';
-                        roleColor = 'bg-indigo-50 text-indigo-700 border-indigo-200';
-                      }
+                    } else if (currentUser) {
+                      ownersList = [{
+                        id: currentUser.id,
+                        name: currentUser.name,
+                        email: currentUser.email || '',
+                        role: currentUser.role || 'Assignee',
+                      }];
                     }
+                  }
+                }
 
-                    return (
-                      <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50/70 border border-slate-100">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 text-white font-bold flex items-center justify-center text-sm shadow-sm shrink-0">
-                          {owner.name.charAt(0)}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between gap-1 flex-wrap">
-                            <h4 className="text-xs font-bold text-slate-900 truncate">{owner.name}</h4>
-                            <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold border ${roleColor} shrink-0`}>
-                              {roleTag}
-                            </span>
+                if (ownersList.length === 0) {
+                  return <p className="text-xs text-slate-400 italic">No owner assigned.</p>;
+                }
+
+                return (
+                  <div className="space-y-3">
+                    <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+                      {ownersList.map((owner) => {
+                        const ownerBranch = task.branches?.find((b) => b.owner?.id === owner.id);
+                        let roleTag = 'Active Assignee';
+                        let roleColor = 'bg-blue-50 text-blue-700 border-blue-200';
+
+                        if (ownerBranch) {
+                          if (ownerBranch.status === 'review') {
+                            roleTag = (task.is_peer_isolated || isSubtaskAssignee) && owner.id === currentUser?.id
+                              ? 'Submitted (In Review)'
+                              : 'Submitted (In Review)';
+                            roleColor = 'bg-amber-50 text-amber-700 border-amber-200';
+                          } else if (ownerBranch.status === 'post_comment') {
+                            roleTag = 'Corrections Needed';
+                            roleColor = 'bg-rose-50 text-rose-700 border-rose-200';
+                          } else if (ownerBranch.status === 'completed') {
+                            roleTag = 'Approved & Completed';
+                            roleColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                          } else {
+                            roleTag = 'Working on Deliverable';
+                            roleColor = 'bg-sky-50 text-sky-700 border-sky-200';
+                          }
+                        } else if ((task.is_peer_isolated || isSubtaskAssignee) && task.my_branch?.status === 'review' && (owner.id === task.my_branch?.assigned_by?.id || owner.id === task.creator?.id)) {
+                          roleTag = 'Reviewing Your Submission';
+                          roleColor = 'bg-amber-50 text-amber-800 border-amber-200';
+                        } else if (task.creator?.id === owner.id) {
+                          if (isReadyForFinalSignOff) {
+                            roleTag = 'Final Sign-off Required';
+                            roleColor = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+                          } else {
+                            roleTag = 'Task Assigner / Creator';
+                            roleColor = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+                          }
+                        }
+
+                        return (
+                          <div
+                            key={owner.id}
+                            className="flex items-center gap-3 p-3 rounded-xl bg-slate-50/70 border border-slate-100 hover:bg-slate-50 transition-colors"
+                          >
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-sky-400 text-white font-bold flex items-center justify-center text-xs shadow-xs shrink-0">
+                              {owner.name.charAt(0)}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center justify-between gap-1 flex-wrap">
+                                <h4 className="text-xs font-bold text-slate-900 truncate">{owner.name}</h4>
+                                <span className={`px-2 py-0.5 rounded-md text-[9px] font-bold border ${roleColor} shrink-0`}>
+                                  {roleTag}
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-slate-400 truncate mt-0.5">{owner.email}</p>
+                            </div>
                           </div>
-                          <p className="text-[10px] text-slate-400 truncate mt-0.5">{owner.email}</p>
-                        </div>
-                      </div>
-                    );
-                  })()}
-                  <button
-                    onClick={() => setActiveTab('comments')}
-                    className="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center justify-between border border-slate-200/80 cursor-pointer"
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <MessageSquare className="w-3.5 h-3.5 text-blue-600" />
-                      <span>Leave Message / Note</span>
-                    </span>
-                    <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-                  </button>
-                </div>
-              ) : (
-                <p className="text-xs text-slate-400 italic">No owner assigned.</p>
-              )}
+                        );
+                      })}
+                    </div>
+                    <button
+                      onClick={() => setActiveTab('comments')}
+                      className="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center justify-between border border-slate-200/80 cursor-pointer"
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <MessageSquare className="w-3.5 h-3.5 text-blue-600" />
+                        <span>Leave Message / Note</span>
+                      </span>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+                    </button>
+                  </div>
+                );
+              })()}
             </div>
 
             {/* On Hold alert if currently on hold */}
