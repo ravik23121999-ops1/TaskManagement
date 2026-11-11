@@ -315,8 +315,8 @@ class TaskResource extends JsonResource
 
         $canCancel = ($isCreator || $isFullAdmin || $subAdminCanCancel) && !in_array($this->status, ['completed', 'cancelled']);
         $canDelete = ($isFullAdmin || $subAdminCanDelete);
-        $canHold = ($isCreator || $isAdmin || $isBranchOwner) && !in_array($this->status, ['completed', 'cancelled', 'on_hold']);
-        $canResume = ($isCreator || $isAdmin || $isBranchOwner) && $this->status === 'on_hold';
+        $canHold = \App\Services\TaskHierarchyService::canUserHoldTask($this->resource, $user);
+        $canResume = \App\Services\TaskHierarchyService::canUserResumeTask($this->resource, $user);
         $canEdit = ($isCreator || $isAdmin) && !in_array($this->status, ['completed', 'cancelled']);
 
         // Request missing details permission:

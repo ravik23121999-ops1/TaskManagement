@@ -86,4 +86,14 @@ class TaskPolicy
             });
         })->exists();
     }
+
+    public function hold(User $user, Task $task): bool
+    {
+        return \App\Services\TaskHierarchyService::canUserHoldTask($task, $user);
+    }
+
+    public function resume(User $user, Task $task): bool
+    {
+        return \App\Services\TaskHierarchyService::canUserResumeTask($task, $user);
+    }
 }

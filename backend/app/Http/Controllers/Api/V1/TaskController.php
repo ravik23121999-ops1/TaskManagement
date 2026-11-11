@@ -898,11 +898,10 @@ class TaskController extends Controller
     {
         $request->validate(['reason' => 'required|string|min:3']);
         $user = $request->user();
-        $isAdmin = $user->role === 'admin' || $user->role === 'sub_admin';
-        $isOwner = $task->creator_id === $user->id || $task->branches()->where('owner_id', $user->id)->exists();
-
-        if (!$isAdmin && !$isOwner) {
-            return response()->json(['message' => 'Unauthorized to put this task on hold'], 403);
+        if (!\App\Services\TaskHierarchyService::canUserHoldTask($task, $user)) {
+            return response()->json([
+                'message' => 'Unauthorized: Only the active leaf node assignee working on this task (or the assigner reviewing a submitted deliverable / holding consolidated work) has the right to pause.'
+            ], 403);
         }
 
         if (in_array($task->status, ['completed', 'cancelled'])) {
@@ -965,11 +964,8 @@ class TaskController extends Controller
     public function resume(Request $request, Task $task): JsonResponse
     {
         $user = $request->user();
-        $isAdmin = $user->role === 'admin' || $user->role === 'sub_admin';
-        $isOwner = $task->creator_id === $user->id || $task->branches()->where('owner_id', $user->id)->exists();
-
-        if (!$isAdmin && !$isOwner) {
-            return response()->json(['message' => 'Unauthorized to resume this task'], 403);
+        if (!\App\Services\TaskHierarchyService::canUserResumeTask($task, $user)) {
+            return response()->json(['message' => 'Unauthorized: You do not have permission to resume this task.'], 403);
         }
 
         if ($task->status !== 'on_hold') {

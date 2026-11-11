@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Task;
 use App\Models\TaskBranch;
+use App\Models\TaskHoldRecord;
+use App\Models\User;
 use Illuminate\Support\Collection;
 
 class TaskHierarchyService
@@ -394,5 +396,194 @@ class TaskHierarchyService
         }
 
         return $uniqueOwners;
+    }
+
+    /**
+     * Determine if a user has the right to pause (hold) a task dynamically:
+     * 1. System Admin & Sub-Admin always retain organizational override authority.
+     * 2. When tasks are delegated down:
+     *    - The leaf node assignee who is actively working (pending, in_progress, post_comment)
+     *      has the right to pause the task at that time.
+     *    - The intermediate assigner who delegated further has NO right to pause while their
+     *      assignees are executing the work.
+     *    - After the leaf node submits their deliverable (review status), the leaf node loses pause right,
+     *      and the above person (the assigner/reviewer) gains the right to pause while reviewing.
+     *    - After the assigner approves the subordinate's task, it is the assigner's responsibility to
+     *      submit their consolidated work upward to the upper level; the assigner holds the work and
+     *      HAS the right to pause at that time!
+     * 3. For work_alone or task creator with all branches completed: Creator has the right to pause.
+     */
+    public static function canUserHoldTask(Task $task, ?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        if (in_array($task->status, ['completed', 'cancelled', 'on_hold'])) {
+            return false;
+        }
+
+        // 1. System Admin and Sub-Admin always have administrative pause authority
+        if ($user->role === 'admin' || $user->role === 'sub_admin') {
+            return true;
+        }
+
+        $allBranches = $task->relationLoaded('branches')
+            ? $task->branches->filter(fn($b) => $b->status !== 'cancelled')
+            : $task->branches()->where('status', '!=', 'cancelled')->get();
+
+        // 2. Work alone handling method or task with no subtasks
+        if ($task->handling_method === 'work_alone' || $allBranches->isEmpty()) {
+            return (int)$task->creator_id === (int)$user->id;
+        }
+
+        // Map parent assignments to parent branch IDs
+        $branchesById = $allBranches->keyBy('id');
+        $parentBranchMap = [];
+        foreach ($allBranches as $branch) {
+            $parentAssignmentId = $branch->parent_assignment_id;
+            if ($parentAssignmentId) {
+                $parentAssignment = $branch->relationLoaded('parentAssignment')
+                    ? $branch->parentAssignment
+                    : $branch->parentAssignment()->first();
+
+                if ($parentAssignment && isset($branchesById[$parentAssignment->task_branch_id])) {
+                    $parentBranchMap[$branch->id] = $parentAssignment->task_branch_id;
+                }
+            }
+        }
+
+        // Helper to get direct children under a branch
+        $getChildren = function ($branchId) use ($allBranches, $parentBranchMap) {
+            return $allBranches->filter(function ($b) use ($branchId, $parentBranchMap) {
+                return ($parentBranchMap[$b->id] ?? null) === $branchId
+                    || ($b->parent_assignment_id && $b->parentAssignment && (int)$b->parentAssignment->task_branch_id === (int)$branchId);
+            });
+        };
+
+        // Recursive helper to get all descendants
+        $getDescendants = function ($parentId) use (&$getDescendants, $getChildren) {
+            $children = $getChildren($parentId);
+            $descendants = collect();
+            foreach ($children as $child) {
+                $descendants->push($child);
+                $descendants = $descendants->merge($getDescendants($child->id));
+            }
+            return $descendants->unique('id');
+        };
+
+        $userBranches = $allBranches->filter(fn($b) => (int)$b->owner_id === (int)$user->id);
+
+        // CASE A: User is an active Leaf Node (working on an uncompleted subtask, not delegated further)
+        foreach ($userBranches as $branch) {
+            if ($branch->status === 'completed' || $branch->status === 'cancelled') {
+                continue;
+            }
+
+            $children = $getChildren($branch->id);
+            if ($children->isEmpty()) {
+                // Leaf node branch!
+                // If currently working on it: has pause right!
+                if (in_array($branch->status, ['pending', 'in_progress', 'post_comment'])) {
+                    return true;
+                }
+                // If branch status is 'review', the leaf node has submitted and cannot pause!
+            }
+        }
+
+        // CASE B: User is an Assigner / Reviewer whose subordinate has SUBMITTED for review
+        // (The leaf node submitted, so responsibility shifted up to this assigner to review)
+        foreach ($allBranches as $branch) {
+            if ($branch->status === 'completed' || $branch->status === 'cancelled') {
+                continue;
+            }
+
+            $currentAssignment = $branch->relationLoaded('assignments')
+                ? $branch->assignments->firstWhere('is_current', true)
+                : $branch->assignments()->where('is_current', true)->first();
+
+            $isDirectAssigner = $currentAssignment
+                && (int)$currentAssignment->assigned_by_id === (int)$user->id
+                && (int)$currentAssignment->assigned_to_id !== (int)$user->id;
+
+            $isParentBranchAssigner = false;
+            if ($branch->parent_assignment_id && $branch->parentAssignment) {
+                $isParentBranchAssigner = (int)$branch->parentAssignment->assigned_to_id === (int)$user->id
+                    || (int)$branch->parentAssignment->assigned_by_id === (int)$user->id;
+            }
+
+            if ($isDirectAssigner || $isParentBranchAssigner) {
+                // Subordinate is in review status! Assigner is reviewing -> Assigner CAN pause!
+                if ($branch->status === 'review') {
+                    return true;
+                }
+
+                // Check pending unreviewed submissions on this subordinate branch
+                $submissions = $branch->relationLoaded('submissions')
+                    ? $branch->submissions
+                    : $branch->submissions()->with('reviews')->get();
+
+                if ($submissions->contains(fn($s) => $s->reviews->isEmpty() && (int)$s->submitted_by_id !== (int)$user->id)) {
+                    return true;
+                }
+            }
+        }
+
+        // CASE C: User is an Intermediate Assigner whose subordinates are ALL completed & approved!
+        // (Assigner approved subordinate tasks, now holds their own deliverable to submit upward)
+        foreach ($userBranches as $branch) {
+            if ($branch->status === 'completed' || $branch->status === 'cancelled') {
+                continue;
+            }
+
+            $descendants = $getDescendants($branch->id);
+            if ($descendants->isNotEmpty()) {
+                $uncompletedDescendants = $descendants->filter(fn($c) => $c->status !== 'completed' && $c->status !== 'cancelled');
+                if ($uncompletedDescendants->isEmpty() && in_array($branch->status, ['pending', 'in_progress', 'post_comment'])) {
+                    // All subordinates approved! Assigner is active holder of work before submitting upward!
+                    return true;
+                }
+            }
+        }
+
+        // CASE D: Task Creator when ALL branches are completed & approved (ready for final sign-off)
+        if ((int)$task->creator_id === (int)$user->id) {
+            $uncompletedAll = $allBranches->filter(fn($b) => $b->status !== 'completed' && $b->status !== 'cancelled');
+            if ($uncompletedAll->isEmpty() && !in_array($task->status, ['completed', 'cancelled'])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Determine if a user has the right to resume a task from on_hold.
+     */
+    public static function canUserResumeTask(Task $task, ?User $user): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        if ($task->status !== 'on_hold') {
+            return false;
+        }
+
+        // 1. Admin and Sub-Admin can always resume
+        if ($user->role === 'admin' || $user->role === 'sub_admin') {
+            return true;
+        }
+
+        // 2. The user who placed the task on hold can always resume it
+        $activeHold = TaskHoldRecord::where('task_id', $task->id)->whereNull('resumed_at')->latest('held_at')->first();
+        if ($activeHold && (int)$activeHold->put_on_hold_by_id === (int)$user->id) {
+            return true;
+        }
+
+        // 3. The current responsibility holder can resume
+        $tempTask = clone $task;
+        $tempTask->status = 'in_progress';
+        return self::canUserHoldTask($tempTask, $user);
     }
 }
