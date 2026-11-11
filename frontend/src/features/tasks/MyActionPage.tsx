@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { tasksApi } from '../../api/tasks';
-import type { Task } from '../../api/tasks';
+import type { Task, TaskSubmission } from '../../api/tasks';
 import { StatusBadge, PriorityBadge } from '../../components/StatusBadge';
 import { Pagination } from '../../components/Pagination';
 import { TableSkeleton } from '../../components/TableSkeleton';
-import { Search, AlertCircle, Eye, Zap, Clock, FileCheck2, RotateCcw, X } from 'lucide-react';
+import { ReviewModal } from '../../components/ReviewModal';
+import { Search, AlertCircle, Eye, Zap, Clock, FileCheck2, RotateCcw, X, CheckCircle2 } from 'lucide-react';
 
 export const MyActionPage: React.FC = () => {
   const navigate = useNavigate();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Review Modal state for Quick Review
+  const [selectedTaskForReview, setSelectedTaskForReview] = useState<Task | null>(null);
+  const [selectedSubmissionForReview, setSelectedSubmissionForReview] = useState<TaskSubmission | null>(null);
+  const [isQuickReviewModalOpen, setIsQuickReviewModalOpen] = useState(false);
 
   // Filters
   const [search, setSearch] = useState('');
@@ -72,6 +78,29 @@ export const MyActionPage: React.FC = () => {
     setStatus('all');
     setPriority('all');
     setPage(1);
+  };
+
+  const openQuickReview = async (task: Task) => {
+    let sub = task.submissions?.find((s) => !s.reviews || s.reviews.length === 0) || task.submissions?.[0];
+    if (!sub) {
+      try {
+        const fullTask = await tasksApi.get(task.id);
+        sub = fullTask.submissions?.find((s) => !s.reviews || s.reviews.length === 0) || fullTask.submissions?.[0];
+        if (sub) {
+          setSelectedTaskForReview(fullTask);
+          setSelectedSubmissionForReview(sub);
+          setIsQuickReviewModalOpen(true);
+          return;
+        }
+      } catch (err) {
+        console.error('Failed to fetch submission details', err);
+      }
+      navigate(`/tasks/${task.id}`);
+    } else {
+      setSelectedTaskForReview(task);
+      setSelectedSubmissionForReview(sub);
+      setIsQuickReviewModalOpen(true);
+    }
   };
 
   // Quick summary numbers from the current list (supports main task or branch status)
@@ -262,9 +291,10 @@ export const MyActionPage: React.FC = () => {
         </div>
       )}
 
-      {/* Tasks Table */}
+      {/* Tasks Table (Desktop & Tablet) & Cards (Mobile) */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop Table View */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-500 font-bold uppercase tracking-wider whitespace-nowrap">
@@ -382,22 +412,117 @@ export const MyActionPage: React.FC = () => {
                       )}
                     </td>
                     <td className="py-4 px-6 text-right whitespace-nowrap">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/tasks/${task.id}`);
-                        }}
-                        className="px-3.5 py-1.5 bg-slate-100 hover:bg-blue-600 text-slate-700 hover:text-white font-semibold rounded-xl text-xs transition inline-flex items-center gap-1.5 shadow-2xs cursor-pointer"
-                      >
-                        <Eye className="w-3.5 h-3.5" />
-                        <span>View</span>
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        {task.permissions?.can_review && (task.status === 'review' || task.branches?.some((b) => b.status === 'review')) && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openQuickReview(task);
+                            }}
+                            className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs transition inline-flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
+                            title="Quick review and decide without leaving page"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Quick Review</span>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/tasks/${task.id}`);
+                          }}
+                          className="px-3.5 py-1.5 bg-slate-100 hover:bg-blue-600 text-slate-700 hover:text-white font-semibold rounded-xl text-xs transition inline-flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>View</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Responsive Card List (< 768px) */}
+        <div className="block md:hidden divide-y divide-slate-100">
+          {loading ? (
+            <div className="p-8 text-center text-slate-400 animate-pulse text-xs">Loading tasks...</div>
+          ) : tasks.length === 0 ? (
+            <div className="p-8 text-center text-slate-400">
+              <AlertCircle className="w-8 h-8 mx-auto text-slate-300 mb-2" />
+              <p className="font-semibold text-slate-700 text-sm">No action tasks pending right now.</p>
+              <p className="text-xs text-slate-400 mt-1">You are all caught up!</p>
+            </div>
+          ) : (
+            tasks.map((task) => (
+              <div
+                key={task.id}
+                onClick={() => navigate(`/tasks/${task.id}`)}
+                className="p-4 hover:bg-slate-50 transition cursor-pointer space-y-3"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-bold text-blue-600 text-xs">{task.task_code}</span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <PriorityBadge priority={task.priority} />
+                    <StatusBadge status={task.status} />
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-slate-900 text-sm leading-snug">
+                    {task.title}
+                  </h3>
+                  {task.department && (
+                    <span className="text-[10px] text-slate-400 mt-0.5 inline-block font-medium">
+                      {task.department.name}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+                  <div className="flex items-center gap-1 text-[11px]">
+                    <Clock className="w-3 h-3 text-slate-400" />
+                    <span>Due: {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'Not set'}</span>
+                    {task.is_overdue && (
+                      <span className="ml-1 px-1.5 py-0.2 rounded text-[9px] font-bold bg-rose-100 text-rose-700">Late</span>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-slate-400 capitalize">{task.handling_method.replace('_', ' ')}</span>
+                </div>
+
+                <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                  {task.permissions?.can_review && (task.status === 'review' || task.branches?.some((b) => b.status === 'review')) && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openQuickReview(task);
+                      }}
+                      className="flex-1 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Quick Review</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/tasks/${task.id}`);
+                    }}
+                    className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>View Task</span>
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         <Pagination
@@ -407,6 +532,26 @@ export const MyActionPage: React.FC = () => {
           onPageChange={(p) => setPage(p)}
         />
       </div>
+
+      {/* Quick Review Modal Popup */}
+      {selectedTaskForReview && selectedSubmissionForReview && (
+        <ReviewModal
+          isOpen={isQuickReviewModalOpen}
+          onClose={() => {
+            setIsQuickReviewModalOpen(false);
+            setSelectedTaskForReview(null);
+            setSelectedSubmissionForReview(null);
+          }}
+          task={selectedTaskForReview}
+          submission={selectedSubmissionForReview}
+          onReviewSubmitted={() => {
+            setIsQuickReviewModalOpen(false);
+            setSelectedTaskForReview(null);
+            setSelectedSubmissionForReview(null);
+            loadTasks();
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { tasksApi } from '../../api/tasks';
 import { usersApi } from '../../api/users';
 import { departmentsApi } from '../../api/departments';
@@ -45,6 +45,7 @@ const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 
 export const CreateTaskPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user: currentUser } = useAuth();
 
   // Wizard Step: 1 = Basic Details, 2 = Assignment, 3 = Review & Submit
@@ -90,6 +91,17 @@ export const CreateTaskPage: React.FC = () => {
   useEffect(() => {
     loadOptions();
   }, []);
+
+  useEffect(() => {
+    const dup = (location.state as any)?.duplicateFrom;
+    if (dup) {
+      if (dup.title) setTitle(dup.title);
+      if (dup.description) setDescription(dup.description);
+      if (dup.priority) setPriority(dup.priority);
+      if (dup.departmentId) setDepartmentId(dup.departmentId);
+      if (dup.handlingMethod) setHandlingMethod(dup.handlingMethod);
+    }
+  }, [location.state]);
 
   const loadOptions = async () => {
     try {
@@ -546,6 +558,15 @@ export const CreateTaskPage: React.FC = () => {
             <h2 className="text-sm font-bold text-slate-900">Task Information</h2>
             <span className="text-[11px] text-slate-400">* Required fields</span>
           </div>
+
+          {(location.state as any)?.duplicateFrom && (
+            <div className="p-3.5 bg-blue-50/90 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-center gap-2.5 shadow-2xs">
+              <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
+              <span>
+                <strong>Cloned from existing task:</strong> All details have been prefilled. You can edit them freely before creating.
+              </span>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">

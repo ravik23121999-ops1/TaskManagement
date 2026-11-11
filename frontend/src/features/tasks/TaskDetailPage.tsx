@@ -44,6 +44,7 @@ import {
   Activity,
   FolderGit2,
   Rocket,
+  Copy,
 } from 'lucide-react';
 
 export const TaskDetailPage: React.FC = () => {
@@ -137,6 +138,29 @@ export const TaskDetailPage: React.FC = () => {
   // Header Actions Dropdown state
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const actionsMenuRef = React.useRef<HTMLDivElement>(null);
+
+  // Timeline Filter State ('all' | 'reviews' | 'handovers' | 'holds')
+  const [timelineFilter, setTimelineFilter] = useState<'all' | 'reviews' | 'handovers' | 'holds'>('all');
+
+  // Interactive Checklist State (Persisted in localStorage per task)
+  const [checkedCheckpoints, setCheckedCheckpoints] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem(`task_checkpoints_${id}`);
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const toggleCheckpoint = (key: string) => {
+    setCheckedCheckpoints((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      try {
+        localStorage.setItem(`task_checkpoints_${id}`, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -899,6 +923,81 @@ export const TaskDetailPage: React.FC = () => {
                 <span>{slaBadge.text}</span>
               </span>
             </div>
+
+            {/* Ball in Court / Responsibility Indicator */}
+            {(() => {
+              let ballLabel = 'Ball in Court:';
+              let ballPerson = '';
+              let ballAction = '';
+              let ballColor = 'bg-blue-50/90 text-blue-800 border-blue-200/80';
+              let ballDot = 'bg-blue-500';
+
+              if (task.status === 'completed') {
+                ballPerson = 'Task Completed';
+                ballAction = 'All deliverables approved & signed off';
+                ballColor = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+                ballDot = 'bg-emerald-500';
+              } else if (task.status === 'cancelled') {
+                ballPerson = 'Task Cancelled';
+                ballAction = 'Workflow terminated';
+                ballColor = 'bg-rose-50 text-rose-800 border-rose-200';
+                ballDot = 'bg-rose-500';
+              } else if (task.status === 'on_hold') {
+                ballPerson = task.hold_record?.held_by || 'Management';
+                ballAction = `Paused (Reason: ${task.hold_record?.reason || 'On hold'})`;
+                ballColor = 'bg-amber-50 text-amber-900 border-amber-300';
+                ballDot = 'bg-amber-500';
+              } else if (task.permissions.can_provide_details && task.latest_clarification) {
+                ballPerson = 'You (Assigner / Creator)';
+                ballAction = `Question needs answering from ${task.latest_clarification.requested_by?.name || 'Assignee'}`;
+                ballColor = 'bg-amber-50 text-amber-900 border-amber-300';
+                ballDot = 'bg-amber-500';
+              } else if (task.permissions.can_review && latestPendingSubmission) {
+                ballPerson = 'You (Reviewer)';
+                ballAction = `Review deliverable from ${latestPendingSubmission.submitted_by?.name || 'Assignee'}`;
+                ballColor = 'bg-purple-50 text-purple-900 border-purple-300';
+                ballDot = 'bg-purple-500 animate-pulse';
+              } else if (isReadyForFinalSignOff) {
+                ballPerson = task.creator?.name || 'Executive Signer';
+                ballAction = 'All subtasks approved — Final Sign-off required';
+                ballColor = 'bg-emerald-50 text-emerald-900 border-emerald-300';
+                ballDot = 'bg-emerald-500 animate-pulse';
+              } else if (task.my_branch?.status === 'review') {
+                ballPerson = task.my_branch.assigned_by?.name || task.creator?.name || 'Assigner';
+                ballAction = 'Reviewing your submitted deliverables';
+                ballColor = 'bg-sky-50 text-sky-900 border-sky-300';
+                ballDot = 'bg-sky-500';
+              } else if (task.permissions.can_submit) {
+                ballPerson = 'You (Active Assignee)';
+                ballAction = 'Deliverables due for submission';
+                ballColor = 'bg-blue-50 text-blue-900 border-blue-300';
+                ballDot = 'bg-blue-500 animate-pulse';
+              } else if (task.current_owners && task.current_owners.length > 0) {
+                const names = task.current_owners.map((o) => o.name).join(', ');
+                ballPerson = names;
+                ballAction = task.current_owners.length > 1 ? 'Working on assigned subtasks' : 'Working on deliverable';
+                ballColor = 'bg-slate-50 text-slate-800 border-slate-200';
+                ballDot = 'bg-blue-500';
+              } else {
+                ballPerson = task.current_owner?.name || 'Assignee';
+                ballAction = 'Working on task';
+              }
+
+              return (
+                <div className="mt-2.5 flex items-center gap-2 flex-wrap">
+                  <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-xl border text-xs font-medium shadow-2xs ${ballColor}`}>
+                    <span className="flex h-2 w-2 relative shrink-0">
+                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${ballDot}`} />
+                      <span className={`relative inline-flex rounded-full h-2 w-2 ${ballDot}`} />
+                    </span>
+                    <span className="font-bold uppercase tracking-wider text-[10px] opacity-75">{ballLabel}</span>
+                    <span className="font-bold text-slate-900">{ballPerson}</span>
+                    <span className="opacity-40">|</span>
+                    <span className="opacity-90">{ballAction}</span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* 1-Button Rule & Action Header */}
@@ -955,7 +1054,10 @@ export const TaskDetailPage: React.FC = () => {
               task.permissions.can_hold ||
               task.permissions.can_resume ||
               task.permissions.can_cancel ||
-              task.permissions?.can_delete
+              task.permissions?.can_delete ||
+              currentUser?.role === 'admin' ||
+              currentUser?.role === 'sub_admin' ||
+              currentUser?.id === task.creator?.id
             ) && (
               <div className="relative" ref={actionsMenuRef}>
                 <button
@@ -1024,6 +1126,34 @@ export const TaskDetailPage: React.FC = () => {
                       >
                         <PauseCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                         <span>Pause Task</span>
+                      </button>
+                    )}
+
+                    {/* Duplicate Task */}
+                    {(currentUser?.role === 'admin' || currentUser?.role === 'sub_admin' || currentUser?.id === task.creator?.id) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsActionsMenuOpen(false);
+                          navigate('/tasks/create', {
+                            state: {
+                              duplicateFrom: {
+                                title: `Copy of ${task.title}`,
+                                description: task.description,
+                                priority: task.priority,
+                                departmentId: task.department?.id || (task as any).department_id,
+                                handlingMethod: task.handling_method,
+                                expectedResult: task.expected_result,
+                                acceptanceCriteria: task.acceptance_criteria,
+                              },
+                            },
+                          });
+                        }}
+                        className="w-full text-left px-3.5 py-2 text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-2 transition cursor-pointer"
+                        title="Create a new task cloned from this task"
+                      >
+                        <Copy className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                        <span>Duplicate Task</span>
                       </button>
                     )}
 
@@ -1280,28 +1410,49 @@ export const TaskDetailPage: React.FC = () => {
             </div>
           </div>
         ) : task.permissions.can_submit ? (
-          <div className="mt-4 p-4 bg-gradient-to-r from-blue-50/95 via-sky-50/70 to-blue-50/95 border border-blue-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs">
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+          <div className="mt-4 p-4 sm:p-5 bg-gradient-to-r from-blue-50/95 via-sky-50/80 to-indigo-50/95 border border-blue-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs shadow-2xs">
+            <div className="flex items-start gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
                 <Zap className="w-5 h-5" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold text-blue-950 text-sm">Action Required: Your Subtask Deliverables are Due</span>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-bold text-blue-950 text-sm">Action Station: Your Subtask Deliverables are Due</span>
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${slaBadge.color}`}>
                     {slaBadge.text}
                   </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                    <span>🔒 Confidential Subtask</span>
+                  </span>
                 </div>
-                <p className="text-blue-800 mt-0.5">
-                  You are actively working on <strong>"{task.my_branch?.title || task.title}"</strong>. When finished, submit your deliverables for review by {task.my_branch?.assigned_by?.name || task.creator?.name || 'Assigner'}.
+                <p className="text-blue-900 leading-relaxed">
+                  You are actively executing <strong>"{task.my_branch?.title || task.title}"</strong>. When finished, submit your deliverables for verification by {task.my_branch?.assigned_by?.name || task.creator?.name || 'your assigner'}.
+                </p>
+                <p className="text-[11px] text-blue-700/80">
+                  Peer Isolation Active: Peer assignees cannot view your subtask, deliverables, or discussions.
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+              {task.permissions.can_request_details && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRequestDetailsQuestion('');
+                    setRequestDetailsFiles([]);
+                    setIsRequestDetailsModalOpen(true);
+                  }}
+                  className="flex-1 sm:flex-none px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs hover:shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                  title="Ask your assigner for clarification or missing details"
+                >
+                  <HelpCircle className="w-3.5 h-3.5 text-amber-600" />
+                  <span>Need Help?</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setIsSubmitModalOpen(true)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-sm transition flex items-center gap-1.5 cursor-pointer active:scale-95"
+                className="flex-1 sm:flex-none px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
                 title="Submit your completed deliverables for review"
               >
                 <Send className="w-3.5 h-3.5" />
@@ -1581,16 +1732,62 @@ export const TaskDetailPage: React.FC = () => {
                     </div>
                   )}
 
-                  {task.my_branch.acceptance_criteria && (
-                    <div className="p-3 bg-white/90 border border-blue-200/80 rounded-xl space-y-1">
-                      <span className="font-bold text-blue-900 text-[10px] uppercase tracking-wider block">
-                        Acceptance Criteria
-                      </span>
-                      <p className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
-                        {task.my_branch.acceptance_criteria}
-                      </p>
-                    </div>
-                  )}
+                  {task.my_branch.acceptance_criteria && (() => {
+                    const criteriaLines = task.my_branch.acceptance_criteria
+                      .split(/\r?\n/)
+                      .filter((l: string) => l.trim().length > 0);
+                    if (criteriaLines.length === 0) return null;
+                    const checkedCount = criteriaLines.filter((_: string, idx: number) =>
+                      Boolean(checkedCheckpoints[`subtask_${task.my_branch?.id}_${idx}`])
+                    ).length;
+                    const pct = Math.round((checkedCount / criteriaLines.length) * 100);
+
+                    return (
+                      <div className="p-3.5 bg-white/95 border border-blue-200/90 rounded-xl space-y-2.5 shadow-2xs">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-blue-950 text-xs flex items-center gap-1.5">
+                            <CheckSquare className="w-3.5 h-3.5 text-blue-600" />
+                            <span>Subtask Checkpoints ({checkedCount}/{criteriaLines.length})</span>
+                          </span>
+                          <span className="text-[11px] font-bold text-blue-600">{pct}% Done</span>
+                        </div>
+                        <div className="w-full bg-blue-100 h-1.5 rounded-full overflow-hidden">
+                          <div
+                            className="bg-blue-600 h-full rounded-full transition-all duration-300"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <div className="space-y-1.5 pt-1">
+                          {criteriaLines.map((crit: string, idx: number) => {
+                            const key = `subtask_${task.my_branch?.id}_${idx}`;
+                            const isDone = Boolean(checkedCheckpoints[key]);
+                            return (
+                              <div
+                                key={idx}
+                                onClick={() => toggleCheckpoint(key)}
+                                className={`flex items-start gap-2.5 p-2 rounded-lg cursor-pointer transition select-none text-xs ${
+                                  isDone
+                                    ? 'bg-blue-50/70 text-slate-500 line-through'
+                                    : 'hover:bg-slate-50 text-slate-800'
+                                }`}
+                              >
+                                <span
+                                  className={`w-4 h-4 rounded flex items-center justify-center shrink-0 mt-0.5 border transition ${
+                                    isDone
+                                      ? 'bg-blue-600 border-blue-600 text-white'
+                                      : 'border-slate-300 bg-white hover:border-blue-400'
+                                  }`}
+                                >
+                                  {isDone && <Check className="w-3 h-3 stroke-[3]" />}
+                                </span>
+                                <span className="leading-tight">{crit.replace(/^[-*•\d\.\s]+/, '')}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })()}
 
                   {/* Attachments Section for My Assignment */}
                   {(() => {
@@ -1739,34 +1936,62 @@ export const TaskDetailPage: React.FC = () => {
                         </p>
                       </div>
                     )}
-                    {task.acceptance_criteria && (
-                      <div className="p-4 bg-slate-50/80 border border-slate-200/80 rounded-xl space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-2">
-                            <CheckSquare className="w-4 h-4 text-blue-600" />
-                            <span>Acceptance Criteria Checklist</span>
-                          </span>
+                    {task.acceptance_criteria && (() => {
+                      const criteriaLines = task.acceptance_criteria
+                        .split(/\r?\n/)
+                        .filter((line: string) => line.trim().length > 0);
+                      if (criteriaLines.length === 0) return null;
+                      const checkedCount = criteriaLines.filter((_: string, idx: number) =>
+                        Boolean(checkedCheckpoints[`main_${task.id}_${idx}`])
+                      ).length;
+                      const pct = Math.round((checkedCount / criteriaLines.length) * 100);
+
+                      return (
+                        <div className="p-4 bg-slate-50/80 border border-slate-200/80 rounded-xl space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-2">
+                              <CheckSquare className="w-4 h-4 text-blue-600" />
+                              <span>Acceptance Criteria Checklist ({checkedCount}/{criteriaLines.length})</span>
+                            </span>
+                            <span className="text-[11px] font-bold text-blue-600">{pct}% Done</span>
+                          </div>
+                          <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                            <div
+                              className="bg-blue-600 h-full rounded-full transition-all duration-300"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            {criteriaLines.map((criterion: string, cIdx: number) => {
+                              const key = `main_${task.id}_${cIdx}`;
+                              const isDone = Boolean(checkedCheckpoints[key]);
+                              return (
+                                <div
+                                  key={cIdx}
+                                  onClick={() => toggleCheckpoint(key)}
+                                  className={`flex items-start gap-2.5 text-xs bg-white p-3 rounded-xl border border-slate-200/60 shadow-2xs cursor-pointer select-none transition ${
+                                    isDone ? 'opacity-60 bg-slate-50/80' : 'hover:border-blue-300'
+                                  }`}
+                                >
+                                  <span
+                                    className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 mt-0.5 border transition ${
+                                      isDone
+                                        ? 'bg-blue-600 border-blue-600 text-white'
+                                        : 'bg-blue-50 border-blue-200 text-blue-600'
+                                    }`}
+                                  >
+                                    {isDone && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                                  </span>
+                                  <span className={`leading-relaxed font-medium ${isDone ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+                                    {criterion.replace(/^[-*•\d\.\s]+/, '')}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                        <div className="space-y-2">
-                          {task.acceptance_criteria
-                            .split(/\r?\n/)
-                            .filter((line: string) => line.trim().length > 0)
-                            .map((criterion: string, cIdx: number) => (
-                              <div
-                                key={cIdx}
-                                className="flex items-start gap-2.5 text-xs text-slate-800 bg-white p-3 rounded-xl border border-slate-200/60 shadow-2xs"
-                              >
-                                <span className="w-4 h-4 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 border border-blue-200">
-                                  <Check className="w-2.5 h-2.5 stroke-[3]" />
-                                </span>
-                                <span className="leading-relaxed font-medium">
-                                  {criterion.replace(/^[-*•\d\.\s]+/, '')}
-                                </span>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
                 )}
               </div>
@@ -1807,36 +2032,63 @@ export const TaskDetailPage: React.FC = () => {
                     </div>
                   )}
 
-                  {task.acceptance_criteria && (
-                    <div className="p-4 bg-slate-50/80 border border-slate-200/80 rounded-xl space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-2">
-                          <CheckSquare className="w-4 h-4 text-blue-600" />
-                          <span>Acceptance Criteria Checklist</span>
-                        </span>
-                        <span className="text-[10px] text-slate-400">Required quality gates</span>
-                      </div>
+                  {task.acceptance_criteria && (() => {
+                    const criteriaLines = task.acceptance_criteria
+                      .split(/\r?\n/)
+                      .filter((line: string) => line.trim().length > 0);
+                    if (criteriaLines.length === 0) return null;
+                    const checkedCount = criteriaLines.filter((_: string, idx: number) =>
+                      Boolean(checkedCheckpoints[`main_${task.id}_${idx}`])
+                    ).length;
+                    const pct = Math.round((checkedCount / criteriaLines.length) * 100);
 
-                      <div className="space-y-2">
-                        {task.acceptance_criteria
-                          .split(/\r?\n/)
-                          .filter((line: string) => line.trim().length > 0)
-                          .map((criterion: string, cIdx: number) => (
-                            <div
-                              key={cIdx}
-                              className="flex items-start gap-2.5 text-xs text-slate-800 bg-white p-3 rounded-xl border border-slate-200/60 shadow-2xs hover:border-blue-200 transition"
-                            >
-                              <span className="w-4 h-4 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 border border-blue-200">
-                                <Check className="w-2.5 h-2.5 stroke-[3]" />
-                              </span>
-                              <span className="leading-relaxed font-medium">
-                                {criterion.replace(/^[-*•\d\.\s]+/, '')}
-                              </span>
-                            </div>
-                          ))}
+                    return (
+                      <div className="p-4 bg-slate-50/80 border border-slate-200/80 rounded-xl space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-2">
+                            <CheckSquare className="w-4 h-4 text-blue-600" />
+                            <span>Acceptance Criteria Checklist ({checkedCount}/{criteriaLines.length})</span>
+                          </span>
+                          <span className="text-[11px] font-bold text-blue-600">{pct}% Complete</span>
+                        </div>
+                        <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                          <div
+                            className="bg-blue-600 h-full rounded-full transition-all duration-300"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          {criteriaLines.map((criterion: string, cIdx: number) => {
+                            const key = `main_${task.id}_${cIdx}`;
+                            const isDone = Boolean(checkedCheckpoints[key]);
+                            return (
+                              <div
+                                key={cIdx}
+                                onClick={() => toggleCheckpoint(key)}
+                                className={`flex items-start gap-2.5 text-xs bg-white p-3 rounded-xl border border-slate-200/60 shadow-2xs cursor-pointer select-none transition ${
+                                  isDone ? 'opacity-60 bg-slate-50/80' : 'hover:border-blue-300'
+                                }`}
+                              >
+                                <span
+                                  className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 mt-0.5 border transition ${
+                                    isDone
+                                      ? 'bg-blue-600 border-blue-600 text-white'
+                                      : 'bg-blue-50 border-blue-200 text-blue-600'
+                                  }`}
+                                >
+                                  {isDone && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                                </span>
+                                <span className={`leading-relaxed font-medium ${isDone ? 'line-through text-slate-400' : 'text-slate-800'}`}>
+                                  {criterion.replace(/^[-*•\d\.\s]+/, '')}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
               </>
             )}
@@ -2596,37 +2848,110 @@ export const TaskDetailPage: React.FC = () => {
               );
             })()}
 
-            <div className="relative pl-6 sm:pl-9 border-l-2 border-slate-200/90 space-y-5 my-4 ml-3 sm:ml-4">
-              {(() => {
-                const historyList = (task.status_history || []).slice().sort((a, b) => {
-                  const aIsCreated = a.reason?.toLowerCase().includes('task created');
-                  const bIsCreated = b.reason?.toLowerCase().includes('task created');
-                  if (aIsCreated && !bIsCreated) return -1;
-                  if (!aIsCreated && bIsCreated) return 1;
+            {(() => {
+              const historyList = (task.status_history || []).slice().sort((a, b) => {
+                const aIsCreated = a.reason?.toLowerCase().includes('task created');
+                const bIsCreated = b.reason?.toLowerCase().includes('task created');
+                if (aIsCreated && !bIsCreated) return -1;
+                if (!aIsCreated && bIsCreated) return 1;
 
-                  const tA = a.changed_at ? new Date(a.changed_at).getTime() : 0;
-                  const tB = b.changed_at ? new Date(b.changed_at).getTime() : 0;
-                  if (tA === tB) {
-                    const aIsAssign = a.reason?.toLowerCase().includes('assigned');
-                    const bIsAssign = b.reason?.toLowerCase().includes('assigned');
-                    if (aIsAssign && !bIsAssign) return -1;
-                    if (!aIsAssign && bIsAssign) return 1;
-                    return 0;
-                  }
-                  return tA - tB;
-                });
-
-                if (historyList.length === 0) {
-                  return (
-                    <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl">
-                      <p className="text-xs text-slate-400 italic">No workflow history records yet.</p>
-                    </div>
-                  );
+                const tA = a.changed_at ? new Date(a.changed_at).getTime() : 0;
+                const tB = b.changed_at ? new Date(b.changed_at).getTime() : 0;
+                if (tA === tB) {
+                  const aIsAssign = a.reason?.toLowerCase().includes('assigned');
+                  const bIsAssign = b.reason?.toLowerCase().includes('assigned');
+                  if (aIsAssign && !bIsAssign) return -1;
+                  if (!aIsAssign && bIsAssign) return 1;
+                  return 0;
                 }
+                return tA - tB;
+              });
 
-                return historyList.map((item, idx) => {
-                  const isLast = idx === historyList.length - 1;
-                  const rLower = (item.reason || '').toLowerCase();
+              const reviewCount = historyList.filter((item) => {
+                const r = (item.reason || '').toLowerCase();
+                return r.includes('review') || r.includes('submit') || r.includes('approv') || r.includes('return') || r.includes('correct');
+              }).length;
+
+              const handoverCount = historyList.filter((item) => {
+                const r = (item.reason || '').toLowerCase();
+                return r.includes('assign') || r.includes('delegat');
+              }).length;
+
+              const holdCount = historyList.filter((item) => {
+                const r = (item.reason || '').toLowerCase();
+                return r.includes('hold') || r.includes('resume') || r.includes('creat') || r.includes('cancel') || r.includes('reopen');
+              }).length;
+
+              const filteredList = historyList.filter((item) => {
+                const r = (item.reason || '').toLowerCase();
+                if (timelineFilter === 'reviews') return r.includes('review') || r.includes('submit') || r.includes('approv') || r.includes('return') || r.includes('correct');
+                if (timelineFilter === 'handovers') return r.includes('assign') || r.includes('delegat');
+                if (timelineFilter === 'holds') return r.includes('hold') || r.includes('resume') || r.includes('creat') || r.includes('cancel') || r.includes('reopen');
+                return true;
+              });
+
+              return (
+                <div>
+                  {/* Timeline Filter Chips */}
+                  <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setTimelineFilter('all')}
+                      className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer ${
+                        timelineFilter === 'all'
+                          ? 'bg-blue-600 text-white shadow-2xs'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                      }`}
+                    >
+                      All Milestones ({historyList.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTimelineFilter('reviews')}
+                      className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                        timelineFilter === 'reviews'
+                          ? 'bg-purple-600 text-white shadow-2xs'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                      }`}
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Reviews & Decisions ({reviewCount})</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTimelineFilter('handovers')}
+                      className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                        timelineFilter === 'handovers'
+                          ? 'bg-sky-600 text-white shadow-2xs'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                      }`}
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>Delegations ({handoverCount})</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setTimelineFilter('holds')}
+                      className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                        timelineFilter === 'holds'
+                          ? 'bg-amber-600 text-white shadow-2xs'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
+                      }`}
+                    >
+                      <PauseCircle className="w-3.5 h-3.5" />
+                      <span>Holds & State ({holdCount})</span>
+                    </button>
+                  </div>
+
+                  <div className="relative pl-6 sm:pl-9 border-l-2 border-slate-200/90 space-y-5 my-4 ml-3 sm:ml-4">
+                    {filteredList.length === 0 ? (
+                      <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl">
+                        <p className="text-xs text-slate-400 italic">No milestones matching the selected filter.</p>
+                      </div>
+                    ) : (
+                      filteredList.map((item, idx) => {
+                        const isLast = idx === filteredList.length - 1;
+                        const rLower = (item.reason || '').toLowerCase();
 
                   // Milestone styling & iconography
                   let nodeBg = 'bg-blue-600 ring-blue-100';
@@ -2761,9 +3086,12 @@ export const TaskDetailPage: React.FC = () => {
                       </div>
                     </div>
                   );
-                });
-              })()}
+                })
+              )}
             </div>
+          </div>
+        );
+      })()}
           </div>
         </div>
       )}
