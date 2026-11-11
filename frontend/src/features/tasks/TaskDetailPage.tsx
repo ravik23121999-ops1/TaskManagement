@@ -947,15 +947,6 @@ export const TaskDetailPage: React.FC = () => {
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Check & Review Work</span>
               </button>
-            ) : task.permissions.can_submit && !isWorkAlone ? (
-              <button
-                type="button"
-                onClick={() => setIsSubmitModalOpen(true)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer hover:shadow-md active:scale-95"
-              >
-                <Send className="w-3.5 h-3.5" />
-                <span>Submit Completed Work</span>
-              </button>
             ) : (task.permissions.can_final_submit || isReadyForFinalSignOff) && (currentUser?.role === 'admin' || currentUser?.role === 'sub_admin' || task.creator?.id === currentUser?.id) ? (
               <button
                 type="button"
@@ -1201,7 +1192,7 @@ export const TaskDetailPage: React.FC = () => {
                 className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
               >
                 <Send className="w-3.5 h-3.5" />
-                <span>Submit Deliverable Fixes</span>
+                <span>Submit for Review</span>
               </button>
             )}
           </div>
@@ -1340,10 +1331,11 @@ export const TaskDetailPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsSubmitModalOpen(true)}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer active:scale-95"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-sm transition flex items-center gap-1.5 cursor-pointer active:scale-95"
+                title="Submit your completed deliverables for review"
               >
-                <Upload className="w-3.5 h-3.5" />
-                <span>Submit Deliverables</span>
+                <Send className="w-3.5 h-3.5" />
+                <span>Submit for Review</span>
               </button>
             </div>
           </div>
@@ -1728,15 +1720,6 @@ export const TaskDetailPage: React.FC = () => {
                         >
                           <UserPlus className="w-3.5 h-3.5" />
                           <span>Delegate to Teammate</span>
-                        </button>
-                      )}
-                      {task.permissions.can_submit && (
-                        <button
-                          onClick={() => setIsSubmitModalOpen(true)}
-                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
-                        >
-                          <Upload className="w-3.5 h-3.5" />
-                          <span>Submit Deliverables</span>
                         </button>
                       )}
                     </div>
