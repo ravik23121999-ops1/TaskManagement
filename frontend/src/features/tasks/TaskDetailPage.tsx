@@ -920,42 +920,12 @@ export const TaskDetailPage: React.FC = () => {
               <RefreshCw className={`w-3.5 h-3.5 text-slate-600 ${isRefreshing ? 'animate-spin text-blue-600' : ''}`} />
             </button>
 
-            {/* THE ONE PRIMARY ACTION BUTTON */}
-            {task.permissions.can_provide_details ? (
+            {/* Primary Action Button (Only rendered here if not already hosted in a dedicated contextual hero banner) */}
+            {isWorkAlone && !isCompleted && (task.permissions.can_final_submit || currentUser?.role === 'admin' || currentUser?.role === 'sub_admin' || task.creator?.id === currentUser?.id) ? (
               <button
                 type="button"
                 onClick={() => {
-                  setProvideDetailsResponse('');
-                  setProvideDetailsFiles([]);
-                  setIsProvideDetailsModalOpen(true);
-                }}
-                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer hover:shadow-md active:scale-95"
-                title="Answer assignee question and resume work"
-              >
-                <Send className="w-3.5 h-3.5" />
-                <span>Answer Question</span>
-              </button>
-            ) : task.permissions.can_review && latestPendingSubmission ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedSubmission(latestPendingSubmission);
-                  setIsReviewModalOpen(true);
-                }}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 cursor-pointer hover:shadow-md active:scale-95"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Check & Review Work</span>
-              </button>
-            ) : (task.permissions.can_final_submit || isReadyForFinalSignOff) && (currentUser?.role === 'admin' || currentUser?.role === 'sub_admin' || task.creator?.id === currentUser?.id) ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setFinalCompleteDesc(
-                    isWorkAlone
-                      ? 'Work completed and all deliverables verified.'
-                      : 'Final deliverables verified and approved for project completion.'
-                  );
+                  setFinalCompleteDesc('Work completed and all deliverables verified.');
                   setFinalCompleteFiles([]);
                   setIsFinalCompleteModalOpen(true);
                 }}
