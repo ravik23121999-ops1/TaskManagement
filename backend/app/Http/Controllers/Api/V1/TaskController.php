@@ -737,24 +737,28 @@ class TaskController extends Controller
                         }
                     }
                 } elseif (!empty($collaborators)) {
+                    // Shared collaboration task: 1 shared task branch owned by creator, teammates collaborate
+                    $branch = $task->branches()->create([
+                        'title' => $task->title,
+                        'description' => $task->description,
+                        'expected_result' => $task->expected_result,
+                        'acceptance_criteria' => $task->acceptance_criteria,
+                        'owner_id' => $user->id,
+                        'status' => 'in_progress',
+                        'due_date' => $task->due_date,
+                    ]);
+
+                    $branch->assignments()->create([
+                        'assigned_to_id' => $user->id,
+                        'assigned_by_id' => $user->id,
+                        'is_current' => true,
+                        'assigned_at' => now(),
+                    ]);
+
                     foreach ($collaborators as $collabId) {
-                        $branch = $task->branches()->create([
-                            'title' => $task->title,
-                            'description' => $task->description,
-                            'owner_id' => $collabId,
-                            'status' => 'pending',
-                            'due_date' => $task->due_date,
-                        ]);
-
-                        $branch->assignments()->create([
-                            'assigned_to_id' => $collabId,
-                            'assigned_by_id' => $user->id,
-                            'is_current' => true,
-                            'assigned_at' => now(),
-                        ]);
-
-                        $branch->collaborators()->create([
+                        $branch->collaborators()->firstOrCreate([
                             'user_id' => $collabId,
+                        ], [
                             'invited_by_id' => $user->id,
                             'can_assign' => true,
                             'can_collaborate' => true,
@@ -762,14 +766,18 @@ class TaskController extends Controller
                         ]);
 
                         if ($collabId !== $user->id) {
-                            SendTaskNotification::dispatch(
-                                $collabId,
-                                'collaboration_invite',
-                                "You were invited to collaborate on — {$task->title}",
-                                $task->id,
-                                'New Collaboration',
-                                $branch->id
-                            );
+                            try {
+                                SendTaskNotification::dispatch(
+                                    $collabId,
+                                    'collaboration_invite',
+                                    "You were invited to collaborate on — {$task->title}",
+                                    $task->id,
+                                    'New Collaboration',
+                                    $branch->id
+                                );
+                            } catch (\Throwable $e) {
+                                \Illuminate\Support\Facades\Log::error('SendTaskNotification failed: ' . $e->getMessage());
+                            }
                         }
                     }
                 } else {

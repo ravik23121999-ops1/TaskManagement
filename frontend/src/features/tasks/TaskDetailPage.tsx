@@ -807,6 +807,16 @@ export const TaskDetailPage: React.FC = () => {
   const slaBadge = getSlaBadge();
 
   const isWorkAlone = task.handling_method === 'work_alone';
+  const isCollaborateTask = task.handling_method === 'collaborate';
+  const hasSubtasks = Boolean(
+    task.has_subtasks ??
+    (task.branches && task.branches.length > 1) ??
+    (task.handling_method === 'assign' && task.branches?.some((b) => b.title !== task.title))
+  );
+  const isDirectDelegation = Boolean(
+    task.is_direct_delegation ??
+    (task.handling_method === 'assign' && !hasSubtasks)
+  );
   const isCompleted = task.status === 'completed';
 
   const allBranchesCompleted =
@@ -1473,11 +1483,17 @@ export const TaskDetailPage: React.FC = () => {
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-slate-900 text-sm">Waiting on Teammates</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-200 text-slate-700">Work in Progress</span>
+                  <span className="font-bold text-slate-900 text-sm">
+                    {isDirectDelegation ? 'Work in Progress' : isCollaborateTask ? 'Team Collaboration Active' : 'Waiting on Teammates'}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-200 text-slate-700">In Progress</span>
                 </div>
                 <p className="text-slate-600 mt-0.5">
-                  Team members are currently working on their assigned subtasks. You will be notified once they submit for your review.
+                  {isDirectDelegation
+                    ? `${task.current_owner?.name || 'Assignee'} is currently working on this task. You will be notified once they submit for review.`
+                    : isCollaborateTask
+                    ? 'Team members are collaborating on this task.'
+                    : 'Team members are currently working on their assigned subtasks. You will be notified once they submit for your review.'}
                 </p>
               </div>
             </div>
@@ -1555,7 +1571,13 @@ export const TaskDetailPage: React.FC = () => {
             }`}
           >
             <Users className="w-3.5 h-3.5" />
-            <span>Subtasks & Team ({task.branches?.length || 0})</span>
+            <span>
+              {hasSubtasks
+                ? `Subtasks & Team (${task.branches?.length || 0})`
+                : isCollaborateTask
+                ? `Team & Collaborators (${task.collaborators?.length || 0})`
+                : `Assigned Team (${task.branches?.length || 0})`}
+            </span>
           </button>
 
           <button
@@ -2209,7 +2231,9 @@ export const TaskDetailPage: React.FC = () => {
                 ) : task.branches && task.branches.length > 0 ? (
                   <div className="space-y-3 pt-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-slate-600 font-medium">Subtasks Completion</span>
+                      <span className="text-slate-600 font-medium">
+                        {hasSubtasks ? 'Subtasks Completion' : isCollaborateTask ? 'Collaboration Status' : 'Task Status'}
+                      </span>
                       <span className="font-bold text-slate-900">
                         {task.branches.filter((b) => b.status === 'completed').length} of {task.branches.filter((b) => b.status !== 'cancelled').length} Done
                       </span>
@@ -2228,7 +2252,13 @@ export const TaskDetailPage: React.FC = () => {
                       onClick={() => setActiveTab('assignments')}
                       className="w-full py-2 px-3 mt-2 bg-blue-50/60 hover:bg-blue-50 text-blue-700 rounded-xl text-xs font-semibold transition flex items-center justify-between border border-blue-200/80 cursor-pointer"
                     >
-                      <span>View All Subtasks ({task.branches.length})</span>
+                      <span>
+                        {hasSubtasks
+                          ? `View All Subtasks (${task.branches.length})`
+                          : isCollaborateTask
+                          ? `View Collaborators (${task.collaborators?.length || 0})`
+                          : `View Assignment (${task.branches.length})`}
+                      </span>
                       <ArrowRight className="w-3.5 h-3.5 text-blue-600" />
                     </button>
                   </div>
@@ -2411,10 +2441,20 @@ export const TaskDetailPage: React.FC = () => {
               <div>
                 <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <UserPlus className="w-4 h-4 text-sky-600" />
-                  <span>Assigned Team Members & Work Branches ({task.branches?.length || 0})</span>
+                  <span>
+                    {hasSubtasks
+                      ? `Subtasks & Team Members (${task.branches?.length || 0})`
+                      : isCollaborateTask
+                      ? `Task Lead (${task.branches?.length || 0})`
+                      : `Assigned Team Member (${task.branches?.length || 0})`}
+                  </span>
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Accountable owners managing parallel branches or assigned deliverables.
+                  {hasSubtasks
+                    ? 'Accountable owners managing assigned subtasks and deliverables.'
+                    : isCollaborateTask
+                    ? 'Primary task owner leading the collaboration.'
+                    : 'Team member directly responsible for executing this task.'}
                 </p>
               </div>
               {task.status !== 'completed' && task.status !== 'cancelled' && (
@@ -2423,7 +2463,7 @@ export const TaskDetailPage: React.FC = () => {
                   className="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-sm transition inline-flex items-center gap-1.5 cursor-pointer shrink-0 active:scale-95"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Add Another Assignee</span>
+                  <span>{hasSubtasks ? 'Add Another Subtask' : 'Add Another Assignee'}</span>
                 </button>
               )}
             </div>
@@ -2454,9 +2494,16 @@ export const TaskDetailPage: React.FC = () => {
                             </div>
                             <div>
                               <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                                <span className="px-2 py-0.5 rounded-md text-[10px] font-bold font-mono bg-blue-50 text-blue-700 border border-blue-200">
-                                  Subtask {b.dot_code || b.hierarchical_code || `1.${idx + 1}`}
-                                </span>
+                                {hasSubtasks ? (
+                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold font-mono bg-blue-50 text-blue-700 border border-blue-200">
+                                    Subtask {b.dot_code || b.hierarchical_code || `1.${idx + 1}`}
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                                    <CheckCircle2 className="w-2.5 h-2.5" />
+                                    <span>{isCollaborateTask ? 'Task Lead' : 'Primary Assignee'}</span>
+                                  </span>
+                                )}
                               </div>
                               <h4 className="font-bold text-slate-900 text-xs">{b.owner?.name || 'Unassigned'}</h4>
                               <p className="text-[10px] text-slate-400 capitalize">
@@ -2502,7 +2549,7 @@ export const TaskDetailPage: React.FC = () => {
                         <div className="pt-3 space-y-2.5 text-xs">
                           <div>
                             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
-                              Subtask Title
+                              {hasSubtasks ? 'Subtask Title' : 'Task Scope'}
                             </span>
                             <p className="font-bold text-slate-800 text-sm">{b.title}</p>
                           </div>
@@ -2510,7 +2557,7 @@ export const TaskDetailPage: React.FC = () => {
                           {b.description && (
                             <div>
                               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">
-                                Instructions & Details
+                                {hasSubtasks ? 'Subtask Instructions' : 'Task Instructions & Details'}
                               </span>
                               <p className="text-slate-600 text-xs whitespace-pre-wrap pl-2 border-l-2 border-blue-400">
                                 {b.description}
@@ -2521,7 +2568,7 @@ export const TaskDetailPage: React.FC = () => {
                           {b.expected_result && (
                             <div className="p-2 bg-slate-50 rounded-lg">
                               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">
-                                What to Deliver / Final Output
+                                {hasSubtasks ? 'What to Deliver / Final Output' : 'Expected Deliverables & Output'}
                               </span>
                               <p className="text-slate-700 text-[11px] whitespace-pre-wrap">{b.expected_result}</p>
                             </div>
@@ -2536,11 +2583,11 @@ export const TaskDetailPage: React.FC = () => {
                             </div>
                           )}
 
-                          {/* Subtask Attachments */}
+                          {/* Subtask / Assigned Attachments */}
                           {b.attachments && b.attachments.length > 0 && (
                             <div className="pt-2 border-t border-slate-100">
                               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">
-                                Individual Attachments ({b.attachments.length})
+                                {hasSubtasks ? 'Subtask Attachments' : 'Assigned Attachments'} ({b.attachments.length})
                               </span>
                               <div className="flex flex-wrap gap-1.5">
                                 {b.attachments.map((att) => (
@@ -2626,7 +2673,14 @@ export const TaskDetailPage: React.FC = () => {
               <div>
                 <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <Users className="w-4 h-4 text-purple-600" />
-                  <span>Task Collaborators ({task.collaborators?.length || 0})</span>
+                  <span>
+                    Task Collaborators ({(() => {
+                      const displayCollaborators = (task.collaborators || []).filter(
+                        (c) => !task.branches?.some((b) => b.owner?.id === c.id)
+                      );
+                      return displayCollaborators.length;
+                    })()})
+                  </span>
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
                   Team members collaborating, contributing, or reviewing alongside the primary owners.
@@ -2643,39 +2697,45 @@ export const TaskDetailPage: React.FC = () => {
               )}
             </div>
 
-            {task.collaborators && task.collaborators.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {task.collaborators.map((c) => (
-                  <div
-                    key={c.id}
-                    className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/60 flex items-center gap-3 text-xs"
-                  >
-                    <div className="w-9 h-9 rounded-full bg-purple-100 text-purple-700 font-bold flex items-center justify-center text-xs shrink-0">
-                      {c.name?.charAt(0) || 'C'}
+            {(() => {
+              const displayCollaborators = (task.collaborators || []).filter(
+                (c) => !task.branches?.some((b) => b.owner?.id === c.id)
+              );
+
+              return displayCollaborators.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {displayCollaborators.map((c) => (
+                    <div
+                      key={c.id}
+                      className="p-3.5 rounded-xl border border-slate-100 bg-slate-50/60 flex items-center gap-3 text-xs"
+                    >
+                      <div className="w-9 h-9 rounded-full bg-purple-100 text-purple-700 font-bold flex items-center justify-center text-xs shrink-0">
+                        {c.name?.charAt(0) || 'C'}
+                      </div>
+                      <div className="truncate flex-1">
+                        <p className="font-bold text-slate-900 truncate">{c.name}</p>
+                        <p className="text-[10px] text-slate-400 truncate">{c.email}</p>
+                        <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-700 capitalize mt-1">
+                          {c.role?.replace('_', ' ') || 'Collaborator'}
+                        </span>
+                      </div>
                     </div>
-                    <div className="truncate flex-1">
-                      <p className="font-bold text-slate-900 truncate">{c.name}</p>
-                      <p className="text-[10px] text-slate-400 truncate">{c.email}</p>
-                      <span className="inline-block px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-700 capitalize mt-1">
-                        {c.role?.replace('_', ' ') || 'Collaborator'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl">
-                <p className="text-xs text-slate-400 italic">No external collaborators invited yet.</p>
-                {task.status !== 'completed' && (
-                  <button
-                    onClick={() => openAssignModal('collaborate')}
-                    className="mt-2 text-xs font-semibold text-purple-600 hover:underline cursor-pointer"
-                  >
-                    + Invite one or more collaborators
-                  </button>
-                )}
-              </div>
-            )}
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl">
+                  <p className="text-xs text-slate-400 italic">No external collaborators invited yet.</p>
+                  {task.status !== 'completed' && (
+                    <button
+                      onClick={() => openAssignModal('collaborate')}
+                      className="mt-2 text-xs font-semibold text-purple-600 hover:underline cursor-pointer"
+                    >
+                      + Invite one or more collaborators
+                    </button>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}

@@ -109,6 +109,8 @@ export interface Task {
   creator: UserSummary | null;
   current_owner: UserSummary | null;
   current_owners?: UserSummary[];
+  is_direct_delegation?: boolean;
+  has_subtasks?: boolean;
   department: { id: number; name: string } | null;
   is_peer_isolated?: boolean;
   progress_summary?: {

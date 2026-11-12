@@ -358,27 +358,6 @@ export const CreateTaskPage: React.FC = () => {
           setError('Please select at least one collaborator to invite.');
           return;
         }
-        if (delegationOption === 'subtasks') {
-          for (const u of selectedUsers) {
-            const work = assigneeWork[u.id];
-            if (!work || !work.title.trim()) {
-              setError(`Subtask Title is required for ${u.name}.`);
-              return;
-            }
-            if (!work.description?.trim()) {
-              setError(`Individual Description is required for ${u.name}.`);
-              return;
-            }
-            if (!work.due_date) {
-              setError(`Individual Due Date is mandatory for ${u.name}.`);
-              return;
-            }
-            if (dueDate && work.due_date && new Date(work.due_date) > new Date(dueDate)) {
-              setError(`Individual Due Date for ${u.name} cannot be later than the overall task due date (${dueDate}).`);
-              return;
-            }
-          }
-        }
       }
       setCurrentStep(3);
     }
@@ -404,12 +383,13 @@ export const CreateTaskPage: React.FC = () => {
         formData.append('files[]', file); // Backwards compatibility
       });
 
-      if (handlingMethod === 'assign' || handlingMethod === 'collaborate') {
+      if (handlingMethod === 'collaborate') {
+        selectedUsers.forEach((u) => {
+          formData.append('collaborators[]', String(u.id));
+        });
+      } else if (handlingMethod === 'assign') {
         selectedUsers.forEach((u) => {
           formData.append('assignees[]', String(u.id));
-          if (handlingMethod === 'collaborate') {
-            formData.append('collaborators[]', String(u.id));
-          }
         });
 
         if (delegationOption === 'direct') {
@@ -992,7 +972,7 @@ export const CreateTaskPage: React.FC = () => {
               {/* ======================================================== */}
               {/* ASSIGNMENT MODE: SUBTASKS VS DIRECT DELEGATION           */}
               {/* ======================================================== */}
-              {selectedUsers.length > 0 && (
+              {selectedUsers.length > 0 && handlingMethod === 'assign' && (
                 <div className="pt-6 border-t border-slate-100 space-y-5">
                   <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-200/80 space-y-2.5">
                     <div className="flex items-center justify-between flex-wrap gap-2">
@@ -1338,8 +1318,42 @@ export const CreateTaskPage: React.FC = () => {
               )}
             </div>
           )}
+
+          {/* Collaboration Summary in Step 2 */}
+          {selectedUsers.length > 0 && handlingMethod === 'collaborate' && (
+            <div className="pt-6 border-t border-slate-100">
+              <div className="bg-purple-50/60 p-5 rounded-2xl border border-purple-200 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-purple-600" />
+                  <h4 className="text-xs font-bold text-slate-900">
+                    Team Collaboration ({selectedUsers.length} Collaborator{selectedUsers.length !== 1 ? 's' : ''})
+                  </h4>
+                </div>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  You and the selected teammates will collaborate together on <strong>"{title || 'Untitled Task'}"</strong>. Everyone can view progress, participate in discussions, upload attachments, and work toward completion.
+                </p>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {selectedUsers.map((u) => (
+                    <span
+                      key={u.id}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-purple-200 rounded-xl text-xs font-semibold text-slate-800 shadow-2xs"
+                    >
+                      <span className="w-5 h-5 rounded-full bg-purple-600 text-white text-[10px] flex items-center justify-center font-bold">
+                        {u.name.charAt(0)}
+                      </span>
+                      <span>{u.name}</span>
+                      <span className="text-[10px] text-slate-400 font-normal">({u.role?.replace('_', ' ')})</span>
+                    </span>
+                  ))}
+                </div>
+                <p className="text-[11px] text-slate-500 italic pt-1">
+                  ✓ No subtask breakdown needed. Click "Next: Review & Submit" to verify and create the collaborative task.
+                </p>
+              </div>
             </div>
           )}
+        </div>
+      )}
 
           {/* Footer Actions */}
           <div className="flex justify-between pt-4 border-t border-slate-100">
@@ -1461,7 +1475,57 @@ export const CreateTaskPage: React.FC = () => {
 
           {/* Employee Assignments / Delegation Summary */}
           {handlingMethod !== 'work_alone' && selectedUsers.length > 0 && (
-            delegationOption === 'direct' ? (
+            handlingMethod === 'collaborate' ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                      <Users className="w-4 h-4 text-purple-600" />
+                      <span>Team Collaborators ({selectedUsers.length} Member{selectedUsers.length !== 1 ? 's' : ''})</span>
+                    </h3>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Team members invited to collaborate on this task.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentStep(2)}
+                    className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Change</span>
+                  </button>
+                </div>
+
+                <div className="p-4 bg-purple-50/50 border border-purple-200 rounded-2xl space-y-3">
+                  <div className="text-xs font-bold text-slate-800">
+                    Invited Collaborators:
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedUsers.map((u) => (
+                      <div
+                        key={u.id}
+                        className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-purple-200 rounded-xl text-xs font-medium text-slate-800 shadow-2xs"
+                      >
+                        <span className="w-6 h-6 rounded-full bg-purple-600 text-white text-xs flex items-center justify-center font-bold">
+                          {u.name.charAt(0)}
+                        </span>
+                        <div>
+                          <div className="font-bold text-slate-900">{u.name}</div>
+                          <div className="text-[10px] text-slate-400">
+                            {u.role?.replace('_', ' ')} {u.department ? `• ${u.department.name}` : ''}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-[11px] text-purple-800 pt-2 border-t border-purple-200/60 flex items-center gap-1.5">
+                    <Check className="w-3.5 h-3.5 text-purple-600" />
+                    <span>All collaborators share the same task scope, attachments, and discussions without creating separate subtasks.</span>
+                  </div>
+                </div>
+              </div>
+            ) : delegationOption === 'direct' ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>

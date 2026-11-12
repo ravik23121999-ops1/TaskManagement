@@ -389,6 +389,20 @@ class TaskResource extends JsonResource
             ] : null,
             'current_owner' => $currentOwner,
             'current_owners' => $currentOwners,
+            'is_direct_delegation' => ($this->handling_method === 'assign') && (
+                $this->branches->count() <= 1 && (
+                    !$this->branches->first() || ($this->branches->first()->share_parent_details ?? true)
+                ) && (
+                    !$this->branches->first() || $this->branches->first()->title === $this->title
+                )
+            ),
+            'has_subtasks' => ($this->handling_method === 'assign' && !(
+                $this->branches->count() <= 1 && (
+                    !$this->branches->first() || ($this->branches->first()->share_parent_details ?? true)
+                ) && (
+                    !$this->branches->first() || $this->branches->first()->title === $this->title
+                )
+            )) || ($this->handling_method === 'collaborate' && $this->branches->count() > 1),
             'is_ready_for_final_signoff' => ($this->handling_method !== 'work_alone') && ($totalBranchCount > 0 && $completedBranchCount === $totalBranchCount) && !in_array($this->status, ['completed', 'cancelled']),
             'all_branches_completed' => ($totalBranchCount > 0 && $completedBranchCount === $totalBranchCount),
             'department' => $this->department ? [
