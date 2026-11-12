@@ -212,7 +212,7 @@ export const LoginPage: React.FC = () => {
                       Employee
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 truncate">karan@gmail.com • Tasks & Branch Work</p>
+                  <p className="text-[11px] text-slate-500 truncate">karan@gmail.com • Tasks & Assigned Subtasks</p>
                 </div>
               </div>
 
@@ -373,7 +373,7 @@ export const LoginPage: React.FC = () => {
             {/* Floating Glassmorphism Badge 1 (Top Left) */}
             <div className="absolute top-5 left-5 px-3 py-1.5 rounded-xl bg-slate-900/85 border border-white/20 text-[11px] font-bold text-white shadow-xl flex items-center gap-2 backdrop-blur-md">
               <GitBranch className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Multi-Branch Collaboration</span>
+              <span>Team Subtasks & Collaboration</span>
             </div>
 
             {/* Floating Glassmorphism Badge 2 (Top Right) */}

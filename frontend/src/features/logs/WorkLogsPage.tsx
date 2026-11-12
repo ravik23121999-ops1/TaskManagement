@@ -405,7 +405,7 @@ export const WorkLogsPage: React.FC = () => {
         >
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-yellow-400" />
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Stage Transitions</span>
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Status Changes</span>
             <span className="p-2 bg-amber-50 text-amber-600 rounded-xl group-hover:scale-110 transition-transform">
               <GitBranch className="w-4 h-4" />
             </span>
@@ -414,8 +414,8 @@ export const WorkLogsPage: React.FC = () => {
             {stats.total_status_changes}
           </div>
           <div className="text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
-            <span>Handovers & reviews</span>
-            <span className="text-amber-600 font-semibold group-hover:underline">View Stages →</span>
+            <span>Assignments & reviews</span>
+            <span className="text-amber-600 font-semibold group-hover:underline">View Changes →</span>
           </div>
         </div>
 
@@ -430,7 +430,7 @@ export const WorkLogsPage: React.FC = () => {
         >
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-400" />
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Deliverables Uploaded</span>
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Files Uploaded</span>
             <span className="p-2 bg-emerald-50 text-emerald-600 rounded-xl group-hover:scale-110 transition-transform">
               <Paperclip className="w-4 h-4" />
             </span>
@@ -439,8 +439,8 @@ export const WorkLogsPage: React.FC = () => {
             {stats.total_attachments}
           </div>
           <div className="text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
-            <span>Files & deliverables</span>
-            <span className="text-emerald-600 font-semibold group-hover:underline">Browse Vault →</span>
+            <span>Task attachments</span>
+            <span className="text-emerald-600 font-semibold group-hover:underline">Browse Files →</span>
           </div>
         </div>
       </div>
@@ -1230,7 +1230,7 @@ export const WorkLogsPage: React.FC = () => {
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1.5 text-xs text-slate-400">
-                      <span>Task Dossier</span>
+                      <span>Full Task Summary</span>
                       <span>›</span>
                       <span className="font-bold text-blue-600">{dossierData.task.task_code}</span>
                     </div>
@@ -1266,7 +1266,7 @@ export const WorkLogsPage: React.FC = () => {
                     <span className="font-semibold text-slate-800">{dossierData.task.current_owner?.name || 'Unassigned'}</span>
                   </div>
                   <div className="p-2.5 bg-slate-50/70 rounded-xl border border-slate-100">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Handling Method</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Assignment Type</span>
                     <span className="font-bold text-blue-600 uppercase">{dossierData.task.handling_method.replace('_', ' ')}</span>
                   </div>
                   <div className="p-2.5 bg-slate-50/70 rounded-xl border border-slate-100">
@@ -1286,7 +1286,7 @@ export const WorkLogsPage: React.FC = () => {
                     }`}
                   >
                     <GitBranch className="w-3.5 h-3.5" />
-                    <span>Complete Journey Timeline ({dossierData.timeline?.length || 0})</span>
+                    <span>Task Timeline ({dossierData.timeline?.length || 0})</span>
                   </button>
 
                   <button
@@ -1310,7 +1310,7 @@ export const WorkLogsPage: React.FC = () => {
                     }`}
                   >
                     <Paperclip className="w-3.5 h-3.5" />
-                    <span>Deliverables & Attachments ({dossierData.attachments?.length || 0})</span>
+                    <span>Files & Attachments ({dossierData.attachments?.length || 0})</span>
                   </button>
 
                   <button
@@ -1322,7 +1322,7 @@ export const WorkLogsPage: React.FC = () => {
                     }`}
                   >
                     <Layers className="w-3.5 h-3.5" />
-                    <span>Branches & Assignees ({dossierData.branches?.length || 0})</span>
+                    <span>Subtasks & Team ({dossierData.branches?.length || 0})</span>
                   </button>
                 </div>
               </div>
@@ -1331,9 +1331,9 @@ export const WorkLogsPage: React.FC = () => {
               {dossierTab === 'timeline' && (
                 <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900">Task Journey (Inception to Completion)</h3>
+                    <h3 className="text-sm font-bold text-slate-900">Task Timeline (Creation to Completion)</h3>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      Chronological progression of every milestone, status transition, review evaluation, and completion signoff.
+                      Chronological progression of every status update, review decision, and completion signoff.
                     </p>
                   </div>
 
@@ -1494,15 +1494,15 @@ export const WorkLogsPage: React.FC = () => {
               {dossierTab === 'branches' && (
                 <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
                   <div>
-                    <h3 className="text-sm font-bold text-slate-900">Task Branches & Delegations</h3>
+                    <h3 className="text-sm font-bold text-slate-900">Subtasks & Team Members</h3>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      Hierarchical branches, sub-assignees, and delegated scopes on this task.
+                      Subtasks and assigned team members for this task.
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {dossierData.branches?.length === 0 ? (
-                      <p className="text-xs text-slate-400 italic">No separate branches created.</p>
+                      <p className="text-xs text-slate-400 italic">No subtasks created.</p>
                     ) : (
                       dossierData.branches.map((b: any) => (
                         <div key={b.id} className="p-4 bg-slate-50/70 border border-slate-200/80 rounded-2xl space-y-2">

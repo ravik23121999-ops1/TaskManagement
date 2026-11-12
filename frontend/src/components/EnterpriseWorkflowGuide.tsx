@@ -88,7 +88,7 @@ export const EnterpriseWorkflowGuide: React.FC<EnterpriseWorkflowGuideProps> = (
       icon: CheckCircle2,
       iconColor: 'text-indigo-600 bg-indigo-50',
       route: '/tasks/pending',
-      help: 'When all sub-branches are approved, the Task Creator does the final review and signs off.',
+      help: 'When all subtasks are approved, the Task Creator does the final review and signs off.',
     },
     {
       id: 'step-5',
@@ -168,7 +168,7 @@ export const EnterpriseWorkflowGuide: React.FC<EnterpriseWorkflowGuideProps> = (
                 <span>3. Final Sign-off</span>
               </div>
               <p className="text-slate-600 text-[11px] leading-relaxed">
-                When team members finish their branches, the upper assignee reviews first. Once all parts are approved, the <strong>Task Creator</strong> does the final verification and completes the task.
+                When team members finish their assigned work, the assigner reviews first. Once all subtasks are approved, the <strong>Task Creator</strong> does the final verification and completes the task.
               </p>
             </div>
           </div>

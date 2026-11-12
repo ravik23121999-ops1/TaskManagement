@@ -47,6 +47,7 @@ export const CreateTaskPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user: currentUser } = useAuth();
+  const isAdminOrSubAdmin = currentUser?.role === 'admin' || currentUser?.role === 'sub_admin';
 
   // Wizard Step: 1 = Basic Details, 2 = Assignment, 3 = Review & Submit
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3>(1);
@@ -717,9 +718,9 @@ export const CreateTaskPage: React.FC = () => {
       {currentStep === 2 && (
         <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
           <div>
-            <h2 className="text-sm font-bold text-slate-900">How would you like to handle this task?</h2>
+            <h2 className="text-sm font-bold text-slate-900">Who will work on this task?</h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Choose whether you are completing this task yourself, assigning distinct work to teammates, or collaborating together.
+              Choose whether you will complete this task yourself, assign work to teammates, or collaborate together.
             </p>
           </div>
 
@@ -741,7 +742,7 @@ export const CreateTaskPage: React.FC = () => {
                 <User className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 mb-1">👤 I'll Do It Myself</h3>
+                <h3 className="text-sm font-bold text-slate-900 mb-1">👤 I'll Do It Myself (Solo Task)</h3>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
                   Solo task. You will complete all work yourself without assigning to others.
                 </p>
@@ -795,9 +796,9 @@ export const CreateTaskPage: React.FC = () => {
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 mb-1">🤝 Work as a Team</h3>
+                <h3 className="text-sm font-bold text-slate-900 mb-1">🤝 Work as a Team (Collaboration)</h3>
                 <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Invite <strong>teammates to collaborate together</strong> with shared progress tracking.
+                  Work together with <strong>teammates with shared progress tracking</strong>.
                 </p>
               </div>
               <div className="mt-3">
@@ -1019,13 +1020,13 @@ export const CreateTaskPage: React.FC = () => {
                         </div>
                         <div>
                           <p className="text-xs font-bold text-slate-900 flex items-center justify-between">
-                            <span>Create Subtasks for Each Employee</span>
+                            <span>Split into Separate Subtasks for Each Person</span>
                             {delegationOption === 'subtasks' && (
                               <span className="text-[10px] font-bold text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">Active</span>
                             )}
                           </p>
                           <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
-                            Allocate separate work: provide distinct subtask titles, individual descriptions, due dates, and attachments for each employee.
+                            Allocate separate work: provide distinct subtask titles, instructions, due dates, and files for each person.
                           </p>
                         </div>
                       </div>
@@ -1048,13 +1049,13 @@ export const CreateTaskPage: React.FC = () => {
                         </div>
                         <div>
                           <p className="text-xs font-bold text-slate-900 flex items-center justify-between">
-                            <span>Delegate Task Directly (What Created)</span>
+                            <span>Assign Entire Task as One (No subtasks)</span>
                             {delegationOption === 'direct' && (
                               <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded">Active</span>
                             )}
                           </p>
                           <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
-                            Do not create subtasks. Directly pass the task and all shared documents as-is to the selected employee{selectedUsers.length !== 1 ? 's' : ''}.
+                            Pass the entire task and all shared files as-is to the selected teammates without creating subtasks.
                           </p>
                         </div>
                       </div>
@@ -1067,11 +1068,11 @@ export const CreateTaskPage: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <Check className="w-5 h-5 text-emerald-600" />
                         <h4 className="text-xs font-bold text-slate-900">
-                          Direct Task Delegation (No Subtasks)
+                          Assign Entire Task as One (No Subtasks)
                         </h4>
                       </div>
                       <p className="text-xs text-slate-600 leading-relaxed">
-                        The task <strong>"{title || 'Untitled Task'}"</strong> and all shared documents will be delegated directly to the selected employee{selectedUsers.length !== 1 ? 's' : ''}:
+                        The task <strong>"{title || 'Untitled Task'}"</strong> and all shared documents will be assigned directly to the selected team members:
                       </p>
                       <div className="flex flex-wrap gap-2 pt-1">
                         {selectedUsers.map((u) => (
@@ -1088,7 +1089,7 @@ export const CreateTaskPage: React.FC = () => {
                         ))}
                       </div>
                       <p className="text-[11px] text-slate-500 italic pt-1">
-                        ✓ No subtask forms required. Click "Next: Review & Submit" to verify and create the task.
+                        ✓ No extra subtask forms required. Click "Next: Review & Submit" to verify and create the task.
                       </p>
                     </div>
                   )}
@@ -1101,15 +1102,17 @@ export const CreateTaskPage: React.FC = () => {
                           <div className="flex items-center gap-2">
                             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                               <Sparkles className="w-4 h-4 text-blue-600" />
-                              <span>Individual Work Allocation (Subtasks)</span>
+                              <span>Assign Subtasks to Team Members</span>
                             </h3>
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
-                              <Lock className="w-3 h-3" />
-                              <span>Strict Peer Isolation</span>
-                            </span>
+                            {isAdminOrSubAdmin && (
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center gap-1">
+                                <Lock className="w-3 h-3" />
+                                <span>Private Subtasks (Assignees see only their work)</span>
+                              </span>
+                            )}
                           </div>
                           <p className="text-[11px] text-slate-500 mt-1">
-                            Each employee receives separate work instructions, private attachments, and deliverables. They will never see each other's work or files.
+                            Provide instructions, due dates, and attachments for each teammate's subtask.
                           </p>
                         </div>
 
@@ -1399,12 +1402,12 @@ export const CreateTaskPage: React.FC = () => {
                 <span className="font-bold text-slate-900 text-sm">{title}</span>
               </div>
               <div>
-                <span className="font-bold text-slate-500 block">Handling Method:</span>
+                <span className="font-bold text-slate-500 block">Assignment Type:</span>
                 <span className="font-bold text-blue-600 uppercase tracking-wide">
                   {handlingMethod === 'assign'
-                    ? `Assign (${selectedUsers.length} Assignee${selectedUsers.length > 1 ? 's' : ''})`
+                    ? `Assign to Teammates (${selectedUsers.length} Person${selectedUsers.length > 1 ? 's' : ''})`
                     : handlingMethod === 'collaborate'
-                    ? `Collaborate (${selectedUsers.length} Collaborator${selectedUsers.length > 1 ? 's' : ''})`
+                    ? `Team Collaboration (${selectedUsers.length} Member${selectedUsers.length > 1 ? 's' : ''})`
                     : 'Work Solo'}
                 </span>
               </div>
@@ -1464,10 +1467,10 @@ export const CreateTaskPage: React.FC = () => {
                   <div>
                     <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                       <Send className="w-4 h-4 text-emerald-600" />
-                      <span>Direct Task Delegation ({selectedUsers.length} Assignee{selectedUsers.length !== 1 ? 's' : ''})</span>
+                      <span>Assign Entire Task as One ({selectedUsers.length} Person{selectedUsers.length !== 1 ? 's' : ''})</span>
                     </h3>
                     <p className="text-[11px] text-slate-500 mt-0.5">
-                      The task scope and all shared documents will be delegated directly to the selected employee{selectedUsers.length !== 1 ? 's' : ''} without creating subtasks.
+                      The task and all shared files will be assigned directly to the selected team members without splitting into subtasks.
                     </p>
                   </div>
                   <button
@@ -1504,7 +1507,7 @@ export const CreateTaskPage: React.FC = () => {
                   </div>
                   <div className="text-[11px] text-emerald-800 pt-2 border-t border-emerald-200/60 flex items-center gap-1.5">
                     <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Each assignee will directly receive the full task scope, due date, deliverables, and shared attachments.</span>
+                    <span>Each person will directly receive the full task scope, due date, deliverables, and shared attachments.</span>
                   </div>
                 </div>
               </div>
@@ -1514,10 +1517,10 @@ export const CreateTaskPage: React.FC = () => {
                 <div>
                   <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                     <Users className="w-4 h-4 text-sky-600" />
-                    <span>Individual Employee Assignments ({selectedUsers.length})</span>
+                    <span>Subtasks for Team Members ({selectedUsers.length})</span>
                   </h3>
                   <p className="text-[11px] text-slate-500 mt-0.5">
-                    Summary of distinct work allocations, acceptance criteria, and private files.
+                    Summary of assigned subtasks, instructions, and files.
                   </p>
                 </div>
                 <button

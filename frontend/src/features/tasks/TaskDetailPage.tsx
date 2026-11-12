@@ -51,6 +51,7 @@ export const TaskDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user: currentUser } = useAuth();
+  const isAdminOrSubAdmin = currentUser?.role === 'admin' || currentUser?.role === 'sub_admin';
 
   const [task, setTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1371,7 +1372,7 @@ export const TaskDetailPage: React.FC = () => {
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Stage 4 of 5</span>
                 </div>
                 <p className="text-emerald-800 mt-0.5">
-                  All assigned subordinate deliverables have been verified and approved. Final executive completion sign-off is required.
+                  All subtasks have been verified and approved. Final sign-off is required to complete the project.
                 </p>
               </div>
             </div>
@@ -1405,7 +1406,7 @@ export const TaskDetailPage: React.FC = () => {
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Completed</span>
               </div>
               <p className="text-emerald-800 mt-0.5">
-                All milestones and deliverables have been successfully verified and accepted.
+                All work and deliverables have been successfully verified and accepted.
               </p>
             </div>
           </div>
@@ -1421,16 +1422,20 @@ export const TaskDetailPage: React.FC = () => {
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${slaBadge.color}`}>
                     {slaBadge.text}
                   </span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
-                    <span>🔒 Confidential Subtask</span>
-                  </span>
+                  {isAdminOrSubAdmin && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                      <span>🔒 Private Subtask</span>
+                    </span>
+                  )}
                 </div>
                 <p className="text-blue-900 leading-relaxed">
-                  You are actively executing <strong>"{task.my_branch?.title || task.title}"</strong>. When finished, submit your deliverables for verification by {task.my_branch?.assigned_by?.name || task.creator?.name || 'your assigner'}.
+                  You are actively working on <strong>"{task.my_branch?.title || task.title}"</strong>. When finished, submit your deliverables for review by {task.my_branch?.assigned_by?.name || task.creator?.name || 'your assigner'}.
                 </p>
-                <p className="text-[11px] text-blue-700/80">
-                  Peer Isolation Active: Peer assignees cannot view your subtask, deliverables, or discussions.
-                </p>
+                {isAdminOrSubAdmin && (
+                  <p className="text-[11px] text-blue-700/80">
+                    Private Subtasks Active: Assignees only see their assigned work and deliverables.
+                  </p>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
@@ -1472,7 +1477,7 @@ export const TaskDetailPage: React.FC = () => {
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-200 text-slate-700">Work in Progress</span>
                 </div>
                 <p className="text-slate-600 mt-0.5">
-                  Subordinate deliverables are currently being executed by assigned team members. You will be notified once they submit for your review.
+                  Team members are currently working on their assigned subtasks. You will be notified once they submit for your review.
                 </p>
               </div>
             </div>
@@ -1678,8 +1683,8 @@ export const TaskDetailPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: Basic Information */}
           <div className="lg:col-span-2 bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
-            {/* STRICT PEER ISOLATION: YOUR ASSIGNED WORK CARD */}
-            {task.is_peer_isolated && task.my_branch && (
+            {/* YOUR ASSIGNED SUBTASK WORK CARD */}
+            {task.my_branch && (
               <div className="p-5 bg-gradient-to-br from-blue-50/90 via-indigo-50/50 to-blue-50/90 border-2 border-blue-200/90 rounded-2xl space-y-4 shadow-sm animate-in fade-in">
                 <div className="flex items-center justify-between pb-3 border-b border-blue-200/60">
                   <div className="flex items-center gap-2">
@@ -1688,22 +1693,26 @@ export const TaskDetailPage: React.FC = () => {
                     </span>
                     <div>
                       <span className="text-xs font-bold text-blue-950 uppercase tracking-wider block">
-                        Your Personal Assigned Work Scope
+                        Your Assigned Subtask
                       </span>
-                      <span className="text-[10px] text-blue-700/80 font-medium">
-                        Confidential individual assignment
-                      </span>
+                      {isAdminOrSubAdmin && (
+                        <span className="text-[10px] text-blue-700/80 font-medium">
+                          Private individual assignment
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
-                    <span>🔒 Peer Privacy Protected</span>
-                  </span>
+                  {isAdminOrSubAdmin && (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                      <span>🔒 Private Assignment</span>
+                    </span>
+                  )}
                 </div>
 
                 <div className="space-y-3">
                   <div>
                     <span className="font-bold text-slate-500 uppercase tracking-wider text-[10px] block mb-0.5">
-                      Your Work Title
+                      Subtask Title
                     </span>
                     <h3 className="text-sm font-bold text-slate-900">
                       {task.my_branch.title}
@@ -1713,7 +1722,7 @@ export const TaskDetailPage: React.FC = () => {
                   {task.my_branch.description && (
                     <div className="p-3 bg-white/90 border border-blue-200/80 rounded-xl space-y-1">
                       <span className="font-bold text-blue-900 text-[10px] uppercase tracking-wider block">
-                        Individual Instructions & Deliverable Scope
+                        Instructions & Details
                       </span>
                       <p className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
                         {task.my_branch.description}
@@ -1724,7 +1733,7 @@ export const TaskDetailPage: React.FC = () => {
                   {task.my_branch.expected_result && (
                     <div className="p-3 bg-white/90 border border-blue-200/80 rounded-xl space-y-1">
                       <span className="font-bold text-blue-900 text-[10px] uppercase tracking-wider block">
-                        Expected Result
+                        What to Deliver / Final Output
                       </span>
                       <p className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
                         {task.my_branch.expected_result}
@@ -1893,10 +1902,12 @@ export const TaskDetailPage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="p-2.5 bg-blue-100/50 rounded-xl text-[11px] text-blue-900 flex items-center gap-2">
-                  <span className="font-bold text-blue-700">🔒 Peer Confidentiality:</span>
-                  <span>You only see your own assigned work. Work and instructions assigned to other peers remain strictly confidential.</span>
-                </div>
+                {isAdminOrSubAdmin && (
+                  <div className="p-2.5 bg-blue-100/50 rounded-xl text-[11px] text-blue-900 flex items-center gap-2">
+                    <span className="font-bold text-blue-700">🔒 Privacy Setting:</span>
+                    <span>Assignees only see their own assigned work.</span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1929,7 +1940,7 @@ export const TaskDetailPage: React.FC = () => {
                       <div className="p-4 bg-sky-50/60 border border-sky-100 rounded-xl space-y-1.5">
                         <div className="flex items-center gap-2 text-sky-900 font-bold text-[11px] uppercase tracking-wider">
                           <Target className="w-3.5 h-3.5 text-sky-600" />
-                          <span>Expected Result & Outcome</span>
+                          <span>What to Deliver / Final Output</span>
                         </div>
                         <p className="text-slate-700 leading-relaxed whitespace-pre-wrap text-xs pl-5">
                           {task.expected_result}
@@ -1951,7 +1962,7 @@ export const TaskDetailPage: React.FC = () => {
                           <div className="flex items-center justify-between">
                             <span className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-2">
                               <CheckSquare className="w-4 h-4 text-blue-600" />
-                              <span>Acceptance Criteria Checklist ({checkedCount}/{criteriaLines.length})</span>
+                              <span>Checklist of What Needs to Be Done ({checkedCount}/{criteriaLines.length})</span>
                             </span>
                             <span className="text-[11px] font-bold text-blue-600">{pct}% Done</span>
                           </div>
@@ -2024,7 +2035,7 @@ export const TaskDetailPage: React.FC = () => {
                     <div className="p-4 bg-sky-50/60 border border-sky-100 rounded-xl space-y-1.5">
                       <div className="flex items-center gap-2 text-sky-900 font-bold text-[11px] uppercase tracking-wider">
                         <Target className="w-3.5 h-3.5 text-sky-600" />
-                        <span>Expected Result & Outcome</span>
+                        <span>What to Deliver / Final Output</span>
                       </div>
                       <p className="text-slate-700 leading-relaxed whitespace-pre-wrap text-xs pl-5">
                         {task.expected_result}
@@ -2047,7 +2058,7 @@ export const TaskDetailPage: React.FC = () => {
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-slate-800 uppercase tracking-wider text-[11px] flex items-center gap-2">
                             <CheckSquare className="w-4 h-4 text-blue-600" />
-                            <span>Acceptance Criteria Checklist ({checkedCount}/{criteriaLines.length})</span>
+                            <span>Checklist of What Needs to Be Done ({checkedCount}/{criteriaLines.length})</span>
                           </span>
                           <span className="text-[11px] font-bold text-blue-600">{pct}% Complete</span>
                         </div>
@@ -2491,7 +2502,7 @@ export const TaskDetailPage: React.FC = () => {
                         <div className="pt-3 space-y-2.5 text-xs">
                           <div>
                             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
-                              Subtask Scope
+                              Subtask Title
                             </span>
                             <p className="font-bold text-slate-800 text-sm">{b.title}</p>
                           </div>
@@ -2499,7 +2510,7 @@ export const TaskDetailPage: React.FC = () => {
                           {b.description && (
                             <div>
                               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">
-                                Individual Description
+                                Instructions & Details
                               </span>
                               <p className="text-slate-600 text-xs whitespace-pre-wrap pl-2 border-l-2 border-blue-400">
                                 {b.description}
@@ -2510,7 +2521,7 @@ export const TaskDetailPage: React.FC = () => {
                           {b.expected_result && (
                             <div className="p-2 bg-slate-50 rounded-lg">
                               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">
-                                Expected Result
+                                What to Deliver / Final Output
                               </span>
                               <p className="text-slate-700 text-[11px] whitespace-pre-wrap">{b.expected_result}</p>
                             </div>
@@ -2519,13 +2530,13 @@ export const TaskDetailPage: React.FC = () => {
                           {b.acceptance_criteria && (
                             <div className="p-2 bg-slate-50 rounded-lg">
                               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">
-                                Acceptance Criteria
+                                Checklist of Requirements
                               </span>
                               <p className="text-slate-700 text-[11px] whitespace-pre-wrap">{b.acceptance_criteria}</p>
                             </div>
                           )}
 
-                          {/* Individual Attachments for this Branch */}
+                          {/* Subtask Attachments */}
                           {b.attachments && b.attachments.length > 0 && (
                             <div className="pt-2 border-t border-slate-100">
                               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">
@@ -2750,7 +2761,7 @@ export const TaskDetailPage: React.FC = () => {
                 </p>
               </div>
               <span className="text-xs text-slate-400 font-semibold px-2.5 py-1 bg-slate-100 rounded-full w-fit">
-                {(task.status_history?.length || 0)} Milestone{(task.status_history?.length || 0) !== 1 ? 's' : ''} Recorded
+                {(task.status_history?.length || 0)} Activity Update{(task.status_history?.length || 0) !== 1 ? 's' : ''}
               </span>
             </div>
 
@@ -2772,11 +2783,11 @@ export const TaskDetailPage: React.FC = () => {
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
                       </span>
                       <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                        Active Parallel Workflow Stages ({activeBranches.filter((b) => b.status !== 'completed').length} Concurrent Tracks)
+                        Subtasks in Progress ({activeBranches.filter((b) => b.status !== 'completed').length} Team Members Working)
                       </h4>
                     </div>
                     <span className="text-[10px] font-bold text-blue-700 bg-blue-100/80 px-2.5 py-0.5 rounded-full border border-blue-200">
-                      Side-by-Side Execution
+                      Working in Parallel
                     </span>
                   </div>
 
@@ -2807,7 +2818,7 @@ export const TaskDetailPage: React.FC = () => {
                                   {branch.owner?.name || 'Unassigned'}
                                 </div>
                                 <div className="text-[10px] text-slate-500 truncate font-medium">
-                                  Track {bIdx + 1}: {branch.title}
+                                  Subtask {bIdx + 1}: {branch.title}
                                 </div>
                               </div>
                             </div>
@@ -2903,7 +2914,7 @@ export const TaskDetailPage: React.FC = () => {
                           : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
                       }`}
                     >
-                      All Milestones ({historyList.length})
+                      All Updates ({historyList.length})
                     </button>
                     <button
                       type="button"
@@ -2927,7 +2938,7 @@ export const TaskDetailPage: React.FC = () => {
                       }`}
                     >
                       <UserPlus className="w-3.5 h-3.5" />
-                      <span>Delegations ({handoverCount})</span>
+                      <span>Assignments ({handoverCount})</span>
                     </button>
                     <button
                       type="button"
@@ -2946,7 +2957,7 @@ export const TaskDetailPage: React.FC = () => {
                   <div className="relative pl-6 sm:pl-9 border-l-2 border-slate-200/90 space-y-5 my-4 ml-3 sm:ml-4">
                     {filteredList.length === 0 ? (
                       <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl">
-                        <p className="text-xs text-slate-400 italic">No milestones matching the selected filter.</p>
+                        <p className="text-xs text-slate-400 italic">No updates matching the selected filter.</p>
                       </div>
                     ) : (
                       filteredList.map((item, idx) => {
@@ -2961,12 +2972,12 @@ export const TaskDetailPage: React.FC = () => {
 
                   if (rLower.includes('task created')) {
                     nodeBg = 'bg-indigo-600 ring-indigo-100';
-                    tagLabel = 'Task Initiated';
+                    tagLabel = 'Task Created';
                     tagClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
                     NodeIcon = Rocket;
                   } else if (rLower.includes('assigned') || rLower.includes('delegat')) {
                     nodeBg = 'bg-sky-600 ring-sky-100';
-                    tagLabel = 'Delegation Handover';
+                    tagLabel = 'Subtask Assigned';
                     tagClass = 'bg-sky-50 text-sky-700 border-sky-200';
                     NodeIcon = UserPlus;
                   } else if (item.to_status === 'review' || rLower.includes('review') || rLower.includes('submitted')) {
