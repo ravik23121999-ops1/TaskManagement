@@ -732,7 +732,18 @@ export const TaskDetailPage: React.FC = () => {
       await tasksApi.downloadAttachment(attachmentId, fileName);
     } catch (err: any) {
       console.error('Download error:', err);
-      showToast(err.response?.data?.message || 'Failed to download attachment', 'error');
+      try {
+        const directUrl = tasksApi.getAttachmentDownloadUrl(attachmentId);
+        const link = document.createElement('a');
+        link.href = directUrl;
+        link.download = fileName;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (fallbackErr) {
+        showToast(err.response?.data?.message || err.message || 'Failed to download attachment', 'error');
+      }
     } finally {
       setDownloadingId(null);
     }

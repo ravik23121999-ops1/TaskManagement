@@ -44,7 +44,21 @@ apiClient.interceptors.request.use((config) => {
 
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    // If response is a Blob containing JSON error (e.g. download endpoint failure), unpack JSON
+    if (error.response?.data instanceof Blob) {
+      try {
+        const text = await error.response.data.text();
+        const json = JSON.parse(text);
+        error.response.data = json;
+        if (json.message) {
+          error.message = json.message;
+        }
+      } catch {
+        // Blob is not JSON, leave as is
+      }
+    }
+
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
