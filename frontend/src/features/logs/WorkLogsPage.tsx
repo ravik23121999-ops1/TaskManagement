@@ -26,6 +26,8 @@ import {
   Building2,
   AlertCircle,
   X,
+  UserPlus,
+  UserX,
 } from 'lucide-react';
 
 export const WorkLogsPage: React.FC = () => {
@@ -1028,7 +1030,15 @@ export const WorkLogsPage: React.FC = () => {
                       if (item.event_type === 'comment') {
                         typePill = { bg: 'bg-indigo-50 text-indigo-700 border-indigo-200', icon: MessageSquare, label: 'Communication' };
                       } else if (item.event_type === 'status_change') {
-                        typePill = { bg: 'bg-amber-50 text-amber-700 border-amber-200', icon: GitBranch, label: 'Transition' };
+                        const isWithdrawn = item.action_title?.toLowerCase().includes('withdrawn') || item.content?.toLowerCase().includes('withdrawn') || item.content?.toLowerCase().includes('cancelled');
+                        const isAssigned = item.action_title?.toLowerCase().includes('assigned') || item.content?.toLowerCase().includes('assigned');
+                        if (isWithdrawn) {
+                          typePill = { bg: 'bg-rose-50 text-rose-700 border-rose-200', icon: UserX, label: 'Assignment Withdrawn' };
+                        } else if (isAssigned) {
+                          typePill = { bg: 'bg-blue-50 text-blue-700 border-blue-200', icon: UserPlus, label: 'Subtask Assigned' };
+                        } else {
+                          typePill = { bg: 'bg-amber-50 text-amber-700 border-amber-200', icon: GitBranch, label: 'Transition' };
+                        }
                       } else if (item.event_type === 'review') {
                         typePill = item.details?.decision === 'approved'
                           ? { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: CheckCircle2, label: 'Approved' }

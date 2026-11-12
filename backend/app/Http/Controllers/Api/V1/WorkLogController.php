@@ -118,11 +118,25 @@ class WorkLogController extends Controller
 
             foreach ($statusQuery as $s) {
                 if (!$s->task) continue;
+
+                $actionTitle = "Stage Transition: " . strtoupper($s->from_status ?? 'draft') . " → " . strtoupper($s->to_status);
+                if ($s->task_branch_id) {
+                    if ($s->to_status === 'cancelled' || str_contains(strtolower($s->reason ?? ''), 'withdrawn')) {
+                        $actionTitle = 'Subtask Assignment Withdrawn';
+                    } elseif ($s->from_status === null) {
+                        $actionTitle = 'Subtask Assigned';
+                    } else {
+                        $actionTitle = "Subtask Status: " . strtoupper($s->from_status) . " → " . strtoupper($s->to_status);
+                    }
+                } elseif (str_contains(strtolower($s->reason ?? ''), 'withdrawn') || str_contains(strtolower($s->reason ?? ''), 'cancelled')) {
+                    $actionTitle = 'Assignment Withdrawn';
+                }
+
                 $logs->push([
                     'id' => 'status_' . $s->id,
                     'raw_id' => $s->id,
                     'event_type' => 'status_change',
-                    'action_title' => "Stage Transition: " . strtoupper($s->from_status ?? 'draft') . " → " . strtoupper($s->to_status),
+                    'action_title' => $actionTitle,
                     'task' => [
                         'id' => $s->task->id,
                         'task_code' => sprintf('T-%03d', $s->task->id),
@@ -506,15 +520,19 @@ class WorkLogController extends Controller
             $fromStr = strtoupper(str_replace('_', ' ', $sh->from_status ?? 'draft'));
             $toStr = strtoupper(str_replace('_', ' ', $sh->to_status));
 
+            $isWithdrawn = $sh->to_status === 'cancelled' || str_contains(strtolower($sh->reason ?? ''), 'withdrawn') || str_contains(strtolower($sh->reason ?? ''), 'cancelled');
+            $badgeLabel = $isWithdrawn ? 'Assignment Withdrawn' : 'Stage Transition';
+            $title = $isWithdrawn ? 'Assignment Withdrawn / Cancelled' : "Stage Transition: {$fromStr} → {$toStr}";
+
             $steps->push([
                 'raw_time' => Carbon::parse($sh->changed_at)->timestamp,
                 'sort_order' => 25,
                 'timestamp' => Carbon::parse($sh->changed_at)->toIso8601String(),
                 'formatted_time' => Carbon::parse($sh->changed_at)->format('M d, Y h:i A'),
                 'time_ago' => Carbon::parse($sh->changed_at)->diffForHumans(),
-                'stage_type' => 'status_change',
-                'badge_label' => 'Stage Transition',
-                'title' => "Stage Transition: {$fromStr} → {$toStr}",
+                'stage_type' => $isWithdrawn ? 'assignment' : 'status_change',
+                'badge_label' => $badgeLabel,
+                'title' => $title,
                 'actor' => [
                     'name' => $sh->changedBy?->name ?? 'System',
                     'role' => $sh->changedBy?->role ?? 'user',

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { tasksApi } from '../../api/tasks';
-import type { Task, TaskSubmission } from '../../api/tasks';
+import type { Task, TaskSubmission, TaskBranch } from '../../api/tasks';
 import { usersApi } from '../../api/users';
 import { useAuth } from '../auth/AuthContext';
 import { StatusBadge, PriorityBadge } from '../../components/StatusBadge';
@@ -45,6 +45,7 @@ import {
   FolderGit2,
   Rocket,
   Copy,
+  Info,
 } from 'lucide-react';
 
 export const TaskDetailPage: React.FC = () => {
@@ -819,10 +820,19 @@ export const TaskDetailPage: React.FC = () => {
 
   const isWorkAlone = task.handling_method === 'work_alone';
   const isCollaborateTask = task.handling_method === 'collaborate';
+
+  const activeBranches: TaskBranch[] = useMemo(
+    () => ((task.branches || []) as TaskBranch[]).filter((b: TaskBranch) => b.status !== 'cancelled'),
+    [task.branches]
+  );
+  const cancelledBranches: TaskBranch[] = useMemo(
+    () => ((task.branches || []) as TaskBranch[]).filter((b: TaskBranch) => b.status === 'cancelled'),
+    [task.branches]
+  );
+
   const hasSubtasks = Boolean(
-    task.has_subtasks ??
-    (task.branches && task.branches.length > 1) ??
-    (task.handling_method === 'assign' && task.branches?.some((b) => b.title !== task.title))
+    activeBranches.length > 1 ||
+    (task.handling_method === 'assign' && activeBranches.some((b: TaskBranch) => b.title !== task.title))
   );
   const isDirectDelegation = Boolean(
     task.is_direct_delegation ??
@@ -1584,10 +1594,10 @@ export const TaskDetailPage: React.FC = () => {
             <Users className="w-3.5 h-3.5" />
             <span>
               {hasSubtasks
-                ? `Subtasks & Team (${task.branches?.length || 0})`
+                ? `Subtasks & Team (${activeBranches.length})`
                 : isCollaborateTask
-                ? `Team & Collaborators (${task.collaborators?.length || 0})`
-                : `Assigned Team (${task.branches?.length || 0})`}
+                ? `Team & Collaborators (${(task.collaborators || []).filter((c) => !activeBranches.some((b: TaskBranch) => b.owner?.id === c.id)).length})`
+                : `Assigned Team (${activeBranches.length})`}
             </span>
           </button>
 
@@ -2265,10 +2275,10 @@ export const TaskDetailPage: React.FC = () => {
                     >
                       <span>
                         {hasSubtasks
-                          ? `View All Subtasks (${task.branches.length})`
+                          ? `View All Subtasks (${activeBranches.length})`
                           : isCollaborateTask
-                          ? `View Collaborators (${task.collaborators?.length || 0})`
-                          : `View Assignment (${task.branches.length})`}
+                          ? `View Collaborators (${(task.collaborators || []).filter((c) => !activeBranches.some((b: TaskBranch) => b.owner?.id === c.id)).length})`
+                          : `View Assignment (${activeBranches.length})`}
                       </span>
                       <ArrowRight className="w-3.5 h-3.5 text-blue-600" />
                     </button>
@@ -2454,10 +2464,10 @@ export const TaskDetailPage: React.FC = () => {
                   <UserPlus className="w-4 h-4 text-sky-600" />
                   <span>
                     {hasSubtasks
-                      ? `Subtasks & Team Members (${task.branches?.length || 0})`
+                      ? `Subtasks & Team Members (${activeBranches.length})`
                       : isCollaborateTask
-                      ? `Task Lead (${task.branches?.length || 0})`
-                      : `Assigned Team Member (${task.branches?.length || 0})`}
+                      ? `Task Lead (${activeBranches.length})`
+                      : `Assigned Team Member (${activeBranches.length})`}
                   </span>
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -2479,10 +2489,10 @@ export const TaskDetailPage: React.FC = () => {
               )}
             </div>
 
-            {task.branches && task.branches.length > 0 ? (
+            {activeBranches.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {task.branches.map((b, idx) => {
-                  const pendingSub = b.submissions?.find((s) => !s.reviews || s.reviews.length === 0);
+                {activeBranches.map((b: TaskBranch, idx: number) => {
+                  const pendingSub = b.submissions?.find((s: any) => !s.reviews || s.reviews.length === 0);
                   const canReassignBranch =
                     (currentUser?.role === 'admin' ||
                       currentUser?.role === 'sub_admin' ||
@@ -2601,7 +2611,7 @@ export const TaskDetailPage: React.FC = () => {
                                 {hasSubtasks ? 'Subtask Attachments' : 'Assigned Attachments'} ({b.attachments.length})
                               </span>
                               <div className="flex flex-wrap gap-1.5">
-                                {b.attachments.map((att) => (
+                                {b.attachments.map((att: any) => (
                                   <button
                                     key={att.id}
                                     onClick={() => handleDownloadAttachment(att.id, att.file_name)}
@@ -2672,8 +2682,46 @@ export const TaskDetailPage: React.FC = () => {
                 })}
               </div>
             ) : (
-              <div className="text-center py-6 border border-dashed border-slate-200 rounded-xl">
-                <p className="text-xs text-slate-400 italic">No assigned members or branches yet.</p>
+              <div className="text-center py-8 border border-dashed border-slate-200 rounded-2xl bg-slate-50/50 space-y-2">
+                <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+                  <UserPlus className="w-5 h-5 text-slate-400" />
+                </div>
+                <h3 className="text-xs font-bold text-slate-800">No Active Assigned Team Members</h3>
+                <p className="text-[11px] text-slate-500 max-w-sm mx-auto">
+                  {cancelledBranches.length > 0
+                    ? 'All previous assignments were withdrawn/cancelled. Click below to allocate to a new team member.'
+                    : 'No team members are currently assigned to this task.'}
+                </p>
+                {task.status !== 'completed' && task.status !== 'cancelled' && (
+                  <button
+                    onClick={() => openAssignModal('assign')}
+                    className="mt-2 px-3.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-sm transition inline-flex items-center gap-1.5 cursor-pointer active:scale-95"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Assign Team Member</span>
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Subtle Audit notice when assignments have been withdrawn */}
+            {cancelledBranches.length > 0 && (
+              <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-slate-600">
+                <div className="flex items-center gap-2">
+                  <Info className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span>
+                    <strong className="text-slate-800">
+                      {cancelledBranches.length} past assignment{cancelledBranches.length > 1 ? 's were' : ' was'} withdrawn
+                    </strong>{' '}
+                    ({cancelledBranches.map((b: TaskBranch) => b.owner?.name).filter(Boolean).join(', ')}). All assignment & withdrawal history is permanently preserved in Work Logs & Activity feed.
+                  </span>
+                </div>
+                <button
+                  onClick={() => setActiveTab('comments')}
+                  className="text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline shrink-0 cursor-pointer self-start sm:self-auto"
+                >
+                  View Activity History →
+                </button>
               </div>
             )}
           </div>
@@ -2687,7 +2735,7 @@ export const TaskDetailPage: React.FC = () => {
                   <span>
                     Task Collaborators ({(() => {
                       const displayCollaborators = (task.collaborators || []).filter(
-                        (c) => !task.branches?.some((b) => b.owner?.id === c.id)
+                        (c: any) => !activeBranches.some((b: TaskBranch) => b.owner?.id === c.id)
                       );
                       return displayCollaborators.length;
                     })()})
@@ -4764,7 +4812,7 @@ export const TaskDetailPage: React.FC = () => {
                         <p className="text-[11px] text-rose-700 leading-relaxed mt-0.5">
                           You are withdrawing subtask <span className="font-bold">"{reassignBranch.title}"</span> from{' '}
                           <span className="font-bold">{reassignBranch.owner?.name || 'this assignee'}</span>.
-                          This subtask will be marked as cancelled and will no longer block overall task completion.
+                          This person will be removed from the active team members list. Both the assignment and cancellation events are permanently preserved in Work Logs & Activity history.
                         </p>
                       </div>
                     </div>
@@ -4783,15 +4831,10 @@ export const TaskDetailPage: React.FC = () => {
                     />
                   </div>
 
-                  <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer pt-1">
-                    <input
-                      type="checkbox"
-                      checked={reassignDeletePermanently}
-                      onChange={(e) => setReassignDeletePermanently(e.target.checked)}
-                      className="rounded border-slate-300 text-rose-600 focus:ring-rose-500"
-                    />
-                    <span>Also remove completely from subtask cards (Soft-delete)</span>
-                  </label>
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-600 flex items-center gap-2">
+                    <Info className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span>This person's card will be removed from active team members, and the cancellation will be permanently logged in Work Logs & Activity feed.</span>
+                  </div>
                 </>
               )}
             </div>
