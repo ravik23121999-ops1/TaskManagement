@@ -44,9 +44,20 @@ export class ErrorBoundary extends Component<Props, State> {
           <h1 className="text-xl font-bold tracking-tight text-white mb-2">
             Something unexpected occurred
           </h1>
-          <p className="text-xs text-slate-400 max-w-md mb-6 leading-relaxed">
+          <p className="text-xs text-slate-400 max-w-md mb-4 leading-relaxed">
             The application encountered a runtime issue while loading this view. Your session and data remain safe.
           </p>
+
+          {this.state.error && (
+            <details className="mb-6 text-left max-w-lg w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-[11px] font-mono text-rose-300 overflow-auto max-h-36">
+              <summary className="cursor-pointer font-bold text-slate-400 hover:text-white select-none">
+                Error Details: {this.state.error.message || 'Runtime Exception'}
+              </summary>
+              <pre className="mt-2 text-[10px] whitespace-pre-wrap text-slate-400">
+                {this.state.error.stack || this.state.error.message}
+              </pre>
+            </details>
+          )}
 
           <div className="flex items-center gap-3">
             <button

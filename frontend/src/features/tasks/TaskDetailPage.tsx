@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { tasksApi } from '../../api/tasks';
 import type { Task, TaskSubmission, TaskBranch } from '../../api/tasks';
@@ -821,13 +821,11 @@ export const TaskDetailPage: React.FC = () => {
   const isWorkAlone = task.handling_method === 'work_alone';
   const isCollaborateTask = task.handling_method === 'collaborate';
 
-  const activeBranches: TaskBranch[] = useMemo(
-    () => ((task.branches || []) as TaskBranch[]).filter((b: TaskBranch) => b.status !== 'cancelled'),
-    [task.branches]
+  const activeBranches: TaskBranch[] = ((task.branches || []) as TaskBranch[]).filter(
+    (b: TaskBranch) => b.status !== 'cancelled'
   );
-  const cancelledBranches: TaskBranch[] = useMemo(
-    () => ((task.branches || []) as TaskBranch[]).filter((b: TaskBranch) => b.status === 'cancelled'),
-    [task.branches]
+  const cancelledBranches: TaskBranch[] = ((task.branches || []) as TaskBranch[]).filter(
+    (b: TaskBranch) => b.status === 'cancelled'
   );
 
   const hasSubtasks = Boolean(
