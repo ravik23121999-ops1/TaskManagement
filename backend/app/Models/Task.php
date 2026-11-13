@@ -111,6 +111,11 @@ class Task extends Model
         return $this->hasMany(TaskHoldRecord::class);
     }
 
+    public function collaborators(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(TaskCollaborator::class, TaskBranch::class);
+    }
+
     public function isWorkAlone(): bool
     {
         return $this->handling_method === 'work_alone';

@@ -1202,4 +1202,90 @@ class TaskWorkflowTest extends TestCase
         $unrelatedView->assertStatus(200);
         $this->assertFalse(collect($unrelatedView->json('data'))->contains('id', $taskId), 'Unrelated employee must not see the private collaboration');
     }
+
+    public function test_path_b_collaborator_can_submit_work_and_creator_reviews_and_completes_task(): void
+    {
+        // 1. Admin creates a task with subtask assigned to Employee 1
+        $createRes = $this->actingAs($this->admin)->postJson('/api/tasks', [
+            'title' => 'Path B Collaborative Deliverables Project',
+            'description' => 'Joint project with collaborators',
+            'handling_method' => 'collaborate',
+            'due_date' => now()->addDays(5)->toDateString(),
+            'branches' => [
+                [
+                    'title' => 'Initial Subtask',
+                    'owner_id' => $this->employee1->id,
+                    'due_date' => now()->addDays(5)->toDateString(),
+                ],
+            ],
+        ]);
+        $createRes->assertStatus(201);
+        $taskId = $createRes->json('data.id');
+        $branchId = $createRes->json('data.branches.0.id');
+
+        // 2. Creator invites Employee 2 as a collaborator
+        $collabRes = $this->actingAs($this->admin)->postJson("/api/tasks/{$taskId}/collaborators", [
+            'user_ids' => [$this->employee2->id],
+        ]);
+        $collabRes->assertStatus(200);
+
+        // 3. Employee 1's branch is cancelled by admin (simulating T-028 condition where only collaborator remains)
+        $cancelBranchRes = $this->actingAs($this->admin)->postJson("/api/task-branches/{$branchId}/cancel-assignment", [
+            'reason' => 'Subtask cancelled in favor of direct collaboration',
+        ]);
+        $cancelBranchRes->assertStatus(200);
+
+        // 4. Employee 2 (Collaborator) views task:
+        // - Must have can_submit = true
+        // - Must show in view=my_action
+        // - Must NOT show in view=pending_with_others
+        $emp2Task = $this->actingAs($this->employee2)->getJson("/api/tasks/{$taskId}");
+        $emp2Task->assertStatus(200);
+        $this->assertTrue($emp2Task->json('data.permissions.can_submit'), 'Collaborator must have can_submit permission');
+
+        $emp2MyAction = $this->actingAs($this->employee2)->getJson('/api/tasks?view=my_action');
+        $emp2MyAction->assertStatus(200);
+        $this->assertTrue(collect($emp2MyAction->json('data'))->contains('id', $taskId), 'Collaborator must see task in my_action');
+
+        $emp2Pending = $this->actingAs($this->employee2)->getJson('/api/tasks?view=pending_with_others');
+        $emp2Pending->assertStatus(200);
+        $this->assertFalse(collect($emp2Pending->json('data'))->contains('id', $taskId), 'Collaborator must not see task in pending_with_others');
+
+        // 5. Collaborator submits deliverables
+        $submitRes = $this->actingAs($this->employee2)->postJson("/api/tasks/{$taskId}/submit", [
+            'description' => 'Completed all collaborative deliverables with files and documentation.',
+        ]);
+        $submitRes->assertStatus(201);
+        $submissionId = $submitRes->json('data.id');
+
+        // 6. Task moves to review status
+        $taskAfterSubmit = $this->actingAs($this->admin)->getJson("/api/tasks/{$taskId}");
+        $taskAfterSubmit->assertStatus(200);
+        $this->assertEquals('review', $taskAfterSubmit->json('data.status'));
+        $this->assertTrue($taskAfterSubmit->json('data.permissions.can_review'), 'Creator must have can_review permission');
+
+        // Creator sees task in view=review
+        $creatorReviewQueue = $this->actingAs($this->admin)->getJson('/api/tasks?view=review');
+        $creatorReviewQueue->assertStatus(200);
+        $this->assertTrue(collect($creatorReviewQueue->json('data'))->contains('id', $taskId), 'Creator must see task in review queue');
+
+        // 7. Creator approves the collaborator submission
+        $reviewRes = $this->actingAs($this->admin)->postJson("/api/submissions/{$submissionId}/review", [
+            'decision' => 'approved',
+            'comments' => 'Excellent work on the collaborative deliverables!',
+        ]);
+        $reviewRes->assertStatus(201);
+
+        // 8. Task is ready for final sign-off by creator
+        $taskAfterApproval = $this->actingAs($this->admin)->getJson("/api/tasks/{$taskId}");
+        $taskAfterApproval->assertStatus(200);
+        $this->assertTrue($taskAfterApproval->json('data.permissions.can_final_submit'), 'Creator must have can_final_submit permission');
+
+        // 9. Creator performs final completion
+        $finalRes = $this->actingAs($this->admin)->postJson("/api/tasks/{$taskId}/final-submit", [
+            'description' => 'Task verified, accepted, and completed.',
+        ]);
+        $finalRes->assertStatus(200);
+        $this->assertEquals('completed', $finalRes->json('data.status'));
+    }
 }

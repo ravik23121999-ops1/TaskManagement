@@ -16,7 +16,10 @@ class TaskResource extends JsonResource
 
         // Permissions for current user
         $isBranchOwner = $user && $this->branches->where('owner_id', $user->id)->isNotEmpty();
-        $userActiveBranch = $user ? ($this->branches->firstWhere('owner_id', $user->id)
+        $isCollaborator = $user && $this->branches->flatMap->collaborators->contains(fn($c) => is_null($c->removed_at) && (int)$c->user_id === (int)$user->id);
+        $userActiveBranch = $user ? ($this->branches->first(fn($b) => (int)$b->owner_id === (int)$user->id && $b->status !== 'cancelled')
+            ?? $this->branches->firstWhere('owner_id', $user->id)
+            ?? $this->branches->first(fn($b) => ($b->assignments->contains('assigned_to_id', $user->id) || $b->collaborators->contains('user_id', $user->id)) && $b->status !== 'cancelled')
             ?? $this->branches->first(fn($b) => $b->assignments->contains('assigned_to_id', $user->id) || $b->collaborators->contains('user_id', $user->id))) : null;
 
         // An employee assigned to a branch acts as an isolated assignee.
@@ -186,12 +189,16 @@ class TaskResource extends JsonResource
             }
         }
 
+        $hasPendingSubmission = $user && $this->submissions->where('submitted_by_id', $user->id)->filter(fn($s) => $s->reviews->isEmpty())->isNotEmpty();
+        $canCollaboratorSubmit = $isCollaborator && !$isCreator && !$hasPendingSubmission && !in_array($this->status, ['completed', 'cancelled', 'on_hold']);
+
         $canSubmit = false;
         if ($this->status !== 'completed' && $this->status !== 'cancelled' && $this->status !== 'on_hold') {
             if ($this->handling_method === 'work_alone') {
                 $canSubmit = false; // Work alone directly uses Final Approval & Complete
             } else {
-                $canSubmit = $isBranchOwner && $userActiveBranch && in_array($userActiveBranch->status, ['pending', 'in_progress', 'post_comment']) && !$isClarificationActive;
+                $canSubmit = ($isBranchOwner && $userActiveBranch && in_array($userActiveBranch->status, ['pending', 'in_progress', 'post_comment']) && !$isClarificationActive)
+                    || $canCollaboratorSubmit;
             }
         }
 
@@ -256,7 +263,7 @@ class TaskResource extends JsonResource
                         $isBranchAssigner = $currentAssignment && (int)$currentAssignment->assigned_by_id === (int)$user->id && (int)$currentAssignment->assigned_to_id !== (int)$user->id;
                         $isCollabInviter = $subBranch->collaborators->where('invited_by_id', $user->id)->where('user_id', '!=', $user->id)->isNotEmpty();
 
-                        if ($isBranchAssigner || $isCollabInviter) {
+                        if ($isCreator || $isBranchAssigner || $isCollabInviter) {
                             $canReview = true;
                             break;
                         }
@@ -286,7 +293,7 @@ class TaskResource extends JsonResource
                     $isBranchAssigner = $currentAssignment && (int)$currentAssignment->assigned_by_id === (int)$user->id && (int)$currentAssignment->assigned_to_id !== (int)$user->id;
                     $isCollabInviter = $b->collaborators->where('invited_by_id', $user->id)->where('user_id', '!=', $user->id)->isNotEmpty();
 
-                    if ($isBranchAssigner || $isCollabInviter) {
+                    if ($isCreator || $isBranchAssigner || $isCollabInviter) {
                         $canReview = true;
                         break;
                     }

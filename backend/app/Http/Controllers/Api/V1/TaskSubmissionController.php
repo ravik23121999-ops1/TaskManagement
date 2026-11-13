@@ -112,17 +112,33 @@ class TaskSubmissionController extends Controller
                 if ($branchId) {
                     $branch = TaskBranch::where('task_id', $task->id)->where('id', $branchId)->first();
                 } else {
-                    // Try to find the user's active branch for this task
-                    $branch = $task->branches()->where('owner_id', $user->id)->first() ?? $task->branches()->first();
+                    // Try to find the user's active branch for this task, collaborator branch, or any active branch
+                    $branch = $task->branches()->where('owner_id', $user->id)->whereNotIn('status', ['cancelled'])->first()
+                        ?? $task->branches()->where('owner_id', $user->id)->first()
+                        ?? $task->branches()->whereHas('collaborators', fn($c) => $c->where('user_id', $user->id)->whereNull('removed_at'))->whereNotIn('status', ['cancelled'])->first()
+                        ?? $task->branches()->whereHas('collaborators', fn($c) => $c->where('user_id', $user->id)->whereNull('removed_at'))->first()
+                        ?? $task->branches()->whereNotIn('status', ['cancelled'])->first()
+                        ?? $task->branches()->first();
                 }
 
                 if (!$branch) {
-                    return response()->json(['message' => 'No relevant task branch found'], 404);
+                    $branch = $task->branches()->create([
+                        'title' => $task->title,
+                        'description' => $task->description,
+                        'owner_id' => $user->id,
+                        'status' => 'in_progress',
+                        'due_date' => $task->due_date,
+                    ]);
                 }
 
-                // Verify user is branch owner, task creator, or admin
-                if ($branch->owner_id !== $user->id && $task->creator_id !== $user->id && !$isAdmin) {
-                    return response()->json(['message' => 'Unauthorized: Only the assigned owner can submit this work'], 403);
+                // Verify user is branch owner, task creator, admin, or active collaborator
+                $isBranchOwner = (int)$branch->owner_id === (int)$user->id;
+                $isTaskCreator = (int)$task->creator_id === (int)$user->id;
+                $isCollaborator = $branch->collaborators()->where('user_id', $user->id)->whereNull('removed_at')->exists()
+                    || $task->branches()->whereHas('collaborators', fn($c) => $c->where('user_id', $user->id)->whereNull('removed_at'))->exists();
+
+                if (!$isBranchOwner && !$isTaskCreator && !$isAdmin && !$isCollaborator) {
+                    return response()->json(['message' => 'Unauthorized: Only the assigned owner or invited collaborators can submit work'], 403);
                 }
 
                 // Industry Working Rule (Bottom-Up Hierarchy Dependency):

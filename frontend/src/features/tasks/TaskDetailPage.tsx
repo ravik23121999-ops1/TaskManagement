@@ -820,6 +820,13 @@ export const TaskDetailPage: React.FC = () => {
 
   const isWorkAlone = task.handling_method === 'work_alone';
   const isCollaborateTask = task.handling_method === 'collaborate';
+  const isCreator = Boolean(task?.creator?.id === currentUser?.id);
+  const isCollaborator = Boolean(
+    currentUser &&
+    !isCreator &&
+    (task.collaborators?.some((c) => c.id === currentUser.id) ||
+      task.branches?.some((b) => (b as any).collaborators?.some((c: any) => c.id === currentUser.id)))
+  );
 
   const activeBranches: TaskBranch[] = ((task.branches || []) as TaskBranch[]).filter(
     (b: TaskBranch) => b.status !== 'cancelled'
@@ -857,8 +864,7 @@ export const TaskDetailPage: React.FC = () => {
     (task.status === 'review' || task.branches?.some((b) => b.status === 'review'));
 
   const isMyWorkDone = Boolean(task.my_branch && task.my_branch.status === 'completed');
-  const isCreator = Boolean(task?.creator?.id === currentUser?.id);
-  const isSubtaskAssignee = !isCreator && Boolean(task?.my_branch);
+  const isSubtaskAssignee = !isCreator && !isCollaborator && Boolean(task?.my_branch && task.my_branch.status !== 'cancelled');
 
   const getLifecycleStageState = (stageKey: string) => {
     if (stageKey === 'created') return 'completed';
@@ -998,10 +1004,10 @@ export const TaskDetailPage: React.FC = () => {
                 ballColor = 'bg-sky-50 text-sky-900 border-sky-300';
                 ballDot = 'bg-sky-500';
               } else if (task.permissions.can_submit) {
-                ballPerson = 'You (Active Assignee)';
-                ballAction = 'Deliverables due for submission';
-                ballColor = 'bg-blue-50 text-blue-900 border-blue-300';
-                ballDot = 'bg-blue-500 animate-pulse';
+                ballPerson = isCollaborator ? 'You (Team Collaborator)' : 'You (Active Assignee)';
+                ballAction = isCollaborator ? 'Collaborative deliverables due for submission' : 'Deliverables due for submission';
+                ballColor = isCollaborator ? 'bg-indigo-50 text-indigo-900 border-indigo-300' : 'bg-blue-50 text-blue-900 border-blue-300';
+                ballDot = isCollaborator ? 'bg-indigo-500 animate-pulse' : 'bg-blue-500 animate-pulse';
               } else if (task.current_owners && task.current_owners.length > 0) {
                 const names = task.current_owners.map((o) => o.name).join(', ');
                 ballPerson = names;
@@ -1447,20 +1453,29 @@ export const TaskDetailPage: React.FC = () => {
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-blue-950 text-sm">Action Station: Your Subtask Deliverables are Due</span>
+                  <span className="font-bold text-blue-950 text-sm">
+                    {isCollaborator ? 'Collaboration Station: Submit Your Deliverables' : 'Action Station: Your Subtask Deliverables are Due'}
+                  </span>
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${slaBadge.color}`}>
                     {slaBadge.text}
                   </span>
-                  {isAdminOrSubAdmin && (
+                  {isAdminOrSubAdmin && !isCollaborator && (
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
                       <span>🔒 Private Subtask</span>
                     </span>
                   )}
+                  {isCollaborator && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1">
+                      <span>👥 Team Collaborator</span>
+                    </span>
+                  )}
                 </div>
                 <p className="text-blue-900 leading-relaxed">
-                  You are actively working on <strong>"{task.my_branch?.title || task.title}"</strong>. When finished, submit your deliverables for review by {task.my_branch?.assigned_by?.name || task.creator?.name || 'your assigner'}.
+                  {isCollaborator
+                    ? `You are collaborating on "${task.title}". When ready, submit your deliverables for review by ${task.creator?.name || 'the task creator'}.`
+                    : `You are actively working on "${task.my_branch?.title || task.title}". When finished, submit your deliverables for review by ${task.my_branch?.assigned_by?.name || task.creator?.name || 'your assigner'}.`}
                 </p>
-                {isAdminOrSubAdmin && (
+                {isAdminOrSubAdmin && !isCollaborator && (
                   <p className="text-[11px] text-blue-700/80">
                     Private Subtasks Active: Assignees only see their assigned work and deliverables.
                   </p>
@@ -1724,8 +1739,105 @@ export const TaskDetailPage: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: Basic Information */}
           <div className="lg:col-span-2 bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
-            {/* YOUR ASSIGNED SUBTASK WORK CARD */}
-            {task.my_branch && (
+            {/* COLLABORATOR WORKSPACE OR ASSIGNED SUBTASK WORK CARD */}
+            {isCollaborator ? (
+              <div className="p-5 bg-gradient-to-br from-indigo-50/90 via-purple-50/50 to-blue-50/90 border-2 border-indigo-200/90 rounded-2xl space-y-4 shadow-sm animate-in fade-in">
+                <div className="flex items-center justify-between pb-3 border-b border-indigo-200/60">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                      <Users className="w-4 h-4" />
+                    </span>
+                    <div>
+                      <span className="text-xs font-bold text-indigo-950 uppercase tracking-wider block">
+                        Team Collaboration Workspace
+                      </span>
+                      <span className="text-[10px] text-indigo-700/80 font-medium">
+                        Collaborating with {task.creator?.name || 'Task Creator'}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200 flex items-center gap-1">
+                    <span>👥 Active Collaborator</span>
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <span className="font-bold text-slate-500 uppercase tracking-wider text-[10px] block mb-0.5">
+                      Collaborative Objective
+                    </span>
+                    <h3 className="text-sm font-bold text-slate-900">
+                      {task.title}
+                    </h3>
+                  </div>
+
+                  {task.description && (
+                    <div className="p-3 bg-white/90 border border-indigo-200/80 rounded-xl space-y-1">
+                      <span className="font-bold text-indigo-900 text-[10px] uppercase tracking-wider block">
+                        Project Scope & Instructions
+                      </span>
+                      <p className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
+                        {task.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {task.expected_result && (
+                    <div className="p-3 bg-white/90 border border-indigo-200/80 rounded-xl space-y-1">
+                      <span className="font-bold text-indigo-900 text-[10px] uppercase tracking-wider block">
+                        What to Deliver / Expected Outcome
+                      </span>
+                      <p className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
+                        {task.expected_result}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between flex-wrap gap-2 pt-1 text-xs">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Workflow Status</span>
+                        <StatusBadge status={task.status as any} size="sm" />
+                      </div>
+                      {task.due_date && (
+                        <div>
+                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Task Due Date</span>
+                          <span className="font-semibold text-slate-800">
+                            {new Date(task.due_date).toLocaleDateString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {task.status === 'completed' && (
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold shadow-2xs">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Collaborative Deliverables Approved & Completed</span>
+                        </div>
+                      )}
+                      {task.status === 'review' && (
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200 rounded-xl text-xs font-semibold shadow-2xs">
+                          <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse" />
+                          <span>Deliverables Submitted · Awaiting Review by {task.creator?.name || 'Creator'}</span>
+                        </div>
+                      )}
+                      {task.permissions.can_submit && (
+                        <button
+                          type="button"
+                          onClick={() => setIsSubmitModalOpen(true)}
+                          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-md transition flex items-center gap-1.5 cursor-pointer active:scale-95"
+                          title="Submit your completed deliverables for review"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                          <span>Submit for Review</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : task.my_branch && task.my_branch.status !== 'cancelled' ? (
               <div className="p-5 bg-gradient-to-br from-blue-50/90 via-indigo-50/50 to-blue-50/90 border-2 border-blue-200/90 rounded-2xl space-y-4 shadow-sm animate-in fade-in">
                 <div className="flex items-center justify-between pb-3 border-b border-blue-200/60">
                   <div className="flex items-center gap-2">
@@ -1950,7 +2062,7 @@ export const TaskDetailPage: React.FC = () => {
                   </div>
                 )}
               </div>
-            )}
+            ) : null}
 
             {/* Clear Separation: For subtask assignees, show parent context in a tidy collapsible accordion */}
             {isSubtaskAssignee ? (
@@ -2365,7 +2477,7 @@ export const TaskDetailPage: React.FC = () => {
                         let roleTag = 'Active Assignee';
                         let roleColor = 'bg-blue-50 text-blue-700 border-blue-200';
 
-                        if (ownerBranch) {
+                        if (ownerBranch && ownerBranch.status !== 'cancelled') {
                           if (ownerBranch.status === 'review') {
                             roleTag = (task.is_peer_isolated || isSubtaskAssignee) && owner.id === currentUser?.id
                               ? 'Submitted (In Review)'
@@ -2380,6 +2492,17 @@ export const TaskDetailPage: React.FC = () => {
                           } else {
                             roleTag = 'Working on Deliverable';
                             roleColor = 'bg-sky-50 text-sky-700 border-sky-200';
+                          }
+                        } else if (task.collaborators?.some((c) => c.id === owner.id) || task.branches?.some((b) => (b as any).collaborators?.some((c: any) => c.id === owner.id))) {
+                          if (task.status === 'review') {
+                            roleTag = 'Deliverables in Review';
+                            roleColor = 'bg-amber-50 text-amber-700 border-amber-200';
+                          } else if (task.status === 'completed') {
+                            roleTag = 'Collaborated & Completed';
+                            roleColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                          } else {
+                            roleTag = 'Team Collaborator';
+                            roleColor = 'bg-purple-50 text-purple-700 border-purple-200';
                           }
                         } else if ((task.is_peer_isolated || isSubtaskAssignee) && task.my_branch?.status === 'review' && (owner.id === task.my_branch?.assigned_by?.id || owner.id === task.creator?.id)) {
                           roleTag = 'Reviewing Your Submission';

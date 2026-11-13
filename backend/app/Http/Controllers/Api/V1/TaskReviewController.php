@@ -53,7 +53,7 @@ class TaskReviewController extends Controller
             $isCollabInviter = $branch->collaborators()->where('invited_by_id', $user->id)->where('user_id', $submission->submitted_by_id)->exists();
         }
 
-        $canReviewThisSubmission = $isAdmin || $isDelegator || $isCollabInviter || (!$branch && $isCreator);
+        $canReviewThisSubmission = $isAdmin || $isCreator || $isDelegator || $isCollabInviter;
 
         if (!$canReviewThisSubmission) {
             return response()->json(['message' => 'Unauthorized: Only the assigner (upper branch) who delegated this branch, or an administrator, can review this submission.'], 403);

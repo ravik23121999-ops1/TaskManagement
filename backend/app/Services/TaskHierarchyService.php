@@ -311,7 +311,20 @@ class TaskHierarchyService
     {
         $allBranches = ($branches ?? $task->branches)->filter(fn($b) => $b->status !== 'cancelled');
 
-        if ($task->handling_method === 'work_alone' || $task->status === 'completed' || $allBranches->isEmpty()) {
+        if ($task->handling_method === 'work_alone' || $task->status === 'completed') {
+            return $task->creator ? [$task->creator] : [];
+        }
+
+        if ($allBranches->isEmpty()) {
+            // If the task has active collaborators, they are the active contributors!
+            $collabUsers = $task->relationLoaded('branches')
+                ? $task->branches->flatMap->collaborators->whereNull('removed_at')->map->user->filter()
+                : $task->branches()->with('collaborators.user')->get()->flatMap->collaborators->whereNull('removed_at')->map->user->filter();
+
+            if ($collabUsers->isNotEmpty()) {
+                return $collabUsers->unique('id')->values()->all();
+            }
+
             return $task->creator ? [$task->creator] : [];
         }
 

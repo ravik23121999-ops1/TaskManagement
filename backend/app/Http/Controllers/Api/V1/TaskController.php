@@ -133,6 +133,18 @@ class TaskController extends Controller
                               $oh->where('creator_id', $user->id)
                                  ->orWhereHas('branches', fn($b) => $b->where('owner_id', $user->id));
                           });
+                    })
+                    // 7. Active collaborator on an in-progress collaborative task who has not yet submitted
+                    ->orWhere(function ($collabQ) use ($user) {
+                        $collabQ->where('status', 'in_progress')
+                            ->where('creator_id', '!=', $user->id)
+                            ->whereHas('branches.collaborators', function ($c) use ($user) {
+                                $c->where('user_id', $user->id)->whereNull('removed_at');
+                            })
+                            ->whereDoesntHave('submissions', function ($s) use ($user) {
+                                $s->where('submitted_by_id', $user->id)
+                                  ->whereDoesntHave('reviews');
+                            });
                     });
                 });
             } elseif ($view === 'pending_with_others') {
@@ -200,6 +212,19 @@ class TaskController extends Controller
                           });
                       });
                 });
+
+                // Exclude active collaborator on an in-progress collaborative task who has not yet submitted
+                $query->whereNot(function ($collabQ) use ($user) {
+                    $collabQ->where('status', 'in_progress')
+                        ->where('creator_id', '!=', $user->id)
+                        ->whereHas('branches.collaborators', function ($c) use ($user) {
+                            $c->where('user_id', $user->id)->whereNull('removed_at');
+                        })
+                        ->whereDoesntHave('submissions', function ($s) use ($user) {
+                            $s->where('submitted_by_id', $user->id)
+                              ->whereDoesntHave('reviews');
+                        });
+                });
             } elseif ($view === 'collaborations') {
                 // Must be a collaborative task: either explicitly created as 'collaborate' OR has invited collaborators
                 $query->where(function ($isCollab) {
@@ -238,25 +263,31 @@ class TaskController extends Controller
                 });
 
                 if (!$isAdmin) {
-                    // Non-admin can ONLY review if they are:
-                    // 1. Assigner/delegator of the branch in review ("upper branch" who assigned further)
-                    // 2. Collaborator who invited the submitter
-                    // And STRICTLY EXCLUDE if the user is only the submitter of their own work
-                    $query->whereHas('branches', function ($b) use ($user) {
-                        $b->where(function ($assignerQ) use ($user) {
-                            $assignerQ->whereHas('assignments', function ($a) use ($user) {
-                                $a->where('is_current', true)
-                                  ->where('assigned_by_id', $user->id)
-                                  ->where('assigned_to_id', '!=', $user->id);
-                            })
-                            ->orWhereHas('collaborators', function ($c) use ($user) {
-                                $c->where('invited_by_id', $user->id)
-                                  ->where('user_id', '!=', $user->id);
-                            });
+                    // Non-admin can review if they are task creator, upper assigner, or collaborator inviter
+                    $query->where(function ($q) use ($user) {
+                        $q->where(function ($creatorQ) use ($user) {
+                            $creatorQ->where('creator_id', $user->id)
+                                ->whereHas('submissions', function ($s) use ($user) {
+                                    $s->where('submitted_by_id', '!=', $user->id)
+                                      ->whereDoesntHave('reviews');
+                                });
                         })
-                        ->whereHas('submissions', function ($s) use ($user) {
-                            $s->where('submitted_by_id', '!=', $user->id)
-                              ->whereDoesntHave('reviews');
+                        ->orWhereHas('branches', function ($b) use ($user) {
+                            $b->where(function ($assignerQ) use ($user) {
+                                $assignerQ->whereHas('assignments', function ($a) use ($user) {
+                                    $a->where('is_current', true)
+                                      ->where('assigned_by_id', $user->id)
+                                      ->where('assigned_to_id', '!=', $user->id);
+                                })
+                                ->orWhereHas('collaborators', function ($c) use ($user) {
+                                    $c->where('invited_by_id', $user->id)
+                                      ->where('user_id', '!=', $user->id);
+                                });
+                            })
+                            ->whereHas('submissions', function ($s) use ($user) {
+                                $s->where('submitted_by_id', '!=', $user->id)
+                                  ->whereDoesntHave('reviews');
+                            });
                         });
                     });
                 }
@@ -1558,7 +1589,7 @@ class TaskController extends Controller
         }
 
         $addedCount = 0;
-        $firstBranch = $task->branches()->first();
+        $firstBranch = $task->branches()->whereNotIn('status', ['cancelled'])->first();
         if (!$firstBranch) {
             $firstBranch = $task->branches()->create([
                 'title' => $task->title,
