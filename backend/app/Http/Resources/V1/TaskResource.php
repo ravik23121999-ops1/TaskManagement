@@ -34,7 +34,7 @@ class TaskResource extends JsonResource
                 $isOwner = (int)$branch->owner_id === (int)$user->id;
                 $isAssignedTo = $branch->assignments->contains(fn($a) => (int)$a->assigned_to_id === (int)$user->id);
                 $isAssignedBy = $branch->assignments->contains(fn($a) => (int)$a->assigned_by_id === (int)$user->id && (int)$a->assigned_to_id !== (int)$user->id);
-                $isCollaborator = $branch->collaborators->contains(fn($c) => (int)$c->user_id === (int)$user->id);
+                $isCollaborator = $branch->collaborators->contains(fn($c) => is_null($c->removed_at) && ((int)$c->user_id === (int)$user->id || (int)$c->invited_by_id === (int)$user->id));
                 return $isOwner || $isAssignedTo || $isAssignedBy || $isCollaborator;
             })->values();
         }
@@ -528,13 +528,19 @@ class TaskResource extends JsonResource
                         'email' => $assignedBy->email,
                         'role' => $assignedBy->role,
                     ] : null,
+                    'collaborators' => $branch->collaborators->filter(fn($c) => is_null($c->removed_at))->map(fn($c) => [
+                        'id' => $c->user?->id,
+                        'name' => $c->user?->name,
+                        'email' => $c->user?->email,
+                        'role' => $c->user?->role,
+                    ])->values(),
                     'attachments' => $branchAttachments,
                     'submissions' => $branchSubmissions,
                     'share_parent_details' => $branch->share_parent_details ?? true,
                     'can_assign_further' => $meta['level'] < 4 && ($branch->can_assign_further ?? true),
                 ];
             }),
-            'collaborators' => $visibleBranches->flatMap->collaborators->map(fn($c) => [
+            'collaborators' => $visibleBranches->flatMap->collaborators->filter(fn($c) => is_null($c->removed_at))->map(fn($c) => [
                 'id' => $c->user?->id,
                 'name' => $c->user?->name,
                 'email' => $c->user?->email,

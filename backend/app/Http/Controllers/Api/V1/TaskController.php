@@ -42,7 +42,10 @@ class TaskController extends Controller
                         });
                   })
                   ->orWhereHas('branches.collaborators', function ($c) use ($user) {
-                      $c->where('user_id', $user->id);
+                      $c->where(function ($cu) use ($user) {
+                          $cu->where('user_id', $user->id)
+                             ->orWhere('invited_by_id', $user->id);
+                      });
                   })
                   ->orWhereHas('submissions.reviews', function ($r) use ($user) {
                       $r->where('reviewer_id', $user->id);
@@ -198,13 +201,34 @@ class TaskController extends Controller
                       });
                 });
             } elseif ($view === 'collaborations') {
-                $query->where(function ($q) use ($user) {
-                    $q->where('handling_method', 'collaborate')
-                      ->where(function ($c) use ($user) {
-                          $c->whereHas('branches.collaborators', fn($col) => $col->where('user_id', $user->id))
-                            ->orWhereHas('branches', fn($b) => $b->where('owner_id', $user->id));
-                      });
+                // Must be a collaborative task: either explicitly created as 'collaborate' OR has invited collaborators
+                $query->where(function ($isCollab) {
+                    $isCollab->where('handling_method', 'collaborate')
+                             ->orWhereHas('branches.collaborators', fn($c) => $c->whereNull('removed_at'));
                 });
+
+                // Default exclusion of cancelled tasks unless specifically requested
+                if (!$request->has('status') || $request->status === 'all') {
+                    $query->where('status', '!=', 'cancelled');
+                }
+
+                if (!$isAdmin) {
+                    // Non-admin can view collaborations where they are creator, branch owner, assigned, collaborator, or inviter
+                    $query->where(function ($userInvolved) use ($user) {
+                        $userInvolved->where('creator_id', $user->id)
+                            ->orWhereHas('branches', function ($b) use ($user) {
+                                $b->where('owner_id', $user->id)
+                                  ->orWhereHas('assignments', fn($a) => $a->where('assigned_to_id', $user->id));
+                            })
+                            ->orWhereHas('branches.collaborators', function ($col) use ($user) {
+                                $col->whereNull('removed_at')
+                                    ->where(function ($u) use ($user) {
+                                        $u->where('user_id', $user->id)
+                                          ->orWhere('invited_by_id', $user->id);
+                                    });
+                            });
+                    });
+                }
             } elseif ($view === 'review') {
                 $query->whereNotIn('status', ['completed', 'cancelled']);
                 // MUST have at least one unreviewed submission that is not a final sign-off!

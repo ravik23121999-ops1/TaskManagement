@@ -1141,4 +1141,65 @@ class TaskWorkflowTest extends TestCase
         $resSubtaskExceedsDue->assertStatus(422)
             ->assertJsonValidationErrors(['branches.0.due_date']);
     }
+
+    public function test_collaborations_view_visibility_for_creator_inviter_and_collaborator(): void
+    {
+        // 1. Admin creates a task assigned to Employee 1
+        $createRes = $this->actingAs($this->admin)->postJson('/api/tasks', [
+            'title' => 'Collaborative Assigned Deliverable',
+            'description' => 'Testing visibility in My Collaborations tab',
+            'handling_method' => 'assign',
+            'priority' => 'high',
+            'due_date' => now()->addDays(5)->toDateString(),
+            'branches' => [
+                [
+                    'owner_id' => $this->employee1->id,
+                    'title' => 'Core Branch Execution',
+                    'description' => 'Primary work stream',
+                    'due_date' => now()->addDays(4)->toDateString(),
+                ],
+            ],
+        ]);
+        $createRes->assertStatus(201);
+        $taskId = $createRes->json('data.id');
+
+        // 2. Admin invites Employee 2 as a collaborator
+        $collabRes = $this->actingAs($this->admin)->postJson("/api/tasks/{$taskId}/collaborators", [
+            'user_ids' => [$this->employee2->id],
+        ]);
+        $collabRes->assertStatus(200);
+
+        // 3. Admin (Creator & Inviter) views collaborations -> Task MUST be visible!
+        $adminView = $this->actingAs($this->admin)->getJson('/api/tasks?view=collaborations');
+        $adminView->assertStatus(200);
+        $this->assertTrue(collect($adminView->json('data'))->contains('id', $taskId), 'Admin/Creator must see collaborative task in view=collaborations');
+
+        // 4. Employee 1 (Branch Owner) views collaborations -> Task MUST be visible!
+        $emp1View = $this->actingAs($this->employee1)->getJson('/api/tasks?view=collaborations');
+        $emp1View->assertStatus(200);
+        $this->assertTrue(collect($emp1View->json('data'))->contains('id', $taskId), 'Branch owner must see collaborative task in view=collaborations');
+
+        // 5. Employee 2 (Invited Collaborator) views collaborations -> Task MUST be visible!
+        $emp2View = $this->actingAs($this->employee2)->getJson('/api/tasks?view=collaborations');
+        $emp2View->assertStatus(200);
+        $this->assertTrue(collect($emp2View->json('data'))->contains('id', $taskId), 'Invited collaborator must see task in view=collaborations');
+
+        // 6. Check Employee 2 Dashboard reflects collaboration count
+        $emp2Dash = $this->actingAs($this->employee2)->getJson('/api/dashboard/employee');
+        $emp2Dash->assertStatus(200);
+        $this->assertGreaterThanOrEqual(1, $emp2Dash->json('data.my_collaborations'), 'Employee 2 dashboard should count this collaboration');
+
+        // 7. Non-involved employee should NOT see this collaborative task
+        $unrelatedEmp = User::create([
+            'name' => 'Unrelated Employee',
+            'email' => 'unrelated@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'employee',
+            'department_id' => $this->department->id,
+            'is_active' => true,
+        ]);
+        $unrelatedView = $this->actingAs($unrelatedEmp)->getJson('/api/tasks?view=collaborations');
+        $unrelatedView->assertStatus(200);
+        $this->assertFalse(collect($unrelatedView->json('data'))->contains('id', $taskId), 'Unrelated employee must not see the private collaboration');
+    }
 }

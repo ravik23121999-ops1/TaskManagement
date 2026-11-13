@@ -194,10 +194,17 @@ class ReportsController extends Controller
                 ->count();
 
             // 5. My Collaborations count
-            $myCollaborationsCount = Task::where('handling_method', 'collaborate')
+            $myCollaborationsCount = Task::where(function ($isCollab) {
+                    $isCollab->where('handling_method', 'collaborate')
+                             ->orWhereHas('branches.collaborators', fn($c) => $c->whereNull('removed_at'));
+                })
+                ->whereNotIn('status', ['cancelled'])
                 ->where(function ($c) use ($user) {
-                    $c->whereHas('branches.collaborators', fn($col) => $col->where('user_id', $user->id))
-                      ->orWhereHas('branches', fn($b) => $b->where('owner_id', $user->id));
+                    $c->where('creator_id', $user->id)
+                      ->orWhereHas('branches', fn($b) => $b->where('owner_id', $user->id)->orWhereHas('assignments', fn($a) => $a->where('assigned_to_id', $user->id)))
+                      ->orWhereHas('branches.collaborators', fn($col) => $col->whereNull('removed_at')->where(function ($u) use ($user) {
+                          $u->where('user_id', $user->id)->orWhere('invited_by_id', $user->id);
+                      }));
                 })->count();
 
             // 6. Awaiting Review count

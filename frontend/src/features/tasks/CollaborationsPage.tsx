@@ -229,7 +229,21 @@ export const CollaborationsPage: React.FC = () => {
                 tasks.map((task) => {
                   const isBranchOwner = task.branches?.some((b) => b.owner?.id === user?.id);
                   const isCreator = task.creator?.id === user?.id;
-                  const myRole = isCreator ? 'Lead Creator' : isBranchOwner ? 'Branch Owner' : 'Collaborator';
+
+                  // Explicit collaborators invited to this task or its branches
+                  const explicitCollabs: UserSummary[] = [
+                    ...(task.collaborators || []),
+                    ...((task.branches || []).flatMap((b) => (b as any).collaborators || [])),
+                  ].filter((u, index, self) => u && self.findIndex((s) => s.id === u.id) === index);
+
+                  const isExplicitCollaborator = explicitCollabs.some((c) => c.id === user?.id);
+                  const myRole = isCreator
+                    ? 'Lead Creator'
+                    : isExplicitCollaborator
+                    ? 'Collaborator'
+                    : isBranchOwner
+                    ? 'Branch Owner'
+                    : 'Collaborator';
 
                   // All collaborators on this task
                   const branchOwners: UserSummary[] = (task.branches || [])
@@ -238,8 +252,13 @@ export const CollaborationsPage: React.FC = () => {
                   const teamMembers: UserSummary[] = [
                     ...(task.creator ? [task.creator] : []),
                     ...branchOwners,
-                    ...(task.collaborators || []),
+                    ...explicitCollabs,
                   ].filter((u, index, self) => u && self.findIndex((s) => s.id === u.id) === index);
+
+                  // Collaborator list to showcase in the column (prefer explicit collaborators, fallback to other team members)
+                  const displayCollaborators: UserSummary[] = explicitCollabs.length > 0
+                    ? explicitCollabs
+                    : teamMembers.filter((m) => m.id !== user?.id);
 
                   return (
                     <tr
@@ -263,6 +282,8 @@ export const CollaborationsPage: React.FC = () => {
                           className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
                             isCreator
                               ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : isExplicitCollaborator
+                              ? 'bg-purple-50 text-purple-700 border-purple-200'
                               : isBranchOwner
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                               : 'bg-purple-50 text-purple-700 border-purple-200'
@@ -272,25 +293,41 @@ export const CollaborationsPage: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-4 px-6 whitespace-nowrap">
-                        <div className="flex items-center -space-x-1.5">
-                          {teamMembers.slice(0, 4).map((tm) => (
+                        {displayCollaborators.length === 1 ? (
+                          <div className="flex items-center gap-2">
                             <div
-                              key={tm.id}
-                              title={`${tm.name} (${tm.role || 'Member'})`}
-                              className="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-600 to-sky-400 text-white font-bold text-[9px] flex items-center justify-center ring-2 ring-white shadow-xs cursor-default"
+                              title={`${displayCollaborators[0].name} (${displayCollaborators[0].role || 'Collaborator'})`}
+                              className="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-bold text-[9px] flex items-center justify-center ring-2 ring-white shadow-xs"
                             >
-                              {tm.name.charAt(0)}
+                              {displayCollaborators[0].name.charAt(0)}
                             </div>
-                          ))}
-                          {teamMembers.length > 4 && (
-                            <div className="w-6 h-6 rounded-full bg-slate-200 text-slate-600 font-bold text-[9px] flex items-center justify-center ring-2 ring-white">
-                              +{teamMembers.length - 4}
-                            </div>
-                          )}
-                          <span className="ml-2.5 text-[11px] text-slate-500 font-medium">
-                            {teamMembers.length} member{teamMembers.length !== 1 ? 's' : ''}
-                          </span>
-                        </div>
+                            <span className="text-[11px] font-semibold text-slate-800">
+                              {displayCollaborators[0].name}
+                            </span>
+                          </div>
+                        ) : displayCollaborators.length > 1 ? (
+                          <div className="flex items-center -space-x-1.5">
+                            {displayCollaborators.slice(0, 4).map((tm) => (
+                              <div
+                                key={tm.id}
+                                title={`${tm.name} (${tm.role || 'Collaborator'})`}
+                                className="w-6 h-6 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-bold text-[9px] flex items-center justify-center ring-2 ring-white shadow-xs cursor-default"
+                              >
+                                {tm.name.charAt(0)}
+                              </div>
+                            ))}
+                            {displayCollaborators.length > 4 && (
+                              <div className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 font-bold text-[9px] flex items-center justify-center ring-2 ring-white">
+                                +{displayCollaborators.length - 4}
+                              </div>
+                            )}
+                            <span className="ml-2.5 text-[11px] text-slate-600 font-medium">
+                              {displayCollaborators.length} collaborators
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 text-[11px] italic">No collaborators</span>
+                        )}
                       </td>
                       <td className="py-4 px-6 whitespace-nowrap">
                         <PriorityBadge priority={task.priority} />
