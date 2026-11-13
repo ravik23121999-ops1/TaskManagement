@@ -2415,6 +2415,77 @@ export const TaskDetailPage: React.FC = () => {
                         );
                       })}
                     </div>
+
+                    {/* Connected Section: Task Collaborators (Option 2) */}
+                    {(() => {
+                      const displayCollaborators = (task.collaborators || []).filter(
+                        (c: any) => !activeBranches.some((b: TaskBranch) => b.owner?.id === c.id)
+                      );
+
+                      return (
+                        <div className="pt-3 border-t border-slate-100 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <Users className="w-3.5 h-3.5 text-purple-600" />
+                              <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                                Collaborators ({displayCollaborators.length})
+                              </span>
+                            </div>
+                            {task.status !== 'completed' && task.status !== 'cancelled' && (
+                              <button
+                                type="button"
+                                onClick={() => openAssignModal('collaborate')}
+                                className="text-[11px] font-semibold text-purple-600 hover:text-purple-700 hover:underline cursor-pointer flex items-center gap-1"
+                              >
+                                <Plus className="w-3 h-3" />
+                                <span>Invite</span>
+                              </button>
+                            )}
+                          </div>
+
+                          {displayCollaborators.length > 0 ? (
+                            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                              {displayCollaborators.map((c: any) => (
+                                <div
+                                  key={c.id}
+                                  className="flex items-center gap-3 p-2.5 rounded-xl bg-purple-50/40 border border-purple-100/80 hover:bg-purple-50/70 transition-colors"
+                                >
+                                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-500 text-white font-bold flex items-center justify-center text-xs shadow-xs shrink-0">
+                                    {c.name?.charAt(0) || 'C'}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex items-center justify-between gap-1 flex-wrap">
+                                      <h4 className="text-xs font-bold text-slate-900 truncate">{c.name}</h4>
+                                      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold border bg-purple-100 text-purple-700 border-purple-200 shrink-0">
+                                        Collaborator
+                                      </span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                                      {c.email} {c.role ? `• ${c.role.replace('_', ' ')}` : ''}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="p-2.5 border border-dashed border-slate-200 rounded-xl text-center bg-slate-50/50">
+                              <p className="text-[11px] text-slate-400">No external collaborators invited yet.</p>
+                              {task.status !== 'completed' && task.status !== 'cancelled' && (
+                                <button
+                                  type="button"
+                                  onClick={() => openAssignModal('collaborate')}
+                                  className="mt-1 text-[11px] font-bold text-purple-600 hover:text-purple-700 hover:underline cursor-pointer inline-flex items-center gap-1"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                  <span>Invite Collaborator</span>
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
                     <button
                       onClick={() => setActiveTab('comments')}
                       className="w-full py-2 px-3 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center justify-between border border-slate-200/80 cursor-pointer"
