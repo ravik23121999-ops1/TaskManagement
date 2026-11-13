@@ -226,6 +226,7 @@ export interface TaskFilters {
   status?: string;
   priority?: string;
   department_id?: string | number;
+  handling_method?: string;
   search?: string;
   page?: number;
   per_page?: number;

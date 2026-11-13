@@ -354,6 +354,23 @@ class TaskController extends Controller
             $query->where('department_id', $request->department_id);
         }
 
+        // Handling method filter (Solo / Team / Collaboration)
+        if ($request->has('handling_method') && $request->handling_method && $request->handling_method !== 'all') {
+            $method = strtolower($request->handling_method);
+            if ($method === 'solo' || $method === 'work_alone') {
+                $query->where('handling_method', 'work_alone');
+            } elseif ($method === 'team' || $method === 'assign') {
+                $query->where('handling_method', 'assign');
+            } elseif ($method === 'collaboration' || $method === 'collaborate') {
+                $query->where(function ($cq) {
+                    $cq->where('handling_method', 'collaborate')
+                       ->orWhereHas('branches.collaborators', fn($c) => $c->whereNull('removed_at'));
+                });
+            } else {
+                $query->where('handling_method', $method);
+            }
+        }
+
         // Fluent Multi-field Search
         if ($request->has('search') && $request->search) {
             $search = trim($request->search);
@@ -392,7 +409,37 @@ class TaskController extends Controller
             'holdRecords.putOnHoldBy'
         ])->paginate($perPage);
 
-        return new TaskCollection($tasks);
+        $extraMeta = null;
+        if ($request->view === 'completed') {
+            $baseCompletedQuery = Task::query()->where('status', 'completed');
+            if (!$isAdmin) {
+                $baseCompletedQuery->where(function ($q) use ($user) {
+                    $q->where('creator_id', $user->id)
+                      ->orWhereHas('branches', function ($b) use ($user) {
+                          $b->where('owner_id', $user->id)
+                            ->orWhereHas('assignments', fn($a) => $a->where('assigned_to_id', $user->id));
+                      })
+                      ->orWhereHas('branches.collaborators', function ($c) use ($user) {
+                          $c->where(fn($cu) => $cu->where('user_id', $user->id)->orWhere('invited_by_id', $user->id));
+                      })
+                      ->orWhereHas('submissions.reviews', fn($r) => $r->where('reviewer_id', $user->id));
+                });
+            }
+
+            $extraMeta = [
+                'method_counts' => [
+                    'all' => (clone $baseCompletedQuery)->count(),
+                    'solo' => (clone $baseCompletedQuery)->where('handling_method', 'work_alone')->count(),
+                    'team' => (clone $baseCompletedQuery)->where('handling_method', 'assign')->count(),
+                    'collaboration' => (clone $baseCompletedQuery)->where(function ($cq) {
+                        $cq->where('handling_method', 'collaborate')
+                           ->orWhereHas('branches.collaborators', fn($c) => $c->whereNull('removed_at'));
+                    })->count(),
+                ],
+            ];
+        }
+
+        return new TaskCollection($tasks, $extraMeta);
     }
 
     public function store(StoreTaskRequest $request): JsonResponse

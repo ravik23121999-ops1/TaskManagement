@@ -1288,4 +1288,99 @@ class TaskWorkflowTest extends TestCase
         $finalRes->assertStatus(200);
         $this->assertEquals('completed', $finalRes->json('data.status'));
     }
+
+    public function test_completed_tasks_can_be_filtered_by_solo_team_and_collaboration_methods(): void
+    {
+        // 1. Create a completed solo task
+        $soloTask = \App\Models\Task::create([
+            'title' => 'Completed Solo Task',
+            'description' => 'Solo work',
+            'handling_method' => 'work_alone',
+            'priority' => 'low',
+            'status' => 'completed',
+            'completed_at' => now(),
+            'creator_id' => $this->admin->id,
+            'department_id' => $this->department->id,
+        ]);
+
+        // 2. Create a completed team task
+        $teamTask = \App\Models\Task::create([
+            'title' => 'Completed Team Task',
+            'description' => 'Team work',
+            'handling_method' => 'assign',
+            'priority' => 'medium',
+            'status' => 'completed',
+            'completed_at' => now(),
+            'creator_id' => $this->admin->id,
+            'department_id' => $this->department->id,
+        ]);
+        $teamBranch = $teamTask->branches()->create([
+            'title' => 'Team Subtask',
+            'owner_id' => $this->employee1->id,
+            'status' => 'completed',
+            'completed_at' => now(),
+        ]);
+
+        // 3. Create a completed collaborative task
+        $collabTask = \App\Models\Task::create([
+            'title' => 'Completed Collaboration Task',
+            'description' => 'Collaborative work',
+            'handling_method' => 'collaborate',
+            'priority' => 'high',
+            'status' => 'completed',
+            'completed_at' => now(),
+            'creator_id' => $this->admin->id,
+            'department_id' => $this->department->id,
+        ]);
+        $collabBranch = $collabTask->branches()->create([
+            'title' => 'Collab Branch',
+            'owner_id' => $this->admin->id,
+            'status' => 'completed',
+            'completed_at' => now(),
+        ]);
+        $collabBranch->collaborators()->create([
+            'user_id' => $this->employee2->id,
+            'invited_by_id' => $this->admin->id,
+            'invited_at' => now(),
+        ]);
+
+        // 4. GET /api/tasks?view=completed (All) -> Contains all 3 tasks and has method_counts
+        $allRes = $this->actingAs($this->admin)->getJson('/api/tasks?view=completed');
+        $allRes->assertStatus(200);
+        $allIds = collect($allRes->json('data'))->pluck('id')->all();
+        $this->assertContains($soloTask->id, $allIds);
+        $this->assertContains($teamTask->id, $allIds);
+        $this->assertContains($collabTask->id, $allIds);
+
+        $counts = $allRes->json('meta.method_counts');
+        $this->assertNotNull($counts);
+        $this->assertGreaterThanOrEqual(1, $counts['solo']);
+        $this->assertGreaterThanOrEqual(1, $counts['team']);
+        $this->assertGreaterThanOrEqual(1, $counts['collaboration']);
+        $this->assertGreaterThanOrEqual(3, $counts['all']);
+
+        // 5. GET /api/tasks?view=completed&handling_method=solo
+        $soloRes = $this->actingAs($this->admin)->getJson('/api/tasks?view=completed&handling_method=solo');
+        $soloRes->assertStatus(200);
+        $soloIds = collect($soloRes->json('data'))->pluck('id')->all();
+        $this->assertContains($soloTask->id, $soloIds);
+        $this->assertNotContains($teamTask->id, $soloIds);
+        $this->assertNotContains($collabTask->id, $soloIds);
+
+        // 6. GET /api/tasks?view=completed&handling_method=team
+        $teamRes = $this->actingAs($this->admin)->getJson('/api/tasks?view=completed&handling_method=team');
+        $teamRes->assertStatus(200);
+        $teamIds = collect($teamRes->json('data'))->pluck('id')->all();
+        $this->assertContains($teamTask->id, $teamIds);
+        $this->assertNotContains($soloTask->id, $teamIds);
+        $this->assertNotContains($collabTask->id, $teamIds);
+
+        // 7. GET /api/tasks?view=completed&handling_method=collaboration
+        $collabFilterRes = $this->actingAs($this->admin)->getJson('/api/tasks?view=completed&handling_method=collaboration');
+        $collabFilterRes->assertStatus(200);
+        $collabIds = collect($collabFilterRes->json('data'))->pluck('id')->all();
+        $this->assertContains($collabTask->id, $collabIds);
+        $this->assertNotContains($soloTask->id, $collabIds);
+        $this->assertNotContains($teamTask->id, $collabIds);
+    }
 }
