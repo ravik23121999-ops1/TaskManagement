@@ -88,7 +88,7 @@ export const LoginPage: React.FC = () => {
                   ENTERPRISE
                 </span>
               </div>
-              <p className="text-xs text-slate-400 font-medium tracking-tight">Internal Enterprise Management Suite</p>
+              <p className="text-xs text-slate-400 font-medium tracking-tight">Enterprise Task Management</p>
             </div>
           </div>
 
@@ -411,7 +411,7 @@ export const LoginPage: React.FC = () => {
             <ShieldCheck className="w-4 h-4 text-emerald-400" />
             <span className="text-slate-300 font-medium">Sanctum Token Guard Protected</span>
           </div>
-          <span>Internal Enterprise Management Suite</span>
+          <span>Enterprise Task Management</span>
         </div>
       </div>
     </div>

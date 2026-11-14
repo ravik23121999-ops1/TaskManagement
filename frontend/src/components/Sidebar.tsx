@@ -124,7 +124,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         {/* Brand Header */}
         <div
           className={`border-b border-slate-800/80 flex items-center relative z-10 shrink-0 bg-[#070b18]/70 backdrop-blur-md transition-all duration-300 ${
-            collapsed ? 'p-3 justify-center' : 'p-4 sm:p-5 justify-between'
+            collapsed ? 'p-3 justify-center' : 'px-4 py-3.5 justify-between'
           }`}
         >
           {collapsed ? (
@@ -133,8 +133,8 @@ const Sidebar: React.FC<SidebarProps> = ({
               onClick={() => handleNav('/')}
               title="QuickLifeNow"
             >
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-md border border-white/20 hover:scale-105 transition-transform duration-200">
-                <Layers className="w-5 h-5 drop-shadow" />
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/25 border border-white/20 hover:scale-105 transition-transform duration-200">
+                <Layers className="w-4.5 h-4.5 drop-shadow-xs" />
               </div>
 
               {/* Floating Tooltip in Collapsed Mode */}
@@ -144,17 +144,19 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>
           ) : (
             <>
-              <div className="flex items-center gap-3">
-                <div className="relative group cursor-pointer" onClick={() => handleNav('/')}>
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-md border border-white/20 group-hover:scale-105 transition-transform duration-200">
-                    <Layers className="w-5 h-5 drop-shadow" />
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="relative group cursor-pointer shrink-0" onClick={() => handleNav('/')}>
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/25 border border-white/20 group-hover:scale-105 transition-transform duration-200">
+                    <Layers className="w-4.5 h-4.5 drop-shadow-xs" />
                   </div>
                 </div>
-                <div className="cursor-pointer" onClick={() => handleNav('/')}>
-                  <h1 className="text-base font-black tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent">
+                <div className="cursor-pointer min-w-0 flex-1" onClick={() => handleNav('/')}>
+                  <span className="text-sm font-bold text-white tracking-tight block truncate">
                     QuickLifeNow
-                  </h1>
-                  <p className="text-[10px] text-slate-400 font-medium tracking-tight mt-0.5">Internal Enterprise Management</p>
+                  </span>
+                  <p className="text-[11px] text-slate-400 font-medium truncate mt-0.5">
+                    Task Management
+                  </p>
                 </div>
               </div>
 
@@ -163,7 +165,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   type="button"
                   onClick={onToggleCollapse}
-                  className="hidden lg:flex p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 transition cursor-pointer"
+                  className="hidden lg:flex w-7 h-7 rounded-lg items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10 transition-all cursor-pointer shrink-0"
                   title="Collapse sidebar"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -174,10 +176,10 @@ const Sidebar: React.FC<SidebarProps> = ({
               <button
                 type="button"
                 onClick={onMobileClose}
-                className="lg:hidden p-1.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 transition cursor-pointer"
+                className="lg:hidden w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition cursor-pointer shrink-0"
                 title="Close Menu"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </>
           )}
