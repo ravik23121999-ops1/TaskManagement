@@ -1394,18 +1394,18 @@ export const TaskDetailPage: React.FC = () => {
             </div>
           </div>
         ) : isReadyForFinalSignOff && !isCompleted ? (
-          <div className="mt-4 p-4 bg-emerald-50/95 border border-emerald-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs">
+          <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-2xs">
             <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                <Check className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                <Check className="w-4 h-4" />
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-emerald-950 text-sm">All Subtasks Approved — Ready for Final Sign-off</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Stage 4 of 5</span>
+                  <span className="font-semibold text-slate-900 text-sm">All Subtasks Approved</span>
+                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">Ready to Complete</span>
                 </div>
-                <p className="text-emerald-800 mt-0.5">
-                  All subtasks have been verified and approved. Final sign-off is required to complete the project.
+                <p className="text-slate-600 mt-0.5">
+                  All team deliverables are verified. Complete this task to close and archive it.
                 </p>
               </div>
             </div>
@@ -1416,15 +1416,15 @@ export const TaskDetailPage: React.FC = () => {
                   setFinalCompleteDesc(
                     isWorkAlone
                       ? 'Work completed and all deliverables verified.'
-                      : 'Final deliverables verified and approved for project completion.'
+                      : 'Final deliverables verified and approved.'
                   );
                   setFinalCompleteFiles([]);
                   setIsFinalCompleteModalOpen(true);
                 }}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer active:scale-95 shrink-0"
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition flex items-center gap-1.5 cursor-pointer shrink-0"
               >
                 <Check className="w-3.5 h-3.5" />
-                <span>Final Sign-off & Complete Task</span>
+                <span>Mark Task Complete</span>
               </button>
             )}
           </div>

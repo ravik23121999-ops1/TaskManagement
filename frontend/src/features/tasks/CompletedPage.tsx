@@ -401,7 +401,7 @@ export const CompletedPage: React.FC = () => {
                     </td>
                     <td className="py-4 px-6 whitespace-nowrap">
                       {task.handling_method === 'work_alone' ? (
-                        <span className="text-slate-500 text-[11px] font-medium italic">
+                        <span className="text-slate-500 text-xs font-medium">
                           Self (Creator)
                         </span>
                       ) : task.handling_method === 'collaborate' || (task.collaborators && task.collaborators.length > 0) ? (
@@ -410,7 +410,7 @@ export const CompletedPage: React.FC = () => {
                             task.collaborators.map((c) => (
                               <span
                                 key={c.id}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-semibold"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200 text-xs font-medium"
                                 title={`Collaborator: ${c.name}`}
                               >
                                 <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
@@ -419,32 +419,38 @@ export const CompletedPage: React.FC = () => {
                             ))
                           ) : (
                             <div className="flex items-center gap-1.5">
-                              <div className="w-6 h-6 rounded-full bg-purple-50 text-purple-700 font-bold flex items-center justify-center text-[10px] border border-purple-100">
+                              <div className="w-6 h-6 rounded-full bg-purple-50 text-purple-700 font-bold flex items-center justify-center text-xs border border-purple-100">
                                 {task.creator?.name?.charAt(0) || 'C'}
                               </div>
-                              <span className="font-semibold text-slate-700">{task.creator?.name || 'Creator'}</span>
+                              <span className="font-medium text-slate-700 text-xs">{task.creator?.name || 'Creator'}</span>
                             </div>
                           )}
                         </div>
-                      ) : task.current_owners && task.current_owners.length > 0 ? (
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-6 h-6 rounded-full bg-blue-50 text-blue-700 font-bold flex items-center justify-center text-[10px] border border-blue-100">
-                            {task.current_owners[0].name.charAt(0)}
-                          </div>
-                          <span className="font-semibold text-slate-700">
-                            {task.current_owners.map((o) => o.name).join(', ')}
-                          </span>
-                        </div>
-                      ) : task.current_owner ? (
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-6 h-6 rounded-full bg-blue-50 text-blue-700 font-bold flex items-center justify-center text-[10px] border border-blue-100">
-                            {task.current_owner.name.charAt(0)}
-                          </div>
-                          <span className="font-semibold text-slate-700">{task.current_owner.name}</span>
-                        </div>
-                      ) : (
-                        <span className="text-slate-400 text-[11px]">Unassigned</span>
-                      )}
+                      ) : (() => {
+                        const assignees = (task as any).assignees && (task as any).assignees.length > 0
+                          ? (task as any).assignees
+                          : (task.branches && task.branches.length > 0
+                            ? Array.from(new Map(task.branches.filter((b: any) => b.owner).map((b: any) => [b.owner.id, b.owner])).values())
+                            : (task.current_owners || (task.current_owner ? [task.current_owner] : [])));
+
+                        if (assignees && assignees.length > 0) {
+                          return (
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {assignees.map((a: any) => (
+                                <span
+                                  key={a.id}
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-50 text-sky-700 border border-sky-200 text-xs font-medium"
+                                  title={`Assignee: ${a.name}`}
+                                >
+                                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500"></span>
+                                  {a.name}
+                                </span>
+                              ))}
+                            </div>
+                          );
+                        }
+                        return <span className="text-slate-400 text-xs">Unassigned</span>;
+                      })()}
                     </td>
                     <td className="py-4 px-6 whitespace-nowrap">
                       {task.handling_method === 'work_alone' ? (

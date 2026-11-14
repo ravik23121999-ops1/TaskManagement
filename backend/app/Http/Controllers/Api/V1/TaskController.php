@@ -360,7 +360,8 @@ class TaskController extends Controller
             if ($method === 'solo' || $method === 'work_alone') {
                 $query->where('handling_method', 'work_alone');
             } elseif ($method === 'team' || $method === 'assign') {
-                $query->where('handling_method', 'assign');
+                $query->where('handling_method', 'assign')
+                      ->whereDoesntHave('branches.collaborators', fn($c) => $c->whereNull('removed_at'));
             } elseif ($method === 'collaboration' || $method === 'collaborate') {
                 $query->where(function ($cq) {
                     $cq->where('handling_method', 'collaborate')
@@ -430,7 +431,8 @@ class TaskController extends Controller
                 'method_counts' => [
                     'all' => (clone $baseCompletedQuery)->count(),
                     'solo' => (clone $baseCompletedQuery)->where('handling_method', 'work_alone')->count(),
-                    'team' => (clone $baseCompletedQuery)->where('handling_method', 'assign')->count(),
+                    'team' => (clone $baseCompletedQuery)->where('handling_method', 'assign')
+                        ->whereDoesntHave('branches.collaborators', fn($c) => $c->whereNull('removed_at'))->count(),
                     'collaboration' => (clone $baseCompletedQuery)->where(function ($cq) {
                         $cq->where('handling_method', 'collaborate')
                            ->orWhereHas('branches.collaborators', fn($c) => $c->whereNull('removed_at'));

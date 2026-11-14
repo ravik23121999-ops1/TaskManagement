@@ -384,6 +384,17 @@ class TaskResource extends JsonResource
             ] : null,
             'current_owner' => $currentOwner,
             'current_owners' => $currentOwners,
+            'assignees' => $this->branches
+                ->filter(fn($b) => $b->status !== 'cancelled' && $b->owner)
+                ->map(fn($b) => [
+                    'id' => $b->owner->id,
+                    'name' => $b->owner->name,
+                    'email' => $b->owner->email,
+                    'role' => $b->owner->role,
+                ])
+                ->unique('id')
+                ->values()
+                ->all(),
             'is_direct_delegation' => ($this->handling_method === 'assign') && (
                 $this->branches->count() <= 1 && (
                     !$this->branches->first() || ($this->branches->first()->share_parent_details ?? true)
