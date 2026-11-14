@@ -336,17 +336,17 @@ export const CompletedPage: React.FC = () => {
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto min-h-[380px]">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 font-bold uppercase tracking-wider whitespace-nowrap">
-                <th className="py-3.5 px-6 whitespace-nowrap">Task Code</th>
-                <th className="py-3.5 px-6">Task Title & Department</th>
-                <th className="py-3.5 px-6">Created By</th>
-                <th className="py-3.5 px-6">Executed By</th>
-                <th className="py-3.5 px-6">Method</th>
-                <th className="py-3.5 px-6">Completed On</th>
-                <th className="py-3.5 px-6 text-right">Action</th>
+                <th className="py-3.5 px-6 w-28 whitespace-nowrap">Task Code</th>
+                <th className="py-3.5 px-6 min-w-[240px]">Task Title & Department</th>
+                <th className="py-3.5 px-6 w-44">Created By</th>
+                <th className="py-3.5 px-6 w-52">Executed By</th>
+                <th className="py-3.5 px-6 w-32">Method</th>
+                <th className="py-3.5 px-6 w-36">Completed On</th>
+                <th className="py-3.5 px-6 text-right w-24">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

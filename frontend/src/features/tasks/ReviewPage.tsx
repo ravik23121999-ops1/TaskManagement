@@ -199,17 +199,17 @@ export const ReviewPage: React.FC = () => {
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto min-h-[380px]">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 font-bold uppercase tracking-wider whitespace-nowrap">
-                <th className="py-3.5 px-6 whitespace-nowrap">Task Code</th>
-                <th className="py-3.5 px-6">Task Title & Department</th>
-                <th className="py-3.5 px-6">Submitted By</th>
-                <th className="py-3.5 px-6">Priority</th>
-                <th className="py-3.5 px-6">Stage</th>
-                <th className="py-3.5 px-6">Due Date</th>
-                <th className="py-3.5 px-6 text-right">Actions</th>
+                <th className="py-3.5 px-6 w-28 whitespace-nowrap">Task Code</th>
+                <th className="py-3.5 px-6 min-w-[240px]">Task Title & Department</th>
+                <th className="py-3.5 px-6 w-48">Submitted By</th>
+                <th className="py-3.5 px-6 w-28">Priority</th>
+                <th className="py-3.5 px-6 w-36">Stage</th>
+                <th className="py-3.5 px-6 w-32">Due Date</th>
+                <th className="py-3.5 px-6 text-right w-24">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">

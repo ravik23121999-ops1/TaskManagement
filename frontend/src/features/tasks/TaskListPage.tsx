@@ -294,17 +294,17 @@ export const TaskListPage: React.FC = () => {
       {/* Table */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
         {/* Desktop Table View */}
-        <div className="hidden md:block overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto min-h-[380px]">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 font-bold uppercase tracking-wider whitespace-nowrap">
-                <th className="py-3.5 px-6 whitespace-nowrap">Task Code</th>
-                <th className="py-3.5 px-6">Task Title & Department</th>
-                <th className="py-3.5 px-6">Status</th>
-                <th className="py-3.5 px-6">Priority</th>
-                <th className="py-3.5 px-6">Action Needed By</th>
-                <th className="py-3.5 px-6">Due Date</th>
-                <th className="py-3.5 px-6 text-right">Action</th>
+                <th className="py-3.5 px-6 w-28 whitespace-nowrap">Task Code</th>
+                <th className="py-3.5 px-6 min-w-[240px]">Task Title & Department</th>
+                <th className="py-3.5 px-6 w-32">Status</th>
+                <th className="py-3.5 px-6 w-28">Priority</th>
+                <th className="py-3.5 px-6 w-48">Action Needed By</th>
+                <th className="py-3.5 px-6 w-32">Due Date</th>
+                <th className="py-3.5 px-6 text-right w-24">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
