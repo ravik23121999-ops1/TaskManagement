@@ -141,9 +141,7 @@ class TaskSubmissionController extends Controller
                     return response()->json(['message' => 'Unauthorized: Only the assigned owner or invited collaborators can submit work'], 403);
                 }
 
-                // Industry Working Rule (Bottom-Up Hierarchy Dependency):
-                // An intermediate assigner CANNOT submit their own branch work upwards to their assigner
-                // until all subtasks delegated by them to team members below them are completed and approved!
+                // Ensure all delegated subordinate subtasks are completed and approved before submitting upward
                 $userBranchIds = [$branch->id];
                 $allBranches = $task->branches()->with(['parentAssignment', 'assignments', 'owner'])->get();
 
@@ -285,12 +283,12 @@ class TaskSubmissionController extends Controller
             return response()->json(['message' => 'Cannot complete task: Task is currently on hold. Resume the task first.'], 422);
         }
 
-        // Approved workflow rule: The creator performs final check and final submission
+        // Verify completion authority
         if ($task->creator_id !== $user->id && !$isAdmin) {
             return response()->json(['message' => 'Unauthorized: Only the original creator (or Admin) can give final completion approval'], 403);
         }
 
-        // Validate parent task completion rule: All active (non-cancelled) branches must be completed
+        // Validate all active branches are completed
         if ($task->handling_method !== 'work_alone') {
             $totalActive = $task->branches()->where('status', '!=', 'cancelled')->count();
             $completedActive = $task->branches()->where('status', 'completed')->count();

@@ -6,6 +6,8 @@ import { usersApi } from '../../api/users';
 import { useAuth } from '../auth/AuthContext';
 import { StatusBadge, PriorityBadge } from '../../components/StatusBadge';
 import { ReviewModal } from '../../components/ReviewModal';
+import { TaskSubmitModal } from './components/TaskSubmitModal';
+import { TaskFinalCompleteModal } from './components/TaskFinalCompleteModal';
 import {
   FileText,
   Users,
@@ -2426,9 +2428,7 @@ export const TaskDetailPage: React.FC = () => {
               </div>
 
               {(() => {
-                // STRICT PEER ISOLATION:
-                // An assignee must NEVER see other peer assignees.
-                // Determine visible owners strictly within this user's peer-isolated scope:
+                // Determine visible owners for the current user scope
                 let ownersList = task.current_owners && task.current_owners.length > 0 ? task.current_owners : (task.current_owner ? [task.current_owner] : []);
 
                 if (task.is_peer_isolated || isSubtaskAssignee) {
@@ -3540,260 +3540,38 @@ export const TaskDetailPage: React.FC = () => {
       )}
 
 
-      {/* SUBMISSION MODAL (Intermediate Submit for Review) */}
-      {isSubmitModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg p-6 space-y-4">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
-                  <Send className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">Submit Work for Review</h3>
-                  <p className="text-xs text-slate-500">Provide a summary of deliverables, work completed, and attach relevant files.</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsSubmitModalOpen(false);
-                  setSubmissionFiles([]);
-                }}
-                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
-              >
-                <XCircle className="w-4 h-4" />
-              </button>
-            </div>
+      {/* Work Submission Modal */}
+      <TaskSubmitModal
+        isOpen={isSubmitModalOpen}
+        onClose={() => {
+          setIsSubmitModalOpen(false);
+          setSubmissionFiles([]);
+        }}
+        onSubmit={handleSubmitWork}
+        description={submissionDesc}
+        setDescription={setSubmissionDesc}
+        files={submissionFiles}
+        setFiles={setSubmissionFiles}
+        submitting={submittingWork}
+      />
 
-            <form onSubmit={handleSubmitWork} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                  <span>Work Description / Deliverables Summary <span className="text-rose-500">*</span></span>
-                </label>
-                <textarea
-                  rows={4}
-                  required
-                  placeholder="Describe your work, completed checklist items, or links to assets..."
-                  value={submissionDesc}
-                  onChange={(e) => setSubmissionDesc(e.target.value)}
-                  className="w-full p-3 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
-                />
-              </div>
-
-              {/* Attachments Section */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Paperclip className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Attach Deliverables / Files (Optional)</span>
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-normal">PDF, Images, Zip, Docs (up to 20MB)</span>
-                </label>
-
-                <label className="border-2 border-dashed border-slate-200 hover:border-blue-400 rounded-xl p-3 flex flex-col items-center justify-center gap-1 bg-slate-50/50 hover:bg-blue-50/20 transition cursor-pointer">
-                  <Upload className="w-4 h-4 text-slate-400" />
-                  <span className="text-xs font-medium text-slate-600">Click to browse or drop files</span>
-                  <input
-                    type="file"
-                    multiple
-                    className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files) {
-                        const newFiles = Array.from(e.target.files);
-                        setSubmissionFiles((prev) => [...prev, ...newFiles]);
-                      }
-                    }}
-                  />
-                </label>
-
-                {submissionFiles.length > 0 && (
-                  <div className="space-y-1.5 max-h-28 overflow-y-auto pr-1">
-                    {submissionFiles.map((file, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between p-2 bg-blue-50/60 border border-blue-100 rounded-lg text-xs"
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                          <span className="font-medium text-slate-800 truncate text-[11px]">{file.name}</span>
-                          <span className="text-[10px] text-slate-400 shrink-0">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setSubmissionFiles((prev) => prev.filter((_, i) => i !== idx))}
-                          className="text-rose-500 hover:text-rose-700 p-0.5 rounded cursor-pointer"
-                        >
-                          <XCircle className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsSubmitModalOpen(false);
-                    setSubmissionFiles([]);
-                  }}
-                  className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submittingWork}
-                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>{submittingWork ? 'Submitting...' : 'Submit for Review'}</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* FINAL TASK COMPLETION MODAL */}
-      {isFinalCompleteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg p-6 space-y-4">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">
-                    {isWorkAlone ? 'Task Completion & Deliverables' : 'Approve & Complete Task'}
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    {isWorkAlone
-                      ? 'Submit your final deliverables, work summary, and attachments to officially complete this task.'
-                      : 'Provide closing remarks, verify deliverables, and sign off to mark this task complete.'}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsFinalCompleteModalOpen(false);
-                  setFinalCompleteFiles([]);
-                }}
-                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
-              >
-                <XCircle className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Task Info Pill */}
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="font-bold text-blue-600">{task.task_code}</span>
-                <span className="text-slate-700 font-semibold truncate">{task.title}</span>
-              </div>
-              <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 font-semibold rounded-full text-[10px] border border-emerald-200 shrink-0">
-                {isWorkAlone ? 'Work Alone Mode' : 'Final Sign-off'}
-              </span>
-            </div>
-
-            <form onSubmit={handleFinalSubmit} className="space-y-4">
-              {/* Description */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                  <span>Deliverables & Completion Description <span className="text-rose-500">*</span></span>
-                  <span className="text-[10px] text-slate-400 font-normal">Summary of completed work</span>
-                </label>
-                <textarea
-                  rows={4}
-                  required
-                  placeholder="Describe your final deliverables, outcome, checklist verification, or closing remarks..."
-                  value={finalCompleteDesc}
-                  onChange={(e) => setFinalCompleteDesc(e.target.value)}
-                  className="w-full p-3 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
-                />
-              </div>
-
-              {/* Attachments */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-700 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Paperclip className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Attach Deliverables / Files (Optional)</span>
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-normal">PDF, Images, Zip, Docs (up to 20MB)</span>
-                </label>
-
-                <label className="border-2 border-dashed border-slate-200 hover:border-emerald-400 rounded-xl p-3 flex flex-col items-center justify-center gap-1 bg-slate-50/50 hover:bg-emerald-50/20 transition cursor-pointer">
-                  <Upload className="w-5 h-5 text-slate-400" />
-                  <span className="text-xs font-medium text-slate-600">Click to browse files or drag & drop here</span>
-                  <span className="text-[10px] text-slate-400">Attach receipts, screenshots, deliverables, or final reports</span>
-                  <input
-                    type="file"
-                    multiple
-                    className="hidden"
-                    onChange={(e) => {
-                      if (e.target.files) {
-                        const newFiles = Array.from(e.target.files);
-                        setFinalCompleteFiles((prev) => [...prev, ...newFiles]);
-                      }
-                    }}
-                  />
-                </label>
-
-                {finalCompleteFiles.length > 0 && (
-                  <div className="space-y-1.5 max-h-32 overflow-y-auto pr-1">
-                    {finalCompleteFiles.map((file, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center justify-between p-2 bg-emerald-50/60 border border-emerald-100 rounded-lg text-xs"
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <FileText className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                          <span className="font-medium text-slate-800 truncate text-[11px]">{file.name}</span>
-                          <span className="text-[10px] text-slate-400 shrink-0">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setFinalCompleteFiles((prev) => prev.filter((_, i) => i !== idx))}
-                          className="text-rose-500 hover:text-rose-700 p-0.5 rounded cursor-pointer"
-                        >
-                          <XCircle className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Modal footer buttons */}
-              <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsFinalCompleteModalOpen(false);
-                    setFinalCompleteFiles([]);
-                  }}
-                  className="px-4 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submittingFinal}
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Check className="w-3.5 h-3.5" />
-                  <span>{submittingFinal ? 'Completing Task...' : 'Approve & Complete Task'}</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* Final Completion Modal */}
+      <TaskFinalCompleteModal
+        isOpen={isFinalCompleteModalOpen}
+        onClose={() => {
+          setIsFinalCompleteModalOpen(false);
+          setFinalCompleteFiles([]);
+        }}
+        onSubmit={handleFinalSubmit}
+        isWorkAlone={isWorkAlone}
+        taskCode={task.task_code}
+        taskTitle={task.title}
+        description={finalCompleteDesc}
+        setDescription={setFinalCompleteDesc}
+        files={finalCompleteFiles}
+        setFiles={setFinalCompleteFiles}
+        submitting={submittingFinal}
+      />
 
       {/* REQUEST MISSING DETAILS MODAL (Assignee -> Assigner) */}
       {isRequestDetailsModalOpen && (

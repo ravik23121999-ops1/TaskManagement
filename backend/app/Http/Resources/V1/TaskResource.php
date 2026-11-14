@@ -27,9 +27,7 @@ class TaskResource extends JsonResource
         $isAssignee = $userActiveBranch && !$isCreator && !$isAdmin;
         $canOverseeAll = $isCreator || $isAdmin;
 
-        // Strict Peer Isolation:
-        // A peer assignee or collaborator must NEVER see another peer's branch work, instructions, or deliverables!
-        // Only the Task Creator and Executive Admins (Overseers) see all branches.
+        // Filter visible branches by user role and assignment scope
         $visibleBranches = $this->branches;
         if (!$canOverseeAll) {
             $visibleBranches = $this->branches->filter(function ($branch) use ($user) {
@@ -49,15 +47,7 @@ class TaskResource extends JsonResource
         $completedBranchCount = $activeBranches->filter(fn($b) => $b->status === 'completed')->count();
         $allBranchesCompleted = ($totalBranchCount > 0 && $completedBranchCount === $totalBranchCount);
 
-        // Calculate current owner / responsibility based on industry bottom-up delegation rules:
-        // 1. Assignee is owner if they have not assigned further.
-        // 2. Assigner is owner if they have not assigned further.
-        // 3. Assigner who delegated further is NOT owner while subordinates are working.
-        // 4. Assigner BECOMES owner after reviewing and approving subordinate assignees' tasks.
-        // 5. Creator is owner when all branches are completed or handling method is work_alone.
-        // STRICT PEER ISOLATION:
-        // When viewing as an assignee (!canOverseeAll), an assignee must NEVER see other peer assignees!
-        // Their ownership scope is strictly restricted to branches visible to them (themselves and any subordinates).
+        // Determine active owners and responsibility
         $branchesForOwnership = $canOverseeAll ? $allBranches : $visibleBranches;
         $rawOwners = \App\Services\TaskHierarchyService::determineCurrentOwners($this->resource, $branchesForOwnership);
 
@@ -202,9 +192,7 @@ class TaskResource extends JsonResource
             }
         }
 
-        // Bottom-Up Hierarchy Dependency:
-        // An intermediate assigner who has delegated subtasks to team members below them
-        // CANNOT submit their own work deliverables upward until all delegated subtasks are completed and approved!
+        // Require approval of delegated child subtasks before submitting
         $userBranchIds = $userActiveBranch ? [$userActiveBranch->id] : ($user ? $this->branches->where('owner_id', $user->id)->pluck('id')->all() : []);
 
         $delegatedChildBranches = $this->branches->filter(function ($b) use ($user, $userBranchIds) {
@@ -681,7 +669,7 @@ class TaskResource extends JsonResource
                     }
                 }
 
-                // Strict peer isolation for assignees: filter out any history items that reference peer assignees
+                // Filter history items by visible assignees
                 if (!$canOverseeAll && !empty($allowedUserIds)) {
                     $historyItems = $historyItems->filter(function ($item) use ($visibleBranches, $allowedUserIds) {
                         if (!empty($item['_is_task_created'])) {

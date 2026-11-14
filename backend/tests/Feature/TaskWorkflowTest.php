@@ -1203,7 +1203,7 @@ class TaskWorkflowTest extends TestCase
         $this->assertFalse(collect($unrelatedView->json('data'))->contains('id', $taskId), 'Unrelated employee must not see the private collaboration');
     }
 
-    public function test_path_b_collaborator_can_submit_work_and_creator_reviews_and_completes_task(): void
+    public function test_collaborator_submission_and_creator_approval(): void
     {
         // 1. Admin creates a task with subtask assigned to Employee 1
         $createRes = $this->actingAs($this->admin)->postJson('/api/tasks', [
@@ -1289,7 +1289,7 @@ class TaskWorkflowTest extends TestCase
         $this->assertEquals('completed', $finalRes->json('data.status'));
     }
 
-    public function test_completed_tasks_can_be_filtered_by_solo_team_and_collaboration_methods(): void
+    public function test_completed_tasks_method_filtering(): void
     {
         // 1. Create a completed solo task
         $soloTask = \App\Models\Task::create([
