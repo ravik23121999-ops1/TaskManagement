@@ -728,7 +728,7 @@ export const Dashboard: React.FC = () => {
 
           {/* Card 4: Collaborations */}
           <div
-            onClick={() => navigate('/tasks/collaborations')}
+            onClick={() => navigate('/tasks/completed?method=collaboration')}
             className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-luxe hover:shadow-luxe-hover hover:-translate-y-1 hover:border-purple-400/60 transition-all duration-300 cursor-pointer relative overflow-hidden group"
           >
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-600 via-pink-500 to-rose-400" />

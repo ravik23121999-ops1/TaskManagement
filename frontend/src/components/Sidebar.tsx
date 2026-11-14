@@ -7,7 +7,6 @@ import {
   Zap,
   ListTodo,
   Clock,
-  Users2,
   FileCheck2,
   CheckCircle2,
   PauseCircle,
@@ -56,7 +55,6 @@ const Sidebar: React.FC<SidebarProps> = ({
     { path: '/tasks/pending', label: 'My Action Required', icon: Zap },
     { path: '/tasks/pending-with-others', label: 'Waiting on Others', icon: Clock },
     { path: '/tasks', label: 'All Tasks', icon: ListTodo },
-    { path: '/tasks/collaborations', label: 'My Collaborations', icon: Users2 },
     ...(enableWorkMessages ? [{ path: '/messages', label: 'Work Messages', icon: MessageSquare }] : []),
     { path: '/tasks/review', label: 'Review Queue', icon: FileCheck2 },
     { path: '/tasks/completed', label: 'Completed', icon: CheckCircle2 },
@@ -75,7 +73,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const isActive = (path: string) => {
     if (path === '/' && location.pathname === '/') return true;
     if (path === '/tasks') {
-      const specialSubPages = ['pending', 'pending-with-others', 'my-action', 'collaborations', 'review', 'completed', 'on-hold', 'cancelled', 'create'];
+      const specialSubPages = ['pending', 'pending-with-others', 'my-action', 'review', 'completed', 'on-hold', 'cancelled', 'create'];
       const isSpecial = specialSubPages.some((sub) => location.pathname.startsWith(`/tasks/${sub}`));
       return location.pathname === '/tasks' || (location.pathname.startsWith('/tasks/') && !isSpecial);
     }

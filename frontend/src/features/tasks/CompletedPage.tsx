@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { tasksApi } from '../../api/tasks';
 import type { Task } from '../../api/tasks';
@@ -9,17 +9,30 @@ import { Search, CheckCircle2, Eye, Building2, Trash2, X, User, Users, Share2, L
 
 export const CompletedPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user: currentUser } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [methodFilter, setMethodFilter] = useState<'all' | 'solo' | 'team' | 'collaboration'>('all');
+  const urlMethod = searchParams.get('method');
+  const initialMethod = urlMethod && ['all', 'solo', 'team', 'collaboration'].includes(urlMethod)
+    ? (urlMethod as 'all' | 'solo' | 'team' | 'collaboration')
+    : 'all';
+
+  const [methodFilter, setMethodFilter] = useState<'all' | 'solo' | 'team' | 'collaboration'>(initialMethod);
   const [methodCounts, setMethodCounts] = useState({
     all: 0,
     solo: 0,
     team: 0,
     collaboration: 0,
   });
+
+  useEffect(() => {
+    if (urlMethod && ['all', 'solo', 'team', 'collaboration'].includes(urlMethod)) {
+      setMethodFilter(urlMethod as 'all' | 'solo' | 'team' | 'collaboration');
+      setPage(1);
+    }
+  }, [urlMethod]);
 
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');

@@ -13,7 +13,6 @@ const TaskListPage = React.lazy(() => import('./features/tasks/TaskListPage'));
 const TaskDetailPage = React.lazy(() => import('./features/tasks/TaskDetailPage'));
 const MyActionPage = React.lazy(() => import('./features/tasks/MyActionPage'));
 const PendingWithOthersPage = React.lazy(() => import('./features/tasks/PendingWithOthersPage'));
-const CollaborationsPage = React.lazy(() => import('./features/tasks/CollaborationsPage'));
 const ReviewPage = React.lazy(() => import('./features/tasks/ReviewPage'));
 const CompletedPage = React.lazy(() => import('./features/tasks/CompletedPage'));
 const OnHoldPage = React.lazy(() => import('./features/tasks/OnHoldPage'));
@@ -159,7 +158,7 @@ const App: React.FC = () => {
                 path="/tasks/collaborations"
                 element={
                   <ProtectedRoute>
-                    <CollaborationsPage />
+                    <Navigate to="/tasks/completed?method=collaboration" replace />
                   </ProtectedRoute>
                 }
               />
