@@ -31,6 +31,40 @@ class WorkLogController extends Controller
     }
 
     /**
+     * Compute clean task progress percentage.
+     */
+    private function calculateTaskProgress(Task $task): int
+    {
+        if ($task->status === 'completed') {
+            return 100;
+        }
+        if ($task->status === 'cancelled') {
+            return 0;
+        }
+
+        $branches = $task->branches;
+        if ($branches && $branches->isNotEmpty()) {
+            $activeBranches = $branches->filter(fn($b) => $b->status !== 'cancelled');
+            $total = $activeBranches->count();
+            if ($total > 0) {
+                $completed = $activeBranches->where('status', 'completed')->count();
+                $pct = (int) round(($completed / $total) * 100);
+                if ($task->status === 'review' && $pct < 90) return 90;
+                if ($task->status === 'in_progress' && $pct < 20) return 20;
+                return $pct;
+            }
+        }
+
+        if ($task->status === 'review') {
+            return 80;
+        }
+        if ($task->status === 'in_progress') {
+            return 50;
+        }
+        return 10;
+    }
+
+    /**
      * Unified work logs stream with filtering and pagination.
      */
     public function index(Request $request): JsonResponse
@@ -386,7 +420,7 @@ class WorkLogController extends Controller
                     'description' => $task->description,
                     'status' => $task->status,
                     'priority' => $task->priority,
-                    'progress' => $task->progress,
+                    'progress' => $this->calculateTaskProgress($task),
                     'handling_method' => $task->handling_method,
                     'creator' => $task->creator ? [
                         'id' => $task->creator->id,
@@ -472,14 +506,14 @@ class WorkLogController extends Controller
             'formatted_time' => Carbon::parse($task->created_at)->format('M d, Y h:i A'),
             'time_ago' => Carbon::parse($task->created_at)->diffForHumans(),
             'stage_type' => 'creation',
-            'badge_label' => 'Initiated',
-            'title' => "Task Created: {$task->title}",
+            'badge_label' => 'Created',
+            'title' => "Task Created",
             'actor' => [
                 'name' => $task->creator?->name ?? 'Creator',
                 'role' => $task->creator?->role ?? 'admin',
                 'department' => $task->creator?->department?->name ?? 'Operations',
             ],
-            'summary' => "Task initiated with handling method " . strtoupper($task->handling_method) . " and priority " . strtoupper($task->priority) . ($task->description ? " — {$task->description}" : ""),
+            'summary' => "Task created with " . strtolower(str_replace('_', ' ', $task->priority)) . " priority (" . strtolower(str_replace('_', ' ', $task->handling_method)) . ")" . ($task->description ? ": {$task->description}" : ""),
             'attachments' => [],
         ]);
 
@@ -494,14 +528,14 @@ class WorkLogController extends Controller
                     'formatted_time' => Carbon::parse($assignTime)->format('M d, Y h:i A'),
                     'time_ago' => Carbon::parse($assignTime)->diffForHumans(),
                     'stage_type' => 'assignment',
-                    'badge_label' => 'Assignment',
+                    'badge_label' => 'Assigned',
                     'title' => "Assigned to " . ($a->assignedTo?->name ?? 'Assignee') . ($b->title && $b->title !== $task->title ? " ({$b->title})" : ""),
                     'actor' => [
                         'name' => $a->assignedBy?->name ?? $task->creator?->name ?? 'Assigner',
                         'role' => $a->assignedBy?->role ?? 'user',
                         'department' => $a->assignedBy?->department?->name ?? 'Operations',
                     ],
-                    'summary' => "Task branch assigned to {$a->assignedTo?->name}" . ($b->due_date ? " with deadline " . Carbon::parse($b->due_date)->format('M d, Y') : ""),
+                    'summary' => "Subtask assigned to {$a->assignedTo?->name}" . ($b->due_date ? " with deadline " . Carbon::parse($b->due_date)->format('M d, Y') : ""),
                     'attachments' => [],
                 ]);
             }
@@ -521,8 +555,8 @@ class WorkLogController extends Controller
             $toStr = strtoupper(str_replace('_', ' ', $sh->to_status));
 
             $isWithdrawn = $sh->to_status === 'cancelled' || str_contains(strtolower($sh->reason ?? ''), 'withdrawn') || str_contains(strtolower($sh->reason ?? ''), 'cancelled');
-            $badgeLabel = $isWithdrawn ? 'Assignment Withdrawn' : 'Stage Transition';
-            $title = $isWithdrawn ? 'Assignment Withdrawn / Cancelled' : "Stage Transition: {$fromStr} → {$toStr}";
+            $badgeLabel = $isWithdrawn ? 'Assignment Withdrawn' : 'Status Change';
+            $title = $isWithdrawn ? 'Assignment Withdrawn' : "Status changed: {$fromStr} → {$toStr}";
 
             $steps->push([
                 'raw_time' => Carbon::parse($sh->changed_at)->timestamp,
@@ -538,7 +572,7 @@ class WorkLogController extends Controller
                     'role' => $sh->changedBy?->role ?? 'user',
                     'department' => $sh->changedBy?->department?->name ?? 'Operations',
                 ],
-                'summary' => $sh->reason ?: "Status moved to " . str_replace('_', ' ', $sh->to_status),
+                'summary' => $sh->reason ?: "Status changed to " . str_replace('_', ' ', $sh->to_status),
                 'attachments' => [],
             ]);
         }
@@ -558,8 +592,8 @@ class WorkLogController extends Controller
             ])->values()->all();
 
             $subType = $sub->is_final ? 'final_sign_off' : 'submission';
-            $subLabel = $sub->is_final ? 'Final Verification' : 'Submitted';
-            $subTitle = $sub->is_final ? 'Final Deliverables Verified & Submitted' : 'Work Submitted for Review';
+            $subLabel = $sub->is_final ? 'Final Submission' : 'Submitted';
+            $subTitle = $sub->is_final ? 'Final Deliverables Submitted' : 'Work Submitted for Review';
 
             $steps->push([
                 'raw_time' => Carbon::parse($sub->submitted_at)->timestamp,
@@ -575,7 +609,7 @@ class WorkLogController extends Controller
                     'role' => $sub->submittedBy?->role ?? 'employee',
                     'department' => $sub->submittedBy?->department?->name ?? 'Operations',
                 ],
-                'summary' => $sub->description ?: 'Deliverables submitted for evaluation',
+                'summary' => $sub->description ?: 'Deliverables submitted for review',
                 'attachments' => $subAttachments,
             ]);
 
@@ -588,14 +622,14 @@ class WorkLogController extends Controller
                     'formatted_time' => Carbon::parse($rev->reviewed_at)->format('M d, Y h:i A'),
                     'time_ago' => Carbon::parse($rev->reviewed_at)->diffForHumans(),
                     'stage_type' => $isApproved ? 'review_approved' : 'review_returned',
-                    'badge_label' => $isApproved ? 'Approved' : 'Needs Correction',
-                    'title' => $isApproved ? "Review Approved" : "Returned for Correction",
+                    'badge_label' => $isApproved ? 'Approved' : 'Returned',
+                    'title' => $isApproved ? "Submission Approved" : "Returned for Revision",
                     'actor' => [
                         'name' => $rev->reviewer?->name ?? 'Reviewer',
                         'role' => $rev->reviewer?->role ?? 'reviewer',
                         'department' => $rev->reviewer?->department?->name ?? 'Management',
                     ],
-                    'summary' => $rev->comments ?: ($isApproved ? 'Submission approved by reviewer' : 'Returned for revision'),
+                    'summary' => $rev->comments ?: ($isApproved ? 'Submission approved' : 'Returned for revision'),
                     'attachments' => [],
                 ]);
             }
@@ -616,8 +650,8 @@ class WorkLogController extends Controller
                 'formatted_time' => Carbon::parse($com->created_at)->format('M d, Y h:i A'),
                 'time_ago' => Carbon::parse($com->created_at)->diffForHumans(),
                 'stage_type' => $isClarification ? 'clarification' : 'communication',
-                'badge_label' => $isClarification ? 'Clarification' : ($com->is_internal ? 'Internal Note' : 'Communication'),
-                'title' => $isClarification ? "Details & Clarification Note" : ($com->is_internal ? "Internal Memo Logged" : "Team Communication Note"),
+                'badge_label' => $isClarification ? 'Clarification' : ($com->is_internal ? 'Internal Note' : 'Comment'),
+                'title' => $isClarification ? "Clarification Note" : ($com->is_internal ? "Internal Note" : "Comment Added"),
                 'actor' => [
                     'name' => $com->user?->name ?? 'Team Member',
                     'role' => $com->user?->role ?? 'employee',
@@ -658,14 +692,14 @@ class WorkLogController extends Controller
                 'formatted_time' => Carbon::parse($task->completed_at)->format('M d, Y h:i A'),
                 'time_ago' => Carbon::parse($task->completed_at)->diffForHumans(),
                 'stage_type' => 'completed',
-                'badge_label' => '100% Completed',
-                'title' => "Task 100% Completed & Verified",
+                'badge_label' => 'Completed',
+                'title' => "Task Completed & Closed",
                 'actor' => [
                     'name' => $task->creator?->name ?? 'Creator',
                     'role' => $task->creator?->role ?? 'admin',
                     'department' => $task->creator?->department?->name ?? 'Management',
                 ],
-                'summary' => "Creator confirmed all deliverables and officially closed the task.",
+                'summary' => "Task completed and verified.",
                 'attachments' => [],
             ]);
         }
@@ -771,7 +805,7 @@ class WorkLogController extends Controller
                     'handling_method' => $task->handling_method,
                     'status' => $task->status,
                     'priority' => $task->priority,
-                    'progress' => $task->progress,
+                    'progress' => $this->calculateTaskProgress($task),
                     'creator' => $task->creator ? ['id' => $task->creator->id, 'name' => $task->creator->name, 'email' => $task->creator->email] : null,
                     'current_owner' => $currentOwner ? ['id' => $currentOwner->id, 'name' => $currentOwner->name, 'email' => $currentOwner->email, 'role' => $currentOwner->role] : null,
                     'department' => $task->department ? ['id' => $task->department->id, 'name' => $task->department->name] : null,
