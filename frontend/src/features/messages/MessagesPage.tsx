@@ -612,14 +612,14 @@ export const MessagesPage: React.FC = () => {
       <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 ${selectedBranchId ? 'hidden sm:flex' : 'flex'}`}>
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Work Messages & Communications</h1>
-            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1.5">
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Work Messages</h1>
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200 flex items-center gap-1.5">
               <MessageSquare className="w-3.5 h-3.5" />
-              <span>Branch Direct Chat</span>
+              <span>Direct Chat</span>
             </span>
           </div>
-          <p className="text-sm text-slate-600 mt-1">
-            Direct branch-wise communication between Assigner and Assignees. Discuss tasks, request missing details, review work, and share documents.
+          <p className="text-xs text-slate-500 mt-1">
+            Chat and discuss tasks directly with your team.
           </p>
         </div>
 

@@ -154,10 +154,10 @@ export const TaskListPage: React.FC = () => {
           </div>
           <p className="text-xs text-slate-500 mt-1">
             {searchParams.get('view') === 'assigned_to_me'
-              ? 'Deliverables and subtasks specifically allocated to you for execution.'
+              ? 'Tasks assigned to you.'
               : search.trim()
-              ? `Showing results matching "${search.trim()}" across all task phases (active open, completed, on hold, archived).`
-              : 'Active organizational tasks across operational workflows. Completed tasks automatically move to the Completed phase.'}
+              ? `Results matching "${search.trim()}".`
+              : 'All active team tasks.'}
           </p>
         </div>
 

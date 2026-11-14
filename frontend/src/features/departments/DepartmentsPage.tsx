@@ -218,9 +218,9 @@ export const DepartmentsPage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Department Management</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Departments</h1>
           <p className="text-xs text-slate-500 mt-1">
-            Organize teams and filter task workloads across operational departments.
+            Manage company departments and teams.
           </p>
         </div>
 

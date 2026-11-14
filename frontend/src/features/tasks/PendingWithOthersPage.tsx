@@ -82,12 +82,12 @@ export const PendingWithOthersPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Waiting on Others</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
-              {total} tracked
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+              {total} in progress
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Tracking tasks you initiated or delegated that are currently with other assignees or reviewers — monitor progress and handovers in real-time.
+            Tasks you assigned to others that are currently being worked on.
           </p>
         </div>
       </div>

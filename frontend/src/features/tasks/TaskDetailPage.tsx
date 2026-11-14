@@ -976,7 +976,7 @@ export const TaskDetailPage: React.FC = () => {
                 ballDot = 'bg-emerald-500';
               } else if (task.status === 'cancelled') {
                 ballPerson = 'Task Cancelled';
-                ballAction = 'Workflow terminated';
+                ballAction = 'Task cancelled';
                 ballColor = 'bg-rose-50 text-rose-800 border-rose-200';
                 ballDot = 'bg-rose-500';
               } else if (task.status === 'on_hold') {
@@ -995,8 +995,8 @@ export const TaskDetailPage: React.FC = () => {
                 ballColor = 'bg-purple-50 text-purple-900 border-purple-300';
                 ballDot = 'bg-purple-500';
               } else if (isReadyForFinalSignOff) {
-                ballPerson = task.creator?.name || 'Executive Signer';
-                ballAction = 'All subtasks approved — Final Sign-off required';
+                ballPerson = task.creator?.name || 'Task Creator';
+                ballAction = 'All subtasks approved — Ready for final completion';
                 ballColor = 'bg-emerald-50 text-emerald-900 border-emerald-300';
                 ballDot = 'bg-emerald-500';
               } else if (task.my_branch?.status === 'review') {
@@ -1773,7 +1773,7 @@ export const TaskDetailPage: React.FC = () => {
                   {task.expected_result && (
                     <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
                       <span className="font-semibold text-slate-700 text-xs block">
-                        Deliverable Requirements & Expected Outcome
+                        Goal & Requirements
                       </span>
                       <p className="text-xs text-slate-600 whitespace-pre-wrap leading-relaxed">
                         {task.expected_result}
@@ -2145,7 +2145,7 @@ export const TaskDetailPage: React.FC = () => {
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                   <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                     <FileText className="w-4 h-4 text-blue-600" />
-                    <span>Task Overview & Deliverables</span>
+                    <span>Task Overview</span>
                   </h2>
                   <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
                     ID: {task.task_code}
@@ -3400,7 +3400,7 @@ export const TaskDetailPage: React.FC = () => {
       {activeTab === 'attachments' && (
         <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-900">Task Attachments & Deliverables</h2>
+            <h2 className="text-sm font-semibold text-slate-900">Attachments</h2>
             <label className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
               <Upload className="w-3.5 h-3.5" />
               <span>{uploadingFile ? 'Uploading...' : 'Upload File'}</span>

@@ -69,7 +69,7 @@ export const ReportsPage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Reports & Analytics</h1>
           <p className="text-xs text-slate-500 mt-1">
-            Real-time organizational performance, task completion trends, and team workload distribution.
+            Task completion trends and team workload distribution.
           </p>
         </div>
 

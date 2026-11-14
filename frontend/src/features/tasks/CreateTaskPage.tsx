@@ -698,92 +698,92 @@ export const CreateTaskPage: React.FC = () => {
       {currentStep === 2 && (
         <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
           <div>
-            <h2 className="text-sm font-bold text-slate-900">Who will work on this task?</h2>
+            <h2 className="text-sm font-semibold text-slate-900">Task Mode</h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Choose whether you will complete this task yourself, assign work to teammates, or collaborate together.
+              Select how this task will be completed.
             </p>
           </div>
 
           {/* 3 Selectable Method Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* 1. Work Alone */}
+            {/* 1. Solo */}
             <div
               onClick={() => {
                 setHandlingMethod('work_alone');
                 setSelectedUsers([]);
               }}
-              className={`p-5 rounded-2xl border-2 text-center transition cursor-pointer flex flex-col items-center justify-between min-h-[190px] ${
+              className={`p-5 rounded-xl border text-center transition cursor-pointer flex flex-col items-center justify-between min-h-[180px] ${
                 handlingMethod === 'work_alone'
-                  ? 'border-blue-600 bg-blue-50/20 shadow-md shadow-blue-500/10'
+                  ? 'border-blue-600 bg-blue-50/20 shadow-xs ring-1 ring-blue-600'
                   : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
               }`}
             >
-              <div className="w-11 h-11 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-3">
                 <User className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 mb-1">👤 I'll Do It Myself (Solo Task)</h3>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Solo task. You will complete all work yourself without assigning to others.
+                <h3 className="text-sm font-semibold text-slate-900 mb-1">Solo</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Work alone. You complete and close this task yourself.
                 </p>
               </div>
               <div className="mt-3">
                 <span
-                  className={`inline-block w-4 h-4 rounded-full border-2 ${
+                  className={`inline-block w-3.5 h-3.5 rounded-full border-2 ${
                     handlingMethod === 'work_alone' ? 'border-blue-600 bg-blue-600' : 'border-slate-300'
                   }`}
                 />
               </div>
             </div>
 
-            {/* 2. Assign to Teammates */}
+            {/* 2. Team */}
             <div
               onClick={() => setHandlingMethod('assign')}
-              className={`p-5 rounded-2xl border-2 text-center transition cursor-pointer flex flex-col items-center justify-between min-h-[190px] ${
+              className={`p-5 rounded-xl border text-center transition cursor-pointer flex flex-col items-center justify-between min-h-[180px] ${
                 handlingMethod === 'assign'
-                  ? 'border-blue-600 bg-blue-50/20 shadow-md shadow-blue-500/10'
+                  ? 'border-blue-600 bg-blue-50/20 shadow-xs ring-1 ring-blue-600'
                   : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
               }`}
             >
-              <div className="w-11 h-11 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center mb-3">
+              <div className="w-10 h-10 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center mb-3">
                 <UserPlus className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 mb-1">👉 Assign to Teammates</h3>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Hand over work to <strong>one or more colleagues</strong> with clear deliverables and due dates.
+                <h3 className="text-sm font-semibold text-slate-900 mb-1">Team (Assign)</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Assign subtasks to team members with review and approval.
                 </p>
               </div>
               <div className="mt-3">
                 <span
-                  className={`inline-block w-4 h-4 rounded-full border-2 ${
+                  className={`inline-block w-3.5 h-3.5 rounded-full border-2 ${
                     handlingMethod === 'assign' ? 'border-blue-600 bg-blue-600' : 'border-slate-300'
                   }`}
                 />
               </div>
             </div>
 
-            {/* 3. Collaborate with Team */}
+            {/* 3. Collaboration */}
             <div
               onClick={() => setHandlingMethod('collaborate')}
-              className={`p-5 rounded-2xl border-2 text-center transition cursor-pointer flex flex-col items-center justify-between min-h-[190px] ${
+              className={`p-5 rounded-xl border text-center transition cursor-pointer flex flex-col items-center justify-between min-h-[180px] ${
                 handlingMethod === 'collaborate'
-                  ? 'border-blue-600 bg-blue-50/20 shadow-md shadow-blue-500/10'
+                  ? 'border-blue-600 bg-blue-50/20 shadow-xs ring-1 ring-blue-600'
                   : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
               }`}
             >
-              <div className="w-11 h-11 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mb-3">
+              <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center mb-3">
                 <Users className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-slate-900 mb-1">🤝 Work as a Team (Collaboration)</h3>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
-                  Work together with <strong>teammates with shared progress tracking</strong>.
+                <h3 className="text-sm font-semibold text-slate-900 mb-1">Collaboration</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  Work together with teammates on a shared objective.
                 </p>
               </div>
               <div className="mt-3">
                 <span
-                  className={`inline-block w-4 h-4 rounded-full border-2 ${
+                  className={`inline-block w-3.5 h-3.5 rounded-full border-2 ${
                     handlingMethod === 'collaborate' ? 'border-blue-600 bg-blue-600' : 'border-slate-300'
                   }`}
                 />

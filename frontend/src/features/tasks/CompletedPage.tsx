@@ -110,12 +110,12 @@ export const CompletedPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Completed Tasks</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
-              {total} verified & closed
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+              {total} completed
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Archived company tasks where all stages, reviews, and creator final sign-offs are 100% completed.
+            All finished and approved tasks across your team.
           </p>
         </div>
 

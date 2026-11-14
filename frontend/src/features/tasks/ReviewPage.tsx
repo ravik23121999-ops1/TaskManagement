@@ -91,12 +91,12 @@ export const ReviewPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Review Queue</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
-              {total} awaiting decision
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+              {total} pending review
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Deliverables and task submissions awaiting your evaluation, approval, or return for corrections.
+            Work submitted by teammates waiting for your review and approval.
           </p>
         </div>
 

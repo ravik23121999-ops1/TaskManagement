@@ -306,13 +306,13 @@ export const WorkLogsPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Work Logs & Task Journeys</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">
-              Task History & Timelines
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Activity Logs</h1>
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+              Task History
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            See the story of every task from start to finish: track assignments, deliverables, comments, and approvals in simple chronological order.
+            Track assignments, submissions, comments, and approvals across all tasks.
           </p>
         </div>
 
@@ -379,7 +379,7 @@ export const WorkLogsPage: React.FC = () => {
           </div>
           <div className="text-[11px] text-slate-400 mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
             <span>Across all tasks</span>
-            <span className="text-blue-600 font-semibold group-hover:underline">Explore Journeys →</span>
+            <span className="text-blue-600 font-semibold group-hover:underline">View Tasks →</span>
           </div>
         </div>
 

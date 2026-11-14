@@ -89,12 +89,12 @@ export const OnHoldPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">On Hold Tasks</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
-              {total} paused
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+              {total} on hold
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Tasks temporarily halted with recorded justifications. Authorized managers or assignees can resume work at any time.
+            Tasks paused with a recorded reason. Resume them anytime.
           </p>
         </div>
 

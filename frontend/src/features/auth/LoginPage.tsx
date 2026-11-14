@@ -396,11 +396,11 @@ export const LoginPage: React.FC = () => {
 
           {/* Inspirational Enterprise Headline */}
           <div className="space-y-2">
-            <h2 className="text-2xl font-black tracking-tight text-white">
-              Internal Enterprise Orchestration Built for Velocity
+            <h2 className="text-2xl font-bold tracking-tight text-white">
+              Task & Team Management Made Simple
             </h2>
-            <p className="text-xs sm:text-sm text-slate-300/80 leading-relaxed font-medium max-w-md mx-auto">
-              Automated delegation chains, real-time stage approvals, and full transparency across all deliverables from creation to completion.
+            <p className="text-xs sm:text-sm text-slate-300/80 leading-relaxed font-normal max-w-md mx-auto">
+              Collaborate smoothly, track progress in real time, and finish projects together as a team.
             </p>
           </div>
         </div>

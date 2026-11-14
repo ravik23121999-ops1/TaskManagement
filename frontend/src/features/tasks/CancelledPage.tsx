@@ -97,12 +97,12 @@ export const CancelledPage: React.FC = () => {
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Cancelled Tasks</h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-700 border border-rose-200">
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-700 border border-rose-200">
               {total} cancelled
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Historical log of tasks cancelled by task creators, administrators, or authorized sub-admins with cancellation reason notes.
+            Archived tasks that were cancelled, including the recorded reason.
           </p>
         </div>
 
