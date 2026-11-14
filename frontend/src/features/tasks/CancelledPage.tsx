@@ -24,6 +24,7 @@ export const CancelledPage: React.FC = () => {
   const { user: currentUser } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
 
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -49,7 +50,11 @@ export const CancelledPage: React.FC = () => {
   }, [page, debouncedSearch]);
 
   const loadCancelledTasks = async () => {
-    setLoading(true);
+    if (tasks.length === 0) {
+      setLoading(true);
+    } else {
+      setIsFetching(true);
+    }
     try {
       const response = await tasksApi.list({
         status: 'cancelled',
@@ -65,6 +70,7 @@ export const CancelledPage: React.FC = () => {
       console.error('Failed to load cancelled tasks', err);
     } finally {
       setLoading(false);
+      setIsFetching(false);
     }
   };
 
@@ -158,21 +164,24 @@ export const CancelledPage: React.FC = () => {
       </div>
 
       {/* Cancelled Tasks Table */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden relative">
+        {isFetching && (
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-600 animate-pulse z-10" />
+        )}
         <div className="overflow-x-auto min-h-[380px]">
-          <table className="w-full text-left text-xs">
+          <table className="w-full table-fixed text-left text-xs min-w-[880px]">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 font-bold uppercase tracking-wider whitespace-nowrap">
                 <th className="py-3.5 px-6 w-28 whitespace-nowrap">Task Code</th>
                 <th className="py-3.5 px-6 min-w-[240px]">Task Title & Department</th>
                 <th className="py-3.5 px-6 w-44">Creator</th>
                 <th className="py-3.5 px-6 w-52">Cancelled By & Date</th>
-                <th className="py-3.5 px-6">Cancellation Reason Note</th>
+                <th className="py-3.5 px-6 min-w-[200px]">Cancellation Reason Note</th>
                 <th className="py-3.5 px-6 text-right w-24">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {loading ? (
+            <tbody className={`divide-y divide-slate-100 transition-opacity duration-150 ${isFetching ? 'opacity-60 pointer-events-none' : 'opacity-100'}`}>
+              {loading && tasks.length === 0 ? (
                 <TableSkeleton rows={6} cols={6} />
               ) : tasks.length === 0 ? (
                 <tr>

@@ -13,6 +13,7 @@ export const CompletedPage: React.FC = () => {
   const { user: currentUser } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
 
   const urlMethod = searchParams.get('method');
   const initialMethod = urlMethod && ['all', 'solo', 'team', 'collaboration'].includes(urlMethod)
@@ -58,7 +59,11 @@ export const CompletedPage: React.FC = () => {
   }, [page, debouncedSearch, methodFilter]);
 
   const loadCompletedTasks = async () => {
-    setLoading(true);
+    if (tasks.length === 0) {
+      setLoading(true);
+    } else {
+      setIsFetching(true);
+    }
     try {
       const response = await tasksApi.list({
         view: 'completed',
@@ -78,6 +83,7 @@ export const CompletedPage: React.FC = () => {
       console.error('Failed to load completed tasks', err);
     } finally {
       setLoading(false);
+      setIsFetching(false);
     }
   };
 
@@ -206,10 +212,10 @@ export const CompletedPage: React.FC = () => {
             setMethodFilter('all');
             setPage(1);
           }}
-          className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 cursor-pointer whitespace-nowrap border ${
             methodFilter === 'all'
-              ? 'bg-white text-slate-900 shadow-2xs border border-slate-200/80'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+              ? 'bg-white text-slate-900 shadow-2xs border-slate-200/80'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/60 border-transparent'
           }`}
         >
           <Layers className="w-3.5 h-3.5 text-slate-500" />
@@ -227,10 +233,10 @@ export const CompletedPage: React.FC = () => {
             setMethodFilter('solo');
             setPage(1);
           }}
-          className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 cursor-pointer whitespace-nowrap border ${
             methodFilter === 'solo'
-              ? 'bg-white text-blue-700 shadow-2xs border border-blue-200/80'
-              : 'text-slate-600 hover:text-blue-700 hover:bg-white/60'
+              ? 'bg-white text-blue-700 shadow-2xs border-blue-200/80'
+              : 'text-slate-600 hover:text-blue-700 hover:bg-white/60 border-transparent'
           }`}
         >
           <User className="w-3.5 h-3.5 text-blue-600" />
@@ -248,10 +254,10 @@ export const CompletedPage: React.FC = () => {
             setMethodFilter('team');
             setPage(1);
           }}
-          className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 cursor-pointer whitespace-nowrap border ${
             methodFilter === 'team'
-              ? 'bg-white text-sky-700 shadow-2xs border border-sky-200/80'
-              : 'text-slate-600 hover:text-sky-700 hover:bg-white/60'
+              ? 'bg-white text-sky-700 shadow-2xs border-sky-200/80'
+              : 'text-slate-600 hover:text-sky-700 hover:bg-white/60 border-transparent'
           }`}
         >
           <Users className="w-3.5 h-3.5 text-sky-600" />
@@ -269,10 +275,10 @@ export const CompletedPage: React.FC = () => {
             setMethodFilter('collaboration');
             setPage(1);
           }}
-          className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 cursor-pointer whitespace-nowrap border ${
             methodFilter === 'collaboration'
-              ? 'bg-white text-purple-700 shadow-2xs border border-purple-200/80'
-              : 'text-slate-600 hover:text-purple-700 hover:bg-white/60'
+              ? 'bg-white text-purple-700 shadow-2xs border-purple-200/80'
+              : 'text-slate-600 hover:text-purple-700 hover:bg-white/60 border-transparent'
           }`}
         >
           <Share2 className="w-3.5 h-3.5 text-purple-600" />
@@ -316,7 +322,7 @@ export const CompletedPage: React.FC = () => {
                 setMethodFilter(e.target.value as any);
                 setPage(1);
               }}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
+              className="w-48 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
             >
               <option value="all">All Methods</option>
               <option value="solo">Solo (Work Alone)</option>
@@ -335,9 +341,12 @@ export const CompletedPage: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden relative">
+        {isFetching && (
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-blue-600 animate-pulse z-10" />
+        )}
         <div className="overflow-x-auto min-h-[380px]">
-          <table className="w-full text-left text-xs">
+          <table className="w-full table-fixed text-left text-xs min-w-[880px]">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-500 font-bold uppercase tracking-wider whitespace-nowrap">
                 <th className="py-3.5 px-6 w-28 whitespace-nowrap">Task Code</th>
@@ -349,8 +358,8 @@ export const CompletedPage: React.FC = () => {
                 <th className="py-3.5 px-6 text-right w-24">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
-              {loading ? (
+            <tbody className={`divide-y divide-slate-100 transition-opacity duration-150 ${isFetching ? 'opacity-60 pointer-events-none' : 'opacity-100'}`}>
+              {loading && tasks.length === 0 ? (
                 <TableSkeleton rows={6} cols={7} />
               ) : tasks.length === 0 ? (
                 <tr>
