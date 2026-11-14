@@ -1245,7 +1245,7 @@ export const MessagesPage: React.FC = () => {
                   <ChevronDown className="w-4 h-4" />
                   <span>{hasNewMessagesBelow ? 'New message received ↓' : 'Recent Messages ↓'}</span>
                   {hasNewMessagesBelow && (
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
                   )}
                 </button>
               )}

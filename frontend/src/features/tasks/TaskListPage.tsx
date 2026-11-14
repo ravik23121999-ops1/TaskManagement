@@ -617,7 +617,7 @@ export const TaskListPage: React.FC = () => {
                   )}
                 </div>
 
-                {/* Mobile Waiting On / Ball in court badge */}
+                {/* Mobile Waiting On / Pending Action badge */}
                 <div className="text-xs">
                   {task.current_owners && task.current_owners.length > 0 ? (
                     <div className="flex items-center gap-1.5 text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-100">

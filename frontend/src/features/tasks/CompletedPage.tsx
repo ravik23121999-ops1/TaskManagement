@@ -121,16 +121,16 @@ export const CompletedPage: React.FC = () => {
             setMethodFilter('all');
             setPage(1);
           }}
-          className={`bg-white p-4 rounded-2xl border transition shadow-2xs cursor-pointer hover:shadow-xs ${
-            methodFilter === 'all' ? 'border-2 border-emerald-500 bg-emerald-50/20' : 'border-slate-200/80 hover:border-slate-300'
+          className={`p-4 rounded-xl border transition shadow-2xs cursor-pointer hover:shadow-xs ${
+            methodFilter === 'all' ? 'border-slate-800 ring-1 ring-slate-800 bg-slate-50/50' : 'border-slate-200 bg-white hover:border-slate-300'
           }`}
         >
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Completed</span>
+            <span className="text-xs font-semibold text-slate-600">Total Completed</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-2xl font-bold text-emerald-600">{methodCounts.all || total}</div>
-          <div className="text-[10px] text-slate-400 mt-1">All time archived tasks</div>
+          <div className="text-2xl font-bold text-slate-900">{methodCounts.all || total}</div>
+          <div className="text-xs text-slate-400 mt-1">All archived tasks</div>
         </div>
 
         <div
@@ -138,16 +138,16 @@ export const CompletedPage: React.FC = () => {
             setMethodFilter('solo');
             setPage(1);
           }}
-          className={`bg-white p-4 rounded-2xl border transition shadow-2xs cursor-pointer hover:shadow-xs ${
-            methodFilter === 'solo' ? 'border-2 border-blue-500 bg-blue-50/20' : 'border-slate-200/80 hover:border-slate-300'
+          className={`p-4 rounded-xl border transition shadow-2xs cursor-pointer hover:shadow-xs ${
+            methodFilter === 'solo' ? 'border-blue-600 ring-1 ring-blue-600 bg-blue-50/30' : 'border-slate-200 bg-white hover:border-slate-300'
           }`}
         >
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600">Solo (Work Alone)</span>
+            <span className="text-xs font-semibold text-slate-600">Solo (Independent)</span>
             <User className="w-4 h-4 text-blue-500" />
           </div>
-          <div className="text-2xl font-bold text-blue-600">{methodCounts.solo}</div>
-          <div className="text-[10px] text-slate-400 mt-1">Independent execution</div>
+          <div className="text-2xl font-bold text-slate-900">{methodCounts.solo}</div>
+          <div className="text-xs text-slate-400 mt-1">Single-assignee tasks</div>
         </div>
 
         <div
@@ -155,16 +155,16 @@ export const CompletedPage: React.FC = () => {
             setMethodFilter('team');
             setPage(1);
           }}
-          className={`bg-white p-4 rounded-2xl border transition shadow-2xs cursor-pointer hover:shadow-xs ${
-            methodFilter === 'team' ? 'border-2 border-sky-500 bg-sky-50/20' : 'border-slate-200/80 hover:border-slate-300'
+          className={`p-4 rounded-xl border transition shadow-2xs cursor-pointer hover:shadow-xs ${
+            methodFilter === 'team' ? 'border-sky-600 ring-1 ring-sky-600 bg-sky-50/30' : 'border-slate-200 bg-white hover:border-slate-300'
           }`}
         >
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-sky-600">Team (Assigned)</span>
+            <span className="text-xs font-semibold text-slate-600">Team (Delegated)</span>
             <Users className="w-4 h-4 text-sky-500" />
           </div>
-          <div className="text-2xl font-bold text-sky-600">{methodCounts.team}</div>
-          <div className="text-[10px] text-slate-400 mt-1">Subtasks & delegation</div>
+          <div className="text-2xl font-bold text-slate-900">{methodCounts.team}</div>
+          <div className="text-xs text-slate-400 mt-1">Subtasks & delegation</div>
         </div>
 
         <div
@@ -172,36 +172,36 @@ export const CompletedPage: React.FC = () => {
             setMethodFilter('collaboration');
             setPage(1);
           }}
-          className={`bg-white p-4 rounded-2xl border transition shadow-2xs cursor-pointer hover:shadow-xs ${
-            methodFilter === 'collaboration' ? 'border-2 border-purple-500 bg-purple-50/20' : 'border-slate-200/80 hover:border-slate-300'
+          className={`p-4 rounded-xl border transition shadow-2xs cursor-pointer hover:shadow-xs ${
+            methodFilter === 'collaboration' ? 'border-purple-600 ring-1 ring-purple-600 bg-purple-50/30' : 'border-slate-200 bg-white hover:border-slate-300'
           }`}
         >
           <div className="flex items-center justify-between text-slate-400 mb-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-purple-600">Collaboration</span>
+            <span className="text-xs font-semibold text-slate-600">Collaboration</span>
             <Share2 className="w-4 h-4 text-purple-500" />
           </div>
-          <div className="text-2xl font-bold text-purple-600">{methodCounts.collaboration}</div>
-          <div className="text-[10px] text-slate-400 mt-1">Joint team deliverables</div>
+          <div className="text-2xl font-bold text-slate-900">{methodCounts.collaboration}</div>
+          <div className="text-xs text-slate-400 mt-1">Joint team deliverables</div>
         </div>
       </div>
 
       {/* Segmented Navigation Tabs: All | Solo | Team | Collaboration */}
-      <div className="flex items-center gap-1.5 p-1 bg-slate-100/80 rounded-2xl border border-slate-200/80 w-fit overflow-x-auto max-w-full">
+      <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200 w-fit overflow-x-auto max-w-full">
         <button
           type="button"
           onClick={() => {
             setMethodFilter('all');
             setPage(1);
           }}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
             methodFilter === 'all'
-              ? 'bg-white text-slate-900 shadow-xs border border-slate-200/60'
+              ? 'bg-white text-slate-900 shadow-2xs border border-slate-200/80'
               : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
           }`}
         >
           <Layers className="w-3.5 h-3.5 text-slate-500" />
           <span>All Completed</span>
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
             methodFilter === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-200 text-slate-700'
           }`}>
             {methodCounts.all || total}
@@ -214,15 +214,15 @@ export const CompletedPage: React.FC = () => {
             setMethodFilter('solo');
             setPage(1);
           }}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
             methodFilter === 'solo'
-              ? 'bg-white text-blue-700 shadow-xs border border-blue-200/60'
+              ? 'bg-white text-blue-700 shadow-2xs border border-blue-200/80'
               : 'text-slate-600 hover:text-blue-700 hover:bg-white/60'
           }`}
         >
           <User className="w-3.5 h-3.5 text-blue-600" />
           <span>Solo</span>
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
             methodFilter === 'solo' ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-700'
           }`}>
             {methodCounts.solo}
@@ -235,15 +235,15 @@ export const CompletedPage: React.FC = () => {
             setMethodFilter('team');
             setPage(1);
           }}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
             methodFilter === 'team'
-              ? 'bg-white text-sky-700 shadow-xs border border-sky-200/60'
+              ? 'bg-white text-sky-700 shadow-2xs border border-sky-200/80'
               : 'text-slate-600 hover:text-sky-700 hover:bg-white/60'
           }`}
         >
           <Users className="w-3.5 h-3.5 text-sky-600" />
           <span>Team</span>
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
             methodFilter === 'team' ? 'bg-sky-600 text-white' : 'bg-slate-200 text-slate-700'
           }`}>
             {methodCounts.team}
@@ -256,15 +256,15 @@ export const CompletedPage: React.FC = () => {
             setMethodFilter('collaboration');
             setPage(1);
           }}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-2 cursor-pointer whitespace-nowrap ${
             methodFilter === 'collaboration'
-              ? 'bg-white text-purple-700 shadow-xs border border-purple-200/60'
+              ? 'bg-white text-purple-700 shadow-2xs border border-purple-200/80'
               : 'text-slate-600 hover:text-purple-700 hover:bg-white/60'
           }`}
         >
           <Share2 className="w-3.5 h-3.5 text-purple-600" />
           <span>Collaboration</span>
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
             methodFilter === 'collaboration' ? 'bg-purple-600 text-white' : 'bg-slate-200 text-slate-700'
           }`}>
             {methodCounts.collaboration}

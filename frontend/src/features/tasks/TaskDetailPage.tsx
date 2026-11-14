@@ -42,7 +42,6 @@ import {
   RefreshCw,
   MoreHorizontal,
   ChevronDown,
-  Zap,
   Activity,
   FolderGit2,
   Rocket,
@@ -962,9 +961,9 @@ export const TaskDetailPage: React.FC = () => {
               </span>
             </div>
 
-            {/* Ball in Court / Responsibility Indicator */}
+            {/* Pending Action / Current Ownership */}
             {(() => {
-              let ballLabel = 'Ball in Court:';
+              let ballLabel = 'Pending Action:';
               let ballPerson = '';
               let ballAction = '';
               let ballColor = 'bg-blue-50/90 text-blue-800 border-blue-200/80';
@@ -982,7 +981,7 @@ export const TaskDetailPage: React.FC = () => {
                 ballDot = 'bg-rose-500';
               } else if (task.status === 'on_hold') {
                 ballPerson = task.hold_record?.held_by || 'Management';
-                ballAction = `Paused (Reason: ${task.hold_record?.reason || 'On hold'})`;
+                ballAction = `Paused (${task.hold_record?.reason || 'On hold'})`;
                 ballColor = 'bg-amber-50 text-amber-900 border-amber-300';
                 ballDot = 'bg-amber-500';
               } else if (task.permissions.can_provide_details && task.latest_clarification) {
@@ -994,12 +993,12 @@ export const TaskDetailPage: React.FC = () => {
                 ballPerson = 'You (Reviewer)';
                 ballAction = `Review deliverable from ${latestPendingSubmission.submitted_by?.name || 'Assignee'}`;
                 ballColor = 'bg-purple-50 text-purple-900 border-purple-300';
-                ballDot = 'bg-purple-500 animate-pulse';
+                ballDot = 'bg-purple-500';
               } else if (isReadyForFinalSignOff) {
                 ballPerson = task.creator?.name || 'Executive Signer';
                 ballAction = 'All subtasks approved — Final Sign-off required';
                 ballColor = 'bg-emerald-50 text-emerald-900 border-emerald-300';
-                ballDot = 'bg-emerald-500 animate-pulse';
+                ballDot = 'bg-emerald-500';
               } else if (task.my_branch?.status === 'review') {
                 ballPerson = task.my_branch.assigned_by?.name || task.creator?.name || 'Assigner';
                 ballAction = 'Reviewing your submitted deliverables';
@@ -1009,7 +1008,7 @@ export const TaskDetailPage: React.FC = () => {
                 ballPerson = isCollaborator ? 'You (Team Collaborator)' : 'You (Active Assignee)';
                 ballAction = isCollaborator ? 'Collaborative deliverables due for submission' : 'Deliverables due for submission';
                 ballColor = isCollaborator ? 'bg-indigo-50 text-indigo-900 border-indigo-300' : 'bg-blue-50 text-blue-900 border-blue-300';
-                ballDot = isCollaborator ? 'bg-indigo-500 animate-pulse' : 'bg-blue-500 animate-pulse';
+                ballDot = isCollaborator ? 'bg-indigo-500' : 'bg-blue-500';
               } else if (task.current_owners && task.current_owners.length > 0) {
                 const names = task.current_owners.map((o) => o.name).join(', ');
                 ballPerson = names;
@@ -1024,11 +1023,8 @@ export const TaskDetailPage: React.FC = () => {
               return (
                 <div className="mt-2.5 flex items-center gap-2 flex-wrap">
                   <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-xl border text-xs font-medium shadow-2xs ${ballColor}`}>
-                    <span className="flex h-2 w-2 relative shrink-0">
-                      <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${ballDot}`} />
-                      <span className={`relative inline-flex rounded-full h-2 w-2 ${ballDot}`} />
-                    </span>
-                    <span className="font-bold uppercase tracking-wider text-[10px] opacity-75">{ballLabel}</span>
+                    <span className={`inline-block rounded-full h-1.5 w-1.5 ${ballDot} shrink-0`} />
+                    <span className="font-semibold text-slate-600">{ballLabel}</span>
                     <span className="font-bold text-slate-900">{ballPerson}</span>
                     <span className="opacity-40">|</span>
                     <span className="opacity-90">{ballAction}</span>
@@ -1448,40 +1444,30 @@ export const TaskDetailPage: React.FC = () => {
             </div>
           </div>
         ) : task.permissions.can_submit ? (
-          <div className="mt-4 p-4 sm:p-5 bg-gradient-to-r from-blue-50/95 via-sky-50/80 to-indigo-50/95 border border-blue-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs shadow-2xs">
+          <div className="mt-4 p-4 sm:p-5 bg-slate-50 border border-slate-200 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs shadow-2xs">
             <div className="flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                <Zap className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 border border-blue-200/80 flex items-center justify-center shrink-0">
+                <Send className="w-4 h-4 text-blue-600" />
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-blue-950 text-sm">
-                    {isCollaborator ? 'Collaboration Station: Submit Your Deliverables' : 'Action Station: Your Subtask Deliverables are Due'}
+                  <span className="font-semibold text-slate-900 text-sm">
+                    {isCollaborator ? 'Collaborative Deliverables Due for Review' : 'Deliverables Due for Review'}
                   </span>
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${slaBadge.color}`}>
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${slaBadge.color}`}>
                     {slaBadge.text}
                   </span>
-                  {isAdminOrSubAdmin && !isCollaborator && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
-                      <span>🔒 Private Subtask</span>
-                    </span>
-                  )}
                   {isCollaborator && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200 flex items-center gap-1">
-                      <span>👥 Team Collaborator</span>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1">
+                      <span>Collaborator</span>
                     </span>
                   )}
                 </div>
-                <p className="text-blue-900 leading-relaxed">
+                <p className="text-slate-600 leading-relaxed">
                   {isCollaborator
-                    ? `You are collaborating on "${task.title}". When ready, submit your deliverables for review by ${task.creator?.name || 'the task creator'}.`
-                    : `You are actively working on "${task.my_branch?.title || task.title}". When finished, submit your deliverables for review by ${task.my_branch?.assigned_by?.name || task.creator?.name || 'your assigner'}.`}
+                    ? `You are collaborating on "${task.title}". Submit your deliverables for review by ${task.creator?.name || 'the task creator'}.`
+                    : `You are working on "${task.my_branch?.title || task.title}". Submit your deliverables for review by ${task.my_branch?.assigned_by?.name || task.creator?.name || 'your assigner'}.`}
                 </p>
-                {isAdminOrSubAdmin && !isCollaborator && (
-                  <p className="text-[11px] text-blue-700/80">
-                    Private Subtasks Active: Assignees only see their assigned work and deliverables.
-                  </p>
-                )}
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto">
@@ -1493,17 +1479,17 @@ export const TaskDetailPage: React.FC = () => {
                     setRequestDetailsFiles([]);
                     setIsRequestDetailsModalOpen(true);
                   }}
-                  className="flex-1 sm:flex-none px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold shadow-2xs hover:shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                  className="flex-1 sm:flex-none px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg text-xs font-semibold shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer"
                   title="Ask your assigner for clarification or missing details"
                 >
                   <HelpCircle className="w-3.5 h-3.5 text-amber-600" />
-                  <span>Need Help?</span>
+                  <span>Request Clarification</span>
                 </button>
               )}
               <button
                 type="button"
                 onClick={() => setIsSubmitModalOpen(true)}
-                className="flex-1 sm:flex-none px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs hover:shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+                className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition flex items-center justify-center gap-1.5 cursor-pointer"
                 title="Submit your completed deliverables for review"
               >
                 <Send className="w-3.5 h-3.5" />
@@ -1743,53 +1729,53 @@ export const TaskDetailPage: React.FC = () => {
           <div className="lg:col-span-2 bg-white p-6 sm:p-7 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
             {/* COLLABORATOR WORKSPACE OR ASSIGNED SUBTASK WORK CARD */}
             {isCollaborator ? (
-              <div className="p-5 bg-gradient-to-br from-indigo-50/90 via-purple-50/50 to-blue-50/90 border-2 border-indigo-200/90 rounded-2xl space-y-4 shadow-sm animate-in fade-in">
-                <div className="flex items-center justify-between pb-3 border-b border-indigo-200/60">
+              <div className="p-5 bg-slate-50 border border-slate-200 rounded-xl space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200">
                   <div className="flex items-center gap-2.5">
-                    <span className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs">
+                    <span className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200/80 flex items-center justify-center shrink-0">
                       <Users className="w-4 h-4" />
                     </span>
                     <div>
-                      <span className="text-xs font-bold text-indigo-950 uppercase tracking-wider block">
-                        Team Collaboration Workspace
+                      <span className="text-xs font-semibold text-slate-900 block">
+                        Collaborative Scope & Deliverables
                       </span>
-                      <span className="text-[10px] text-indigo-700/80 font-medium">
+                      <span className="text-xs text-slate-500">
                         Collaborating with {task.creator?.name || 'Task Creator'}
                       </span>
                     </div>
                   </div>
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200 flex items-center gap-1">
-                    <span>👥 Active Collaborator</span>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-1">
+                    <span>Collaborator</span>
                   </span>
                 </div>
 
                 <div className="space-y-3">
                   <div>
-                    <span className="font-bold text-slate-500 uppercase tracking-wider text-[10px] block mb-0.5">
+                    <span className="font-semibold text-slate-500 text-xs block mb-0.5">
                       Collaborative Objective
                     </span>
-                    <h3 className="text-sm font-bold text-slate-900">
+                    <h3 className="text-sm font-semibold text-slate-900">
                       {task.title}
                     </h3>
                   </div>
 
                   {task.description && (
-                    <div className="p-3 bg-white/90 border border-indigo-200/80 rounded-xl space-y-1">
-                      <span className="font-bold text-indigo-900 text-[10px] uppercase tracking-wider block">
+                    <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
+                      <span className="font-semibold text-slate-700 text-xs block">
                         Project Scope & Instructions
                       </span>
-                      <p className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
+                      <p className="text-xs text-slate-600 whitespace-pre-wrap leading-relaxed">
                         {task.description}
                       </p>
                     </div>
                   )}
 
                   {task.expected_result && (
-                    <div className="p-3 bg-white/90 border border-indigo-200/80 rounded-xl space-y-1">
-                      <span className="font-bold text-indigo-900 text-[10px] uppercase tracking-wider block">
-                        What to Deliver / Expected Outcome
+                    <div className="p-3 bg-white border border-slate-200 rounded-lg space-y-1">
+                      <span className="font-semibold text-slate-700 text-xs block">
+                        Deliverable Requirements & Expected Outcome
                       </span>
-                      <p className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
+                      <p className="text-xs text-slate-600 whitespace-pre-wrap leading-relaxed">
                         {task.expected_result}
                       </p>
                     </div>
@@ -1798,13 +1784,13 @@ export const TaskDetailPage: React.FC = () => {
                   <div className="flex items-center justify-between flex-wrap gap-2 pt-1 text-xs">
                     <div className="flex items-center gap-3">
                       <div>
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Workflow Status</span>
+                        <span className="text-xs text-slate-400 block">Status</span>
                         <StatusBadge status={task.status as any} size="sm" />
                       </div>
                       {task.due_date && (
                         <div>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Task Due Date</span>
-                          <span className="font-semibold text-slate-800">
+                          <span className="text-xs text-slate-400 block">Due Date</span>
+                          <span className="font-medium text-slate-800">
                             {new Date(task.due_date).toLocaleDateString()}
                           </span>
                         </div>
@@ -2056,13 +2042,6 @@ export const TaskDetailPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-
-                {isAdminOrSubAdmin && (
-                  <div className="p-2.5 bg-blue-100/50 rounded-xl text-[11px] text-blue-900 flex items-center gap-2">
-                    <span className="font-bold text-blue-700">🔒 Privacy Setting:</span>
-                    <span>Assignees only see their own assigned work.</span>
-                  </div>
-                )}
               </div>
             ) : null}
 
@@ -3086,19 +3065,16 @@ export const TaskDetailPage: React.FC = () => {
               }
 
               return (
-                <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-blue-50/90 via-indigo-50/60 to-purple-50/80 border border-blue-100 shadow-xs">
+                <div className="mb-6 p-4 rounded-xl bg-slate-50 border border-slate-200">
                   <div className="flex items-center justify-between gap-2 mb-3">
                     <div className="flex items-center gap-2">
-                      <span className="flex h-2 w-2 relative">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
-                      </span>
-                      <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                        Subtasks in Progress ({activeBranches.filter((b) => b.status !== 'completed').length} Team Members Working)
+                      <span className="inline-block rounded-full h-2 w-2 bg-blue-600 shrink-0" />
+                      <h4 className="text-xs font-semibold text-slate-900">
+                        Subtasks in Progress ({activeBranches.filter((b) => b.status !== 'completed').length} active)
                       </h4>
                     </div>
-                    <span className="text-[10px] font-bold text-blue-700 bg-blue-100/80 px-2.5 py-0.5 rounded-full border border-blue-200">
-                      Working in Parallel
+                    <span className="text-xs font-medium text-slate-600 bg-white px-2.5 py-0.5 rounded-md border border-slate-200">
+                      Parallel Execution
                     </span>
                   </div>
 

@@ -53,11 +53,11 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const mainMenuItems = [
     { path: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/tasks/pending', label: 'My Action Required', icon: Zap, badge: 'Active' },
+    { path: '/tasks/pending', label: 'My Action Required', icon: Zap },
     { path: '/tasks/pending-with-others', label: 'Waiting on Others', icon: Clock },
     { path: '/tasks', label: 'All Tasks', icon: ListTodo },
     { path: '/tasks/collaborations', label: 'My Collaborations', icon: Users2 },
-    ...(enableWorkMessages ? [{ path: '/messages', label: 'Work Messages', icon: MessageSquare, badge: 'Direct' }] : []),
+    ...(enableWorkMessages ? [{ path: '/messages', label: 'Work Messages', icon: MessageSquare }] : []),
     { path: '/tasks/review', label: 'Review Queue', icon: FileCheck2 },
     { path: '/tasks/completed', label: 'Completed', icon: CheckCircle2 },
     { path: '/tasks/on-hold', label: 'On Hold', icon: PauseCircle },
@@ -65,7 +65,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const manageMenuItems = [
-    { path: '/work-logs', label: 'Work Logs', icon: ClipboardList, badge: 'Audit' },
+    { path: '/work-logs', label: 'Work Logs', icon: ClipboardList },
     { path: '/users', label: 'Users', icon: Users },
     { path: '/departments', label: 'Departments', icon: Building2 },
     { path: '/reports', label: 'Reports', icon: BarChart3 },
@@ -190,10 +190,10 @@ const Sidebar: React.FC<SidebarProps> = ({
           {collapsed ? (
             <button
               onClick={() => handleNav('/tasks/create')}
-              className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 cursor-pointer relative group ${
+              className={`w-11 h-11 rounded-xl flex items-center justify-center transition cursor-pointer relative group ${
                 location.pathname === '/tasks/create'
-                  ? 'bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-500 text-white shadow-lg shadow-blue-500/35 border border-cyan-300/40'
-                  : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-md shadow-blue-600/25 hover:scale-105 border border-blue-400/30'
+                  ? 'bg-blue-500 text-white shadow-xs'
+                  : 'bg-blue-600 hover:bg-blue-500 text-white shadow-xs'
               }`}
               title="Create New Task"
             >
@@ -205,13 +205,13 @@ const Sidebar: React.FC<SidebarProps> = ({
           ) : (
             <button
               onClick={() => handleNav('/tasks/create')}
-              className={`w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer ${
+              className={`w-full flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
                 location.pathname === '/tasks/create'
-                  ? 'bg-gradient-to-r from-blue-500 via-indigo-500 to-cyan-500 text-white shadow-lg shadow-blue-500/35 border border-cyan-300/40'
-                  : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white shadow-md shadow-blue-600/25 hover:shadow-lg hover:shadow-blue-500/35 border border-blue-400/30'
+                  ? 'bg-blue-500 text-white shadow-xs'
+                  : 'bg-blue-600 hover:bg-blue-500 text-white shadow-xs'
               }`}
             >
-              <PlusCircle className="w-4 h-4 text-cyan-100" />
+              <PlusCircle className="w-4 h-4 text-white" />
               <span>Create New Task</span>
             </button>
           )}
@@ -229,10 +229,10 @@ const Sidebar: React.FC<SidebarProps> = ({
               <div className="my-2 h-px bg-slate-800/80 mx-2" />
             ) : (
               <div className="px-3 mb-2 flex items-center justify-between">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400/90">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                   Core Workspace
                 </span>
-                <span className="h-px flex-1 ml-3 bg-gradient-to-r from-slate-700/80 via-slate-800/40 to-transparent" />
+                <span className="h-px flex-1 ml-3 bg-slate-800" />
               </div>
             )}
 
@@ -244,57 +244,39 @@ const Sidebar: React.FC<SidebarProps> = ({
                   <li key={item.path}>
                     <button
                       onClick={() => handleNav(item.path)}
-                      className={`w-full group relative flex items-center rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer ${
+                      className={`w-full group relative flex items-center rounded-xl text-xs font-medium transition cursor-pointer ${
                         collapsed
                           ? 'justify-center p-2.5'
                           : 'justify-between px-3.5 py-2'
                       } ${
                         active
-                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/30 font-bold border border-blue-400/30'
-                          : 'text-slate-300/90 hover:bg-white/[0.07] hover:text-white hover:border hover:border-white/5'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
                       }`}
                     >
-                      {active && (
-                        <span
-                          className={`absolute left-0 bg-cyan-400 rounded-r-full shadow-[0_0_10px_#22d3ee] ${
-                            collapsed ? 'top-2 bottom-2 w-1' : 'top-1.5 bottom-1.5 w-1.5'
-                          }`}
-                        />
-                      )}
                       <div className={`flex items-center min-w-0 ${collapsed ? 'justify-center' : 'gap-3'}`}>
                         <Icon
-                          className={`w-4 h-4 shrink-0 transition-transform duration-150 ${
+                          className={`w-4 h-4 shrink-0 transition ${
                             active
                               ? 'text-white'
-                              : 'text-slate-400 group-hover:text-cyan-400 group-hover:scale-110'
+                              : 'text-slate-400 group-hover:text-slate-200'
                           }`}
                         />
                         {!collapsed && (
-                          <span className="transition-transform duration-150 group-hover:translate-x-0.5 whitespace-nowrap">
+                          <span className="whitespace-nowrap">
                             {item.label}
                           </span>
                         )}
                       </div>
 
-                      {!collapsed && item.badge && !active && (
-                        <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-blue-500/20 text-cyan-300 border border-blue-400/30 shadow-xs shrink-0 whitespace-nowrap ml-1.5">
-                          {item.badge}
-                        </span>
-                      )}
-
-                      {!collapsed && !active && !item.badge && (
+                      {!collapsed && !active && (
                         <ChevronRight className="w-3 h-3 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                       )}
 
                       {/* Floating Tooltip in Collapsed Mode */}
                       {collapsed && (
-                        <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl border border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity z-50 flex items-center gap-1.5">
+                        <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl border border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity z-50">
                           <span>{item.label}</span>
-                          {item.badge && (
-                            <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-blue-500/30 text-cyan-300 border border-blue-400/30">
-                              {item.badge}
-                            </span>
-                          )}
                         </div>
                       )}
                     </button>
@@ -311,10 +293,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <div className="my-2 h-px bg-slate-800/80 mx-2" />
               ) : (
                 <div className="px-3 mb-2 flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400/90">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
                     Administration & Audit
                   </span>
-                  <span className="h-px flex-1 ml-3 bg-gradient-to-r from-slate-700/80 via-slate-800/40 to-transparent" />
+                  <span className="h-px flex-1 ml-3 bg-slate-800" />
                 </div>
               )}
 
@@ -326,57 +308,39 @@ const Sidebar: React.FC<SidebarProps> = ({
                     <li key={item.path}>
                       <button
                         onClick={() => handleNav(item.path)}
-                        className={`w-full group relative flex items-center rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer ${
+                        className={`w-full group relative flex items-center rounded-xl text-xs font-medium transition cursor-pointer ${
                           collapsed
                             ? 'justify-center p-2.5'
                             : 'justify-between px-3.5 py-2'
                         } ${
                           active
-                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/30 font-bold border border-blue-400/30'
-                            : 'text-slate-300/90 hover:bg-white/[0.07] hover:text-white hover:border hover:border-white/5'
+                            ? 'bg-blue-600 text-white shadow-xs'
+                            : 'text-slate-300 hover:bg-slate-800/80 hover:text-white'
                         }`}
                       >
-                        {active && (
-                          <span
-                            className={`absolute left-0 bg-cyan-400 rounded-r-full shadow-[0_0_10px_#22d3ee] ${
-                              collapsed ? 'top-2 bottom-2 w-1' : 'top-1.5 bottom-1.5 w-1.5'
-                            }`}
-                          />
-                        )}
                         <div className={`flex items-center min-w-0 ${collapsed ? 'justify-center' : 'gap-3'}`}>
                           <Icon
-                            className={`w-4 h-4 shrink-0 transition-transform duration-150 ${
+                            className={`w-4 h-4 shrink-0 transition ${
                               active
                                 ? 'text-white'
-                                : 'text-slate-400 group-hover:text-cyan-400 group-hover:scale-110'
+                                : 'text-slate-400 group-hover:text-slate-200'
                             }`}
                           />
                           {!collapsed && (
-                            <span className="transition-transform duration-150 group-hover:translate-x-0.5 whitespace-nowrap">
+                            <span className="whitespace-nowrap">
                               {item.label}
                             </span>
                           )}
                         </div>
 
-                        {!collapsed && item.badge && !active && (
-                          <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/35 shadow-xs shrink-0 whitespace-nowrap ml-1.5">
-                            {item.badge}
-                          </span>
-                        )}
-
-                        {!collapsed && !active && !item.badge && (
+                        {!collapsed && !active && (
                           <ChevronRight className="w-3 h-3 text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                         )}
 
                         {/* Floating Tooltip in Collapsed Mode */}
                         {collapsed && (
-                          <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl border border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity z-50 flex items-center gap-1.5">
+                          <div className="pointer-events-none absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold whitespace-nowrap shadow-xl border border-slate-700 opacity-0 group-hover:opacity-100 transition-opacity z-50">
                             <span>{item.label}</span>
-                            {item.badge && (
-                              <span className="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-amber-500/20 text-amber-300 border border-amber-500/35">
-                                {item.badge}
-                              </span>
-                            )}
                           </div>
                         )}
                       </button>
