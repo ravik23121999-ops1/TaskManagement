@@ -144,4 +144,48 @@ class WorkLogTest extends TestCase
         $this->assertNotEmpty($data['conversations']);
         $this->assertEquals('Initial communication note between team members', $data['conversations'][0]['comment']);
     }
+
+    public function test_task_journey_timeline_filters_out_internal_draft_status_changes(): void
+    {
+        Sanctum::actingAs($this->admin);
+
+        // Add an initial synthetic creation status history record
+        TaskStatusHistory::create([
+            'task_id' => $this->task->id,
+            'from_status' => null,
+            'to_status' => 'in_progress',
+            'changed_by_id' => $this->admin->id,
+            'reason' => 'Task created',
+            'changed_at' => now(),
+        ]);
+
+        // Add a genuine business transition (e.g. In Progress -> On Hold)
+        TaskStatusHistory::create([
+            'task_id' => $this->task->id,
+            'from_status' => 'in_progress',
+            'to_status' => 'on_hold',
+            'changed_by_id' => $this->admin->id,
+            'reason' => 'Client requested pause',
+            'changed_at' => now()->addMinutes(10),
+        ]);
+
+        $response = $this->getJson("/api/work-logs/task/{$this->task->id}");
+        $response->assertStatus(200);
+
+        $timeline = collect($response->json('data.timeline'));
+
+        // Synthetic "DRAFT -> IN PROGRESS" with "Task created" MUST NOT exist in timeline
+        $hasDuplicateDraft = $timeline->contains(function ($step) {
+            return str_contains($step['title'] ?? '', 'DRAFT')
+                && str_contains($step['summary'] ?? '', 'Task created');
+        });
+        $this->assertFalse($hasDuplicateDraft, 'Synthetic DRAFT -> IN PROGRESS creation record should be filtered out');
+
+        // Genuine status change "IN PROGRESS -> ON HOLD" MUST exist in timeline
+        $hasRealStatusChange = $timeline->contains(function ($step) {
+            return str_contains($step['title'] ?? '', 'IN PROGRESS → ON HOLD')
+                && str_contains($step['summary'] ?? '', 'Client requested pause');
+        });
+        $this->assertTrue($hasRealStatusChange, 'Genuine status change should be preserved in timeline');
+    }
 }

@@ -153,17 +153,25 @@ class WorkLogController extends Controller
             foreach ($statusQuery as $s) {
                 if (!$s->task) continue;
 
-                $actionTitle = "Stage Transition: " . strtoupper($s->from_status ?? 'draft') . " → " . strtoupper($s->to_status);
+                $reasonLower = strtolower($s->reason ?? '');
+                $fromStatusLower = strtolower($s->from_status ?? '');
+                $toStatusLower = strtolower($s->to_status ?? '');
+                $isWithdrawn = $toStatusLower === 'cancelled' || str_contains($reasonLower, 'withdrawn') || str_contains($reasonLower, 'cancelled');
+
                 if ($s->task_branch_id) {
-                    if ($s->to_status === 'cancelled' || str_contains(strtolower($s->reason ?? ''), 'withdrawn')) {
+                    if ($isWithdrawn) {
                         $actionTitle = 'Subtask Assignment Withdrawn';
-                    } elseif ($s->from_status === null) {
+                    } elseif ($s->from_status === null || $fromStatusLower === 'draft') {
                         $actionTitle = 'Subtask Assigned';
                     } else {
                         $actionTitle = "Subtask Status: " . strtoupper($s->from_status) . " → " . strtoupper($s->to_status);
                     }
-                } elseif (str_contains(strtolower($s->reason ?? ''), 'withdrawn') || str_contains(strtolower($s->reason ?? ''), 'cancelled')) {
+                } elseif ($isWithdrawn) {
                     $actionTitle = 'Assignment Withdrawn';
+                } elseif (($s->from_status === null || $fromStatusLower === 'draft') && ($toStatusLower === 'in_progress' || str_contains($reasonLower, 'task created'))) {
+                    $actionTitle = 'Task Created';
+                } else {
+                    $actionTitle = "Stage Transition: " . strtoupper($s->from_status ?? 'draft') . " → " . strtoupper($s->to_status);
                 }
 
                 $logs->push([
@@ -543,18 +551,37 @@ class WorkLogController extends Controller
 
         // 3. Stage Transitions / Status History
         foreach ($task->statusHistory as $sh) {
-            $isReviewOrSub = str_contains(strtolower($sh->reason ?? ''), 'approved by') 
-                || str_contains(strtolower($sh->reason ?? ''), 'returned by')
-                || str_contains(strtolower($sh->reason ?? ''), 'submitted for review');
+            $reasonLower = strtolower($sh->reason ?? '');
+
+            // Skip reviews or submissions (already handled with rich details in Section 4)
+            $isReviewOrSub = str_contains($reasonLower, 'approved by') 
+                || str_contains($reasonLower, 'returned by')
+                || str_contains($reasonLower, 'submitted for review');
             
             if ($isReviewOrSub) {
+                continue;
+            }
+
+            $isWithdrawn = $sh->to_status === 'cancelled' || str_contains($reasonLower, 'withdrawn') || str_contains($reasonLower, 'cancelled');
+
+            // Skip synthetic internal creation & initial assignment initialization records (DRAFT -> IN_PROGRESS)
+            // because Section 1 (Created) and Section 2 (Assigned) already display them as clear milestone cards.
+            $fromStatusLower = strtolower($sh->from_status ?? '');
+            $toStatusLower = strtolower($sh->to_status ?? '');
+            $isInitialOrDuplicate = !$isWithdrawn && (
+                $sh->from_status === null
+                || in_array($fromStatusLower, ['draft', ''])
+                || str_contains($reasonLower, 'task created')
+                || str_contains($reasonLower, 'assigned to')
+            ) && in_array($toStatusLower, ['in_progress', 'draft', 'pending']);
+
+            if ($isInitialOrDuplicate) {
                 continue;
             }
 
             $fromStr = strtoupper(str_replace('_', ' ', $sh->from_status ?? 'draft'));
             $toStr = strtoupper(str_replace('_', ' ', $sh->to_status));
 
-            $isWithdrawn = $sh->to_status === 'cancelled' || str_contains(strtolower($sh->reason ?? ''), 'withdrawn') || str_contains(strtolower($sh->reason ?? ''), 'cancelled');
             $badgeLabel = $isWithdrawn ? 'Assignment Withdrawn' : 'Status Change';
             $title = $isWithdrawn ? 'Assignment Withdrawn' : "Status changed: {$fromStr} → {$toStr}";
 
