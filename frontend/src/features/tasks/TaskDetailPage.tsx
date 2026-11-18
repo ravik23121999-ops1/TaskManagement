@@ -285,13 +285,30 @@ export const TaskDetailPage: React.FC = () => {
   const [modalAssigneeWork, setModalAssigneeWork] = useState<Record<number, ModalWorkData>>({});
   const [showParentContext, setShowParentContext] = useState(false);
 
+  const getParentMaxDueDate = (): string | undefined => {
+    // If the delegating user owns a branch (e.g. Priya delegating further), the child subtask CANNOT exceed Priya's branch due date!
+    const userBranch = task?.branches?.find((b) => b.owner?.id === currentUser?.id) || task?.my_branch;
+    const branchDue = userBranch?.due_date ? userBranch.due_date.split('T')[0] : null;
+    const taskDue = task?.due_date ? task.due_date.split('T')[0] : null;
+
+    if (branchDue && taskDue) {
+      return branchDue < taskDue ? branchDue : branchDue;
+    }
+    return branchDue || taskDue || undefined;
+  };
+
+  const getParentMinDueDate = (): string | undefined => {
+    // Cannot be earlier than the task creation date
+    return task?.created_at ? task.created_at.split('T')[0] : new Date().toISOString().split('T')[0];
+  };
+
   const initModalWork = (u: any): ModalWorkData => ({
     mode: 'new_subtask',
     title: task ? `${task.title} - ${u.name}` : `${u.name}'s Scope`,
     description: '',
     expected_result: '',
     acceptance_criteria: '',
-    due_date: task?.due_date ? task.due_date.split('T')[0] : '',
+    due_date: getParentMaxDueDate() || '',
     share_previous: false,
     can_assign_further: true,
     files: [],
@@ -425,9 +442,15 @@ export const TaskDetailPage: React.FC = () => {
               setSubmittingModal(false);
               return;
             }
-            if (task.due_date && work.due_date && new Date(work.due_date) > new Date(task.due_date)) {
-              const maxDate = task.due_date.split('T')[0];
-              setModalError(`Individual Due Date for ${u?.name || 'employee'} cannot be later than the task due date (${maxDate}).`);
+            const maxAllowed = getParentMaxDueDate();
+            const minAllowed = getParentMinDueDate();
+            if (maxAllowed && work.due_date && work.due_date > maxAllowed) {
+              setModalError(`Individual Due Date for ${u?.name || 'employee'} cannot be later than your deadline (${maxAllowed}).`);
+              setSubmittingModal(false);
+              return;
+            }
+            if (minAllowed && work.due_date && work.due_date < minAllowed) {
+              setModalError(`Individual Due Date for ${u?.name || 'employee'} cannot be earlier than task creation date (${minAllowed}).`);
               setSubmittingModal(false);
               return;
             }
@@ -4058,14 +4081,22 @@ export const TaskDetailPage: React.FC = () => {
                                 />
                               </div>
                               <div className="space-y-1">
-                                <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
-                                  <span>Due Date</span>
-                                  <span className="text-rose-500">*</span>
-                                </label>
+                                <div className="flex items-center justify-between">
+                                  <label className="text-[11px] font-bold text-slate-700 flex items-center gap-1">
+                                    <span>Due Date</span>
+                                    <span className="text-rose-500">*</span>
+                                  </label>
+                                  {getParentMaxDueDate() && (
+                                    <span className="text-[10px] text-blue-600 font-semibold">
+                                      (Max: {new Date(getParentMaxDueDate()!).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })})
+                                    </span>
+                                  )}
+                                </div>
                                 <input
                                   type="date"
                                   value={work.due_date}
-                                  max={task?.due_date ? task.due_date.split('T')[0] : undefined}
+                                  min={getParentMinDueDate()}
+                                  max={getParentMaxDueDate()}
                                   onChange={(e) => updateModalWork(uid, { due_date: e.target.value })}
                                   className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                                 />

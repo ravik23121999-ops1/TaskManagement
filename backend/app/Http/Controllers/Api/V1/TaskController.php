@@ -1344,6 +1344,7 @@ class TaskController extends Controller
 
         // Validate mandatory subtask due dates and ensure they do not exceed parent deadline
         $parentMaxDueDate = $userBranch?->due_date ? \Carbon\Carbon::parse($userBranch->due_date) : ($task->due_date ? \Carbon\Carbon::parse($task->due_date) : null);
+
         if (!$isDirectDelegation && !empty($branchesData)) {
             foreach ($branchesData as $bIndex => $b) {
                 if (empty($b['due_date'])) {
@@ -1351,10 +1352,12 @@ class TaskController extends Controller
                         'message' => 'The due date is mandatory for each subtask.'
                     ], 422);
                 }
-                if ($parentMaxDueDate && \Carbon\Carbon::parse($b['due_date'])->startOfDay()->gt($parentMaxDueDate->startOfDay())) {
+                $parsedDueDate = \Carbon\Carbon::parse($b['due_date'])->startOfDay();
+                if ($parentMaxDueDate && $parsedDueDate->gt($parentMaxDueDate->startOfDay())) {
                     $bTitle = $b['title'] ?? 'Subtask';
+                    $deadlineName = $userBranch?->due_date ? 'your subtask deadline' : 'the task due date';
                     return response()->json([
-                        'message' => "The subtask \"{$bTitle}\" due date cannot be later than the task due date ({$parentMaxDueDate->toDateString()})."
+                        'message' => "The subtask \"{$bTitle}\" due date cannot be later than {$deadlineName} ({$parentMaxDueDate->toDateString()})."
                     ], 422);
                 }
             }
