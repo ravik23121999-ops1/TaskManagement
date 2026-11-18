@@ -158,6 +158,15 @@ class WorkLogController extends Controller
                 $toStatusLower = strtolower($s->to_status ?? '');
                 $isWithdrawn = $toStatusLower === 'cancelled' || str_contains($reasonLower, 'withdrawn') || str_contains($reasonLower, 'cancelled');
 
+                // When showing all events ('all'), reviews and attachments have their own rich cards.
+                // Skip review status duplicates so review actions don't show twice in the feed.
+                $isReviewDuplicate = str_contains($reasonLower, 'approved') 
+                    || str_contains($reasonLower, 'returned')
+                    || in_array($toStatusLower, ['post_comment']);
+                if ($type === 'all' && $isReviewDuplicate) {
+                    continue;
+                }
+
                 if ($s->task_branch_id) {
                     if ($isWithdrawn) {
                         $actionTitle = 'Subtask Assignment Withdrawn';
@@ -327,9 +336,17 @@ class WorkLogController extends Controller
             return $unauthorized;
         }
 
-        $data = \Illuminate\Support\Facades\Cache::remember('work_logs_stats_metrics', 20, function () {
+        $data = \Illuminate\Support\Facades\Cache::remember('work_logs_stats_metrics', 5, function () {
             $totalComments = TaskComment::count();
-            $totalStatusChanges = TaskStatusHistory::count();
+            // Count genuine workflow transitions (excluding internal creation initialization)
+            $totalStatusChanges = TaskStatusHistory::where(function ($q) {
+                $q->whereNotNull('from_status')
+                    ->where('from_status', '!=', 'draft')
+                    ->where('from_status', '!=', '');
+            })->where(function ($q) {
+                $q->where('reason', 'not like', '%Task created%')
+                    ->where('reason', 'not like', '%assigned to%');
+            })->count();
             $totalAttachments = TaskAttachment::count();
             $totalReviews = TaskReview::count();
             $totalTasks = Task::count();
@@ -552,22 +569,39 @@ class WorkLogController extends Controller
         // 3. Stage Transitions / Status History
         foreach ($task->statusHistory as $sh) {
             $reasonLower = strtolower($sh->reason ?? '');
+            $fromStatusLower = strtolower($sh->from_status ?? '');
+            $toStatusLower = strtolower($sh->to_status ?? '');
 
             // Skip reviews or submissions (already handled with rich details in Section 4)
-            $isReviewOrSub = str_contains($reasonLower, 'approved by') 
-                || str_contains($reasonLower, 'returned by')
-                || str_contains($reasonLower, 'submitted for review');
+            $isReviewOrSub = str_contains($reasonLower, 'approved') 
+                || str_contains($reasonLower, 'returned')
+                || str_contains($reasonLower, 'submitted')
+                || str_contains($reasonLower, 'review')
+                || in_array($toStatusLower, ['review', 'post_comment'])
+                || ($fromStatusLower === 'review' && in_array($toStatusLower, ['completed', 'post_comment', 'in_progress']));
             
             if ($isReviewOrSub) {
                 continue;
             }
 
-            $isWithdrawn = $sh->to_status === 'cancelled' || str_contains($reasonLower, 'withdrawn') || str_contains($reasonLower, 'cancelled');
+            // Skip hold & resume records if already represented in Section 6 (TaskHoldRecord)
+            $isCapturedInHoldRecords = ($toStatusLower === 'on_hold') && $task->holdRecords->contains(function ($hr) use ($sh) {
+                return abs(Carbon::parse($hr->held_at ?? $hr->created_at)->diffInSeconds(Carbon::parse($sh->changed_at))) <= 60;
+            });
+            if ($isCapturedInHoldRecords) {
+                continue;
+            }
+
+            // Skip final completion records if already represented in Section 7
+            $isCapturedInClosure = ($toStatusLower === 'completed') && $task->status === 'completed' && $task->completed_at;
+            if ($isCapturedInClosure) {
+                continue;
+            }
+
+            $isWithdrawn = $toStatusLower === 'cancelled' || str_contains($reasonLower, 'withdrawn') || str_contains($reasonLower, 'cancelled');
 
             // Skip synthetic internal creation & initial assignment initialization records (DRAFT -> IN_PROGRESS)
             // because Section 1 (Created) and Section 2 (Assigned) already display them as clear milestone cards.
-            $fromStatusLower = strtolower($sh->from_status ?? '');
-            $toStatusLower = strtolower($sh->to_status ?? '');
             $isInitialOrDuplicate = !$isWithdrawn && (
                 $sh->from_status === null
                 || in_array($fromStatusLower, ['draft', ''])
