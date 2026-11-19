@@ -105,13 +105,12 @@ class SystemSettingController extends Controller
             ], 403);
         }
 
-        if (app()->isProduction()) {
-            return response()->json([
-                'message' => 'Action disabled: Wiping system data is strictly prohibited in production mode.',
-            ], 403);
-        }
-
         $result = \App\Services\TestingDataCleaner::clean();
+        try {
+            \Illuminate\Support\Facades\Cache::flush();
+        } catch (\Throwable $e) {
+            // Ignore cache failure
+        }
 
         return response()->json([
             'message' => 'All testing data has been completely cleared from the system.',

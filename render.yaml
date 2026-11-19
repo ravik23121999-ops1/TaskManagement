@@ -2,6 +2,7 @@ services:
   - type: web
     name: quicklifenow-app
     runtime: docker
+    autoDeploy: true
     dockerfilePath: ./Dockerfile
     dockerContext: .
     plan: free
