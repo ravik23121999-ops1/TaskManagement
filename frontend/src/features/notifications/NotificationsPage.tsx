@@ -87,9 +87,20 @@ export const NotificationsPage: React.FC = () => {
         )}
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs divide-y divide-slate-100 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs divide-y divide-slate-100 overflow-hidden min-h-[360px]">
         {loading ? (
-          <div className="p-12 text-center text-slate-400">Loading notifications...</div>
+          <div className="p-8 space-y-4 animate-pulse">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4 py-2">
+                <div className="w-9 h-9 rounded-xl bg-slate-200/80 shrink-0" />
+                <div className="space-y-2 flex-1">
+                  <div className="h-4 w-48 bg-slate-200/80 rounded" />
+                  <div className="h-3 w-72 bg-slate-100 rounded" />
+                </div>
+                <div className="h-3 w-16 bg-slate-100 rounded ml-auto" />
+              </div>
+            ))}
+          </div>
         ) : notifications.length === 0 ? (
           <div className="p-12 text-center text-slate-400">
             <Bell className="w-8 h-8 mx-auto text-slate-300 mb-2" />
