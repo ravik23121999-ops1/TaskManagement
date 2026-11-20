@@ -277,7 +277,7 @@ const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200/70 shadow-[0_1px_3px_rgba(15,23,42,0.02)] sticky top-0 z-20 px-3 sm:px-6 flex items-center justify-between gap-3 select-none transition-all">
+    <header className="h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200/70 shadow-[0_1px_3px_rgba(15,23,42,0.02)] sticky top-0 z-20 px-3 sm:px-6 flex items-center justify-between gap-3 select-none">
       <div className="flex items-center gap-2 flex-1 max-w-md">
         {/* Unified Sidebar Toggle Hamburger Button (Works for Mobile Drawer & Desktop Collapse) */}
         <button
