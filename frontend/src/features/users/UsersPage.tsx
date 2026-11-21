@@ -510,7 +510,7 @@ export const UsersPage: React.FC = () => {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. John Doe"
+                  placeholder="e.g. Alex Johnson"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-xl"
@@ -522,7 +522,7 @@ export const UsersPage: React.FC = () => {
                 <input
                   type="email"
                   required
-                  placeholder="john@company.com"
+                  placeholder="alex@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-3 py-2 border border-slate-200 rounded-xl"

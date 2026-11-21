@@ -54,7 +54,7 @@ export const TaskSubmitModal: React.FC<TaskSubmitModalProps> = ({
             <textarea
               rows={4}
               required
-              placeholder="Describe your work, completed checklist items, or links to assets..."
+              placeholder="e.g. Completed all scheduled deliverables, validated against acceptance criteria, and attached final audit report and verification logs..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full p-3 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"

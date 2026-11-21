@@ -3022,7 +3022,7 @@ export const TaskDetailPage: React.FC = () => {
           <form onSubmit={handleAddComment} className="space-y-3">
             <textarea
               rows={3}
-              placeholder="Write a comment or update for this task..."
+              placeholder="Write a comment or update for this task (e.g. Completed initial deliverables, ready for preliminary review)..."
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
               className="w-full p-3.5 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
@@ -3616,7 +3616,7 @@ export const TaskDetailPage: React.FC = () => {
                 <textarea
                   rows={4}
                   required
-                  placeholder="Describe what information, API keys, credentials, design assets, or clarifications you need..."
+                  placeholder="e.g. Need staging database access keys and updated client SLA agreement to proceed with security audit..."
                   value={requestDetailsQuestion}
                   onChange={(e) => setRequestDetailsQuestion(e.target.value)}
                   className="w-full p-3 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-600"
@@ -3742,7 +3742,7 @@ export const TaskDetailPage: React.FC = () => {
                 <textarea
                   rows={4}
                   required
-                  placeholder="Provide the missing instructions, credentials, explanations, or links..."
+                  placeholder="e.g. Attached the updated staging API credentials and client SLA agreement document in task attachments..."
                   value={provideDetailsResponse}
                   onChange={(e) => setProvideDetailsResponse(e.target.value)}
                   className="w-full p-3 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
@@ -4076,7 +4076,7 @@ export const TaskDetailPage: React.FC = () => {
                                   type="text"
                                   value={work.title}
                                   onChange={(e) => updateModalWork(uid, { title: e.target.value })}
-                                  placeholder="e.g. Develop APIs / UI Module"
+                                  placeholder="e.g. Database Schema & Migration, Frontend UI View, Integration Testing"
                                   className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                                 />
                               </div>
@@ -4128,7 +4128,7 @@ export const TaskDetailPage: React.FC = () => {
                               rows={3}
                               value={work.description}
                               onChange={(e) => updateModalWork(uid, { description: e.target.value })}
-                              placeholder="Detail the specific tasks, instructions, or delegation details for this assignee..."
+                              placeholder="e.g. Execute load testing against authentication endpoints and document latency percentiles..."
                               className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 resize-y"
                             />
                           </div>
@@ -4471,7 +4471,7 @@ export const TaskDetailPage: React.FC = () => {
                 rows={3}
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
-                placeholder="Explain why this task is being cancelled (min. 3 characters)..."
+                placeholder="e.g. Task requirements superseded by new Q4 enterprise roadmap and vendor restructuring..."
                 className="w-full px-3.5 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500"
                 autoFocus
               />
@@ -4891,7 +4891,7 @@ export const TaskDetailPage: React.FC = () => {
                 rows={3}
                 value={reopenReason}
                 onChange={(e) => setReopenReason(e.target.value)}
-                placeholder="Explain why this task is being reopened (optional)..."
+                placeholder="e.g. Stakeholder requested additional compliance metrics in the final summary report..."
                 className="w-full px-3.5 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 autoFocus
               />
@@ -4959,7 +4959,7 @@ export const TaskDetailPage: React.FC = () => {
                 rows={3}
                 value={holdReason}
                 onChange={(e) => setHoldReason(e.target.value)}
-                placeholder="Explain why this task is being paused (e.g., waiting for client feedback, budget approval)..."
+                placeholder="e.g. Temporarily placed on hold awaiting client security sign-off and vendor SLA clearance..."
                 className="w-full px-3.5 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
                 autoFocus
               />
