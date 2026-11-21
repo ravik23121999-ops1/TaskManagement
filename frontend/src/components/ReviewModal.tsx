@@ -220,7 +220,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
               rows={3}
               value={comments}
               onChange={(e) => setComments(e.target.value)}
-              placeholder={decision === 'returned' ? 'e.g. Please revise Section 2 compliance checklist and attach vendor SLA sign-off...' : 'e.g. Deliverables verified against requirements; approved for closure.'}
+              placeholder={decision === 'returned' ? 'e.g. Please update the title and re-upload the file...' : 'e.g. Looks great, approved!'}
               className="w-full p-3 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
           </div>

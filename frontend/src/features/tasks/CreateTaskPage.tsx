@@ -554,7 +554,7 @@ export const CreateTaskPage: React.FC = () => {
               <label className="block text-xs font-bold text-slate-700 mb-1.5">Task Title *</label>
               <input
                 type="text"
-                placeholder="e.g. Q4 Financial Audit & Compliance Review"
+                placeholder="e.g. Website Redesign & Launch"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
@@ -579,7 +579,7 @@ export const CreateTaskPage: React.FC = () => {
             <label className="block text-xs font-bold text-slate-700 mb-1.5">Task Description *</label>
             <textarea
               rows={4}
-              placeholder="e.g. Outline key project deliverables, operational objectives, deadlines, and acceptance criteria for all team members..."
+              placeholder="e.g. Briefly describe what needs to be done, requirements, and the goal of this task..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full p-3.5 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
@@ -1185,7 +1185,7 @@ export const CreateTaskPage: React.FC = () => {
                                     [u.id]: { ...work, title: e.target.value },
                                   }))
                                 }
-                                placeholder="e.g. Technical Architecture Review, Frontend Interface Development, Quality Assurance Testing"
+                                placeholder="e.g. Design Wireframes, Build Features, Testing"
                                 className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                               />
                             </div>
@@ -1228,7 +1228,7 @@ export const CreateTaskPage: React.FC = () => {
                                   [u.id]: { ...work, description: e.target.value },
                                 }))
                               }
-                              placeholder={`e.g. Audit active IAM policies, verify access logs, and compile risk assessment report assigned specifically to ${u.name}...`}
+                              placeholder={`e.g. Briefly describe what ${u.name} should focus on and deliver...`}
                               className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
                             />
                           </div>

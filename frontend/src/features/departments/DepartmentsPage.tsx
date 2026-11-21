@@ -419,7 +419,7 @@ export const DepartmentsPage: React.FC = () => {
                 <label className="block font-bold text-slate-700 mb-1">Description</label>
                 <textarea
                   rows={3}
-                  placeholder="e.g. Oversees corporate infrastructure, technical support, information security, and cloud systems..."
+                  placeholder="e.g. Manages team projects, support, and department operations..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="w-full p-3 border border-slate-200 rounded-xl"

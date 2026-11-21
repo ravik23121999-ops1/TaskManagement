@@ -1400,12 +1400,12 @@ export const MessagesPage: React.FC = () => {
                       type="text"
                       placeholder={
                         activeThreadData.is_overseer
-                          ? 'Post review remarks, checklist items, or missing details...'
+                          ? 'Leave review feedback or request missing details...'
                           : messageType === 'missing_details_request'
-                          ? 'Specify missing credentials, files, or information needed...'
+                          ? 'What information or files do you need?...'
                           : messageType === 'details_provided'
-                          ? 'Provide the requested details, links, or instructions...'
-                          : 'Type a task message or status update...'
+                          ? 'Add your reply or details here...'
+                          : 'Type a message...'
                       }
                       value={messageInput}
                       onChange={(e) => setMessageInput(e.target.value)}

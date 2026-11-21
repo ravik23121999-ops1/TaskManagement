@@ -77,7 +77,7 @@ export const TaskFinalCompleteModal: React.FC<TaskFinalCompleteModalProps> = ({
             <textarea
               rows={4}
               required
-              placeholder="e.g. All deliverables completed, reviewed against acceptance criteria, QA approved, and signed off for deployment..."
+              placeholder="e.g. All work is finished and verified. Ready to close this task."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="w-full p-3 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600"
