@@ -554,7 +554,7 @@ export const CreateTaskPage: React.FC = () => {
               <label className="block text-xs font-bold text-slate-700 mb-1.5">Task Title *</label>
               <input
                 type="text"
-                placeholder="Enter task title (e.g. Create Website Landing Page)..."
+                placeholder="Create new task..."
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600"
